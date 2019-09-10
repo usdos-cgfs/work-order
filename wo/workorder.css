@@ -1,0 +1,116 @@
+/*#tabs table {
+    border-collapse: collapse;
+    margin-bottom: 15px;
+    width: 40%;
+}
+
+    #tabs table thead td {
+        font-weight: bold;
+    }
+
+    #tabs table td {
+        border: 1px solid gray;
+    }*/
+
+.data-table {
+    border-collapse: collapse;
+}
+
+    .data-table thead td {
+        font-weight: bold;
+    }
+
+    .data-table td {
+        border: 1px solid gray;
+        font-size: 12pt;
+        font-family: arial;
+    }
+
+#table-wo-request-info td {
+    text-align: right;
+    padding-right: 30px;
+}
+
+#new-wo-table td {
+    padding: 20px;
+    text-align: center;
+}
+
+#table-attachments {
+    border-collapse: collapse;
+    margin-bottom: 15px;
+    width: 40%;
+}
+
+    #table-attachments thead td {
+        font-weight: bold;
+    }
+
+    #table-attachments td {
+        border: 1px solid gray;
+    }
+
+#table-approvals {
+    border-collapse: collapse;
+}
+
+    #table-approvals td {
+        border: 1px solid gray;
+        font-size: 12pt;
+        font-family: arial;
+    }
+
+#wo-open-orders {
+    border-collapse: collapse;
+}
+
+    #wo-open-orders td {
+        font-size: 12pt;
+        border: 1px solid gray;
+    }
+
+.header h2 {
+    font-family: arial;
+    font-size: 14pt;
+    font-weight: bold;
+    border-bottom-style: solid;
+    border-bottom-width: 5px;
+    border-color: blue;
+    margin-bottom: 25px;
+    margin-top: 20px;
+}
+
+.service-type-detail {
+    margin-top: 25px;
+    margin-bottom: 25px;
+}
+
+    .service-type-detail p {
+        padding-top: 5px;
+    }
+
+#wo-progress-bar .ui-progressbar-value {
+    background: rgb(0, 127, 255);
+}
+
+.admin-action-zone {
+    width: 35%;
+    border-width: 1px;
+    border-color: red;
+    border-style: solid;
+    padding: 5px;
+    background-color: rgb(255, 0, 0, .1);
+}
+
+input[disabled] {
+    color: gray;
+}
+
+#tabs p {
+    font-family: Arial;
+    font-size: 13pt;
+}
+
+.required {
+    color: red;
+}

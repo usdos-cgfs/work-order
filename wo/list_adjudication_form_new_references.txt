@@ -1,0 +1,8 @@
+<link rel="stylesheet" href="/workorderdemo/SiteAssets/wo/workorder.css" />
+
+<script src="/workorderdemo/SiteAssets/vendor/jquery/jquery-3.3.1.min.js"></script>
+<script src="/workorderdemo/SiteAssets/common/sal.js"></script>
+<script src="/workorderdemo/SiteAssets/common/common.js"></script>
+
+<script src="/workorderdemo/SiteAssets/wo/viewmodels.js"></script>
+<script src="/workorderdemo/SiteAssets/wo/list_adjudication_form_new.js"></script>

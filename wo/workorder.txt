@@ -1,0 +1,343 @@
+<link rel="stylesheet" href="/workorderdemo/SiteAssets/vendor/jquery/jquery-ui-1.12.1.full/jquery-ui.css" />
+<link rel="stylesheet" href="/workorderdemo/SiteAssets/vendor/jquery/jquery-ui-1.12.1.full/jquery-ui.css" />
+<link rel="stylesheet" href="/workorderdemo/SiteAssets/vendor/jquery/jquery-ui-1.12.1.full/jquery-ui.theme.css" />
+
+<link rel="stylesheet" href="/workorderdemo/SiteAssets/vendor/fontawesome-5.9.0/css/all.min.css">
+<!--<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">-->
+
+
+<link rel="stylesheet" href="/workorderdemo/SiteAssets/wo/workorder.css" />
+<!-- common/RDT/app"  -->
+
+<div id="tabs">
+    <ul>
+        <li><a href="#order-new">New Order</a></li>
+        <li><a href="#order-detail">Detail View</a></li>
+        <li><a href="#open-orders">Open Orders</a></li>
+    </ul>
+    <div id="order-new">
+        <p>Select the type of work order you would like to open:</p>
+        <table id="new-wo-table">
+            <tbody>
+                <tr>
+                    <td>
+                        <a type="button" onclick="newWorkOrder('pu10k')">
+                            <i class="fa fa-credit-card fa-5x" aria-hidden="true"></i>
+                            <p>Purchase Under 10k</p>
+                        </a>
+                    </td>
+                    <td>
+                        <a onclick="newWorkOrder('tel')">
+                            <i class="fa fa-phone fa-5x" aria-hidden="true"></i>
+                            <p>Telephone</p>
+                        </a>
+                    </td>
+
+                </tr>
+                <tr>
+                    <td>
+                        <a onclick="newWorkOrder('presentation')">
+                            <i class="fa fa-desktop fa-5x" aria-hidden="true"></i>
+                            <p>Presentation</p>
+                        </a>
+                    </td>
+                    <td>
+                        <a type="button" onclick="newWorkOrder('rsa')">
+                            <i class="fa fa-check-double fa-5x" aria-hidden="true"></i>
+                            <p>RSA Token</p>
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div id="order-detail">
+        <div id="wo-progress-bar" data-bind="visible: hasProgressBar"></div>
+        <p data-bind="visible: requestStage() != ''">Current Stage:<span data-bind="text: requestStage"></span></p>
+        <div id="wo-routing" data-bind="visible: showRouting">
+            <div class="header">
+                <h2>Routing and Assignment</h2>
+            </div>
+            <button type="button" onclick="newAssignment()">Assign</button>
+            <table id="wo-assignees" class="data-table" data-bind="visible: requestAssignees().length > 0">
+                <thead>
+                    <tr>
+                        <td>Assignee</td>
+                        <td>Role</td>
+                        <td>Assignment Date</td>
+                        <td>Actions</td>
+                    </tr>
+                </thead>
+                <tbody data-bind="foreach: requestAssignees">
+                    <tr>
+                        <td><p data-bind="text: Assignee.get_lookupValue()"></p></td>
+                        <td><p data-bind="text: Role"></p></td>
+                        <td><p data-bind="text: Created.toLocaleString()"></p></td>
+                        <td>
+                            <i class="fas fa-search"></i>
+                            <i class="fas fa-user-times"></i>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="wo-form">
+            <div id="wo-requestor-info">
+                <div class="header request-header">
+                    <h2>Requestor Information</h2>
+                </div>
+                <table id="table-wo-request-info">
+                    <tbody>
+                        <tr>
+                            <td style="align-content: flex-end">
+                                <p>
+                                    Request ID: <input class="non-editable-field" type="text"
+                                                       data-bind="value: requestID" />
+                                </p>
+                            </td>
+                            <td>
+                                <p>
+                                    Requestor Office<span class="required">*</span>: <select class="editable-field new" type="text"
+                                                                                   data-bind="value: requestorOffice, options: requestorOfficeOptions, disable: currentView() == 'view'"></select>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <p>
+                                    Requestor Name: <input class="non-editable-field" type="text"
+                                                 data-bind="value: requestorName" />
+                                </p>
+                            </td>
+                            <td>
+                                <p>
+                                    Managing Director: <input class="non-editable-field" type="text"
+                                                              data-bind="value: requestorManager" />
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+
+                                <p>
+                                    Requestor Phone: <input class="editable-field" type="text"
+                                                  data-bind="value: requestorTelephone, disable: currentView() == 'view'" />
+                                </p>
+                            </td>
+                            <td>
+                                <p>
+                                    Requestor Email: <input class="non-editable-field" type="text"
+                                                  data-bind="value: requestorEmail" />
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+
+
+                                <p>
+                                    Submitted Date:<input class="non-editable-field" type="text"
+                                                data-bind="value: requestSubmittedDate" />
+                                </p>
+                            </td>
+                            <td>
+                                <p>
+                                    Service Type<span class="required">*</span>: <select class="editable-field new" type="select"
+                                                                                         data-bind="value: requestServiceTypeName,
+                                                            options: requestServiceTypes,
+                                                            enable: currentView() == 'new'"></select>
+                                </p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Capture the specific info for each service type below. -->
+            <!-- Purchase Under 10k. -->
+            <div id="wo-pu10k" class="service-type-detail" data-bind="visible: requestServiceType() == 'pu10k'"
+                 style="display: none">
+                <div class="header service-type-header">
+                    <h2>Purchase Under 10k</h2>
+                </div>
+                <p>Description<span class="required">*</span>:</p>
+                <textarea rows="5" cols="50" class="editable-field"
+                          data-bind="value: pu10kDescription, disable: currentView() == 'view'"></textarea>
+                <p>
+                    Cost Estimate (USD)<span class="required">*</span>: <input class="editable-field" type="text"
+                                                                               data-bind="value: pu10kCostEst, disable: currentView() == 'view'"></input>
+                </p>
+            </div>
+            <!-- Telephone -->
+            <div id="wo-tel" class="service-type-detail" data-bind="visible: requestServiceType() == 'tel'"
+                 style="display: none">
+                <div class="header service-type-header">
+                    <h2>Telephone</h2>
+                </div>
+                <p>Please provide the following information:</p>
+                <p>
+                    Phone Number:
+                    <input class="editable-field" data-bind="disable: currentView() == 'view'"></input>
+                </p>
+                <p>
+                    Location/Cube Number<span class="required">*</span>:
+                    <input class="editable-field" type="text" data-bind="disable: currentView() == 'view'"></input>
+                </p>
+                <p>
+                    Phone Request Type<span class="required">*</span>:
+                    <select class="editable-field" type="select" data-bind="disable: currentView() == 'view',
+                        options: telServiceTypes, optionsCaption: 'Select...', value: telSelectedType"></select>
+                </p>
+                <div data-bind="visible: telSelectedType() == 'Move'">
+                    <p>To<span class="required">*</span>: <input data-bind="value: telTo"></input></p>
+                    <p>From<span class="required">*</span>: <input data-bind="value: telFrom"></input></p>
+                </div>
+                <div data-bind="visible: telSelectedType() == 'Issues'">
+                    <p>Description<span class="required">*</span>:</p>
+                    <textarea rows="5" cols="50" data-bind="value: telDesc"></textarea>
+                </div>
+            </div>
+            <!-- Presentation -->
+            <div id="wo-presentation" class="service-type-detail"
+                 data-bind="visible: requestServiceType() == 'presentation'" style="display: none">
+                <div class="header service-type-header">
+                    <h2>Presentation</h2>
+                </div>
+                <p>Please provide the following for presentations:</p>
+                <p>
+                    Type of request: <select data-bind="disable: currentView() == 'view',
+                        options: presentationServiceTypes, optionsCaption: 'Select...', value: presentationSelectedType"></select>
+                </p>
+                <p>POC: <input /></p>
+                <p>Date: <input /></p>
+                <p>Duration: <input /></p>
+                <p>Locations: <input /></p>
+                <div data-bind="visible: presentationSelectedType() == 'DVC'">
+                    <p>Call type: <select data-bind="options: presentationCallTypes, value: presentationCallType"></select></p>
+                    <p>VTC Dial Out: <select data-bind="options: presentationDialOuts, value: presentationDialOut"></select></p>
+                </div>
+                <p>Connection Type: <select data-bind="options: presentationConnectionTypes, value: presentationConnectionType"></select></p>
+            </div>
+            <!--RSA Token-->
+            <div id="wo-rsa" class="service-type-detail" data-bind="visible: requestServiceType() == 'rsa'"
+                 style="display: none">
+                <div class="header service-type-header">
+                    <h2>RSA Token</h2>
+                </div>
+                <p>Requests for new RSA Tokens requires the following information:</p>
+            </div>
+            <div id="wo-" class="service-type-detail" style="display: none">
+                <div class="header service-type-header">
+                    <h2></h2>
+                </div>
+                <p>work order specific info here.</p>
+            </div>
+            <!-- Capture any attachments below -->
+            <div id="wo-attachments" class="service-type-detail"
+                 data-bind="visible: requestServiceTypeHasAttachments">
+                <div class="header attachments-header">
+                    <h2>Attachments</h2>
+                </div>
+                <p id="instr-attachments" data-bind="text: requestAttachmentDesc">
+                    Instructions for uploading
+                    attachments.
+                </p>
+                <table id="table-attachments" class="data-table" data-bind="visible: requestAttachments().length > 0">
+                    <thead>
+                        <tr>
+                            <td>Title</td>
+                            <td>Actions</td>
+                        </tr>
+                    </thead>
+                    <tbody data-bind="foreach: requestAttachments">
+                        <tr>
+                            <td><a target="_blank" data-bind="attr: { href: fileUrl }, text: title"></a></td>
+                            <td>
+                                <i class="fas fa-search"></i>
+                                <i class="fas fa-trash"></i>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" class="editable-field" href="javascript:void(0)" onclick="newAttachment()"
+                        data-bind="disable: currentView() == 'view'">
+                    New Attachment
+                </button>
+            </div>
+            <!-- Approvals here -->
+            <div id="wo-approvals" class="service-type-detail">
+                <div class="header approvals-header">
+                    <h2>Approvals</h2>
+                </div>
+                <div class="admin-action-zone" data-bind="visible: pu10kShowAdmin">
+                    <h3>Administrative Action Zone</h3>
+                    <p>This purchase request requires your approval:</p>
+                    <button type="button" href="javascript:void(0)" onclick="newApproval()">Approve/Reject</button>
+                </div>
+                <table id="table-approvals" class="data-table" data-bind="visible: requestApprovals().length > 0">
+                    <thead>
+                        <tr>
+                            <td>Approver</td>
+                            <td>Adjudication</td>
+                            <td>Comment</td>
+                            <td>Date</td>
+                        </tr>
+                    </thead>
+                    <tbody data-bind="foreach: requestApprovals">
+                        <tr>
+                            <td><p data-bind="text: Author.get_lookupValue()"></p></td>
+                            <td><p data-bind="text: Adjudication"></p></td>
+                            <td><p data-bind="text: Comment"></p></td>
+                            <td><p data-bind="text: Created.toLocaleString()"></p></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        </br>
+        <div>
+            <button type="button" class="editable-field" href="javascript:void(0)" onclick="saveWorkOrder()"
+                    data-bind="enable: canSaveForm">
+                Save
+            </button>
+            <button type="button" href="javascript:void(0)" onclick="editWorkOrder()"
+                    data-bind="enable: canEditForm">
+                Edit
+            </button>
+        </div>
+    </div>
+    <div id="open-orders">
+        <table id="wo-open-orders" class="data-table" data-bind="visible: allOpenOrders().length > 0">
+            <thead>
+                <tr>
+                    <td>Order ID</td>
+                    <td>Service Type</td>
+                    <td>Requesting Office</td>
+                    <td>Requestor</td>
+                </tr>
+            </thead>
+            <tbody data-bind="foreach: allOpenOrders">
+                <tr>
+                    <td><a href="#" data-bind="click: $root.showWorkOrder, text: Title"></a></td>
+                    <td><p data-bind="text: RequestType"></p></td>
+                    <td><p data-bind="text: RequestorOffice"></p></td>
+                    <td><p data-bind="text: RequestorName"></p></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- <script src="/_layouts/15/SP.Runtime.js"></script>
+<script src="/_layouts/15/SP.js"></script>
+<script src="/_layouts/15/SP.UserProfiles.js"></script> -->
+
+<script src="/workorderdemo/SiteAssets/vendor/jquery/jquery-3.3.1.min.js"></script>
+<script src="/workorderdemo/SiteAssets/vendor/jquery/jquery-ui-1.12.1.full/external/jquery/jquery.js"></script>
+<script src="/workorderdemo/SiteAssets/vendor/jquery/jquery-ui-1.12.1.full/jquery-ui.js"></script>
+<script src="/workorderdemo/SiteAssets/vendor/knockout/knockout-3.5.0.js"></script>
+
+<script src="/workorderdemo/SiteAssets/common/sal.js"></script>
+<script src="/workorderdemo/SiteAssets/common/common.js"></script>
+
+<script src="/workorderdemo/SiteAssets/wo/viewmodels.js"></script>
+<script src="/workorderdemo/SiteAssets/wo/workorder.js"></script>
