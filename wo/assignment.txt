@@ -1,0 +1,33 @@
+<div id="wo-routing" data-bind="visible: showRouting">
+    <div class="header">
+        <h2>Routing and Assignment</h2>
+    </div>
+    <button type="button" onclick="newAssignment()">Assign</button>
+    <table id="wo-assignees" class="data-table" data-bind="visible: requestAssignees().length > 0">
+        <thead>
+            <tr>
+                <td>Assignee</td>
+                <td>Role</td>
+                <td>Assignment Date</td>
+                <td>Actions</td>
+            </tr>
+        </thead>
+        <tbody data-bind="foreach: requestAssignees">
+            <tr>
+                <td>
+                    <p data-bind="text: Assignee.get_lookupValue()"></p>
+                </td>
+                <td>
+                    <p data-bind="text: Role"></p>
+                </td>
+                <td>
+                    <p data-bind="text: Created.toLocaleString()"></p>
+                </td>
+                <td>
+                    <i class="fas fa-search"></i>
+                    <i class="fas fa-user-times"></i>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>

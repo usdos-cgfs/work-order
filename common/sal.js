@@ -8,7 +8,7 @@
 
     Author: Peter Backlund 
     Contact: backlundpf <@> state.gov
-    Created: 2018-02-12
+    Created: 2019-02-12
 */
 
 window.console = window.console || { log: function () { } };
@@ -103,13 +103,13 @@ function SPList(listDef) {
                                 Common Private Methods       
     ******************************************************************/
     onQueryFailed = function (sender, args) {
-        console.log('unsuccessful read');
+        console.log('unsuccessful read', sender);
         alert('Request failed. ' + args.get_message() +
           '\n' + args.get_stackTrace());
     };
 
     self.updateConfig = function () {
-        console.log('update', self.config)
+        //console.log('update', self.config)
         self.config.currentContext = new SP.ClientContext.get_current();
         self.config.website = self.config.currentContext.get_web();
         self.config.listRef = self.config.website.get_lists().getByTitle(self.config.def.title);
@@ -233,7 +233,7 @@ function SPList(listDef) {
     /*****************************************************************
                             updateListItem      
     ******************************************************************/
-    function updateListItem(id, valuePairs, callback) {
+    self.updateListItem = function (id, valuePairs, callback) {
         self.callbackUpdateListItem = callback;
         //self.updateConfig();
         var oList = self.config.listRef;
@@ -248,13 +248,14 @@ function SPList(listDef) {
 
         self.config.currentContext.load(this.oListItem);
         self.config.currentContext.executeQueryAsync(
-          onGetListItemsSucceeded.bind(this),
+          onUpdateListItemsSucceeded.bind(this),
           onQueryFailed.bind(this)
         )
     }
 
-    function onQuerySucceeded() {
-        alert('Item updated!');
+    function onUpdateListItemsSucceeded(sender, args) {
+        //alert('Item updated!');
+        self.callbackUpdateListItem()
     }
 
     /*****************************************************************
@@ -270,7 +271,7 @@ function SPList(listDef) {
         self.config.currentContext.load(this.files);
         self.config.currentContext.executeQueryAsync(
           onGetListFilesSucceeded.bind(this),
-          onQueryFailed.bind(this)
+          ongetListFilesFailed.bind(this)
         )
 
     }
@@ -293,6 +294,11 @@ function SPList(listDef) {
         console.log('this', this);
         console.log('self', self)
         this.callbackGetFolderContents(fileArr)
+    }
+
+    ongetListFilesFailed = function (sender, args) {
+        // let's log this but suppress any alerts
+        console.log('WARN: something went wrong fetching files', args)
     }
 
     /*****************************************************************

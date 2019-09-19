@@ -15,6 +15,12 @@
 /*****************************************************************************/
 window.console = window.console || { log: function () { } };
 
+//Add a method for peeking the last element of an array
+// Similar to .pop(), but doesn't remove the element
+// Array.prototype.peek = function() {
+//    return this[this.length - 1];
+// }
+
 function convertModelToViewfield(model) {
     vf = "<ViewFields>";
     for (i=0; i<model.length; i++) {

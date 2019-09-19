@@ -1,11 +1,17 @@
 
 function initListRefs() {
     vm.listRefWO(new SPList(workOrderListDef));
-    vm.listRefpu10k(new SPList(pu10kListDef));
+    //vm.listRefpu10k(new SPList(pu10kListDef));
 
     vm.listRefApproval(new SPList(approvalListDef));
     vm.libRefWODocs(new SPList(workOrderDocDef));
     vm.listRefAssignment(new SPList(assignmentListDef));
+
+    // Now, create a listRef for each of our service types:
+    $.each(woViews, function (name, view) {
+        console.log(name, view)
+        vm['listRef' + name](new SPList(view.listDef))
+    })
 }
 
 // function initPageListeners() {
@@ -32,15 +38,19 @@ function fetchOpenOrders() {
     })
 }
 
+function navSelectWorkOrder() { $('#tabs').tabs({ active: 2 }) };
+
 function newWorkOrder(woType) {
     // Open the detail tab view
-    $("#tabs").tabs({ active: 1 });
+    $("#tabs").tabs({ active: 3 });
     console.log(woViews[woType].id);
 
 
     //set the select for which view we're on.
     vm.requestServiceType(woType);
     vm.currentView('new');
+
+    clearValuePairs(woViews[woType].listDef.viewFields);
 
     // Set our VM fields
     vm.requestID(new Date().toISOString().substr(-4))
@@ -50,21 +60,39 @@ function newWorkOrder(woType) {
     vm.requestorTelephone();
     vm.requestorEmail(sal.globalConfig.currentUser.get_email());
     vm.requestorOffice();
+    vm.requestStage(0);
+
+    //Clear our requested fields.
+    vm.requestApprovals('');
+    vm.requestAttachments('');
+    vm.requestAssignees('');
 }
 
 function viewWorkOrder(woID) {
     // Set the tab to detail view
-    $("#tabs").tabs({ active: 1 });
+    $("#tabs").tabs({ active: 3 });
     vm.currentView('view');
     vm.requestID(woID);
-    fetchApprovals();
+    fetchApprovals(function () {console.log('approvals fetched')});
     fetchAttachments();
 
-    var camlq = '<Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' + vm.requestID() + '</Value></Eq></Where></Query>'
+    var camlq = '<View><Query><Where><Eq>'
+        + '<FieldRef Name="Title"/><Value Type="Text">' + vm.requestID() + '</Value>'
+        + '</Eq></Where></Query></View>';
+
     vm.listRefWO().getListItems(camlq, function (items) {
         vm.requestHeader(items[0]);
+        setValuePairs(workOrderListDef.viewFields, items[0])
+    })
+
+    var serviceTypeCaml = '<View><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' + vm.requestID() + '</Value></Eq></Where></Query></View>';
+    vm['listRef' + vm.requestServiceType()]().getListItems(serviceTypeCaml, function (items) {
+        vm.serviceTypeHeader(items[0]);
+        setValuePairs(vm.requestListDef().listDef.viewFields, items[0])
     })
 }
+
+
 
 function editWorkOrder() {
     //make the editable fields editable.
@@ -83,11 +111,12 @@ function saveWorkOrder() {
     switch (vm.currentView()) {
         case 'edit':
             // We are saving an edit form, get the id and update.
-            setTimeout(function() {onSaveEditWorkOrderCallback('12')}, 1000);
+            setTimeout(function () { onSaveEditWorkOrderCallback('12') }, 1000);
             break;
         case 'new':
             // we are saving a new record, create a new copy of each of the record types.
             // Save the current work order 
+            vm.requestStage(1);
             //var valuePairs = [['Title', 'Test Work Order'], ['RequestType', vm.requestServiceTypeName()]]
             var valuePairs = getValuePairs(workOrderListDef.viewFields);
 
@@ -102,6 +131,12 @@ function saveWorkOrder() {
     switch (vm.requestServiceType()) {
         case 'pu10k':
             save_pu10k();
+            break;
+        case 'tel':
+            break;
+        case 'presentation':
+            break;
+        case 'rsa':
             break;
         default:
             onSaveNewWorkOrderMaster('01');
@@ -128,18 +163,19 @@ function onSaveEditWorkOrderCallback(val) {
  ************************************************************/
 function save_pu10k() {
     // console.log('master wo saved')
-    var valuePairs = getValuePairs(pu10kListDef.viewFields);
+    vm.pu10kDescription($('#textpu10kDescription').val())
+    var valuePairs = getValuePairs(woViews.pu10k.listDef.viewFields);
     console.log('pu10k valuepairs', valuePairs);
+    // Use our workaround to get the pu10k description text.
     switch (vm.currentView()) {
         case 'new':
-            vm.pu10kStage('Submitted to Managing Director');
-            vm.requestStage('Submitted to Managing Director')
+            vm.pu10kStage(0);
             vm.listRefpu10k().createListItem(valuePairs, onSaveNewWorkOrderMaster);
-            vm.requestProgress(20);
+            //vm.requestProgress(20);
             break;
         case 'edit':
             // TODO: Pass the correct item 
-            vm.listRefpu10k().updateListItem('1', valuepairs, onSaveEditWorkOrderCallback);
+            vm.listRefpu10k().updateListItem(vm.serviceTypeHeader().ID, valuePairs, onSaveEditWorkOrderCallback);
             break;
         default:
 
@@ -149,9 +185,29 @@ function save_pu10k() {
 function getValuePairs(listDef) {
     var valuePairs = []
     $.each(listDef, function (field, obj) {
-        valuePairs.push([field, !$.isEmptyObject(vm[obj.koMap]()) ? vm[obj.koMap]() : ''])
+        // For each mapped field in our List Def viewfields, push the bound
+        // KO object to it.
+        if (!(['ID', 'Created'].includes(field))) {
+            valuePairs.push([field, !$.isEmptyObject(vm[obj.koMap]()) ? vm[obj.koMap]() : ''])
+        }
     })
     return valuePairs;
+}
+
+function setValuePairs(listDef, jObject) {
+    // The inverse of our getValuePairs function, set the KO observables
+    // from our returned object.
+    $.each(listDef, function (field, obj) {
+        console.log(field + ' ' + obj.koMap)
+        vm[obj.koMap](jObject[field]);
+    })
+
+}
+
+function clearValuePairs(listDef) {
+    $.each(listDef, function (field, obj) {
+        vm[obj.koMap]('')
+    })
 }
 /************************************************************
  * Attachments
@@ -160,7 +216,8 @@ function newAttachment() {
     vm.libRefWODocs().createFolder(vm.requestID(), function () {
         vm.libRefWODocs().uploadNewDocument(vm.requestID(), 'Attach a New Document', { id: vm.requestID() }, function () {
             console.log('success');
-        fetchAttachments()})
+            fetchAttachments()
+        })
     })
 }
 
@@ -193,44 +250,86 @@ function fetchAssignments() {
  * Approvals
  ************************************************************/
 function newApproval() {
-    vm.listRefApproval().showModal('NewForm.aspx', 'New adjudication', { woId: vm.requestID() }, function (args) {
-        console.log('approval args', args)
-        // TODO: If this pushes the process forward, handle that here.
-        approvalUpdateProgress()
-        fetchApprovals();
+    vm.listRefApproval().showModal('NewForm.aspx', 'New adjudication', { woId: vm.requestID() }, newApprovalCallback)
+}
+
+function fetchApprovals(callback) {
+    var camlq = '<View><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' + vm.requestID() + '</Value></Eq></Where></Query></View>'
+    vm.listRefApproval().getListItems(camlq, function (approvals) { vm.requestApprovals(approvals); callback() });
+}
+
+function newApprovalCallback(result, value) {
+    console.log('approval callback: ' + result, value)
+    if (result === SP.UI.DialogResult.OK) {
+        console.log(value)
+        fetchApprovals(function () {
+            // Let's branch based on whether the last approval was approve or reject.
+            switch (vm.requestApprovals().slice(-1)[0].Adjudication) {
+                case 'Approved':
+                    //let'do whatever we need for an approved record.
+                    alert('Record has been approved. You may now close this window.')
+                    //TODO: Push to the next stage!!!!
+                    pipelineForward();
+                    break;
+                case 'Rejected':
+                    //Rejected records get closed!
+                    alert('Record has been rejected. You may now close this window.')
+                    break;
+                default:
+                    //Something went wrong
+                    alert(':(');
+            }
+        });
+    }
+
+}
+
+function pipelineForward() {
+    var t = parseInt(vm.requestStage()) + 1;
+    vm.requestStage(t);
+    var valuepairs = [['RequestStage', vm.requestStage()]]
+    vm.listRefWO().updateListItem(vm.requestHeader().ID, valuepairs, function () {
+        console.log('pipeline moved to next stage.')
     })
 }
 
-function fetchApprovals() {
-    var camlq = '<View><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' + vm.requestID() + '</Value></Eq></Where></Query></View>'
-    vm.listRefApproval().getListItems(camlq, function (approvals) { vm.requestApprovals(approvals) });
-}
-
-function approvalUpdateProgress() {
-    vm.pu10kStage('Submitted to DED');
-    vm.requestStage('Submitted to DED')
-    vm.requestProgress(40);
-}
-
 function initApp() {
+    //textpu10kDescription = new nicEditor({fullPanel : true}).panelInstance('textpu10kDescription')
     $('.non-editable-field').prop('disabled', true)
     $("#tabs").tabs();
     $('#wo-progress-bar').progressbar({
         value: 0,
     })
     console.log('initialized listeners')
+
     // Initialize our SharePoint Access Layer
     initSal();
-    //Initialize our tabs
 
+    // Initialize ViewModel
     vm = new koviewmodel();
     ko.applyBindings(vm);
 
+    // Setup models for each of the lists we may connect to
     initListRefs();
     // initPageListeners();
     initVMVars();
-
-    fetchOpenOrders();
+    var href = window.location.href.toLowerCase();
+    var hash = window.location.hash.replace('#', '');
+    // check that we are on the app page
+    if (href.includes('app.aspx')) {
+        vm.page('app');
+        fetchOpenOrders();
+        viewWorkOrder(hash);
+    } else if (href.includes('approval.aspx')) {
+        vm.page('approval');
+        $('#li-open-orders').hide();
+        $('#li-new-orders').hide();    
+        viewWorkOrder(hash);
+    } else if (href.includes('admin.aspx')) {
+        vm.page('admin');
+        $('#li-new-orders').hide();
+        fetchOpenOrders();
+    }
 }
 
 $(document).ready(function () {
