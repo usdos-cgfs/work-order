@@ -18,10 +18,10 @@ sal.globalConfig = sal.globalConfig || {};
 sal.site = sal.site || {};
 
 
-
 //ExecuteOrDelayUntilScriptLoaded(InitSal, "sp.js");
 
 function initSal() {
+    console.log('we are initing sal')
     // Initialize the sitewide settings here.
     sal.globalConfig.siteUrl = _spPageContextInfo.webServerRelativeUrl;
     //sal.globalConfig.user = 
@@ -63,7 +63,7 @@ sal.siteConnection = function () {
 sal.generateEmptyItem = function (viewFields) {
     /* Create an empty object that matches the viewfields */
     focusedItems = [{}];
-    viewFields.forEach((item) => { focusedItems[0][item] = 0 })
+    $(viewFields).each(function (item) { focusedItems[0][item] = 0 })
     return focusedItems
 }
 
@@ -96,7 +96,7 @@ function SPList(listDef) {
     }
 
     self.config = {
-        def: listDef,
+        def: listDef
     };
 
     /*****************************************************************
@@ -138,9 +138,11 @@ function SPList(listDef) {
 
     self.generateEmptyItem = function () {
         /* Create an empty object that matches the viewfields */
-        let focusedItems = [{}];
-        Object.keys(this.config.def.viewFields).forEach((item) => { focusedItems[0][item] = 0 })
-        return focusedItems
+        var focusedItems = [{}];
+        var keys = []
+        $.each(this.config.def.viewFields, function (field, obj) { keys.push(field) });
+        $.each(keys, function (item) { focusedItems[0][item] = 0 });
+        return focusedItems;
     };
 
     self.getItemCount = function (callback) {
@@ -197,7 +199,7 @@ function SPList(listDef) {
         self.callbackGetListItem = callback;
         //self.updateConfig();
         console.log('context loaded', self.config);
-        let camlQuery = new SP.CamlQuery();
+        var camlQuery = new SP.CamlQuery();
         camlQuery.set_viewXml(caml);
         self.collListItem = self.config.listRef.getItems(camlQuery);
         self.config.currentContext.load(self.collListItem);
@@ -215,19 +217,22 @@ function SPList(listDef) {
         while (listItemEnumerator.moveNext()) {
             var oListItem = listItemEnumerator.get_current();
             //console.log(oListItem);
-            let listObj = {}
-            Object.keys(self.config.def.viewFields).forEach(function (item) {
-                //console.log('getting: ', item)
+            var listObj = {};
+            var keys = [];
+            $.each(this.config.def.viewFields, function (field, obj) { keys.push(field) });
+            console.log('keys', keys)
+            $.each(keys, function (idx, item) {
                 var getItem = oListItem.get_item(item);
+                console.log('getting: ' + item + ' ' + getItem)
                 //console.log(getItem)
                 //console.log(item + ' item: ', getItem)
                 listObj[item] = getItem;
             });
-            self.focusedItems.push(listObj)
+            self.focusedItems.push(listObj);
         }
         //this.setState({ focusedItems })
-        console.log('calling callback get list')
-        self.callbackGetListItem(self.focusedItems)
+        console.log('calling callback get list');
+        self.callbackGetListItem(self.focusedItems);
     };
 
     /*****************************************************************
@@ -255,7 +260,7 @@ function SPList(listDef) {
 
     function onUpdateListItemsSucceeded(sender, args) {
         //alert('Item updated!');
-        self.callbackUpdateListItem()
+        self.callbackUpdateListItem();
     }
 
     /*****************************************************************
@@ -287,18 +292,18 @@ function SPList(listDef) {
                 fileUrl: fileUrl,
                 title: file.get_title(),
                 name: file.get_name(),
-                created: file.get_timeCreated(),
-            })
+                created: file.get_timeCreated()
+            });
         } 
         console.log('filearr', fileArr);
         console.log('this', this);
-        console.log('self', self)
-        this.callbackGetFolderContents(fileArr)
+        console.log('self', self);
+        this.callbackGetFolderContents(fileArr);
     }
 
     ongetListFilesFailed = function (sender, args) {
         // let's log this but suppress any alerts
-        console.log('WARN: something went wrong fetching files', args)
+        console.log('WARN: something went wrong fetching files', args);
     }
 
     /*****************************************************************

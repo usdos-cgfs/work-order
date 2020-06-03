@@ -5,6 +5,9 @@
 woViews = {
     pu10k: {
         name: 'Purchase Under 10k',
+        description: '<div><p>Purchases Under 10k require the following:</p><ul><li>Quote</li><li>Description</li></ul></div>',
+        icon: '<i class="fa fa-credit-card fa-5x" aria-hidden="true"></i>',
+        daysToClose: 5,
         id: '#wo-pu10k',
         hasAttachments: true,
         attachmentDesc: 'Please attach the quote for your purchase request.',
@@ -13,36 +16,29 @@ woViews = {
             0: {
                 type: 'Editing',
                 displayName: 'New Work Order',
-                progress: 0,
+                progress: 0
             },
             1: {
-                type: 'Adjudication',
-                displayName: 'Submitted to Managing Director',
-                progress: 20,
+                type: 'Approval',
+                displayName: 'Managing Director Approval',
+                progress: 20
             },
             2: {
-                type: 'Adjudication',
-                displayName: 'Submitted to DED',
+                type: 'Approval',
+                displayName: 'DED Approval',
                 adjudicator: 'washdc\\backlundpf',
-                progress: 40,
+                progress: 40
             },
             3: {
-                type: 'Assignment',
-                displayName: 'Submitted to Budget Officer',
-                isActionable: false,
-                progress: 60,
+                type: 'Action',
+                displayName: 'Card Holder Purchasing',
+                progress: 90
             },
-            4: {
-                type: 'Assignment',
-                displayName: 'Submitted for Obligation of Funds',
-                isActionable: false,
-                progress: 80,
-            },
-            5: {
-                type: 'Assignment',
-                displayName: 'Submitted to Card Holder',
-                progress: 90,
-            },
+            10: {
+                type: 'Closed',
+                displayName: 'Completed',
+                progress: 100
+            }
         },
         listDef: {
             name: 'st_pu10k',
@@ -52,60 +48,380 @@ woViews = {
                 'Title': { type: 'Text', koMap: 'requestID' },
                 'Description': { type: 'Text', koMap: 'pu10kDescription' },
                 'CostEst': { type: 'Text', koMap: 'pu10kCostEst' },
-                'CurrentStage': { type: 'Text', koMap: 'pu10kStage' },
+                'CurrentStage': { type: 'Text', koMap: 'pu10kStage' }
             }
         }
     },
     tel: {
         name: 'Telephone',
+        description: '<div class="ui placeholder"><div class="paragraph"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div></div></div>',
+        icon: '<i class="fa fa-phone fa-5x" aria-hidden="true"></i>',
+        daysToClose: 2,
         id: '#wo-tel',
         hasAttachments: true,
         attachmentDesc: 'Attach Approvals - This work order can not be submitted until approved email is uploaded.',
+        hasStages: true,
+        pipeline: {
+            0: {
+                type: 'Editing',
+                displayName: 'New Work Order',
+                progress: 0
+            },
+            1: {
+                type: 'Approval',
+                displayName: 'Manager/Supervisor Approval',
+                isActionable: false,
+                progress: 30
+            },
+            2: {
+                type: 'Action',
+                displayName: 'CGFS Admin Services',
+                isActionable: false,
+                progress: 60
+            },
+            10: {
+                type: 'Closed',
+                displayName: 'Completed',
+                progress: 0
+            }
+        },
         listDef: {
             name: 'st_telephone',
             title: 'st_telephone',
+            viewFields: {
+                'ID': { type: 'Text', koMap: 'empty' },
+                'Title': { type: 'Text', koMap: 'requestID' },
+                'PhoneNum': { type: 'Text', koMap: 'telPhoneNum' },
+                'Location': { type: 'Text', koMap: 'telLocation' },
+                'RequestType': { type: 'Text', koMap: 'telSelectedType' },
+                'To': { type: 'Text', koMap: 'telTo' },
+                'From': { type: 'Text', koMap: 'telFrom' },
+                'Description': { type: 'Text', koMap: 'telDesc' }
+            }
+        }
+    },
+    presentation: {
+        name: 'Presentation',
+        description: '<div class="ui placeholder"><div class="paragraph"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div></div></div>',
+        icon: '<i class="fa fa-desktop fa-5x" aria-hidden="true"></i>',
+        daysToClose: 1,
+        id: '#wo-presentation',
+        hasAttachments: false,
+        pipeline: {
+            0: {
+                type: 'Editing',
+                displayName: 'New Work Order',
+                progress: 0
+            },
+            1: {
+                type: 'Approval',
+                displayName: 'Manager/Supervisor Approval',
+                isActionable: false,
+                progress: 30
+            },
+            2: {
+                type: 'Action',
+                displayName: 'CGFS Admin Services',
+                isActionable: false,
+                progress: 60
+            },
+            10: {
+                type: 'Closed',
+                displayName: 'Completed',
+                progress: 0
+            }
+        },
+        listDef: {
+            name: 'st_presentation',
+            title: 'st_presentation',
             viewFields: {
                 'ID': { type: 'Text', koMap: 'empty' },
                 'Title': { type: 'Text', koMap: 'empty' }
             }
-        },
+        }
     },
-    presentation: {
-        name: 'Presentation',
-        id: '#wo-presentation',
-        hasAttachments: false,
+    access: {
+        name: 'Building Access',
+        description: '<div class="ui placeholder"><div class="paragraph"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div></div></div>',
+        icon: '<i class="fa fa-check-double fa-5x" aria-hidden="true"></i>',
+        daysToClose: 3,
+        id: '#wo-access',
+        hasAttachments: true,
+        attachmentDesc: 'Please Add building access request attachments.',
+        pipeline: {
+            0: {
+                type: 'Editing',
+                displayName: 'New Work Order',
+                progress: 0
+            },
+            1: {
+                type: 'Approval',
+                displayName: 'Manager/Supervisor Approval',
+                isActionable: false,
+                progress: 30
+            },
+            2: {
+                type: 'Approval',
+                displayName: 'DED Approval',
+                isActionable: false,
+                progress: 30
+            },
+            3: {
+                type: 'Action',
+                displayName: 'CGFS Admin Services',
+                isActionable: false,
+                progress: 60
+            },
+            10: {
+                type: 'Closed',
+                displayName: 'Completed',
+                progress: 0
+            }
+        },
         listDef: {
-            name: 'st_telephone',
-            title: 'st_telephone',
+            name: 'st_access',
+            title: 'st_access',
             viewFields: {
                 'ID': { type: 'Text', koMap: 'empty' },
-                'Title': { type: 'Text', koMap: 'empty' }
-            },
-        },
+                'Title': { type: 'Text', koMap: 'empty' },
+                'AccessType': { type: 'Text', koMap: 'accessType' },
+                'EmployeeType': { type: 'Text', koMap: 'accessEmployeeType' },
+                'Description': { type: 'Text', koMap: 'accessDesc' },
+                'SpecialInstructions': { type: 'Text', koMap: 'accessSpecInst' }
+            }
+        }
     },
-    rsa: {
-        name: 'RSA Token',
-        id: '#wo-rsa',
-        hasAttachments: false,
-        attachmentDesc: 'Please attach the quote for your purchase request.',
+    property: {
+        name: 'Property/Asset Management',
+        description: '<div class="ui placeholder"><div class="paragraph"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div></div></div>',
+        icon: '<i class="fa fa-warehouse fa-5x" aria-hidden="true"></i>',
+        daysToClose: 5,
+        id: '#wo-property',
+        hasAttachments: true,
+        attachmentDesc: 'Please attach the Recieving Report.',
+        hasStages: true,
+        pipeline: {
+            0: {
+                type: 'Editing',
+                displayName: 'New Work Order',
+                progress: 0
+            },
+            1: {
+                type: 'Approval',
+                displayName: 'Managing Director Approval',
+                progress: 20
+            },
+            2: {
+                type: 'Approval',
+                displayName: 'DED Approval',
+                adjudicator: 'washdc\\backlundpf',
+                progress: 40
+            },
+            3: {
+                type: 'Action',
+                displayName: 'CGFS Admin Services',
+                isActionable: false,
+                progress: 60
+            },
+            10: {
+                type: 'Closed',
+                displayName: 'Completed',
+                progress: 100
+            }
+        },
         listDef: {
-            name: 'st_telephone',
-            title: 'st_telephone',
+            name: 'st_property',
+            title: 'st_property',
             viewFields: {
                 'ID': { type: 'Text', koMap: 'empty' },
-                'Title': { type: 'Text', koMap: 'empty' }
-            },
-        },
+                'Title': { type: 'Text', koMap: 'requestID' },
+                'PropertyTransfer': { type: 'Bool', koMap: 'propertyTransfer' },
+                'ExcessProperty': { type: 'Bool', koMap: 'propertyExcess' },
+                'RecievingReport': { type: 'Text', koMap: 'propertyRecievingReport' },
+                'SerialNumber': { type: 'Text', koMap: 'propertySerialNumber' },
+                'PropertyLocation': { type: 'Text', koMap: 'propertyLocation' },
+            }
+        }
     },
+    facilities: {
+        name: 'Facilities/Building Services',
+        description: '<div class="ui placeholder"><div class="paragraph"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div></div></div>',
+        icon: '<i class="fa fa-tools fa-5x" aria-hidden="true"></i>',
+        daysToClose: 5,
+        id: '#wo-facilities',
+        hasAttachments: true,
+        attachmentDesc: 'Please add Facilities/Building attachments.',
+        hasStages: true,
+        pipeline: {
+            0: {
+                type: 'Editing',
+                displayName: 'New Work Order',
+                progress: 0
+            },
+            1: {
+                type: 'Approval',
+                displayName: 'Managing Director Approval',
+                progress: 20
+            },
+            2: {
+                type: 'Approval',
+                displayName: 'DED Approval',
+                adjudicator: 'washdc\\backlundpf',
+                progress: 40
+            },
+            3: {
+                type: 'Action',
+                displayName: 'CGFS Admin Services',
+                isActionable: false,
+                progress: 60
+            },
+            10: {
+                type: 'Closed',
+                displayName: 'Completed',
+                progress: 100
+            }
+        },
+        listDef: {
+            name: 'st_facilities',
+            title: 'st_facilities',
+            viewFields: {
+                'ID': { type: 'Text', koMap: 'empty' },
+                'Title': { type: 'Text', koMap: 'requestID' },
+                'Services': { type: 'Text', koMap: 'facilitiesService' },
+                'Description': { type: 'Text', koMap: 'facilitiesDesc' },
+                'Location': { type: 'Text', koMap: 'facilitiesLoc' },
+                'SpecialAccomodation': { type: 'Bool', koMap: 'facilitiesSpecAcc' },
+                'SpecialInstructions': { type: 'Text', koMap: 'facilitiesSpecInst' },
+            }
+        }
+    },
+    print: {
+        name: 'GPO Print Request',
+        description: '<div class="ui placeholder"><div class="paragraph"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div></div></div>',
+        icon: '<i class="fa fa-print fa-5x" aria-hidden="true"></i>',
+        daysToClose: 5,
+        id: '#wo-print',
+        hasAttachments: true,
+        attachmentDesc: 'Please add print request attachments.',
+        hasStages: true,
+        pipeline: {
+            0: {
+                type: 'Editing',
+                displayName: 'New Work Order',
+                progress: 0
+            },
+            1: {
+                type: 'Approval',
+                displayName: 'Managing Director Approval',
+                progress: 20
+            },
+            2: {
+                type: 'Approval',
+                displayName: 'DED Approval',
+                adjudicator: 'washdc\\backlundpf',
+                progress: 40
+            },
+            3: {
+                type: 'Action',
+                displayName: 'CGFS Admin Services',
+                isActionable: false,
+                progress: 60
+            },
+            10: {
+                type: 'Closed',
+                displayName: 'Completed',
+                progress: 100
+            }
+        },
+        listDef: {
+            name: 'st_print',
+            title: 'st_print',
+            viewFields: {
+                'ID': { type: 'Text', koMap: 'empty' },
+                'Title': { type: 'Text', koMap: 'requestID' },
+                'DateNeeded': { type: 'DateTime', koMap: 'printDateNeeded' },
+                'Quantity': { type: 'Text', koMap: 'printQuantity' },
+                'Description': { type: 'Text', koMap: 'printDesc' },
+                'SpecialInstructions': { type: 'Text', koMap: 'printSpecialInst' },
+            }
+        }
+    },
+    supplies: {
+        name: 'Office Supplies',
+        description: '<div class="ui placeholder"><div class="paragraph"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div></div></div>',
+        icon: '<i class="fa fa-paperclip fa-5x" aria-hidden="true"></i>',
+        daysToClose: 5,
+        id: '#wo-supplies',
+        hasAttachments: true,
+        attachmentDesc: 'Add any attachments for printing.',
+        hasStages: true,
+        pipeline: {
+            0: {
+                type: 'Editing',
+                displayName: 'New Work Order',
+                progress: 0
+            },
+            1: {
+                type: 'Approval',
+                displayName: 'Managing Director Approval',
+                progress: 20
+            },
+            2: {
+                type: 'Approval',
+                displayName: 'DED Approval',
+                adjudicator: 'washdc\\backlundpf',
+                progress: 40
+            },
+            3: {
+                type: 'Action',
+                displayName: 'CGFS Admin Services',
+                isActionable: false,
+                progress: 60
+            },
+            10: {
+                type: 'Closed',
+                displayName: 'Completed',
+                progress: 100
+            }
+        },
+        listDef: {
+            name: 'st_supplies',
+            title: 'st_supplies',
+            viewFields: {
+                'ID': { type: 'Text', koMap: 'empty' },
+                'Title': { type: 'Text', koMap: 'requestID' },
+                'DateNeeded': { type: 'DateTime', koMap: 'suppliesDateNeeded' },
+                'Name': { type: 'Text', koMap: 'suppliesName' },
+                'SpecialInstructions': { type: 'Text', koMap: 'suppliesSpecialInst' },
+            }
+        }
+    }
+}
+
+function getWoByName(value) {
+    console.log(value);
+    var view = {}
+    $.each(woViews, function (key, obj) {
+        console.log(obj.name)
+        if (obj.name == value) {
+            console.log('found')
+            view = obj;
+            return false;
+        }
+    })
+    return view;
 }
 
 var managingDirectors = {
     'Select': '',
+    'CGFS/EX': 'Backlund, Peter',
     'CGFS/F': 'Lugo, Joan',
     'CGFS/GC': 'Self, Amy',
     'CGFS/S/CST': 'Sizemore, Richard',
-    'CGFS/GSO': 'Bowers, Susan',
+    'CGFS/GSO': 'Bowers, Susan'
 }
+
+var offices = ['CGFS/EX', 'CGFS/F', 'CGFS/GC', 'CGFS/S/CST', 'CGFS/GSO'];
 
 
 /************************************************************
@@ -118,13 +434,15 @@ var workOrderListDef = {
         'ID': { type: 'Text', koMap: 'empty' },
         'Title': { type: 'Text', koMap: 'requestID' },
         'ManagingDirector': { type: 'Person', koMap: 'requestorManager' },
-        'RequestType': { type: 'Text', koMap: 'requestServiceTypeName' },
+        'RequestType': { type: 'Text', koMap: 'requestTypeName' },
         'RequestorName': { type: 'Text', koMap: 'requestorName' },
         'RequestorPhone': { type: 'Text', koMap: 'requestorTelephone' },
         'RequestorEmail': { type: 'Text', koMap: 'requestorEmail' },
         'RequestorOffice': { type: 'Text', koMap: 'requestorOffice' },
-        'RequestStage': { type: 'Text', koMap: 'requestStage' },
-        'Created': { type: 'Date', koMap: 'requestSubmittedDate' },
+        'RequestStage': { type: 'Text', koMap: 'requestStageNum' },
+        'RequestStatus': { type: 'Text', koMap: 'requestStatus' },
+        'ClosedDate': { type: 'Text', koMap: 'requestClosedDate' },
+        'Created': { type: 'Date', koMap: 'requestSubmittedDate' }
     }
 };
 
@@ -136,7 +454,7 @@ var approvalListDef = {
         'Adjudication': { type: 'Choice', koMap: 'empty' },
         'Comment': { type: 'Text', koMap: 'empty' },
         'Author': { type: 'Text', koMap: 'empty' },
-        'Created': { type: 'Text', koMap: 'empty' },
+        'Created': { type: 'Text', koMap: 'empty' }
     }
 }
 
@@ -148,7 +466,18 @@ var assignmentListDef = {
         'Assignee': { type: 'Person', koMap: 'empty' },
         'Role': { type: 'Text', koMap: 'empty' },
         'Author': { type: 'Text', koMap: 'empty' },
-        'Created': { type: 'Text', koMap: 'empty' },
+        'Created': { type: 'Text', koMap: 'empty' }
+    }
+}
+
+var commentListDef = {
+    name: 'Comment',
+    title: 'Comment',
+    viewFields: {
+        'Title': { type: 'Text', koMap: 'empty' },
+        'Comment': { type: 'Text', koMap: 'empty' },
+        'Author': { type: 'Text', koMap: 'empty' },
+        'Created': { type: 'Text', koMap: 'empty' }
     }
 }
 
@@ -157,20 +486,11 @@ var workOrderDocDef = {
     title: 'Work Order Documents',
     viewFields: {
         'Title': { type: 'Text', koMap: 'empty' },
-        'WorkOrderID': { type: 'Text', koMap: 'empty' },
+        'WorkOrderID': { type: 'Text', koMap: 'empty' }
     }
 }
 
-var pu10kListDef = {
-    name: 'st_pu10k',
-    title: 'st_pu10k',
-    viewFields: {
-        'Title': { type: 'Text', koMap: 'requestID' },
-        'Description': { type: 'Text', koMap: 'pu10kDescription' },
-        'CostEst': { type: 'Text', koMap: 'pu10kCostEst' },
-        'CurrentStage': { type: 'Text', koMap: 'pu10kStage' },
-    }
-};
+
 
 /************************************************************
  * Set Knockout View Model
@@ -180,12 +500,46 @@ function koviewmodel() {
 
     self.empty = ko.observable();
 
+    self.serviceTypeAbbreviations = ko.observableArray(Object.keys(woViews))
+    self.serviceTypeViews = ko.observable(woViews);
+    /************************************************************
+    * Authorize Current user to make changes
+    ************************************************************/
+    self.userRole = ko.observable(); // Determine whether the user is in the admin group or not.
+    self.userRecordRole = ko.observable(); // Determine how the user is associated to the selected record.
+
+    // Can the current user take action on the record?
+    self.requestCurUserAction = ko.pureComputed(function () {
+        if (self.requestStage()) {
+            return self.requestStage().type == 'Action';
+        } else {
+            return false;
+        }
+    });
+
+    // Can the current user approve the record?
+    self.requestCurUserApprove = ko.pureComputed(function () {
+        if (self.requestStage()) {
+            return self.requestStage().type == 'Approval';
+        } else {
+            return false;
+        }
+    });
+
+    /************************************************************
+    * Page/Tab Specific handlers
+    ************************************************************/
     // What page is the user on? App, Approval, Admin
     self.page = ko.observable();
-    self.showWorkOrder = function (workorder) {
-        console.log('clicked', workorder);
-        viewWorkOrder(workorder.Title);
-    };
+
+    // What tab is the user on? 
+    self.tab = ko.observable();
+    self.tab.subscribe(function (newPage) {
+        console.log('New Page: ', newPage)
+        $('.ui.menu').find('.item').tab('change tab', newPage);
+
+    })
+
     /************************************************************
      * Hold a reference to each of our SAL items
      ************************************************************/
@@ -193,11 +547,27 @@ function koviewmodel() {
     self.libRefWODocs = ko.observable();
     self.listRefApproval = ko.observable();
     self.listRefAssignment = ko.observable();
+    self.listRefComment = ko.observable();
 
     self.listRefpu10k = ko.observable();
     self.listReftel = ko.observable();
     self.listRefpresentation = ko.observable();
     self.listRefrsa = ko.observable();
+    self.listRefaccess = ko.observable();
+    self.listRefproperty = ko.observable();
+    self.listReffacilities = ko.observable();
+    self.listRefprint = ko.observable();
+    self.listRefsupplies = ko.observable();
+
+    self.currentListRef = ko.pureComputed({
+        read: function () {
+            if (self.requestType()) {
+                return self['listRef' + self.requestType()]()
+            } else {
+                return null;
+            }
+        }
+    })
 
     /************************************************************
      * Hold current info about our lists
@@ -205,12 +575,32 @@ function koviewmodel() {
     self.woCount = ko.observable();
     self.allOpenOrders = ko.observableArray();
     self.assignedOpenOrders = ko.observableArray();
+    self.allAssignments = ko.observableArray();
+
+    /************************************************************
+    * allOpenOrders Table Handlers
+    ************************************************************/
+    self.showWorkOrder = function (request) {
+        console.log('clicked', request);
+        viewWorkOrder(request.Title);
+    };
+
+    self.getRequestStage = function (request) {
+        return getWoByName(request.RequestType).pipeline[request.RequestStage].displayName;
+    };
+
+    self.estimateClosingDate = function (request) {
+        console.log('est closing date', request);
+        var daysOffset = getWoByName(request.RequestType).daysToClose;
+        var closeDate = businessDaysFromDate(request.Created, daysOffset);
+        return closeDate.format('yyyy-MM-dd');
+    }
 
     /************************************************************
      * Hold generic Work Order vars
      ************************************************************/
     // The available service types (we'll set this from a json array)
-    self.requestServiceTypes = ko.observableArray();
+    self.requestTypes = ko.observableArray();
 
     self.currentView = ko.observable();
 
@@ -219,6 +609,7 @@ function koviewmodel() {
     self.requestApprovals = ko.observableArray();
 
     self.requestAssignees = ko.observableArray();
+    self.requestComments = ko.observableArray();
 
 
     //self.getApprovalAuthor = function (approval) {
@@ -239,7 +630,7 @@ function koviewmodel() {
     });
 
     self.showRouting = ko.pureComputed(function () {
-        return self.page() == 'admin';
+        return true; //self.page() == 'admin';
     })
 
     /************************************************************
@@ -254,36 +645,56 @@ function koviewmodel() {
     self.requestHeader = ko.observable(); // This is the raw JSON object returned by the work order query.
     self.serviceTypeHeader = ko.observable(); // This is the raw JSON object object returned by the service type query.
 
-    // Requestor/Header Info
-    self.requestorName = ko.observable();
-    self.requestorTelephone = ko.observable();
-    self.requestorEmail = ko.observable();
-    self.requestorManager = ko.observable();
+    self.requestStatus = ko.observable(); // Open, Closed, etc
+    self.requestStageNum = ko.observable(0); // 0, 1, 2 etc, used for our view pipelines.
 
+    self.requestStage = ko.observable(); // Actual stage object {}
 
-    self.requestStage = ko.observable('0');
+    self.requestStageNum.subscribe(function () {
+        buildPipelineElement();
+        if (self.requestType() && self.requestStageNum()) {
+            self.requestStage(self.requestTypeView().pipeline[self.requestStageNum()])
+        } else {
+            return ''
+        }
+    })
 
     self.requestStageName = ko.pureComputed({
         read: function () {
-            if (self.requestServiceType()) {
-                return woViews[self.requestServiceType()].pipeline[self.requestStage()].displayName
+            if (self.requestType() && self.requestStageNum()) {
+                return self.requestTypeView().pipeline[self.requestStageNum()].displayName
             } else {
                 return ''
             }
         }
     })
 
-    self.requestorOffice = ko.observable();
 
-    self.requestorOfficeOptions = ko.observable(Object.keys(managingDirectors));
+
+    // Requestor/Header Info
+    self.requestorName = ko.observable();
+    self.requestorTelephone = ko.observable();
+    self.requestorEmail = ko.observable();
+    self.requestorManager = ko.observable();
+    self.requestorOffice = ko.observable();
+    self.requestorOfficeOptions = ko.observable(offices);
 
     self.requestSubmittedDate = ko.observable();
+    self.requestClosedDate = ko.observable();
 
-    self.requestServiceType = ko.observable();
-    self.requestServiceTypeName = ko.pureComputed({
+    self.requestType = ko.observable();
+    self.requestTypeView = ko.observable();
+
+    self.requestType.subscribe(function (val) {
+        console.log('subscription event triggered', val)
+        self.requestTypeView(woViews[val])
+        buildPipelineElement();
+    }, self, 'change')
+
+    self.requestTypeName = ko.pureComputed({
         read: function () {
-            if (this.requestServiceType()) {
-                return woViews[this.requestServiceType()].name;
+            if (self.requestType()) {
+                return self.requestTypeView().name;
             } else {
                 return '';
             }
@@ -291,43 +702,53 @@ function koviewmodel() {
         write: function (value) {
             $.each(woViews, function (key) {
                 if (woViews[key].name == value) {
-                    self.requestServiceType(key.toString());
+                    self.requestType(key.toString());
                 }
             })
         },
-        owner: this,
+        owner: this
     }, this);
 
-    self.requestServiceTypeHasAttachments = ko.pureComputed(function () {
-        if (self.requestServiceType()) {
-            return woViews[self.requestServiceType()].hasAttachments == true;
+
+    self.requestTypeIcon = ko.pureComputed({
+        read: function () {
+            return self.requestType() ? self.requestTypeView().icon : '';
+        }
+    })
+
+    self.requestTypeHasAttachments = ko.pureComputed(function () {
+        if (self.requestType()) {
+            return self.requestTypeView().hasAttachments == true;
         } else {
             return false;
         }
     })
 
-    self.requestServiceType.subscribe(function () {
-        self.requestListDef(woViews[self.requestServiceType()])
-    })
-
-    self.requestListDef = ko.observable();
-
+    //self.requestTypeView = ko.pureComputed(function () {
+    //        console.log('Request Type View', self.requestType())
+    //        var rt = self.requestType();
+    //        return woViews[rt];
+    //    }
+    //);
+    //self.requestType.subscribe(function () {
+    //    self.requestTypeView(self.requestTypeView())
+    //})
 
     // Deal with progress/stages here.
     self.requestProgress = ko.observable();
-    self.requestStage.subscribe(function () {
-        if (self.requestServiceType() && self.requestStage()) {
+    self.requestStageNum.subscribe(function () {
+        if (self.requestType() && (self.requestStageNum() != undefined)) {
             self.requestProgress(
-                woViews[self.requestServiceType()].pipeline[self.requestStage()].progress
+                self.requestTypeView().pipeline[self.requestStageNum()].progress
             )
         }
     })
 
     self.hasProgressBar = ko.pureComputed(function () {
-        if (!self.requestServiceType()) {
+        if (!self.requestType()) {
             return false;
         } else {
-            return woViews[self.requestServiceType()].hasStages && self.requestProgress() > 0;
+            return self.requestTypeView().hasStages && self.requestProgress() > 0;
         }
     })
 
@@ -344,8 +765,8 @@ function koviewmodel() {
     })
 
     self.requestAttachmentDesc = ko.pureComputed(function () {
-        if (self.requestServiceType() && woViews[self.requestServiceType()].hasAttachments) {
-            return woViews[self.requestServiceType()].attachmentDesc;
+        if (self.requestType() && self.requestTypeView().hasAttachments) {
+            return self.requestTypeView().attachmentDesc;
         } else {
             return '';
         }
@@ -367,6 +788,9 @@ function koviewmodel() {
     /************************************************************
     * Telephone
     ************************************************************/
+    self.telPhoneNum = ko.observable();
+    self.telLocation = ko.observable();
+
     self.telServiceTypes = ko.observableArray([
         'Installation', 'Move', 'Issues', 'Password Reset'
     ]);
@@ -398,6 +822,71 @@ function koviewmodel() {
 
     self.presentationConnectionTypes = ko.observableArray(['Open', 'DSN', 'IP'])
     self.presentationConnectionType = ko.observable();
+
+    /************************************************************
+    * Building Access
+    ************************************************************/
+    self.accessTypeOpts = ko.observableArray(['Normal work day', '24/7', 'FLETC', 'Other'])
+    self.accessEmployeeTypeOpts = ko.observable(['CGFS Government', 'CGFS Contractor', 'Other'])
+
+    self.accessType = ko.observable()
+    self.accessEmployeeType = ko.observable()
+    self.accessDesc = ko.observable()
+    self.accessSpecInst = ko.observable()
+
+    /************************************************************
+    * Property
+    ************************************************************/
+    self.propertyTransfer = ko.observable();
+    self.propertyExcess = ko.observable();
+    self.propertyRecievingReport = ko.observable();
+    self.propertySerialNumber = ko.observable();
+    self.propertyLocation = ko.observable();
+
+
+    /************************************************************
+    * Facilities/Building Services
+    ************************************************************/
+    self.facilitiesServiceOpts = ko.observableArray(['Labor Services/Moving', 'Facilities Maintenance',
+                                            'Office Furniture', 'Office Space', 'Workstation Reconfiguration'])    // Choice
+
+    self.facilitiesService = ko.observable()    // Choice
+    self.facilitiesDesc = ko.observable()       // Multiline
+    self.facilitiesLoc = ko.observable()        // Multiline
+    self.facilitiesSpecAcc = ko.observable()    // Bool
+    self.facilitiesSpecInst = ko.observable()   // Multiline
+
+    /************************************************************
+    * GPO Print Request
+    ************************************************************/
+    self.printDateNeededStr = ko.pureComputed({
+        read: function () {
+            return new Date(self.printDateNeeded()).format('yyyy-MM-dd');
+        },
+        write: function (val) {
+            self.printDateNeeded(new Date(val + 'T00:00:00'));
+        }
+    })
+    self.printDateNeeded = ko.observable(new Date())
+    self.printQuantity = ko.observable();
+    self.printDesc = ko.observable();
+    self.printSpecialInst = ko.observable();
+
+    /************************************************************
+    * Office Supplies
+    ************************************************************/
+    self.suppliesDateNeededStr = ko.pureComputed({
+        read: function () {
+            return new Date(self.suppliesDateNeeded()).format('yyyy-MM-dd');
+        },
+        write: function (val) {
+            self.suppliesDateNeeded(new Date(val + 'T00:00:00'));
+        }
+    })
+    self.suppliesDateNeeded = ko.observable(new Date());
+    self.suppliesName = ko.observable();
+    self.suppliesSpecialInst = ko.observable();
+
 }
 
 /* Binding handlers */

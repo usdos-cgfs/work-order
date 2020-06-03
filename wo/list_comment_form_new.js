@@ -10,16 +10,9 @@ $(document).ready(function () {
 
     $('input[title="Title"]').val(args.woId);
     $('input[title="Title"]').prop('disabled', true);
-
-    if (args.role) {
-        $('select[title="Role"]').val(args.role)
-        $('select[title="Role"]').prop('disabled', true)
-    }
 })
 
 function PreSaveAction() {
     $('input[title="Title"]').prop('disabled', false);
-    $('select[title="Role"]').prop('disabled', false)
-
     return true;
 }
