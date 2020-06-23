@@ -12,7 +12,7 @@
         border: 1px solid gray;
     }*/
 
-.data-table {
+/*.data-table {
     border-collapse: collapse;
 }
 
@@ -24,7 +24,8 @@
         border: 1px solid gray;
         font-size: 12pt;
         font-family: arial;
-    }
+        padding: 3px;
+    }*/
 
 #table-wo-request-info td {
     text-align: right;
@@ -36,7 +37,11 @@
     text-align: center;
 }
 
-#table-attachments {
+.trix-button-group--file-tools {
+    display: none,
+}
+
+/*#table-attachments {
     border-collapse: collapse;
     margin-bottom: 15px;
     width: 40%;
@@ -48,9 +53,9 @@
 
     #table-attachments td {
         border: 1px solid gray;
-    }
+    }*/
 
-#table-approvals {
+/*#table-approvals {
     border-collapse: collapse;
 }
 
@@ -58,18 +63,18 @@
         border: 1px solid gray;
         font-size: 12pt;
         font-family: arial;
-    }
+    }*/
 
-#wo-open-orders {
+/*#wo-open-orders {
     border-collapse: collapse;
 }
 
     #wo-open-orders td {
         font-size: 12pt;
         border: 1px solid gray;
-    }
+    }*/
 
-.header h2 {
+/*.header h2 {
     font-family: arial;
     font-size: 14pt;
     font-weight: bold;
@@ -78,6 +83,21 @@
     border-color: blue;
     margin-bottom: 25px;
     margin-top: 20px;
+}*/
+
+/*.service-type-icon {
+    float: left;
+    margin: 10px;
+}*/
+
+/*.table {
+    table-layout: fixed !important;
+}*/
+
+.sticky {
+    position: sticky;
+    top: 0;
+    z-index: 1;
 }
 
 .service-type-detail {
@@ -94,12 +114,16 @@
 }
 
 .admin-action-zone {
-    width: 35%;
-    border-width: 1px;
-    border-color: red;
+    border-radius: 5px;
+    border-width: 2px;
+    border-color: blue;
     border-style: solid;
-    padding: 5px;
-    background-color: rgb(255, 0, 0, .1);
+    padding: 15px;
+    background-color: rgb(0, 0, 255, .1);
+}
+
+.admin-action-zone div {
+    padding-bottom: 5px;
 }
 
 input[disabled] {
@@ -114,3 +138,21 @@ input[disabled] {
 .required {
     color: red;
 }
+
+#open-orders h2 {
+    margin: 25px 25%;
+}
+
+.container {
+    margin: 15px;
+}
+
+textarea {
+    width: 100%;
+    height: 120px;
+}
+
+.checkbox {
+    padding-top: 5px;
+}
+
