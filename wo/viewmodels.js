@@ -5,6 +5,7 @@
 woViews = {
   access: {
     name: "Building Access",
+    spid: 2,
     description:
       '<div class="ui placeholder"><div class="paragraph"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div></div></div>',
     icon: "fa-check-double",
@@ -62,6 +63,7 @@ woViews = {
   },
   diplomatic_passport: {
     name: "Diplomatic Passport",
+    spid: 4,
     description:
       "<div><p>Complete this form to obtain a new diplomatic passport or renew an existing one</p></div>",
     icon: "fa-passport",
@@ -128,6 +130,7 @@ woViews = {
   },
   it_hardware: {
     name: "IT Hardware",
+    spid: 8,
     description:
       "<div><p>Complete this request to obtain new IT hardware</p></div>",
     icon: "fa-laptop",
@@ -180,6 +183,7 @@ woViews = {
   },
   locksmith: {
     name: "Locksmith Services",
+    spid: 9,
     description:
       "<div><p>Complete this request to order locksmith services.</p></div>",
     icon: "fa-key",
@@ -230,6 +234,7 @@ woViews = {
   },
   network_drop: {
     name: "Network Drops",
+    spid: 12,
     description:
       "<div><p>Complete this request for a new network drop.</p></div>",
     icon: "fa-ethernet",
@@ -267,6 +272,7 @@ woViews = {
   },
   news_subscription: {
     name: "Newspapers and Subscriptions",
+    spid: 13,
     description:
       "<div><p>Complete this request for a new newpaper subscriptions.</p></div>",
     icon: "fa-newspaper",
@@ -306,6 +312,7 @@ woViews = {
   },
   office_furniture: {
     name: "Office Furniture",
+    spid: 15,
     description:
       "<div><p>Complete this request for Office Furniture requests.</p></div>",
     icon: "fa-chair",
@@ -395,6 +402,7 @@ woViews = {
   },
   tel: {
     name: "Telephone",
+    spid: 19,
     description:
       '<div class="ui placeholder"><div class="paragraph"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div></div></div>',
     icon: "fa-phone",
@@ -445,6 +453,7 @@ woViews = {
   },
   presentation: {
     name: "Presentation",
+    spid: 16,
     description:
       '<div class="ui placeholder"><div class="paragraph"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div></div></div>',
     icon: "fa-desktop",
@@ -539,6 +548,7 @@ woViews = {
   },
   facilities: {
     name: "Facilities/Building Services",
+    spid: 3,
     description:
       '<div class="ui placeholder"><div class="paragraph"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div></div></div>',
     icon: "fa-tools",
@@ -644,6 +654,7 @@ woViews = {
   },
   supplies: {
     name: "Office Supplies",
+    spid: 15,
     description:
       '<div class="ui placeholder"><div class="paragraph"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div></div></div>',
     icon: "fa-paperclip",
@@ -695,6 +706,7 @@ woViews = {
   },
   requisition: {
     name: "Requisition",
+    spid: 18,
     description:
       "<div><p>Complete this request for Office Furniture requests.</p></div>",
     icon: "fa-redo",
@@ -884,7 +896,7 @@ var configServiceTypeListDef = {
     Active: { type: "Text", koMap: "empty" },
     st_list: { type: "Text", koMap: "empty" },
     Description: { type: "Text", koMap: "empty" },
-    AttchmentRequired: { type: "Text", koMap: "empty" },
+    AttachmentRequired: { type: "Text", koMap: "empty" },
     AttachmentDescription: { type: "Text", koMap: "empty" },
     ListDef: { type: "Text", koMap: "empty" },
     ElementID: { type: "Text", koMap: "empty" },
@@ -957,6 +969,8 @@ function koviewmodel() {
   self.listRefConfigPipelines = ko.observable();
   self.listRefConfigRequestingOffices = ko.observable();
   self.listRefConfigServiceType = ko.observable();
+
+  self.listRefServiceTypesArr = ko.observableArray();
 
   //TODO: Replace all of these with an array!
   self.listRefaccess = ko.observable();
@@ -1065,7 +1079,7 @@ function koviewmodel() {
     self.loadedListItemLists(self.loadedListItemLists() + 1);
   };
 
-  self.loadedListItemLists().subscribe(function (val) {
+  self.loadedListItemLists.subscribe(function (val) {
     if (val == 5) {
       initComplete();
     }

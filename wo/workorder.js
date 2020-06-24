@@ -5,7 +5,7 @@ tabsEnum = {
   "#order-detail": 3,
 };
 
-function initListRefs() {
+function initStaticListRefs() {
   vm.listRefWO(new SPList(workOrderListDef));
   //vm.listRefpu10k(new SPList(pu10kListDef));
 
@@ -25,6 +25,22 @@ function initListRefs() {
   $.each(woViews, function (name, view) {
     console.log(name, view);
     vm["listRef" + name](new SPList(view.listDef));
+  });
+}
+
+function initServiceTypeListRefs() {
+  // These need to be defined separately after initialization
+  // since they depend on data loaded from the static list refs
+
+  vm.listItemsConfigServiceType().forEach((serviceType) => {
+    if (serviceType.ListDef != null && serviceType.ListDef) {
+      let servID = serviceType.ID;
+      /*
+      vm.listRefServiceTypesArr.push({
+        servID: new SPList(serviceType.ListDef),
+      });
+      */
+    }
   });
 }
 
@@ -401,7 +417,7 @@ function fetchConfigListData(callback) {
       vm.incLoadedListItems();
     }
   );
-  /* We'll include out inactive service types just in case there are some open */
+  /* We'll won't filter our inactive service types just in case there are some open */
   vm.listRefConfigServiceType().getListItems("<Query></Query>", (items) => {
     vm.listItemsConfigServiceType(items);
     vm.incLoadedListItems();
@@ -628,10 +644,22 @@ function initApp() {
   vm = new koviewmodel();
   ko.applyBindings(vm);
 
-  // Setup models for each of the lists we may connect to
-  initListRefs();
+  // Setup models for each of the config lists we may connect to
+  initStaticListRefs();
   // initPageListeners();
   initVMVars();
+  fetchConfigListData();
+
+  //if (hash != '') {
+  //    viewWorkOrder(hash);
+  //}
+}
+
+function initComplete() {
+  //Initialize the rest of our list references
+  initServiceTypeListRefs();
+
+  //Initialization complete: load the current tab.
   var href = window.location.href.toLowerCase();
   var hash = window.location.hash.replace("#", "");
   // check that we are on the app page
@@ -665,13 +693,7 @@ function initApp() {
     });
     fetchAllAssignments();
   }
-
-  //if (hash != '') {
-  //    viewWorkOrder(hash);
-  //}
 }
-
-function initComplete() {}
 
 $(document).ready(function () {
   SP.SOD.executeFunc(
