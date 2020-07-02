@@ -747,19 +747,27 @@ woViews = {
   },
 };
 
-function getWoByName(value) {
-  console.log(value);
-  var view = {};
-  $.each(woViews, function (key, obj) {
-    console.log(obj.name);
-    if (obj.name == value) {
-      console.log("found");
-      view = obj;
-      return false;
-    }
-  });
-  return view;
-}
+/*
+sampleServiceType = {
+  Active: true,
+  AttachmentDescription:
+    '<div class="ExternalClass3AC99BB72627496B872A696D6ED66F96"><p>A​ttachments&#58;<br></p></div>',
+  AttachmentRequired: true,
+  DaysToCloseBusiness: 30,
+  DaysToCloseDisp: 14,
+  Description:
+    '<div class="ExternalClassDB16BCB87118415CBB8161EE9FB6EBE9"><p>C​omplete this request for a new network drop.<br></p></div>',
+  ElementID: "wo-network-drop",
+  ID: 12,
+  Icon: "fa-ethernet",
+  KPIThresholdGreen: null,
+  KPIThresholdYellow: null,
+  ListDef: {},
+  Title: "Network Drops",
+  UID: "network_drop",
+  st_list: "st_network_drop",
+};
+*/
 
 var managingDirectors = {
   Select: "",
@@ -773,7 +781,7 @@ var managingDirectors = {
 var offices = ["CGFS/EX", "CGFS/F", "CGFS/GC", "CGFS/S/CST", "CGFS/GSO"];
 
 /************************************************************
- * Set SharePoint definitions here for use with SAL
+ * Set Static SharePoint definitions here for use with SAL
  ************************************************************/
 var workOrderListDef = {
   name: "WorkOrder",
@@ -786,9 +794,10 @@ var workOrderListDef = {
     RequestorName: { type: "Text", koMap: "requestorName" },
     RequestorPhone: { type: "Text", koMap: "requestorTelephone" },
     RequestorEmail: { type: "Text", koMap: "requestorEmail" },
-    RequestorOffice: { type: "Text", koMap: "requestorOffice" },
+    RequestorOffice: { type: "Text", koMap: "requestorOfficeLookupId" },
     RequestStage: { type: "Text", koMap: "requestStageNum" },
     RequestStatus: { type: "Text", koMap: "requestStatus" },
+    ServiceType: { type: "Text", koMap: "requestServiceTypeLookupId" },
     ClosedDate: { type: "Text", koMap: "requestClosedDate" },
     Created: { type: "Date", koMap: "requestSubmittedDate" },
   },
@@ -904,6 +913,8 @@ var configServiceTypeListDef = {
     DaysToCloseDisp: { type: "Text", koMap: "empty" },
     KPIThresholdYellow: { type: "Text", koMap: "empty" },
     KPIThresholdGreen: { type: "Text", koMap: "empty" },
+    Icon: { type: "Text", koMap: "empty" },
+    UID: { type: "Text", koMap: "empty" },
   },
 };
 
@@ -917,6 +928,7 @@ function koviewmodel() {
 
   self.serviceTypeAbbreviations = ko.observableArray(Object.keys(woViews));
   self.serviceTypeViews = ko.observable(woViews);
+
   /************************************************************
    * Authorize Current user to make changes
    ************************************************************/
@@ -970,8 +982,6 @@ function koviewmodel() {
   self.listRefConfigRequestingOffices = ko.observable();
   self.listRefConfigServiceType = ko.observable();
 
-  self.listRefServiceTypesArr = ko.observableArray();
-
   //TODO: Replace all of these with an array!
   self.listRefaccess = ko.observable();
   self.listRefdiplomatic_passport = ko.observable();
@@ -1013,17 +1023,26 @@ function koviewmodel() {
    ************************************************************/
   self.showWorkOrder = function (request) {
     console.log("clicked", request);
-    viewWorkOrder(request.Title);
+    viewWorkOrderItem(request.Title);
   };
 
   self.getRequestStage = function (request) {
-    return getWoByName(request.RequestType).pipeline[request.RequestStage]
-      .displayName;
+    return selectPipelineById(request.ServiceType.get_lookupId()).find(
+      (step) => step.Step == request.RequestStage
+    ).Title;
+    // return getWoByName(request.RequestType).pipeline[request.RequestStage]
+    //   .displayName;
   };
 
   self.estimateClosingDate = function (request) {
+    // TODO: Add the holidays list in here somewhere
     console.log("est closing date", request);
-    var daysOffset = getWoByName(request.RequestType).daysToClose;
+    //var daysOffset = getWoByName(request.RequestType).daysToClose;
+    let daysOffset = self
+      .configServiceTypes()
+      .find((stype) => stype.ID == request.ServiceType.get_lookupId())
+      .DaysToCloseDisp;
+
     var closeDate = businessDaysFromDate(request.Created, daysOffset);
     return closeDate.format("yyyy-MM-dd");
   };
@@ -1067,12 +1086,33 @@ function koviewmodel() {
    * Configuration List Data Here
    ************************************************************/
 
-  self.listItemsConfigActionOffices = ko.observable();
-  self.listItemsConfigHolidays = ko.observable();
-  self.listItemsConfigPipelines = ko.observable();
-  self.listItemsConfigRequestingOffices = ko.observable();
-  self.listItemsConfigServiceType = ko.observable();
+  self.configActionOffices = ko.observable();
+  self.configHolidays = ko.observable();
+  self.configPipelines = ko.observable();
+  self.configRequestingOffices = ko.observable();
+  // We'll update this to hold listRef objects
+  self.configServiceTypes = ko.observable();
 
+  // Hold the selected configServiceTypes
+  self.selectedServiceType = ko.observable();
+  self.selectedServiceTypeUID = ko.observable({});
+
+  // return the selected service type pipeline
+  self.selectedPipeline = ko.pureComputed(function () {
+    if (self.selectedServiceType()) {
+      return selectPipelineById(self.selectedServiceType().ID).sort((a, b) => {
+        return a.Step - b.Step;
+      });
+    }
+  });
+
+  function selectPipelineById(stypeId) {
+    return self
+      .configPipelines()
+      .filter((pipeline) => pipeline.ServiceType.get_lookupId() == stypeId);
+  }
+
+  // Track the number of loaded list items for initialization process
   self.loadedListItemLists = ko.observable(0);
 
   self.incLoadedListItems = function () {
@@ -1125,8 +1165,26 @@ function koviewmodel() {
   self.requestorTelephone = ko.observable();
   self.requestorEmail = ko.observable();
   self.requestorManager = ko.observable();
+
+  // JSON Object for the requesting office
   self.requestorOffice = ko.observable();
-  self.requestorOfficeOptions = ko.observable(offices);
+  // Gets and sets the ID for above
+  self.requestorOfficeLookupId = ko.pureComputed({
+    read: function () {
+      if (self.requestorOffice()) {
+        return parseInt(self.requestorOffice().ID);
+      } else {
+        return null;
+      }
+    },
+    write: function (value) {
+      self.requestorOffice(
+        self
+          .configRequestingOffices()
+          .find((ro) => ro.ID == value.get_lookupId())
+      );
+    },
+  });
 
   self.requestSubmittedDate = ko.observable();
   self.requestClosedDate = ko.observable();
@@ -1164,6 +1222,25 @@ function koviewmodel() {
     },
     this
   );
+
+  // Service Type Lookup is set from the request header,
+  // and is mapped to ServiceType field on workorder
+  self.requestServiceTypeLookupId = ko.pureComputed({
+    read: function () {
+      if (self.selectedServiceType()) {
+        return parseInt(self.selectedServiceType().ID);
+      } else {
+        return null;
+      }
+    },
+    write: function (value) {
+      self.selectedServiceType(
+        self
+          .configServiceTypes()
+          .find((stype) => stype.ID == value.get_lookupId())
+      );
+    },
+  });
 
   self.requestTypeIcon = ko.pureComputed({
     read: function () {
@@ -1450,21 +1527,20 @@ function koviewmodel() {
   self.suppliesDateNeeded = ko.observable(new Date());
   self.suppliesName = ko.observable();
   self.suppliesSpecialInst = ko.observable();
+
+  /************************************************************
+   * Requisitions
+   ************************************************************/
+  self.requisitionTypes = ko.observableArray([
+    "Requisition",
+    "De-Obligation",
+    "Re-Alignment",
+  ]); // Choice
+
+  self.requisitionType = ko.observable(); // Choice
+  self.requisitionQuantity = ko.observable(); // Multiline
+  self.requisitionComments = ko.observable(); // Multiline
 }
-
-/************************************************************
- * Requisitions
- ************************************************************/
-self.requisitionTypes = ko.observableArray([
-  "Requisition",
-  "De-Obligation",
-  "Re-Alignment",
-]); // Choice
-
-self.requisitionType = ko.observable(); // Choice
-self.requisitionQuantity = ko.observable(); // Multiline
-self.requisitionComments = ko.observable(); // Multiline
-
 /* Binding handlers */
 // ko.bindingHandlers.nicedit = {
 //     init: function(element, valueAccessor) {

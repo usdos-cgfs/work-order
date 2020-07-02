@@ -165,3 +165,18 @@ function loadListDefsToSP() {
     }
   });
 }
+
+function loadPipelinesToSP() {
+  $.each(vm.configServiceTypes(), function (index, serviceType) {
+    console.log(serviceType);
+    let vp = [
+      ["Title", "Assigned"],
+      ["ServiceType", serviceType.ID.toString()],
+      ["Step", 1],
+      ["ActionType", "Approval"],
+    ];
+    vm.listRefConfigPipelines().createListItem(vp, function (idx) {
+      console.log("Index Created", idx);
+    });
+  });
+}

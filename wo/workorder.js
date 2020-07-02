@@ -31,27 +31,16 @@ function initStaticListRefs() {
 function initServiceTypeListRefs() {
   // These need to be defined separately after initialization
   // since they depend on data loaded from the static list refs
+  // mutate the current service types arr
 
-  vm.listItemsConfigServiceType().forEach((serviceType) => {
+  vm.configServiceTypes().forEach((serviceType) => {
     if (serviceType.ListDef != null && serviceType.ListDef) {
       let servID = serviceType.ID;
-      /*
-      vm.listRefServiceTypesArr.push({
-        servID: new SPList(serviceType.ListDef),
-      });
-      */
+      console.log("Creating List Ref for: ", servID);
+      serviceType.listRef = new SPList(JSON.parse(serviceType.ListDef));
     }
   });
 }
-
-// function initPageListeners() {
-//     // $('#new-order-button').click(function () {
-//     //     var formname = 'NewForm.aspx';
-//     //     var title = 'New Work Order';
-//     //     var args = {};
-//     //     vm.listRefWO().showModal(formname, title, args, onSaveNewWorkOrderCallback)
-//     // })
-// }
 
 function initVMVars() {
   // set the wo types
@@ -79,11 +68,12 @@ function closeWorkOrder() {
   vm.listRefWO().updateListItem(vm.requestHeader().ID, vp, function () {
     alert("record closed");
   });
-  viewWorkOrder(vm.requestID());
+  viewWorkOrderItem(vm.requestID());
 }
 
 function showDescription(woType) {
-  vm.requestType(woType);
+  //vm.requestType(woType.UID);
+  vm.selectedServiceType(woType);
   //$('#wo-description-modal').dialog();
   $("#wo-description-modal").modal("show");
 }
@@ -107,7 +97,7 @@ function newWorkOrder() {
   //set the select for which view we're on.
   vm.currentView("new");
 
-  clearValuePairs(vm.requestTypeView().listDef.viewFields);
+  clearValuePairs(vm.selectedServiceType().ListDef.viewFields);
 
   // Set our VM fields
   vm.requestID(new Date().getTime());
@@ -123,13 +113,13 @@ function newWorkOrder() {
   //Clear our requested fields.
   vm.requestClosedDate(null);
   vm.requestSubmittedDate(null);
-  vm.requestApprovals("");
-  vm.requestAttachments("");
-  vm.requestAssignees("");
-  vm.requestComments("");
+  vm.requestApprovals([]);
+  vm.requestAttachments([]);
+  vm.requestAssignees([]);
+  vm.requestComments([]);
 }
 
-function viewWorkOrder(woID) {
+function viewWorkOrderItem(woID) {
   // Set the tab to detail view
   //$('.ui.menu').find('.item').tab('change tab', 'order-detail');
 
@@ -156,32 +146,39 @@ function viewWorkOrder(woID) {
   vm.listRefWO().getListItems(camlq, function (items) {
     vm.requestHeader(items[0]);
     console.log("workorder fetched - setting value pairs");
-    setValuePairs(workOrderListDef.viewFields, items[0]);
-    viewServiceType();
+    setValuePairs(workOrderListDef.viewFields, vm.requestHeader());
+    viewServiceTypeItem();
     //buildPipelineElement();
     $(".editable-field").prop("disabled", true);
   });
   vm.tab("order-detail");
 }
 
-function viewServiceType() {
+function viewServiceTypeItem() {
   // Fetches the list item info from the currently selected service type and record.
   var serviceTypeCaml =
     '<View><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' +
     vm.requestID() +
     "</Value></Eq></Where></Query></View>";
-  vm.currentListRef().getListItems(serviceTypeCaml, function (items) {
-    vm.serviceTypeHeader(items[0]);
-    console.log("service type fetched -- setting valuepairs");
-    setValuePairs(vm.requestTypeView().listDef.viewFields, items[0]);
+  vm.selectedServiceType().listRef.getListItems(serviceTypeCaml, function (
+    items
+  ) {
+    let res = items[0];
+    vm.serviceTypeHeader(res);
+    console.log("service type fetched -- setting valuepairs", items);
+    setValuePairs(
+      vm.selectedServiceType().ListDef.viewFields,
+      vm.serviceTypeHeader()
+    );
   });
 }
 
 function buildPipelineElement() {
+  // TODO: Fix all this for the current pipeline.
   //Based off the currently selected record and record type, show a pipeline of where we're at in the process at the top of the page.
   var pipeline = '<div class="ui mini ordered steps">';
   var curStage = parseInt(vm.requestStageNum());
-  $.each(vm.requestTypeView().pipeline, function (item, stage) {
+  $.each(vm.selectedPipeline(), function (item, stage) {
     var status = "disabled";
     if (item < curStage) {
       var status = "completed";
@@ -231,7 +228,9 @@ function saveWorkOrder() {
     "Saving Work Order...",
     "Please wait..."
   );
-  var typeValuePairs = getValuePairs(vm.requestTypeView().listDef.viewFields);
+  var typeValuePairs = getValuePairs(
+    vm.selectedServiceType().ListDef.viewFields
+  );
 
   // First, save or update the parent work order item.
   switch (vm.currentView()) {
@@ -286,7 +285,7 @@ function saveWorkOrder() {
       onSaveNewWorkOrderMaster("01");
   }
 
-  viewWorkOrder(vm.requestID());
+  viewWorkOrderItem(vm.requestID());
   //$('.editable-field').prop('disabled', true)
   //vm.currentView('view');
 }
@@ -308,7 +307,7 @@ function onSaveEditWorkOrderCallback(val) {
 function save_pu10k() {
   // console.log('master wo saved')
   vm.pu10kDescription($("#textpu10kDescription").val());
-  var valuePairs = getValuePairs(woViews.pu10k.listDef.viewFields);
+  var valuePairs = getValuePairs(vm.selectedServiceType().ListDef.viewFields);
   console.log("pu10k valuepairs", valuePairs);
   // Use our workaround to get the pu10k description text.
   switch (vm.currentView()) {
@@ -330,7 +329,7 @@ function save_pu10k() {
 }
 
 function save_tel() {
-  var valuePairs = getValuePairs(vm.requestTypeView().listDef.viewFields);
+  var valuePairs = getValuePairs(vm.selectedServiceType().ListDef.viewFields);
   switch (vm.currentView()) {
     case "new":
       //vm.pu10kStage(0);
@@ -396,30 +395,30 @@ function clearValuePairs(listDef) {
 function fetchConfigListData(callback) {
   /* Retrieve all data from our config lists */
   vm.listRefConfigActionOffices().getListItems("<Query></Query>", (items) => {
-    vm.listItemsConfigActionOffices(items);
+    vm.configActionOffices(items);
     vm.incLoadedListItems();
   });
 
   vm.listRefConfigHolidays().getListItems("<Query></Query>", (items) => {
-    vm.listItemsConfigHolidays(items);
+    vm.configHolidays(items);
     vm.incLoadedListItems();
   });
 
   vm.listRefConfigPipelines().getListItems("<Query></Query>", (items) => {
-    vm.listItemsConfigPipelines(items);
+    vm.configPipelines(items);
     vm.incLoadedListItems();
   });
 
   vm.listRefConfigRequestingOffices().getListItems(
     "<Query></Query>",
     (items) => {
-      vm.listItemsConfigRequestingOffices(items);
+      vm.configRequestingOffices(items);
       vm.incLoadedListItems();
     }
   );
   /* We'll won't filter our inactive service types just in case there are some open */
   vm.listRefConfigServiceType().getListItems("<Query></Query>", (items) => {
-    vm.listItemsConfigServiceType(items);
+    vm.configServiceTypes(items);
     vm.incLoadedListItems();
   });
 }
@@ -670,7 +669,7 @@ function initComplete() {
     vm.page("app");
     fetchOpenOrders(function () {
       if (hash != "") {
-        viewWorkOrder(hash);
+        viewWorkOrderItem(hash);
       } else {
         vm.tab("open-orders");
 
