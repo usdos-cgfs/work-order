@@ -1107,6 +1107,7 @@ function koviewmodel() {
   });
 
   function selectPipelineById(stypeId) {
+    // Should we sort here?
     return self
       .configPipelines()
       .filter((pipeline) => pipeline.ServiceType.get_lookupId() == stypeId);

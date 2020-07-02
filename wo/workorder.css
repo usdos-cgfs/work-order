@@ -103,6 +103,10 @@
   z-index: 1;
 }
 
+#service-types {
+  padding-top: 15px;
+}
+
 .service-type-detail {
   margin-top: 25px;
   margin-bottom: 25px;

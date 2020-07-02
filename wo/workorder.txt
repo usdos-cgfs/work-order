@@ -89,8 +89,8 @@
                 data-bind="click: $root.showWorkOrder, text: Title"
               ></a>
             </td>
-            <td data-bind="text: RequestType"></td>
-            <td data-bind="text: RequestorOffice"></td>
+            <td data-bind="text: ServiceType.get_lookupValue()"></td>
+            <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
             <td data-bind="text: RequestorName"></td>
             <td data-bind="text: $root.getRequestStage($data)"></td>
             <td data-bind="text: Created.format('yyyy-MM-dd')"></td>
@@ -396,7 +396,7 @@
 
     <div id="wo-form">
       <div class="ui grid">
-        <div class="twelve wide column">
+        <div class="sixteen wide column">
           <div id="wo-requestor-info" class="ui fluid card">
             <div class="content">
               <h2 class="ui header">Requestor Information</h2>
@@ -524,7 +524,8 @@
             </div>
           </div>
         </div>
-        <div class="four wide column">
+        <!-- Experimental subscriber feature, we don't have time to worry about this yet -->
+        <div class="four wide column" style="display: none">
           <div id="wo-requestor-info" class="ui fluid card">
             <div class="content">
               <h2 class="ui header">Request Subscribers</h2>
@@ -554,10 +555,11 @@
           </div>
         </div>
       </div>
-      <div id="service-types" data-bind="if: selectedServiceType">
+      <div id="service-types" class="ui grid" data-bind="if: selectedServiceType">
         <!-- Everything but the input form should be standardized. -->
         <!-- Capture the specific info for each service type below. -->
-        <div class="ui fluid card service-type-detail content" data-bind="visible: selectedServiceType()">
+        <div class="sixteen wide column">
+          <div class="ui fluid card service-type-detail content" data-bind="visible: selectedServiceType()">
           <div class="content">
             <h2 class="ui header" data-bind="text: selectedServiceType() ? selectedServiceType().Title : 'Something went wrong'"></h2>
           </div>
@@ -1001,6 +1003,7 @@
               class="editable-field"
               data-bind="textInput: requisitionComments, disable: currentView()=='view'"
             ></textarea>
+          </div>
           </div>
         </div>
         <!-- Building Access -->
@@ -1795,7 +1798,7 @@
                 type="button"
                 class="ui primary button editable-field"
                 onclick="newAttachment()"
-                data-bind="disable: currentView() == 'view'"
+                data-bind="disable: requestHeader().RequestStatus == 'Open'"
               >
                 New Attachment
               </button>

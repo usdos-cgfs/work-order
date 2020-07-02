@@ -117,6 +117,8 @@ function newWorkOrder() {
   vm.requestAttachments([]);
   vm.requestAssignees([]);
   vm.requestComments([]);
+
+  buildPipelineElement();
 }
 
 function viewWorkOrderItem(woID) {
@@ -148,7 +150,7 @@ function viewWorkOrderItem(woID) {
     console.log("workorder fetched - setting value pairs");
     setValuePairs(workOrderListDef.viewFields, vm.requestHeader());
     viewServiceTypeItem();
-    //buildPipelineElement();
+    buildPipelineElement();
     $(".editable-field").prop("disabled", true);
   });
   vm.tab("order-detail");
@@ -167,7 +169,7 @@ function viewServiceTypeItem() {
     vm.serviceTypeHeader(res);
     console.log("service type fetched -- setting valuepairs", items);
     setValuePairs(
-      vm.selectedServiceType().ListDef.viewFields,
+      JSON.parse(vm.selectedServiceType().ListDef).viewFields,
       vm.serviceTypeHeader()
     );
   });
@@ -177,13 +179,22 @@ function buildPipelineElement() {
   // TODO: Fix all this for the current pipeline.
   //Based off the currently selected record and record type, show a pipeline of where we're at in the process at the top of the page.
   var pipeline = '<div class="ui mini ordered steps">';
+
+  // First step is editing, this is always checked
+  pipeline +=
+    '<div class="step completed">' +
+    '<div class="content">' +
+    '<div class="title">Editing</div>' +
+    '<div class="description">New Request</div>' +
+    "</div></div>";
+
+  var status = "disabled";
   var curStage = parseInt(vm.requestStageNum());
   $.each(vm.selectedPipeline(), function (item, stage) {
-    var status = "disabled";
-    if (item < curStage) {
-      var status = "completed";
-    } else if (item == curStage) {
-      var status = "active";
+    if (stage.Step < curStage) {
+      status = "completed";
+    } else if (stage.Step == curStage) {
+      status = "active";
     }
 
     pipeline +=
@@ -192,15 +203,25 @@ function buildPipelineElement() {
       '">' +
       '<div class="content">' +
       '<div class="title">' +
-      stage.type +
+      stage.ActionType +
       "</div>" +
       '<div class="description">' +
-      stage.displayName +
+      stage.Title +
       "</div>" +
       "</div></div>";
   });
 
-  pipeline += "</div>";
+  let completeStatus = status == "completed" ? status : "disabled";
+  // Replace status with Request closed status?
+  pipeline +=
+    '<div class="step ' +
+    completeStatus +
+    '">' +
+    '<div class="content">' +
+    '<div class="title">Closed</div>' +
+    '<div class="description">Request Closed</div>' +
+    "</div></div></div>";
+
   $("#wo-progress-pipeline").html(pipeline);
   console.log("building pipeline", vm.requestType());
 }
@@ -229,7 +250,7 @@ function saveWorkOrder() {
     "Please wait..."
   );
   var typeValuePairs = getValuePairs(
-    vm.selectedServiceType().ListDef.viewFields
+    JSON.parse(vm.selectedServiceType().ListDef).viewFields
   );
 
   // First, save or update the parent work order item.
@@ -239,13 +260,13 @@ function saveWorkOrder() {
       setTimeout(function () {
         onSaveEditWorkOrderCallback("12");
       }, 1000);
-      vm.currentListRef().updateListItem(
+      vm.selectedServiceType().listRef.updateListItem(
         vm.serviceTypeHeader().ID,
         typeValuePairs,
         onSaveNewWorkOrderMaster
       );
-
       break;
+
     case "new":
       // we are saving a new record, create a new copy of each of the record types.
       // Save the current work order
@@ -263,7 +284,7 @@ function saveWorkOrder() {
       vm.requestSubmittedDate(new Date().toLocaleString());
 
       // Save the workorder specific info here:
-      vm.currentListRef().createListItem(
+      vm.selectedServiceType().listRef.createListItem(
         typeValuePairs,
         onSaveNewWorkOrderMaster
       );
