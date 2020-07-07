@@ -33,9 +33,16 @@
 <div id="tabs">
   <div class="ui top attached tabular menu">
     <a class="item" data-tab="open-orders">Open Orders</a>
-    <a class="item" data-tab="assigned-orders">Assigned Orders</a>
+    <a
+      class="item"
+      data-tab="assigned-orders"
+      data-bind="if: assignedOpenOrders().length > 0"
+      >Assigned Orders</a
+    >
     <a class="item" data-tab="order-new">New Order</a>
-    <a class="item" data-tab="order-detail">Detail View</a>
+    <a class="item" data-tab="order-detail" data-bind="if: selectedServiceType"
+      >Detail View</a
+    >
   </div>
   <div
     id="open-orders"
@@ -133,6 +140,7 @@
     id="assigned-orders"
     data-tab="assigned-orders"
     class="ui bottom attached tab segment"
+    data-bind="if: assignedOpenOrders"
   >
     <div data-bind="visible: assignedOpenOrders().length == 0">
       <h2>You currently have no assigned orders.</h2>
@@ -276,14 +284,7 @@
         <div class="content">
           <div class="ui left middle aligned grid">
             <div class="row">
-              <div class="two wide column">
-                <i
-                  class="fa fa-4x"
-                  aria-hidden="true"
-                  data-bind="class: selectedServiceType().Icon"
-                ></i>
-              </div>
-              <div class="fourteen wide column">
+              <div class="sixteen wide column">
                 <div id="wo-progress-pipeline"></div>
               </div>
             </div>
@@ -292,8 +293,8 @@
                 <button
                   type="button"
                   class="ui fluid blue button"
-                  data-bind="visible: requestCurUserAssign"
-                  onclick="newAssignment('Action Resolver')"
+                  data-bind="visible: requestCurUserAssign() && requestStage().ActionType == 'Pending Assignment'"
+                  onclick="$('#wo-routing').accordion('toggle', 0)"
                 >
                   Assign
                 </button>
@@ -302,7 +303,7 @@
                 <button
                   type="button"
                   class="ui fluid green button"
-                  data-bind="visible: requestCurUserApprove"
+                  data-bind="visible: requestCurUserApprove()"
                   onclick="newApproval()"
                 >
                   Approve/Reject
@@ -312,8 +313,8 @@
               <div class="four wide column">
                 <button
                   type="button"
-                  class="ui fluid blue button"
-                  data-bind="visible: requestCurUserAssign"
+                  class="ui fluid green button"
+                  data-bind="visible: requestCurUserAdvance"
                   onclick="actionComplete()"
                 >
                   Next Step <span class="fa fa-chevron-right"></span>
@@ -366,7 +367,7 @@
             <tbody data-bind="foreach: requestAssignees">
               <tr>
                 <td>
-                  <p data-bind="text: Assignee.get_lookupValue()"></p>
+                  <p data-bind="text: ActionOffice.get_lookupValue()"></p>
                 </td>
                 <td>
                   <p data-bind="text: Role"></p>
@@ -385,20 +386,34 @@
             </tbody>
           </table>
         </div>
-        <div class="aligned right">
+        <div class="aligned right" data-bind="visible: requestCurUserAssign">
+          <select
+            class="ui search dropdown"
+            data-bind=" value: assignAssignee,
+              options: assignCurUserAssignees, 
+              optionsText: (AO) => {return AO.Title}, 
+              optionsCaption: 'Select...'"
+          ></select>
           <button
+            type="button"
+            class="ui primary button"
+            onclick="createAssignment()"
+            data-bind="enable: assignAssignee"
+          >
+            Assign
+          </button>
+          <!-- <button
             type="button"
             class="ui primary button"
             onclick="newAssignment()"
             data-bind=""
           >
             New Assignment
-          </button>
+          </button> -->
         </div>
       </div>
     </div>
     <div class="ui hidden divider"></div>
-
     <div id="wo-form">
       <div class="ui grid">
         <div class="sixteen wide column">

@@ -158,12 +158,18 @@ function viewServiceTypeItem() {
 }
 
 function buildPipelineElement() {
+  if (!vm.selectedServiceType()) return;
   // TODO: Fix all this for the current pipeline.
   //Based off the currently selected record and record type, show a pipeline of where we're at in the process at the top of the page.
   var pipeline = '<div class="ui mini ordered steps">';
 
   // First step is editing, this is always checked
   var inDraft = vm.requestStatus() == "Draft" ? "active" : "completed";
+
+  pipeline +=
+    '<div class="step completed"><div class="conent"><i class="fa fa-4x ' +
+    vm.selectedServiceType().Icon +
+    '"/></div></div>';
 
   pipeline +=
     '<div class="step ' +
@@ -478,6 +484,7 @@ function fetchAttachments() {
  * Assignments
  ************************************************************/
 function newAssignment(role) {
+  // Open the new assignments forms
   vm.listRefAssignment().showModal(
     "CustomNewForm.aspx",
     "New Assignment",
@@ -489,6 +496,21 @@ function newAssignment(role) {
       fetchAssignments();
     }
   );
+}
+
+function createAssignment() {
+  // Create a new assignment based off our set observables
+  if (vm.assignAssignee()) {
+    let vp = [
+      ["Title", vm.requestID()],
+      ["Role", "Action Resolver"],
+      ["ActionOffice", vm.assignAssignee().ID],
+    ];
+    vm.listRefAssignment().createListItem(vp, (id) => {
+      console.log("Assigned: ", id);
+      fetchAssignments();
+    });
+  }
 }
 
 function fetchAssignments() {
@@ -619,6 +641,7 @@ function pipelineForward() {
   vm.listRefWO().updateListItem(vm.requestHeader().ID, valuepairs, function () {
     SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
     console.log("pipeline moved to next stage.");
+    buildPipelineElement();
   });
 }
 

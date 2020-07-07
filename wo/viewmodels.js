@@ -857,7 +857,10 @@ var configActionOfficesListDef = {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "empty" },
     Office: { type: "Text", koMap: "empty" },
-    AOGroup: { type: "Text", koMap: "empty" },
+    AOGroup: { type: "Person", koMap: "empty" },
+    CanAssign: { type: "Bool", koMap: "empty" },
+    SysAdmin: { type: "Bool", koMap: "empty" },
+    UserAddress: { type: "Person", koMap: "empty" },
   },
 };
 
@@ -930,11 +933,20 @@ function koviewmodel() {
   self.serviceTypeViews = ko.observable(woViews);
 
   /************************************************************
-   * Authorize Current user to take actions
+   * ADMIN: Authorize Current user to take actions
    ************************************************************/
   self.userRole = ko.observable(); // Determine whether the user is in the admin group or not.
   self.userRecordRole = ko.observable(); // Determine how the user is associated to the selected record.
 
+  self.userActionOfficeMembership = ko.pureComputed(() => {
+    // Return the configActionOffice offices this user is a part of
+    return self
+      .configActionOffices()
+      .filter(
+        (ao) =>
+          ao.UserAddress.get_lookupId() == sal.globalConfig.currentUser.get_id()
+      );
+  });
   // Can the current user take action on the record?
   self.requestCurUserAction = ko.pureComputed(function () {
     return true;
@@ -942,11 +954,70 @@ function koviewmodel() {
 
   // Can the current user approve the record?
   self.requestCurUserApprove = ko.pureComputed(function () {
-    return true;
+    return false;
   });
 
+  /************************************************************
+   * ADMIN: Assignment
+   ************************************************************/
   self.requestCurUserAssign = ko.pureComputed(function () {
-    return true;
+    if (self.requestStage()) {
+      // does the current user have CanAssign to any offices?
+      let uao = self
+        .userActionOfficeMembership()
+        .filter((uao) => {
+          return uao.CanAssign;
+        })
+        .map((uao) => uao.Office);
+
+      // Get the office assigned to this stage,
+      let assignedOffice = self
+        .configActionOffices()
+        .find((ao) => ao.ID == self.requestStage().Assignee.get_lookupId());
+
+      return uao.includes(assignedOffice.Office);
+    }
+  });
+
+  self.assignCurUserAssignees = ko.pureComputed(function () {
+    //Who can the current user assign to?
+    let uao = self
+      .userActionOfficeMembership()
+      .filter((uao) => {
+        return uao.CanAssign;
+      })
+      .map((uao) => uao.Office);
+
+    if (!uao) {
+      // This person isn't an action office, how did we get here?
+      return [];
+    } else if (uao.map((uao) => uao.SysAdmin).includes(true)) {
+      // User is sysadmin, return all action offices
+      return self.configActionOffices();
+    } else {
+      return self.configActionOffices().filter((ao) => {
+        return uao.includes(ao.Office);
+      });
+    }
+  });
+
+  self.assignAssignee = ko.observable();
+
+  /************************************************************
+   * ADMIN: Advance
+   ************************************************************/
+  self.requestCurUserAdvance = ko.pureComputed(function () {
+    if (self.requestStage()) {
+      // which offices is the current user a member of?
+      let uao = self.userActionOfficeMembership().map((uao) => uao.Office);
+
+      // Get the office assigned to this stage,
+      let assignedOffice = self
+        .configActionOffices()
+        .find((ao) => ao.ID == self.requestStage().Assignee.get_lookupId());
+
+      return uao.includes(assignedOffice.Office);
+    }
   });
 
   /************************************************************
@@ -1105,16 +1176,11 @@ function koviewmodel() {
   self.requestStatus = ko.observable(); // Open, Closed, etc
   self.requestStageNum = ko.observable(0); // 0, 1, 2 etc, used for our view pipelines.
 
-  self.requestStage = ko.observable(); // Actual stage object {}
-
-  self.requestStageNum.subscribe(function () {
-    buildPipelineElement();
+  self.requestStage = ko.pureComputed(function () {
     if (self.selectedServiceType() && self.requestStageNum()) {
-      self.requestStage(
-        self
-          .selectedPipeline()
-          .find((stage) => stage.Step == self.requestStageNum())
-      );
+      return self
+        .selectedPipeline()
+        .find((stage) => stage.Step == self.requestStageNum());
     } else {
       return "";
     }
