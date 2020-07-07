@@ -790,7 +790,6 @@ var workOrderListDef = {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "requestID" },
     ManagingDirector: { type: "Person", koMap: "requestorManager" },
-    RequestType: { type: "Text", koMap: "requestTypeName" },
     RequestorName: { type: "Text", koMap: "requestorName" },
     RequestorPhone: { type: "Text", koMap: "requestorTelephone" },
     RequestorEmail: { type: "Text", koMap: "requestorEmail" },
@@ -821,6 +820,7 @@ var assignmentListDef = {
   viewFields: {
     Title: { type: "Text", koMap: "empty" },
     Assignee: { type: "Person", koMap: "empty" },
+    ActionOffice: { type: "Lookup", koMap: "empty" },
     Role: { type: "Text", koMap: "empty" },
     Author: { type: "Text", koMap: "empty" },
     Created: { type: "Text", koMap: "empty" },
@@ -930,27 +930,23 @@ function koviewmodel() {
   self.serviceTypeViews = ko.observable(woViews);
 
   /************************************************************
-   * Authorize Current user to make changes
+   * Authorize Current user to take actions
    ************************************************************/
   self.userRole = ko.observable(); // Determine whether the user is in the admin group or not.
   self.userRecordRole = ko.observable(); // Determine how the user is associated to the selected record.
 
   // Can the current user take action on the record?
   self.requestCurUserAction = ko.pureComputed(function () {
-    if (self.requestStage()) {
-      return self.requestStage().type == "Action";
-    } else {
-      return false;
-    }
+    return true;
   });
 
   // Can the current user approve the record?
   self.requestCurUserApprove = ko.pureComputed(function () {
-    if (self.requestStage()) {
-      return self.requestStage().type == "Approval";
-    } else {
-      return false;
-    }
+    return true;
+  });
+
+  self.requestCurUserAssign = ko.pureComputed(function () {
+    return true;
   });
 
   /************************************************************
@@ -964,6 +960,10 @@ function koviewmodel() {
   self.tab.subscribe(function (newPage) {
     console.log("New Page: ", newPage);
     $(".ui.menu").find(".item").tab("change tab", newPage);
+    if (newPage == "order-detail") {
+      console.log("Activate Accordion");
+      $(".ui.accordion").accordion();
+    }
   });
 
   /************************************************************
@@ -981,34 +981,6 @@ function koviewmodel() {
   self.listRefConfigPipelines = ko.observable();
   self.listRefConfigRequestingOffices = ko.observable();
   self.listRefConfigServiceType = ko.observable();
-
-  //TODO: Replace all of these with an array!
-  self.listRefaccess = ko.observable();
-  self.listRefdiplomatic_passport = ko.observable();
-  self.listRefit_hardware = ko.observable();
-  self.listReflocksmith = ko.observable();
-  self.listRefnetwork_drop = ko.observable();
-  self.listRefnews_subscription = ko.observable();
-  self.listRefpu10k = ko.observable();
-  self.listReftel = ko.observable();
-  self.listRefpresentation = ko.observable();
-  self.listRefrsa = ko.observable();
-  self.listRefoffice_furniture = ko.observable();
-  self.listRefproperty = ko.observable();
-  self.listReffacilities = ko.observable();
-  self.listRefprint = ko.observable();
-  self.listRefsupplies = ko.observable();
-  self.listRefrequisition = ko.observable();
-
-  self.currentListRef = ko.pureComputed({
-    read: function () {
-      if (self.requestType()) {
-        return self["listRef" + self.requestType()]();
-      } else {
-        return null;
-      }
-    },
-  });
 
   /************************************************************
    * Hold current info about our lists
@@ -1030,14 +1002,12 @@ function koviewmodel() {
     return selectPipelineById(request.ServiceType.get_lookupId()).find(
       (step) => step.Step == request.RequestStage
     ).Title;
-    // return getWoByName(request.RequestType).pipeline[request.RequestStage]
-    //   .displayName;
   };
 
   self.estimateClosingDate = function (request) {
     // TODO: Add the holidays list in here somewhere
     console.log("est closing date", request);
-    //var daysOffset = getWoByName(request.RequestType).daysToClose;
+
     let daysOffset = self
       .configServiceTypes()
       .find((stype) => stype.ID == request.ServiceType.get_lookupId())
@@ -1051,7 +1021,6 @@ function koviewmodel() {
    * Hold generic Work Order vars
    ************************************************************/
   // The available service types (we'll set this from a json array)
-  self.requestTypes = ko.observableArray();
 
   self.currentView = ko.observable();
 
@@ -1095,7 +1064,6 @@ function koviewmodel() {
 
   // Hold the selected configServiceTypes
   self.selectedServiceType = ko.observable();
-  self.selectedServiceTypeUID = ko.observable({});
 
   // return the selected service type pipeline
   self.selectedPipeline = ko.pureComputed(function () {
@@ -1141,24 +1109,15 @@ function koviewmodel() {
 
   self.requestStageNum.subscribe(function () {
     buildPipelineElement();
-    if (self.requestType() && self.requestStageNum()) {
+    if (self.selectedServiceType() && self.requestStageNum()) {
       self.requestStage(
-        self.requestTypeView().pipeline[self.requestStageNum()]
+        self
+          .selectedPipeline()
+          .find((stage) => stage.Step == self.requestStageNum())
       );
     } else {
       return "";
     }
-  });
-
-  self.requestStageName = ko.pureComputed({
-    read: function () {
-      if (self.requestType() && self.requestStageNum()) {
-        return self.requestTypeView().pipeline[self.requestStageNum()]
-          .displayName;
-      } else {
-        return "";
-      }
-    },
   });
 
   // Requestor/Header Info
@@ -1190,40 +1149,6 @@ function koviewmodel() {
   self.requestSubmittedDate = ko.observable();
   self.requestClosedDate = ko.observable();
 
-  self.requestType = ko.observable();
-  self.requestTypeView = ko.observable();
-
-  self.requestType.subscribe(
-    function (val) {
-      console.log("subscription event triggered", val);
-      self.requestTypeView(woViews[val]);
-      buildPipelineElement();
-    },
-    self,
-    "change"
-  );
-
-  self.requestTypeName = ko.pureComputed(
-    {
-      read: function () {
-        if (self.requestType()) {
-          return self.requestTypeView().name;
-        } else {
-          return "";
-        }
-      },
-      write: function (value) {
-        $.each(woViews, function (key) {
-          if (woViews[key].name == value) {
-            self.requestType(key.toString());
-          }
-        });
-      },
-      owner: this,
-    },
-    this
-  );
-
   // Service Type Lookup is set from the request header,
   // and is mapped to ServiceType field on workorder
   self.requestServiceTypeLookupId = ko.pureComputed({
@@ -1243,66 +1168,9 @@ function koviewmodel() {
     },
   });
 
-  self.requestTypeIcon = ko.pureComputed({
-    read: function () {
-      return self.requestType() ? self.requestTypeView().icon : "";
-    },
-  });
-
-  self.requestTypeHasAttachments = ko.pureComputed(function () {
-    if (self.requestType()) {
-      return self.requestTypeView().hasAttachments == true;
-    } else {
-      return false;
-    }
-  });
-
-  //self.requestTypeView = ko.pureComputed(function () {
-  //        console.log('Request Type View', self.requestType())
-  //        var rt = self.requestType();
-  //        return woViews[rt];
-  //    }
-  //);
-  //self.requestType.subscribe(function () {
-  //    self.requestTypeView(self.requestTypeView())
-  //})
-
-  // Deal with progress/stages here.
-  self.requestProgress = ko.observable();
-  self.requestStageNum.subscribe(function () {
-    if (self.requestType() && self.requestStageNum() != undefined) {
-      self.requestProgress(
-        self.requestTypeView().pipeline[self.requestStageNum()].progress
-      );
-    }
-  });
-
-  self.hasProgressBar = ko.pureComputed(function () {
-    if (!self.requestType()) {
-      return false;
-    } else {
-      return self.requestTypeView().hasStages && self.requestProgress() > 0;
-    }
-  });
-
   self.requestorOffice.subscribe(function () {
     // When the requesting office changes, so changes the manager
     self.requestorManager(managingDirectors[self.requestorOffice()]);
-  });
-
-  self.requestProgress.subscribe(function () {
-    //console.log('Progress: ', self.request)
-    $("#wo-progress-bar").progressbar("option", {
-      value: self.requestProgress(),
-    });
-  });
-
-  self.requestAttachmentDesc = ko.pureComputed(function () {
-    if (self.requestType() && self.requestTypeView().hasAttachments) {
-      return self.requestTypeView().attachmentDesc;
-    } else {
-      return "";
-    }
   });
 
   /************************************************************

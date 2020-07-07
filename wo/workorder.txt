@@ -156,7 +156,7 @@
             <a href="#" data-bind="click: $root.showWorkOrder, text: Title"></a>
           </td>
           <td>
-            <p data-bind="text: RequestType"></p>
+            <p data-bind="text: ServiceType.get_lookupValue()"></p>
           </td>
           <td>
             <p data-bind="text: RequestorOffice"></p>
@@ -178,7 +178,7 @@
       class="ui four stackable cards"
       data-bind="foreach: configServiceTypes"
     >
-    <!-- ko if: Active -->
+      <!-- ko if: Active -->
       <div class="card" data-bind="click: showDescription.bind($data)">
         <!--<div class="center aligned content">
                     <div class="header" data-bind="text: vm.serviceTypeViews()[$data].name"></div>
@@ -269,64 +269,69 @@
     id="order-detail"
     data-tab="order-detail"
     class="ui bottom attached tab segment"
+    data-bind="if: selectedServiceType"
   >
     <div class="sticky">
       <div class="ui fluid card">
         <div class="content">
-          <table>
-            <tr>
-              <td>
-                <!-- <span class="service-type-icon" data-bind="html: requestTypeIcon"></span> -->
+          <div class="ui left middle aligned grid">
+            <div class="row">
+              <div class="two wide column">
                 <i
-                  class="fa fa-2x"
+                  class="fa fa-4x"
                   aria-hidden="true"
-                  data-bind="class: requestTypeIcon"
+                  data-bind="class: selectedServiceType().Icon"
                 ></i>
-              </td>
-              <td>
-                <h1 data-bind="text: requestTypeName"></h1>
+              </div>
+              <div class="fourteen wide column">
                 <div id="wo-progress-pipeline"></div>
-              </td>
-            </tr>
-          </table>
-          <!--<div id="wo-progress-bar" data-bind="visible: hasProgressBar"></div>
-                    <p>Current Stage:<span data-bind="text: requestStageName"></span></p>-->
-        </div>
-        <div
-          class="content aligned right"
-          data-bind="visible: requestCurUserAction() || requestCurUserApprove()"
-        >
-          <!--TODO: Visible: Record is Actionable, Onclick: Complete Action, Action Button-->
-          <button
-            type="button"
-            class="ui bottom attached green button"
-            data-bind="visible: requestCurUserAction"
-            onclick="actionComplete()"
-          >
-            Action Complete
-          </button>
-          <button
-            type="button"
-            class="ui green button"
-            data-bind="visible: requestCurUserApprove"
-            onclick="newApproval()"
-          >
-            Approve/Reject
-          </button>
+              </div>
+            </div>
+            <div class="row">
+              <div class="four wide column">
+                <button
+                  type="button"
+                  class="ui fluid blue button"
+                  data-bind="visible: requestCurUserAssign"
+                  onclick="newAssignment('Action Resolver')"
+                >
+                  Assign
+                </button>
+              </div>
+              <div class="four wide column">
+                <button
+                  type="button"
+                  class="ui fluid green button"
+                  data-bind="visible: requestCurUserApprove"
+                  onclick="newApproval()"
+                >
+                  Approve/Reject
+                </button>
+              </div>
+              <div class="four wide column"></div>
+              <div class="four wide column">
+                <button
+                  type="button"
+                  class="ui fluid blue button"
+                  data-bind="visible: requestCurUserAssign"
+                  onclick="actionComplete()"
+                >
+                  Next Step <span class="fa fa-chevron-right"></span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <!--<div class="ui sticky">
-            <div class="ui message">
-                <div class="header">Test Sticky</div>
-                <div class="ui placeholder">
-                    <div class="paragraph">
-                        <div class="line"></div>
-                    </div>
-                </div>
-                <p></p>
-            </div>
-        </div>-->
+    <div class="ui hidden divider"></div>
+    <div class="ui left middle aligned grid">
+      <div class="row">
+        <div class="six wide column">
+          <h1 data-bind="text: selectedServiceType().Title"></h1>
+        </div>
+      </div>
+    </div>
     <div class="ui hidden divider"></div>
     <div
       id="wo-routing"
@@ -525,7 +530,7 @@
           </div>
         </div>
         <!-- Experimental subscriber feature, we don't have time to worry about this yet -->
-        <div class="four wide column" style="display: none">
+        <div class="four wide column" style="display: none;">
           <div id="wo-requestor-info" class="ui fluid card">
             <div class="content">
               <h2 class="ui header">Request Subscribers</h2>
@@ -555,1199 +560,502 @@
           </div>
         </div>
       </div>
-      <div id="service-types" class="ui grid" data-bind="if: selectedServiceType">
+      <div
+        id="service-types"
+        class="ui grid"
+        data-bind="if: selectedServiceType"
+      >
         <!-- Everything but the input form should be standardized. -->
         <!-- Capture the specific info for each service type below. -->
         <div class="sixteen wide column">
-          <div class="ui fluid card service-type-detail content" data-bind="visible: selectedServiceType()">
-          <div class="content">
-            <h2 class="ui header" data-bind="text: selectedServiceType() ? selectedServiceType().Title : 'Something went wrong'"></h2>
-          </div>
-          <!-- Specific request type documentation goes here: -->
-          <div class="content" data-bind="visible: selectedServiceType().UID == 'access'">
-            <p>Building access requests require the following information:</p>
-            <p>
-              Access Type:
-              <select
-                data-bind="value: accessType,
+          <div
+            class="ui fluid card service-type-detail content"
+            data-bind="visible: selectedServiceType()"
+          >
+            <div class="content">
+              <h2
+                class="ui header"
+                data-bind="text: selectedServiceType() ? selectedServiceType().Title : 'Something went wrong'"
+              ></h2>
+            </div>
+            <!-- Specific request type documentation goes here: -->
+            <div
+              class="content"
+              data-bind="visible: selectedServiceType().UID == 'access'"
+            >
+              <p>Building access requests require the following information:</p>
+              <p>
+                Access Type:
+                <select
+                  data-bind="value: accessType,
                                                   options: accessTypeOpts,
                                                   optionscaption: 'Select...',
                                                   enable: currentView()=='new'"
-              ></select>
-            </p>
-            <p>
-              Employee Type:
-              <select
-                data-bind="value: accessEmployeeType,
+                ></select>
+              </p>
+              <p>
+                Employee Type:
+                <select
+                  data-bind="value: accessEmployeeType,
                                                   options: accessEmployeeTypeOpts,
                                                   optionscaption: 'Select...',
                                                   enable: currentView()=='new'"
-              ></select>
-            </p>
-            <div class="ui grid">
-              <div class="eight wide column">
-                <p>
-                  Full Name<span class="required">*</span>:
-                  <input
-                    type="text"
-                    data-bind="value: accessFullName, disable: currentView()=='view'"
-                  />
-                </p>
-              </div>
-              <div class="eight wide column">
-                <p>
-                  Badge Num<span class="required">*</span>:
-                  <input
-                    type="text"
-                    data-bind="value: accessBadgeNum, disable: currentView()=='view'"
-                  />
-                </p>
-              </div>
-              <div class="eight wide column">
-                <p>
-                  Expiration Date<span class="required">*</span>:
-                  <input
-                    type="date"
-                    data-bind="value: accessExpirationDateStr, disable: currentView()=='view'"
-                  />
-                </p>
-              </div>
-              <div class="eight wide column">
-                <p>
-                  Locations<span class="required">*</span>:
-                  <input
-                    type="text"
-                    data-bind="value: accessLocations, disable: currentView()=='view'"
-                  />
-                </p>
-              </div>
-            </div>
-            <p>Justification<span class="required">*</span>:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: accessJustification, disable: currentView()=='view'"
-            ></textarea>
-            <p>Description<span class="required">*</span>:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: accessDesc, disable: currentView()=='view'"
-            ></textarea>
-            <p>Special Instructions:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: accessSpecInst, disable: currentView()=='view'"
-            ></textarea>
-
-          </div>
-          <div class="content" data-bind="visible: selectedServiceType().UID == 'diplomatic_passport'">
-            <!-- We're going to cheat and overload this for diplomatic visa's as well but let's put that off for now -->
-            <p>
-              Request Type<span class="required">*</span>:
-              <select
-                class="editable-field"
-                type="text"
-                data-bind="disable: currentView() == 'view',
-                        options: diplomaticPassportServiceTypes, optionsCaption: 'Select...', value: diplomaticPassportSelectedType"
-              ></select>
-            </p>
-            <table
-              data-bind="visible: diplomaticPassportSelectedType() != undefined"
-            >
-              <tr>
-                <td>
-                  <p>
-                    Grade/Rank<span class="required">*</span>:
-                    <input
-                      class="editable-field"
-                      type="text"
-                      data-bind="value: diplomaticPassportGrade, disable: currentView() == 'view'"
-                    />
-                  </p>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <p>
-                    Destination Country<span class="required">*</span>:
-                    <input
-                      class="editable-field"
-                      type="text"
-                      data-bind="value: diplomaticPassportDestinationCountry, disable: currentView() == 'view'"
-                    />
-                  </p>
-                </td>
-                <td>
-                  <p>
-                    Destination City<span class="required">*</span>:
-                    <input
-                      class="editable-field"
-                      type="text"
-                      data-bind="value: diplomaticPassportDestinationCity, disable: currentView() == 'view'"
-                    />
-                  </p>
-                </td>
-              </tr>
-              <tr
-                data-bind="visible: diplomaticPassportSelectedType() == 'Renewal'"
-              >
-                <td>
-                  <p>
-                    State/Country of Birth<span class="required">*</span>:
-                    <input
-                      class="editable-field"
-                      type="text"
-                      data-bind="value: diplomaticPassportBirthLocation, disable: currentView() == 'view'"
-                    />
-                  </p>
-                </td>
-                <td>
-                  <p>
-                    Expiration Date (of most recent Passport)<span
-                      class="required"
-                      >*</span
-                    >:
-                    <input
-                      class="editable-field"
-                      type="date"
-                      data-bind="value: diplomaticPassportExpirationStr, disable: currentView() == 'view'"
-                    />
-                  </p>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <p>
-                    Departure<span class="required">*</span>:
-                    <input
-                      class="editable-field"
-                      type="date"
-                      data-bind="value: diplomaticPassportDepartureStr, disable: currentView() == 'view'"
-                    />
-                  </p>
-                </td>
-                <td>
-                  <p>
-                    Return<span class="required">*</span>:
-                    <input
-                      class="editable-field"
-                      type="date"
-                      data-bind="value: diplomaticPassportReturnStr, disable: currentView() == 'view'"
-                    />
-                  </p>
-                </td>
-              </tr>
-            </table>
-          </div>
-          <div class="content" data-bind="visible: selectedServiceType().UID == 'it_hardware'">
-            <p>IT Hardware requests require the following information:</p>
-            <div class="ui grid">
-              <div class="eight wide column">
-                <p>
-                  Hardware Name<span class="required">*</span>:
-                  <input
-                    type="text"
-                    data-bind="value: itHardwareName, disable: currentView()=='view'"
-                  />
-                </p>
-              </div>
-              <div class="eight wide column">
-                <p>
-                  Quantity<span class="required">*</span>:
-                  <input
-                    type="text"
-                    data-bind="value: itHardwareQuantity, disable: currentView()=='view'"
-                  />
-                </p>
-              </div>
-              <div class="eight wide column">
-                <p>
-                  POC<span class="required">*</span>:
-                  <input
-                    type="date"
-                    data-bind="value: itHardwarePOCName, disable: currentView()=='view'"
-                  />
-                </p>
-              </div>
-              <div class="eight wide column">
-                <p>
-                  Cost<span class="required">*</span>:
-                  <input
-                    type="text"
-                    data-bind="value: itHardwareCost, disable: currentView()=='view'"
-                  />
-                </p>
-              </div>
-            </div>
-            <p>Description<span class="required">*</span>:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: itHardwareDescription, disable: currentView()=='view'"
-            ></textarea>
-          </div>
-          <div class="content" data-bind="visible: selectedServiceType().UID == 'locksmith'">
-            <p>Locksmith Service requests require the following information:</p>
-            <div class="ui grid">
-              <div class="eight wide column">
-                <p>
-                  Location<span class="required">*</span>:
-                  <input
-                    type="text"
-                    data-bind="value: locksmithLocation, disable: currentView()=='view'"
-                  />
-                </p>
-              </div>
-              <div class="eight wide column">
-                <p>
-                  Lock Type<span class="required">*</span>:
-                  <input
-                    type="text"
-                    data-bind="value: locksmithLockType, disable: currentView()=='view'"
-                  />
-                </p>
-              </div>
-            </div>
-            <p>Justification<span class="required">*</span>:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: locksmithJustification, disable: currentView()=='view'"
-            ></textarea>
-          </div>
-          <div class="content" data-bind="visible: selectedServiceType().UID == 'network_drop'">
-            <p>Network Drop requests require the following information:</p>
-            <p>Description<span class="required">*</span>:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: networkDropDescription, disable: currentView()=='view'"
-            ></textarea>
-          </div>
-          <div class="content" data-bind="visible: selectedServiceType().UID == 'news_subscription'">
-            <p>
-              Newspapers and Subscriptions require the following information:
-            </p>
-            <div class="ui grid">
-              <div class="eight wide column">
-                <p>
-                  Name(s) of Paper/Magazine<span class="required">*</span>:
-                  <textarea
-                    type="text"
-                    data-bind="value: newsSubName, disable: currentView()=='view'"
-                  ></textarea>
-                </p>
-              </div>
-              <div class="eight wide column">
-                <p>
-                  Number of Subscriptions<span class="required">*</span>:
-                  <textarea
-                    type="text"
-                    data-bind="textInput: newsSubQuantity, disable: currentView()=='view'"
-                  ></textarea>
-                </p>
-              </div>
-            </div>
-            <p>Justification<span class="required">*</span>:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: locksmithJustification, disable: currentView()=='view'"
-            ></textarea>
-          </div>
-          <div class="content" data-bind="visible: selectedServiceType().UID == 'office_furniture'">
-            <p>
-              Office Furniture requests require the following information:
-            </p>
-            <p>Description<span class="required">*</span>:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: officeFurnitureDesc, disable: currentView()=='view'"
-            ></textarea>
-          </div>
-          <div class="content" data-bind="visible: selectedServiceType().UID == 'tel'">
-            <p>Please provide the following information:</p>
-            <p>
-              Phone Number:
-              <input
-                class="editable-field"
-                data-bind="disable: currentView() == 'view', value: telPhoneNum"
-              />
-            </p>
-            <p>
-              Location/Cube Number<span class="required">*</span>:
-              <input
-                class="editable-field"
-                type="text"
-                data-bind="disable: currentView() == 'view', value: telLocation"
-              />
-            </p>
-            <p>
-              Phone Request Type<span class="required">*</span>:
-              <select
-                class="editable-field"
-                type="select"
-                data-bind="disable: currentView() == 'view',
-                        options: telServiceTypes, optionsCaption: 'Select...', value: telSelectedType"
-              ></select>
-            </p>
-            <div data-bind="visible: telSelectedType() == 'Move'">
-              <p>
-                To<span class="required">*</span>:
-                <input data-bind="value: telTo" />
+                ></select>
               </p>
-              <p>
-                From<span class="required">*</span>:
-                <input data-bind="value: telFrom" />
-              </p>
-            </div>
-            <div data-bind="visible: telSelectedType() == 'Issues'">
+              <div class="ui grid">
+                <div class="eight wide column">
+                  <p>
+                    Full Name<span class="required">*</span>:
+                    <input
+                      type="text"
+                      data-bind="value: accessFullName, disable: currentView()=='view'"
+                    />
+                  </p>
+                </div>
+                <div class="eight wide column">
+                  <p>
+                    Badge Num<span class="required">*</span>:
+                    <input
+                      type="text"
+                      data-bind="value: accessBadgeNum, disable: currentView()=='view'"
+                    />
+                  </p>
+                </div>
+                <div class="eight wide column">
+                  <p>
+                    Expiration Date<span class="required">*</span>:
+                    <input
+                      type="date"
+                      data-bind="value: accessExpirationDateStr, disable: currentView()=='view'"
+                    />
+                  </p>
+                </div>
+                <div class="eight wide column">
+                  <p>
+                    Locations<span class="required">*</span>:
+                    <input
+                      type="text"
+                      data-bind="value: accessLocations, disable: currentView()=='view'"
+                    />
+                  </p>
+                </div>
+              </div>
+              <p>Justification<span class="required">*</span>:</p>
+              <textarea
+                class="editable-field"
+                data-bind="textInput: accessJustification, disable: currentView()=='view'"
+              ></textarea>
               <p>Description<span class="required">*</span>:</p>
               <textarea
-                rows="5"
-                cols="50"
-                data-bind="value: telDesc"
+                class="editable-field"
+                data-bind="textInput: accessDesc, disable: currentView()=='view'"
               ></textarea>
-            </div>
-          </div>
-          <div class="content" data-bind="visible: selectedServiceType().UID == 'presentation'">
-            <p>Please provide the following information:</p>
-            <p>
-              Type of request:
-              <select
-                data-bind="disable: currentView() == 'view',
-                        options: presentationServiceTypes, optionsCaption: 'Select...', value: presentationSelectedType"
-              ></select>
-            </p>
-            <p>POC: <input /></p>
-            <p>Date: <input /></p>
-            <p>Duration: <input /></p>
-            <p>Locations: <input /></p>
-            <div data-bind="visible: presentationSelectedType() == 'DVC'">
-              <p>
-                Call type:
-                <select
-                  data-bind="options: presentationCallTypes, value: presentationCallType"
-                ></select>
-              </p>
-              <p>
-                VTC Dial Out:
-                <select
-                  data-bind="options: presentationDialOuts, value: presentationDialOut"
-                ></select>
-              </p>
-            </div>
-            <p>
-              Connection Type:
-              <select
-                data-bind="options: presentationConnectionTypes, value: presentationConnectionType"
-              ></select>
-            </p>
-          </div>
-          <div class="content" data-bind="visible: selectedServiceType().UID == 'property'">
-            <div class="ui toggle checkbox">
-              <input
-                type="checkbox"
-                class="editable-field"
-                data-bind="value: propertyTransfer"
-              />
-              <label>Property Transfer</label>
-            </div>
-            <br />
-            <div class="ui toggle checkbox">
-              <input
-                type="checkbox"
-                class="editable-field"
-                data-bind="value: propertyExcess"
-              />
-              <label>Excess Property</label>
-            </div>
-            <p>
-              Serial Tag Number:
-              <input
-                class="editable-field"
-                type="text"
-                data-bind="value: propertySerialNumber"
-              />
-            </p>
-            <p>
-              Property Location:
+              <p>Special Instructions:</p>
               <textarea
                 class="editable-field"
-                data-bind="textInput: propertyLocation"
+                data-bind="textInput: accessSpecInst, disable: currentView()=='view'"
               ></textarea>
-            </p>
-          </div>
-          <div class="content"  data-bind="visible: selectedServiceType().UID == 'requisition'">
-            <p>
-              Requisitions require the following information:
-            </p>
-            <div class="ui grid">
-              <div class="eight wide column">
-                <p>
-                  Requisition Type<span class="required">*</span>:
-                  <select
-                    type="text"
-                    data-bind="value: requisitionType, options: requisitionTypes, optionsCaption: 'Select...',
-                     disable: currentView()=='view'"
-                  ></select>
-                </p>
-              </div>
-              <div class="eight wide column">
-                <p>
-                  Quantity of requisitions<span class="required">*</span>:
-                  <input
-                    type="text"
-                    data-bind="value: requisitionQuantity, disable: currentView()=='view'"
-                  ></textarea>
-                </p>
-              </div>
-            </div>
-            <p>Comments<span class="required">*</span>:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: requisitionComments, disable: currentView()=='view'"
-            ></textarea>
-          </div>
-          </div>
-        </div>
-        <!-- Building Access -->
-        <div
-          id="wo-access"
-          class="ui fluid card service-type-detail content"
-          data-bind="visible: requestType() == 'access'"
-          style="display: none;"
-        >
-          <div class="content">
-            <h2 class="ui header">Building Access</h2>
-          </div>
-          <div class="content">
-            <p>Building access requests require the following information:</p>
-            <p>
-              Access Type:
-              <select
-                data-bind="value: accessType,
-                                                  options: accessTypeOpts,
-                                                  optionscaption: 'Select...',
-                                                  enable: currentView()=='new'"
-              ></select>
-            </p>
-            <p>
-              Employee Type:
-              <select
-                data-bind="value: accessEmployeeType,
-                                                  options: accessEmployeeTypeOpts,
-                                                  optionscaption: 'Select...',
-                                                  enable: currentView()=='new'"
-              ></select>
-            </p>
-            <div class="ui grid">
-              <div class="eight wide column">
-                <p>
-                  Full Name<span class="required">*</span>:
-                  <input
-                    type="text"
-                    data-bind="value: accessFullName, disable: currentView()=='view'"
-                  />
-                </p>
-              </div>
-              <div class="eight wide column">
-                <p>
-                  Badge Num<span class="required">*</span>:
-                  <input
-                    type="text"
-                    data-bind="value: accessBadgeNum, disable: currentView()=='view'"
-                  />
-                </p>
-              </div>
-              <div class="eight wide column">
-                <p>
-                  Expiration Date<span class="required">*</span>:
-                  <input
-                    type="date"
-                    data-bind="value: accessExpirationDateStr, disable: currentView()=='view'"
-                  />
-                </p>
-              </div>
-              <div class="eight wide column">
-                <p>
-                  Locations<span class="required">*</span>:
-                  <input
-                    type="text"
-                    data-bind="value: accessLocations, disable: currentView()=='view'"
-                  />
-                </p>
-              </div>
-            </div>
-            <p>Justification<span class="required">*</span>:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: accessJustification, disable: currentView()=='view'"
-            ></textarea>
-            <p>Description<span class="required">*</span>:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: accessDesc, disable: currentView()=='view'"
-            ></textarea>
-            <p>Special Instructions:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: accessSpecInst, disable: currentView()=='view'"
-            ></textarea>
-          </div>
-        </div>
-        <!-- Diplomatic passport  -->
-        <div
-          id="wo-diplomatic-passport"
-          class="ui fluid card service-type-detail"
-          data-bind="visible: requestType() == 'diplomatic_passport'"
-          style="display: none;"
-        >
-          <div class="content">
-            <h2 class="ui header">Diplomatic Passport</h2>
-          </div>
-          <div class="content">
-            <p>
-              Request Type<span class="required">*</span>:
-              <select
-                class="editable-field"
-                type="text"
-                data-bind="disable: currentView() == 'view',
-                        options: diplomaticPassportServiceTypes, optionsCaption: 'Select...', value: diplomaticPassportSelectedType"
-              ></select>
-            </p>
-            <table
-              data-bind="visible: diplomaticPassportSelectedType() != undefined"
-            >
-              <tr>
-                <td>
-                  <p>
-                    Grade/Rank<span class="required">*</span>:
-                    <input
-                      class="editable-field"
-                      type="text"
-                      data-bind="value: diplomaticPassportGrade, disable: currentView() == 'view'"
-                    />
-                  </p>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <p>
-                    Destination Country<span class="required">*</span>:
-                    <input
-                      class="editable-field"
-                      type="text"
-                      data-bind="value: diplomaticPassportDestinationCountry, disable: currentView() == 'view'"
-                    />
-                  </p>
-                </td>
-                <td>
-                  <p>
-                    Destination City<span class="required">*</span>:
-                    <input
-                      class="editable-field"
-                      type="text"
-                      data-bind="value: diplomaticPassportDestinationCity, disable: currentView() == 'view'"
-                    />
-                  </p>
-                </td>
-              </tr>
-              <tr
-                data-bind="visible: diplomaticPassportSelectedType() == 'Renewal'"
-              >
-                <td>
-                  <p>
-                    State/Country of Birth<span class="required">*</span>:
-                    <input
-                      class="editable-field"
-                      type="text"
-                      data-bind="value: diplomaticPassportBirthLocation, disable: currentView() == 'view'"
-                    />
-                  </p>
-                </td>
-                <td>
-                  <p>
-                    Expiration Date (of most recent Passport)<span
-                      class="required"
-                      >*</span
-                    >:
-                    <input
-                      class="editable-field"
-                      type="date"
-                      data-bind="value: diplomaticPassportExpirationStr, disable: currentView() == 'view'"
-                    />
-                  </p>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <p>
-                    Departure<span class="required">*</span>:
-                    <input
-                      class="editable-field"
-                      type="date"
-                      data-bind="value: diplomaticPassportDepartureStr, disable: currentView() == 'view'"
-                    />
-                  </p>
-                </td>
-                <td>
-                  <p>
-                    Return<span class="required">*</span>:
-                    <input
-                      class="editable-field"
-                      type="date"
-                      data-bind="value: diplomaticPassportReturnStr, disable: currentView() == 'view'"
-                    />
-                  </p>
-                </td>
-              </tr>
-            </table>
-          </div>
-        </div>
-        <!-- IT Hardware -->
-        <div
-          id="wo-it-hardware"
-          class="ui fluid card service-type-detail content"
-          data-bind="visible: requestType() == 'it_hardware'"
-          style="display: none;"
-        >
-          <div class="content">
-            <h2 class="ui header">IT Hardware</h2>
-          </div>
-          <div class="content">
-            <p>IT Hardware requests require the following information:</p>
-            <div class="ui grid">
-              <div class="eight wide column">
-                <p>
-                  Hardware Name<span class="required">*</span>:
-                  <input
-                    type="text"
-                    data-bind="value: itHardwareName, disable: currentView()=='view'"
-                  />
-                </p>
-              </div>
-              <div class="eight wide column">
-                <p>
-                  Quantity<span class="required">*</span>:
-                  <input
-                    type="text"
-                    data-bind="value: itHardwareQuantity, disable: currentView()=='view'"
-                  />
-                </p>
-              </div>
-              <div class="eight wide column">
-                <p>
-                  POC<span class="required">*</span>:
-                  <input
-                    type="date"
-                    data-bind="value: itHardwarePOCName, disable: currentView()=='view'"
-                  />
-                </p>
-              </div>
-              <div class="eight wide column">
-                <p>
-                  Cost<span class="required">*</span>:
-                  <input
-                    type="text"
-                    data-bind="value: itHardwareCost, disable: currentView()=='view'"
-                  />
-                </p>
-              </div>
-            </div>
-            <p>Description<span class="required">*</span>:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: itHardwareDescription, disable: currentView()=='view'"
-            ></textarea>
-          </div>
-        </div>
-        <!-- Locksmith -->
-        <div
-          id="wo-locksmith"
-          class="ui fluid card service-type-detail content"
-          data-bind="visible: requestType() == 'locksmith'"
-          style="display: none;"
-        >
-          <div class="content">
-            <h2 class="ui header">Locksmith Services</h2>
-          </div>
-          <div class="content">
-            <p>Locksmith Service requests require the following information:</p>
-            <div class="ui grid">
-              <div class="eight wide column">
-                <p>
-                  Location<span class="required">*</span>:
-                  <input
-                    type="text"
-                    data-bind="value: locksmithLocation, disable: currentView()=='view'"
-                  />
-                </p>
-              </div>
-              <div class="eight wide column">
-                <p>
-                  Lock Type<span class="required">*</span>:
-                  <input
-                    type="text"
-                    data-bind="value: locksmithLockType, disable: currentView()=='view'"
-                  />
-                </p>
-              </div>
-            </div>
-            <p>Justification<span class="required">*</span>:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: locksmithJustification, disable: currentView()=='view'"
-            ></textarea>
-          </div>
-        </div>
-        <!-- Network Drop -->
-        <div
-          id="wo-network-drop"
-          class="ui fluid card service-type-detail content"
-          data-bind="visible: requestType() == 'network_drop'"
-          style="display: none;"
-        >
-          <div class="content">
-            <h2 class="ui header">Network Drops</h2>
-          </div>
-          <div class="content">
-            <p>Network Drop requests require the following information:</p>
-            <p>Description<span class="required">*</span>:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: networkDropDescription, disable: currentView()=='view'"
-            ></textarea>
-          </div>
-        </div>
-        <!-- Newspapers and Subscriptions -->
-        <div
-          id="wo-news-subscription"
-          class="ui fluid card service-type-detail content"
-          data-bind="visible: requestType() == 'news_subscription'"
-          style="display: none;"
-        >
-          <div class="content">
-            <h2 class="ui header">Newspapers and Subscriptions</h2>
-          </div>
-          <div class="content">
-            <p>
-              Newspapers and Subscriptions require the following information:
-            </p>
-            <div class="ui grid">
-              <div class="eight wide column">
-                <p>
-                  Name(s) of Paper/Magazine<span class="required">*</span>:
-                  <textarea
-                    type="text"
-                    data-bind="value: newsSubName, disable: currentView()=='view'"
-                  ></textarea>
-                </p>
-              </div>
-              <div class="eight wide column">
-                <p>
-                  Number of Subscriptions<span class="required">*</span>:
-                  <textarea
-                    type="text"
-                    data-bind="textInput: newsSubQuantity, disable: currentView()=='view'"
-                  ></textarea>
-                </p>
-              </div>
-            </div>
-            <p>Justification<span class="required">*</span>:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: locksmithJustification, disable: currentView()=='view'"
-            ></textarea>
-          </div>
-        </div>
-        <!-- Office Furniture -->
-        <div
-          id="wo-office-furniture"
-          class="ui fluid card service-type-detail content"
-          data-bind="visible: requestType() == 'news_subscription'"
-          style="display: none;"
-        >
-          <div class="content">
-            <h2 class="ui header">Newspapers and Subscriptions</h2>
-          </div>
-          <div class="content">
-            <p>
-              Newspapers and Subscriptions require the following information:
-            </p>
-            <p>Description<span class="required">*</span>:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: officeFurnitureDesc, disable: currentView()=='view'"
-            ></textarea>
-          </div>
-        </div>
-        <!-- Purchase Under 10k. -->
-        <div
-          id="wo-pu10k"
-          class="ui fluid card service-type-detail content"
-          data-bind="visible: requestType() == 'pu10k'"
-          style="display: none;"
-        >
-          <div class="content">
-            <h2 class="ui header">Purchase Under 10k</h2>
-          </div>
-          <div class="content">
-            <p>Description<span class="required">*</span>:</p>
-            <textarea
-              id="textpu10kDescription"
-              style="width: 640px; display: none;"
-            ></textarea>
-            <div data-bind="visible: currentView() != 'view'">
-              <trix-editor
-                input="textpu10kDescription"
-                class="editable-field"
-                data-bind="value: pu10kDescription"
-              >
-              </trix-editor>
             </div>
             <div
-              data-bind="html: pu10kDescription, visible: currentView() == 'view'"
-            ></div>
-            <p>
-              Cost Estimate (USD)<span class="required">*</span>:
-              <input
-                class="editable-field"
-                type="text"
-                data-bind="value: pu10kCostEst, disable: currentView() == 'view'"
-              />
-            </p>
-          </div>
-        </div>
-        <!-- Telephone -->
-        <div
-          id="wo-tel"
-          class="ui fluid card service-type-detail content"
-          data-bind="visible: requestType() == 'tel'"
-          style="display: none;"
-        >
-          <div class="content">
-            <h2 class="ui header">Telephone</h2>
-          </div>
-          <div class="content">
-            <p>Please provide the following information:</p>
-            <p>
-              Phone Number:
-              <input
-                class="editable-field"
-                data-bind="disable: currentView() == 'view', value: telPhoneNum"
-              />
-            </p>
-            <p>
-              Location/Cube Number<span class="required">*</span>:
-              <input
-                class="editable-field"
-                type="text"
-                data-bind="disable: currentView() == 'view', value: telLocation"
-              />
-            </p>
-            <p>
-              Phone Request Type<span class="required">*</span>:
-              <select
-                class="editable-field"
-                type="select"
-                data-bind="disable: currentView() == 'view',
-                        options: telServiceTypes, optionsCaption: 'Select...', value: telSelectedType"
-              ></select>
-            </p>
-            <div data-bind="visible: telSelectedType() == 'Move'">
+              class="content"
+              data-bind="visible: selectedServiceType().UID == 'diplomatic_passport'"
+            >
+              <!-- We're going to cheat and overload this for diplomatic visa's as well but let's put that off for now -->
               <p>
-                To<span class="required">*</span>:
-                <input data-bind="value: telTo" />
+                Request Type<span class="required">*</span>:
+                <select
+                  class="editable-field"
+                  type="text"
+                  data-bind="disable: currentView() == 'view',
+                        options: diplomaticPassportServiceTypes, optionsCaption: 'Select...', value: diplomaticPassportSelectedType"
+                ></select>
               </p>
-              <p>
-                From<span class="required">*</span>:
-                <input data-bind="value: telFrom" />
-              </p>
+              <table
+                data-bind="visible: diplomaticPassportSelectedType() != undefined"
+              >
+                <tr>
+                  <td>
+                    <p>
+                      Grade/Rank<span class="required">*</span>:
+                      <input
+                        class="editable-field"
+                        type="text"
+                        data-bind="value: diplomaticPassportGrade, disable: currentView() == 'view'"
+                      />
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <p>
+                      Destination Country<span class="required">*</span>:
+                      <input
+                        class="editable-field"
+                        type="text"
+                        data-bind="value: diplomaticPassportDestinationCountry, disable: currentView() == 'view'"
+                      />
+                    </p>
+                  </td>
+                  <td>
+                    <p>
+                      Destination City<span class="required">*</span>:
+                      <input
+                        class="editable-field"
+                        type="text"
+                        data-bind="value: diplomaticPassportDestinationCity, disable: currentView() == 'view'"
+                      />
+                    </p>
+                  </td>
+                </tr>
+                <tr
+                  data-bind="visible: diplomaticPassportSelectedType() == 'Renewal'"
+                >
+                  <td>
+                    <p>
+                      State/Country of Birth<span class="required">*</span>:
+                      <input
+                        class="editable-field"
+                        type="text"
+                        data-bind="value: diplomaticPassportBirthLocation, disable: currentView() == 'view'"
+                      />
+                    </p>
+                  </td>
+                  <td>
+                    <p>
+                      Expiration Date (of most recent Passport)<span
+                        class="required"
+                        >*</span
+                      >:
+                      <input
+                        class="editable-field"
+                        type="date"
+                        data-bind="value: diplomaticPassportExpirationStr, disable: currentView() == 'view'"
+                      />
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <p>
+                      Departure<span class="required">*</span>:
+                      <input
+                        class="editable-field"
+                        type="date"
+                        data-bind="value: diplomaticPassportDepartureStr, disable: currentView() == 'view'"
+                      />
+                    </p>
+                  </td>
+                  <td>
+                    <p>
+                      Return<span class="required">*</span>:
+                      <input
+                        class="editable-field"
+                        type="date"
+                        data-bind="value: diplomaticPassportReturnStr, disable: currentView() == 'view'"
+                      />
+                    </p>
+                  </td>
+                </tr>
+              </table>
             </div>
-            <div data-bind="visible: telSelectedType() == 'Issues'">
+            <div
+              class="content"
+              data-bind="visible: selectedServiceType().UID == 'it_hardware'"
+            >
+              <p>IT Hardware requests require the following information:</p>
+              <div class="ui grid">
+                <div class="eight wide column">
+                  <p>
+                    Hardware Name<span class="required">*</span>:
+                    <input
+                      type="text"
+                      data-bind="value: itHardwareName, disable: currentView()=='view'"
+                    />
+                  </p>
+                </div>
+                <div class="eight wide column">
+                  <p>
+                    Quantity<span class="required">*</span>:
+                    <input
+                      type="text"
+                      data-bind="value: itHardwareQuantity, disable: currentView()=='view'"
+                    />
+                  </p>
+                </div>
+                <div class="eight wide column">
+                  <p>
+                    POC<span class="required">*</span>:
+                    <input
+                      type="date"
+                      data-bind="value: itHardwarePOCName, disable: currentView()=='view'"
+                    />
+                  </p>
+                </div>
+                <div class="eight wide column">
+                  <p>
+                    Cost<span class="required">*</span>:
+                    <input
+                      type="text"
+                      data-bind="value: itHardwareCost, disable: currentView()=='view'"
+                    />
+                  </p>
+                </div>
+              </div>
               <p>Description<span class="required">*</span>:</p>
               <textarea
-                rows="5"
-                cols="50"
-                data-bind="value: telDesc"
+                class="editable-field"
+                data-bind="textInput: itHardwareDescription, disable: currentView()=='view'"
               ></textarea>
             </div>
-          </div>
-        </div>
-        <!-- Presentation -->
-        <div
-          id="wo-presentation"
-          class="ui fluid card service-type-detail content"
-          data-bind="visible: requestType() == 'presentation'"
-          style="display: none;"
-        >
-          <div class="content">
-            <h2 class="ui header">Presentation</h2>
-          </div>
-          <div class="content">
-            <p>Please provide the following information:</p>
-            <p>
-              Type of request:
-              <select
-                data-bind="disable: currentView() == 'view',
-                        options: presentationServiceTypes, optionsCaption: 'Select...', value: presentationSelectedType"
-              ></select>
-            </p>
-            <p>POC: <input /></p>
-            <p>Date: <input /></p>
-            <p>Duration: <input /></p>
-            <p>Locations: <input /></p>
-            <div data-bind="visible: presentationSelectedType() == 'DVC'">
+            <div
+              class="content"
+              data-bind="visible: selectedServiceType().UID == 'locksmith'"
+            >
               <p>
-                Call type:
-                <select
-                  data-bind="options: presentationCallTypes, value: presentationCallType"
-                ></select>
+                Locksmith Service requests require the following information:
               </p>
-              <p>
-                VTC Dial Out:
-                <select
-                  data-bind="options: presentationDialOuts, value: presentationDialOut"
-                ></select>
-              </p>
-            </div>
-            <p>
-              Connection Type:
-              <select
-                data-bind="options: presentationConnectionTypes, value: presentationConnectionType"
-              ></select>
-            </p>
-          </div>
-        </div>
-        <!-- Property -->
-        <div
-          id="wo-property"
-          class="ui fluid card service-type-detail content"
-          data-bind="visible: requestType() == 'property'"
-          style="display: none;"
-        >
-          <div class="content">
-            <h2 class="ui header">Property/Asset Management</h2>
-          </div>
-          <div class="content">
-            <div class="ui toggle checkbox">
-              <input
-                type="checkbox"
-                class="editable-field"
-                data-bind="value: propertyTransfer"
-              />
-              <label>Property Transfer</label>
-            </div>
-            <br />
-            <div class="ui toggle checkbox">
-              <input
-                type="checkbox"
-                class="editable-field"
-                data-bind="value: propertyExcess"
-              />
-              <label>Excess Property</label>
-            </div>
-            <p>
-              Serial Tag Number:
-              <input
-                class="editable-field"
-                type="text"
-                data-bind="value: propertySerialNumber"
-              />
-            </p>
-            <p>
-              Property Location:
+              <div class="ui grid">
+                <div class="eight wide column">
+                  <p>
+                    Location<span class="required">*</span>:
+                    <input
+                      type="text"
+                      data-bind="value: locksmithLocation, disable: currentView()=='view'"
+                    />
+                  </p>
+                </div>
+                <div class="eight wide column">
+                  <p>
+                    Lock Type<span class="required">*</span>:
+                    <input
+                      type="text"
+                      data-bind="value: locksmithLockType, disable: currentView()=='view'"
+                    />
+                  </p>
+                </div>
+              </div>
+              <p>Justification<span class="required">*</span>:</p>
               <textarea
                 class="editable-field"
-                data-bind="textInput: propertyLocation"
+                data-bind="textInput: locksmithJustification, disable: currentView()=='view'"
               ></textarea>
-            </p>
-          </div>
-        </div>
-        <!-- Facilities -->
-        <div
-          id="wo-facilities"
-          class="ui fluid card service-type-detail content"
-          data-bind="visible: requestType() == 'facilities'"
-          style="display: none;"
-        >
-          <div class="content">
-            <h2 class="ui header">Facilities/Building Services</h2>
-          </div>
-          <div class="content">
-            <div class="ui info message">
-              <div class="header">
-                For the following issues:
-              </div>
-              <ul class="list">
-                <li>Pest Control</li>
-                <li>A/C & Heating</li>
-                <li>Bathroom & Plumbing</li>
-                <li>Lights & Electrical</li>
-              </ul>
-              <br />
-              <div class="header">
-                Please contact:
-              </div>
-              <ul class="list">
-                <li>HST: 202-647-5610</li>
-                <li>SA-1: 202-663-1995</li>
-                <li>SA-15: 703-528-3074</li>
-              </ul>
             </div>
-            <p>
-              Service Type:
-              <select
-                data-bind="value: facilitiesService,
-                                              options: facilitiesServiceOpts,
-                                              optionscaption: 'Select...',
-                                              enable: currentView()=='new'"
-              ></select>
-            </p>
-            <p>Description:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: facilitiesDesc"
-            ></textarea>
-            <p>Special Instructions:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: facilitiesSpecInst"
-            ></textarea>
-            <p>Location:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: facilitiesLoc"
-            ></textarea>
-            <div class="ui toggle checkbox">
-              <input
-                type="checkbox"
+            <div
+              class="content"
+              data-bind="visible: selectedServiceType().UID == 'network_drop'"
+            >
+              <p>Network Drop requests require the following information:</p>
+              <p>Description<span class="required">*</span>:</p>
+              <textarea
                 class="editable-field"
-                data-bind="value: facilitiesSpecAcc"
-              />
-              <label>Special Accomodation</label>
+                data-bind="textInput: networkDropDescription, disable: currentView()=='view'"
+              ></textarea>
             </div>
-          </div>
-        </div>
-        <!-- Print -->
-        <div
-          id="wo-print"
-          class="ui fluid card service-type-detail content"
-          data-bind="visible: requestType() == 'print'"
-          style="display: none;"
-        >
-          <div class="content">
-            <h2 class="ui header">GPO Print Request</h2>
-          </div>
-          <div class="content">
-            <p>Date Needed:</p>
-            <input
-              class="editable-field"
-              type="date"
-              data-bind="value: printDateNeededStr"
-            />
-            <p>
-              Quantity:
-              <input
+            <div
+              class="content"
+              data-bind="visible: selectedServiceType().UID == 'news_subscription'"
+            >
+              <p>
+                Newspapers and Subscriptions require the following information:
+              </p>
+              <div class="ui grid">
+                <div class="eight wide column">
+                  <p>
+                    Name(s) of Paper/Magazine<span class="required">*</span>:
+                    <textarea
+                      type="text"
+                      data-bind="value: newsSubName, disable: currentView()=='view'"
+                    ></textarea>
+                  </p>
+                </div>
+                <div class="eight wide column">
+                  <p>
+                    Number of Subscriptions<span class="required">*</span>:
+                    <textarea
+                      type="text"
+                      data-bind="textInput: newsSubQuantity, disable: currentView()=='view'"
+                    ></textarea>
+                  </p>
+                </div>
+              </div>
+              <p>Justification<span class="required">*</span>:</p>
+              <textarea
                 class="editable-field"
-                type="number"
-                data-bind="value: printQuantity"
-              />
-            </p>
-            <p>Description:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: printDesc"
-            ></textarea>
-            <p>Special Instructions:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: printSpecialInst"
-            ></textarea>
-          </div>
-        </div>
-        <!-- Supplies -->
-        <div
-          id="wo-supplies"
-          class="ui fluid card service-type-detail content"
-          data-bind="visible: requestType() == 'supplies'"
-          style="display: none;"
-        >
-          <div class="content">
-            <h2 class="ui header">Office Supplies</h2>
-          </div>
-          <div class="content">
-            <p>Date Needed:</p>
-            <input
-              class="editable-field"
-              type="date"
-              data-bind="value: suppliesDateNeededStr"
-            />
-            <p>Name:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: suppliesName"
-            ></textarea>
-            <p>Special Instructions:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: suppliesSpecialInst"
-            ></textarea>
-          </div>
-        </div>
-        <!-- Requisitions -->
-        <div
-          id="wo-requisitions"
-          class="ui fluid card service-type-detail content"
-          data-bind="visible: requestType() == 'requisitions'"
-          style="display: none;"
-        >
-          <div class="content">
-            <h2 class="ui header">Requisitions</h2>
-          </div>
-          <div class="content">
-            <p>
-              Requisitions require the following information:
-            </p>
-            <div class="ui grid">
-              <div class="eight wide column">
+                data-bind="textInput: locksmithJustification, disable: currentView()=='view'"
+              ></textarea>
+            </div>
+            <div
+              class="content"
+              data-bind="visible: selectedServiceType().UID == 'office_furniture'"
+            >
+              <p>
+                Office Furniture requests require the following information:
+              </p>
+              <p>Description<span class="required">*</span>:</p>
+              <textarea
+                class="editable-field"
+                data-bind="textInput: officeFurnitureDesc, disable: currentView()=='view'"
+              ></textarea>
+            </div>
+            <div
+              class="content"
+              data-bind="visible: selectedServiceType().UID == 'tel'"
+            >
+              <p>Please provide the following information:</p>
+              <p>
+                Phone Number:
+                <input
+                  class="editable-field"
+                  data-bind="disable: currentView() == 'view', value: telPhoneNum"
+                />
+              </p>
+              <p>
+                Location/Cube Number<span class="required">*</span>:
+                <input
+                  class="editable-field"
+                  type="text"
+                  data-bind="disable: currentView() == 'view', value: telLocation"
+                />
+              </p>
+              <p>
+                Phone Request Type<span class="required">*</span>:
+                <select
+                  class="editable-field"
+                  type="select"
+                  data-bind="disable: currentView() == 'view',
+                        options: telServiceTypes, optionsCaption: 'Select...', value: telSelectedType"
+                ></select>
+              </p>
+              <div data-bind="visible: telSelectedType() == 'Move'">
                 <p>
-                  Requisition Type<span class="required">*</span>:
+                  To<span class="required">*</span>:
+                  <input data-bind="value: telTo" />
+                </p>
+                <p>
+                  From<span class="required">*</span>:
+                  <input data-bind="value: telFrom" />
+                </p>
+              </div>
+              <div data-bind="visible: telSelectedType() == 'Issues'">
+                <p>Description<span class="required">*</span>:</p>
+                <textarea
+                  rows="5"
+                  cols="50"
+                  data-bind="value: telDesc"
+                ></textarea>
+              </div>
+            </div>
+            <div
+              class="content"
+              data-bind="visible: selectedServiceType().UID == 'presentation'"
+            >
+              <p>Please provide the following information:</p>
+              <p>
+                Type of request:
+                <select
+                  data-bind="disable: currentView() == 'view',
+                        options: presentationServiceTypes, optionsCaption: 'Select...', value: presentationSelectedType"
+                ></select>
+              </p>
+              <p>POC: <input /></p>
+              <p>Date: <input /></p>
+              <p>Duration: <input /></p>
+              <p>Locations: <input /></p>
+              <div data-bind="visible: presentationSelectedType() == 'DVC'">
+                <p>
+                  Call type:
                   <select
-                    type="text"
-                    data-bind="value: requisitionType, optons: requisitionTypes, optionsCaption: 'Select...',
-                     disable: currentView()=='view'"
+                    data-bind="options: presentationCallTypes, value: presentationCallType"
+                  ></select>
+                </p>
+                <p>
+                  VTC Dial Out:
+                  <select
+                    data-bind="options: presentationDialOuts, value: presentationDialOut"
                   ></select>
                 </p>
               </div>
-              <div class="eight wide column">
-                <p>
-                  Quantity of requisitions<span class="required">*</span>:
-                  <input
-                    type="text"
-                    data-bind="value: requisitionQuantity, disable: currentView()=='view'"
-                  ></textarea>
-                </p>
-              </div>
+              <p>
+                Connection Type:
+                <select
+                  data-bind="options: presentationConnectionTypes, value: presentationConnectionType"
+                ></select>
+              </p>
             </div>
-            <p>Comments<span class="required">*</span>:</p>
-            <textarea
-              class="editable-field"
-              data-bind="textInput: requisitionComments, disable: currentView()=='view'"
-            ></textarea>
-          </div>
-        </div>
-        <!-- Sample -->
-        <div
-          id="wo-property"
-          class="ui fluid card service-type-detail content"
-          style="display: none;"
-        >
-          <div class="content">
-            <h2 class="ui header">Property/Asset Management</h2>
-          </div>
-          <div class="content">
-            <p>work order specific info here.</p>
+            <div
+              class="content"
+              data-bind="visible: selectedServiceType().UID == 'property'"
+            >
+              <div class="ui toggle checkbox">
+                <input
+                  type="checkbox"
+                  class="editable-field"
+                  data-bind="value: propertyTransfer"
+                />
+                <label>Property Transfer</label>
+              </div>
+              <br />
+              <div class="ui toggle checkbox">
+                <input
+                  type="checkbox"
+                  class="editable-field"
+                  data-bind="value: propertyExcess"
+                />
+                <label>Excess Property</label>
+              </div>
+              <p>
+                Serial Tag Number:
+                <input
+                  class="editable-field"
+                  type="text"
+                  data-bind="value: propertySerialNumber"
+                />
+              </p>
+              <p>
+                Property Location:
+                <textarea
+                  class="editable-field"
+                  data-bind="textInput: propertyLocation"
+                ></textarea>
+              </p>
+            </div>
+            <div
+              class="content"
+              data-bind="visible: selectedServiceType().UID == 'requisition'"
+            >
+              <p>
+                Requisitions require the following information:
+              </p>
+              <div class="ui grid">
+                <div class="eight wide column">
+                  <p>
+                    Requisition Type<span class="required">*</span>:
+                    <select
+                      type="text"
+                      data-bind="value: requisitionType, options: requisitionTypes, optionsCaption: 'Select...',
+                     disable: currentView()=='view'"
+                    ></select>
+                  </p>
+                </div>
+                <div class="eight wide column">
+                  <p>
+                    Quantity of requisitions<span class="required">*</span>:
+                    <input
+                      type="text"
+                      data-bind="value: requisitionQuantity, disable: currentView()=='view'"
+                    />
+                  </p>
+                </div>
+              </div>
+              <p>Comments<span class="required">*</span>:</p>
+              <textarea
+                class="editable-field"
+                data-bind="textInput: requisitionComments, disable: currentView()=='view'"
+              ></textarea>
+            </div>
           </div>
         </div>
       </div>
-
       <!--Attachments and actions/approvals workflow-->
       <div class="ui grid">
         <div class="six wide column" data-bind="if: selectedServiceType">
@@ -1757,8 +1065,15 @@
               <h2 class="ui header">Attachments</h2>
             </div>
             <div class="content">
-              <div data-bind="visible: selectedServiceType().AttachmentRequired">
-                <h3>This service type has required attachments:<span class="required">*</span></h3>
+              <div
+                data-bind="visible: selectedServiceType().AttachmentRequired"
+              >
+                <h3>
+                  This service type has required attachments:<span
+                    class="required"
+                    >*</span
+                  >
+                </h3>
               </div>
               <div
                 id="instr-attachments"
@@ -1798,7 +1113,7 @@
                 type="button"
                 class="ui primary button editable-field"
                 onclick="newAttachment()"
-                data-bind="disable: requestHeader().RequestStatus == 'Open'"
+                data-bind="disable: requestStatus() == 'Closed'"
               >
                 New Attachment
               </button>

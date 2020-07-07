@@ -20,12 +20,6 @@ function initStaticListRefs() {
   vm.listRefConfigPipelines(new SPList(configPipelinesListDef));
   vm.listRefConfigRequestingOffices(new SPList(configRequestingOfficesListDef));
   vm.listRefConfigServiceType(new SPList(configServiceTypeListDef));
-
-  // Now, create a listRef for each of our service types:
-  $.each(woViews, function (name, view) {
-    console.log(name, view);
-    vm["listRef" + name](new SPList(view.listDef));
-  });
 }
 
 function initServiceTypeListRefs() {
@@ -40,16 +34,6 @@ function initServiceTypeListRefs() {
       serviceType.listRef = new SPList(JSON.parse(serviceType.ListDef));
     }
   });
-}
-
-function initVMVars() {
-  // set the wo types
-  var wotypes = [];
-  $.each(woViews, function (key, val) {
-    wotypes.push(val.name);
-  });
-
-  vm.requestTypes(wotypes);
 }
 
 function navSelectWorkOrder() {
@@ -72,9 +56,7 @@ function closeWorkOrder() {
 }
 
 function showDescription(woType) {
-  //vm.requestType(woType.UID);
   vm.selectedServiceType(woType);
-  //$('#wo-description-modal').dialog();
   $("#wo-description-modal").modal("show");
 }
 
@@ -84,7 +66,7 @@ function dismissDescription() {
 
 function newWorkOrder() {
   dismissDescription();
-  // Chained, requires vm.requestType to already be selected.
+  // Chained, requires vm.selectedServiceType to already be selected.
   //console.log(woViews[woType].id);
   // Open the detail tab view
   //$('.ui.menu').find('.item').tab('change tab', 'order-detail');
@@ -108,7 +90,7 @@ function newWorkOrder() {
   vm.requestorEmail(sal.globalConfig.currentUser.get_email());
   vm.requestorOffice();
   vm.requestStageNum(0);
-  vm.requestStatus("Pending");
+  vm.requestStatus("Draft");
 
   //Clear our requested fields.
   vm.requestClosedDate(null);
@@ -152,8 +134,8 @@ function viewWorkOrderItem(woID) {
     viewServiceTypeItem();
     buildPipelineElement();
     $(".editable-field").prop("disabled", true);
+    vm.tab("order-detail");
   });
-  vm.tab("order-detail");
 }
 
 function viewServiceTypeItem() {
@@ -181,8 +163,12 @@ function buildPipelineElement() {
   var pipeline = '<div class="ui mini ordered steps">';
 
   // First step is editing, this is always checked
+  var inDraft = vm.requestStatus() == "Draft" ? "active" : "completed";
+
   pipeline +=
-    '<div class="step completed">' +
+    '<div class="step ' +
+    inDraft +
+    '">' +
     '<div class="content">' +
     '<div class="title">Editing</div>' +
     '<div class="description">New Request</div>' +
@@ -191,6 +177,7 @@ function buildPipelineElement() {
   var status = "disabled";
   var curStage = parseInt(vm.requestStageNum());
   $.each(vm.selectedPipeline(), function (item, stage) {
+    status = "disabled";
     if (stage.Step < curStage) {
       status = "completed";
     } else if (stage.Step == curStage) {
@@ -223,7 +210,7 @@ function buildPipelineElement() {
     "</div></div></div>";
 
   $("#wo-progress-pipeline").html(pipeline);
-  console.log("building pipeline", vm.requestType());
+  //console.log("building pipeline", vm.selectedServiceType().Title);
 }
 
 function actionComplete() {
@@ -272,7 +259,6 @@ function saveWorkOrder() {
       // Save the current work order
       vm.requestStageNum(1);
       vm.requestStatus("Open");
-      //var valuePairs = [['Title', 'Test Work Order'], ['RequestType', vm.requestTypeName()]]
       var valuePairs = getValuePairs(workOrderListDef.viewFields);
 
       // TODO: Figure out how to submit people to people picker fields.
@@ -291,7 +277,7 @@ function saveWorkOrder() {
       break;
   }
 
-  switch (vm.requestType()) {
+  switch (vm.selectedServiceType().UID) {
     case "pu10k":
       save_pu10k();
       break;
@@ -354,12 +340,15 @@ function save_tel() {
   switch (vm.currentView()) {
     case "new":
       //vm.pu10kStage(0);
-      vm.currentListRef().createListItem(valuePairs, onSaveNewWorkOrderMaster);
+      vm.selectedServiceType().listRef.createListItem(
+        valuePairs,
+        onSaveNewWorkOrderMaster
+      );
       //vm.requestProgress(20);
       break;
     case "edit":
       // TODO: Pass the correct item
-      vm.currentListRef().updateListItem(
+      vm.selectedServiceType().listRef.updateListItem(
         vm.serviceTypeHeader().ID,
         valuePairs,
         onSaveEditWorkOrderCallback
@@ -490,7 +479,7 @@ function fetchAttachments() {
  ************************************************************/
 function newAssignment(role) {
   vm.listRefAssignment().showModal(
-    "NewForm.aspx",
+    "CustomNewForm.aspx",
     "New Assignment",
     { woId: vm.requestID(), role: role },
     function (args) {
@@ -667,7 +656,7 @@ function initApp() {
   // Setup models for each of the config lists we may connect to
   initStaticListRefs();
   // initPageListeners();
-  initVMVars();
+
   fetchConfigListData();
 
   //if (hash != '') {
