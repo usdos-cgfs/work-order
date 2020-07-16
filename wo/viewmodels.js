@@ -47,17 +47,33 @@ woViews = {
       name: "st_access",
       title: "st_access",
       viewFields: {
-        ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "requestID" },
-        AccessType: { type: "Text", koMap: "accessType" },
-        EmployeeType: { type: "Text", koMap: "accessEmployeeType" },
-        FullName: { type: "Text", koMap: "accessFullName" },
-        BadgeNum: { type: "Text", koMap: "accessBadgeNum" },
-        ExpirationDate: { type: "Text", koMap: "accessExpirationDate" },
-        Locations: { type: "Text", koMap: "accessLocations" },
-        Justification: { type: "Text", koMap: "accessJustification" },
+        ID: { type: "Text", koMap: "empty", required: false },
+        Title: { type: "Text", koMap: "requestID", required: false },
+        AccessType: { type: "Text", koMap: "accessType", required: false },
+        EmployeeType: {
+          type: "Text",
+          koMap: "accessEmployeeType",
+          required: false,
+        },
+        FullName: { type: "Text", koMap: "accessFullName", required: false },
+        BadgeNum: { type: "Text", koMap: "accessBadgeNum", required: false },
+        ExpirationDate: {
+          type: "Text",
+          koMap: "accessExpirationDate",
+          required: false,
+        },
+        Locations: { type: "Text", koMap: "accessLocations", required: false },
+        Justification: {
+          type: "Text",
+          koMap: "accessJustification",
+          required: false,
+        },
         Description: { type: "Text", koMap: "accessDesc" },
-        SpecialInstructions: { type: "Text", koMap: "accessSpecInst" },
+        SpecialInstructions: {
+          type: "Text",
+          koMap: "accessSpecInst",
+          required: false,
+        },
       },
     },
   },
@@ -105,26 +121,53 @@ woViews = {
       name: "st_diplomatic_passport",
       title: "st_diplomatic_passport",
       viewFields: {
-        ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "requestID" },
-        RequestType: { type: "Text", koMap: "diplomaticPassportSelectedType" },
-        Grade: { type: "Text", koMap: "diplomaticPassportGrade" },
+        ID: { type: "Text", koMap: "empty", required: false },
+        Title: { type: "Text", koMap: "requestID", required: false },
+        RequestType: {
+          type: "Text",
+          koMap: "diplomaticPassportSelectedType",
+          required: false,
+        },
+        Grade: {
+          type: "Text",
+          koMap: "diplomaticPassportGrade",
+          required: false,
+        },
         DestinationCity: {
           type: "Text",
           koMap: "diplomaticPassportDestinationCity",
+          required: false,
         },
         DestinationCountry: {
           type: "Text",
           koMap: "diplomaticPassportDestinationCountry",
+          required: false,
         },
-        Departure: { type: "Text", koMap: "diplomaticPassportDeparture" },
-        Return: { type: "Text", koMap: "diplomaticPassportReturn" },
-        Purpose: { type: "Text", koMap: "diplomaticPassportPurpose" },
+        Departure: {
+          type: "Text",
+          koMap: "diplomaticPassportDeparture",
+          required: false,
+        },
+        Return: {
+          type: "Text",
+          koMap: "diplomaticPassportReturn",
+          required: false,
+        },
+        Purpose: {
+          type: "Text",
+          koMap: "diplomaticPassportPurpose",
+          required: false,
+        },
         BirthLocation: {
           type: "Text",
           koMap: "diplomaticPassportBirthLocation",
+          required: false,
         },
-        Expiration: { type: "Text", koMap: "diplomaticPassportExpiration" },
+        Expiration: {
+          type: "Text",
+          koMap: "diplomaticPassportExpiration",
+          required: false,
+        },
       },
     },
   },
@@ -171,13 +214,21 @@ woViews = {
       name: "st_it_hardware",
       title: "st_it_hardware",
       viewFields: {
-        ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "requestID" },
-        Name: { type: "Text", koMap: "itHardwareName" },
-        Quantity: { type: "Text", koMap: "itHardwareQuantity" },
-        POCName: { type: "Text", koMap: "itHardwarePOCName" },
-        Cost: { type: "Text", koMap: "itHardwareCost" },
-        Description: { type: "Text", koMap: "itHardwareDescription" },
+        ID: { type: "Text", koMap: "empty", required: false },
+        Title: { type: "Text", koMap: "requestID", required: false },
+        Name: { type: "Text", koMap: "itHardwareName", required: false },
+        Quantity: {
+          type: "Text",
+          koMap: "itHardwareQuantity",
+          required: false,
+        },
+        POCName: { type: "Text", koMap: "itHardwarePOCName", required: false },
+        Cost: { type: "Text", koMap: "itHardwareCost", required: true },
+        Description: {
+          type: "Text",
+          koMap: "itHardwareDescription",
+          required: false,
+        },
       },
     },
   },
@@ -225,10 +276,14 @@ woViews = {
       title: "st_locksmith",
       viewFields: {
         ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "requestID" },
-        Location: { type: "Text", koMap: "locksmithLocation" },
-        LockType: { type: "Text", koMap: "locksmithLockType" },
-        Justification: { type: "Text", koMap: "locksmithJustification" },
+        Title: { type: "Text", koMap: "requestID", required: false },
+        Location: { type: "Text", koMap: "locksmithLocation", required: false },
+        LockType: { type: "Text", koMap: "locksmithLockType", required: false },
+        Justification: {
+          type: "Text",
+          koMap: "locksmithJustification",
+          required: false,
+        },
       },
     },
   },
@@ -265,8 +320,12 @@ woViews = {
       title: "st_network_drop",
       viewFields: {
         ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "requestID" },
-        Description: { type: "Text", koMap: "networkDropDescription" },
+        Title: { type: "Text", koMap: "requestID", required: false },
+        Description: {
+          type: "Text",
+          koMap: "networkDropDescription",
+          required: false,
+        },
       },
     },
   },
@@ -304,9 +363,9 @@ woViews = {
       title: "st_news_subscription",
       viewFields: {
         ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "requestID" },
-        SubName: { type: "Text", koMap: "newsSubName" },
-        Quantity: { type: "Text", koMap: "newsSubQuantity" },
+        Title: { type: "Text", koMap: "requestID", required: false },
+        SubName: { type: "Text", koMap: "newsSubName", required: false },
+        Quantity: { type: "Text", koMap: "newsSubQuantity", required: false },
       },
     },
   },
@@ -344,8 +403,12 @@ woViews = {
       title: "st_office_furniture",
       viewFields: {
         ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "requestID" },
-        Description: { type: "Text", koMap: "officeFurnitureDesc" },
+        Title: { type: "Text", koMap: "requestID", required: false },
+        Description: {
+          type: "Text",
+          koMap: "officeFurnitureDesc",
+          required: false,
+        },
       },
     },
   },
@@ -393,10 +456,14 @@ woViews = {
       title: "st_pu10k",
       viewFields: {
         ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "requestID" },
-        Description: { type: "Text", koMap: "pu10kDescription" },
-        CostEst: { type: "Text", koMap: "pu10kCostEst" },
-        CurrentStage: { type: "Text", koMap: "pu10kStage" },
+        Title: { type: "Text", koMap: "requestID", required: false },
+        Description: {
+          type: "Text",
+          koMap: "pu10kDescription",
+          required: false,
+        },
+        CostEst: { type: "Text", koMap: "pu10kCostEst", required: false },
+        CurrentStage: { type: "Text", koMap: "pu10kStage", required: false },
       },
     },
   },
@@ -441,13 +508,17 @@ woViews = {
       title: "st_telephone",
       viewFields: {
         ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "requestID" },
-        PhoneNum: { type: "Text", koMap: "telPhoneNum" },
-        Location: { type: "Text", koMap: "telLocation" },
-        RequestType: { type: "Text", koMap: "telSelectedType" },
-        To: { type: "Text", koMap: "telTo" },
-        From: { type: "Text", koMap: "telFrom" },
-        Description: { type: "Text", koMap: "telDesc" },
+        Title: { type: "Text", koMap: "requestID", required: false },
+        PhoneNum: { type: "Text", koMap: "telPhoneNum", required: false },
+        Location: { type: "Text", koMap: "telLocation", required: false },
+        RequestType: {
+          type: "Text",
+          koMap: "telSelectedType",
+          required: false,
+        },
+        To: { type: "Text", koMap: "telTo", required: false },
+        From: { type: "Text", koMap: "telFrom", required: false },
+        Description: { type: "Text", koMap: "telDesc", required: false },
       },
     },
   },
@@ -537,12 +608,32 @@ woViews = {
       title: "st_property",
       viewFields: {
         ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "requestID" },
-        PropertyTransfer: { type: "Bool", koMap: "propertyTransfer" },
-        ExcessProperty: { type: "Bool", koMap: "propertyExcess" },
-        RecievingReport: { type: "Text", koMap: "propertyRecievingReport" },
-        SerialNumber: { type: "Text", koMap: "propertySerialNumber" },
-        PropertyLocation: { type: "Text", koMap: "propertyLocation" },
+        Title: { type: "Text", koMap: "requestID", required: false },
+        PropertyTransfer: {
+          type: "Bool",
+          koMap: "propertyTransfer",
+          required: false,
+        },
+        ExcessProperty: {
+          type: "Bool",
+          koMap: "propertyExcess",
+          required: false,
+        },
+        RecievingReport: {
+          type: "Text",
+          koMap: "propertyRecievingReport",
+          required: false,
+        },
+        SerialNumber: {
+          type: "Text",
+          koMap: "propertySerialNumber",
+          required: false,
+        },
+        PropertyLocation: {
+          type: "Text",
+          koMap: "propertyLocation",
+          required: false,
+        },
       },
     },
   },
@@ -590,13 +681,21 @@ woViews = {
       name: "st_facilities",
       title: "st_facilities",
       viewFields: {
-        ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "requestID" },
-        Services: { type: "Text", koMap: "facilitiesService" },
-        Description: { type: "Text", koMap: "facilitiesDesc" },
-        Location: { type: "Text", koMap: "facilitiesLoc" },
-        SpecialAccomodation: { type: "Bool", koMap: "facilitiesSpecAcc" },
-        SpecialInstructions: { type: "Text", koMap: "facilitiesSpecInst" },
+        ID: { type: "Text", koMap: "empty", required: false },
+        Title: { type: "Text", koMap: "requestID", required: false },
+        Services: { type: "Text", koMap: "facilitiesService", required: false },
+        Description: { type: "Text", koMap: "facilitiesDesc", required: false },
+        Location: { type: "Text", koMap: "facilitiesLoc", required: false },
+        SpecialAccomodation: {
+          type: "Bool",
+          koMap: "facilitiesSpecAcc",
+          required: false,
+        },
+        SpecialInstructions: {
+          type: "Text",
+          koMap: "facilitiesSpecInst",
+          required: false,
+        },
       },
     },
   },
@@ -644,11 +743,19 @@ woViews = {
       title: "st_print",
       viewFields: {
         ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "requestID" },
-        DateNeeded: { type: "DateTime", koMap: "printDateNeeded" },
-        Quantity: { type: "Text", koMap: "printQuantity" },
-        Description: { type: "Text", koMap: "printDesc" },
-        SpecialInstructions: { type: "Text", koMap: "printSpecialInst" },
+        Title: { type: "Text", koMap: "requestID", required: false },
+        DateNeeded: {
+          type: "DateTime",
+          koMap: "printDateNeeded",
+          required: false,
+        },
+        Quantity: { type: "Text", koMap: "printQuantity", required: false },
+        Description: { type: "Text", koMap: "printDesc", required: false },
+        SpecialInstructions: {
+          type: "Text",
+          koMap: "printSpecialInst",
+          required: false,
+        },
       },
     },
   },
@@ -697,10 +804,18 @@ woViews = {
       title: "st_supplies",
       viewFields: {
         ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "requestID" },
-        DateNeeded: { type: "DateTime", koMap: "suppliesDateNeeded" },
-        Name: { type: "Text", koMap: "suppliesName" },
-        SpecialInstructions: { type: "Text", koMap: "suppliesSpecialInst" },
+        Title: { type: "Text", koMap: "requestID", required: false },
+        DateNeeded: {
+          type: "DateTime",
+          koMap: "suppliesDateNeeded",
+          required: false,
+        },
+        Name: { type: "Text", koMap: "suppliesName", required: false },
+        SpecialInstructions: {
+          type: "Text",
+          koMap: "suppliesSpecialInst",
+          required: false,
+        },
       },
     },
   },
@@ -738,10 +853,22 @@ woViews = {
       title: "st_requisition",
       viewFields: {
         ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "requestID" },
-        RequisitionType: { type: "Text", koMap: "requisitionType" },
-        Quantity: { type: "Text", koMap: "requisitionQuantity" },
-        Comments: { type: "Text", koMap: "requisitionComments" },
+        Title: { type: "Text", koMap: "requestID", required: false },
+        RequisitionType: {
+          type: "Text",
+          koMap: "requisitionType",
+          required: false,
+        },
+        Quantity: {
+          type: "Text",
+          koMap: "requisitionQuantity",
+          required: false,
+        },
+        Comments: {
+          type: "Text",
+          koMap: "requisitionComments",
+          required: false,
+        },
       },
     },
   },
@@ -796,6 +923,7 @@ var workOrderListDef = {
     RequestorOffice: { type: "Text", koMap: "requestorOfficeLookupId" },
     RequestStage: { type: "Text", koMap: "requestStageNum" },
     RequestStatus: { type: "Text", koMap: "requestStatus" },
+    RequestDescription: { type: "Text", koMap: "requestDescription" },
     ServiceType: { type: "Text", koMap: "requestServiceTypeLookupId" },
     ClosedDate: { type: "Text", koMap: "requestClosedDate" },
     Created: { type: "Date", koMap: "requestSubmittedDate" },
@@ -806,6 +934,7 @@ var approvalListDef = {
   name: "Adjudication",
   title: "Adjudication",
   viewFields: {
+    ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "requestID" },
     Adjudication: { type: "Choice", koMap: "empty" },
     Comment: { type: "Text", koMap: "empty" },
@@ -818,6 +947,7 @@ var assignmentListDef = {
   name: "Assignment",
   title: "Assignment",
   viewFields: {
+    ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "empty" },
     Assignee: { type: "Person", koMap: "empty" },
     ActionOffice: { type: "Lookup", koMap: "empty" },
@@ -831,6 +961,7 @@ var commentListDef = {
   name: "Comment",
   title: "Comment",
   viewFields: {
+    ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "empty" },
     Comment: { type: "Text", koMap: "empty" },
     Author: { type: "Text", koMap: "empty" },
@@ -838,10 +969,26 @@ var commentListDef = {
   },
 };
 
+var workOrderEmailsListDef = {
+  name: "WorkOrderEmails",
+  title: "WorkOrderEmails",
+  viewFields: {
+    ID: { type: "Text", koMap: "empty" },
+    Title: { type: "Text", koMap: "empty" },
+    To: { type: "Person", koMap: "empty" },
+    CC: { type: "Person", koMap: "empty" },
+    BCC: { type: "Person", koMap: "empty" },
+    Body: { type: "Text", koMap: "empty" },
+    Sent: { type: "Bool", koMap: "empty" },
+    DateSent: { type: "Date", koMap: "empty" },
+  },
+};
+
 var workOrderDocDef = {
   name: "WorkOrderDocuments",
   title: "Work Order Documents",
   viewFields: {
+    ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "empty" },
     WorkOrderID: { type: "Text", koMap: "empty" },
   },
@@ -895,6 +1042,7 @@ var configRequestingOfficesListDef = {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "empty" },
     Active: { type: "Text", koMap: "empty" },
+    ROGroup: { type: "Person", koMap: "empty" },
   },
 };
 
@@ -932,6 +1080,8 @@ function koviewmodel() {
   self.serviceTypeAbbreviations = ko.observableArray(Object.keys(woViews));
   self.serviceTypeViews = ko.observable(woViews);
 
+  self.userGroupMembership = ko.observable();
+
   /************************************************************
    * ADMIN: Authorize Current user to take actions
    ************************************************************/
@@ -947,6 +1097,13 @@ function koviewmodel() {
           ao.UserAddress.get_lookupId() == sal.globalConfig.currentUser.get_id()
       );
   });
+
+  self.userActionOfficeOwnership = ko.pureComputed(() => {
+    return self.userActionOfficeMembership().filter((uao) => {
+      return uao.CanAssign;
+    });
+  });
+
   // Can the current user take action on the record?
   self.requestCurUserAction = ko.pureComputed(function () {
     return true;
@@ -963,12 +1120,7 @@ function koviewmodel() {
   self.requestCurUserAssign = ko.pureComputed(function () {
     if (self.requestStage()) {
       // does the current user have CanAssign to any offices?
-      let uao = self
-        .userActionOfficeMembership()
-        .filter((uao) => {
-          return uao.CanAssign;
-        })
-        .map((uao) => uao.Office);
+      let uao = self.userActionOfficeOwnership().map((uao) => uao.Office);
 
       // Get the office assigned to this stage,
       let assignedOffice = self
@@ -1001,6 +1153,22 @@ function koviewmodel() {
     }
   });
 
+  self.assignRemove = function (assignment) {
+    console.log("deleting assignee", assignment);
+    self.listRefAssignment().deleteListItem(assignment.ID, () => {
+      // SP.UI.Notify.addNotification(
+      //   assignment.ActionOffice.get_lookupValue() + " Removed",
+      //   true
+      // );
+
+      timedNotification(
+        assignment.ActionOffice.get_lookupValue() + " Removed",
+        2 * 1000
+      );
+      fetchAssignments();
+    });
+  };
+
   self.assignAssignee = ko.observable();
 
   /************************************************************
@@ -1018,6 +1186,13 @@ function koviewmodel() {
 
       return uao.includes(assignedOffice.Office);
     }
+  });
+
+  /************************************************************
+   * ADMIN: Approvals/Actions Table
+   ************************************************************/
+  self.showActionsTable = ko.pureComputed(() => {
+    return false;
   });
 
   /************************************************************
@@ -1045,6 +1220,7 @@ function koviewmodel() {
   self.listRefApproval = ko.observable();
   self.listRefAssignment = ko.observable();
   self.listRefComment = ko.observable();
+  self.listRefWOEmails = ko.observable();
 
   // Configuration Lists
   self.listRefConfigActionOffices = ko.observable();
@@ -1070,9 +1246,10 @@ function koviewmodel() {
   };
 
   self.getRequestStage = function (request) {
-    return selectPipelineById(request.ServiceType.get_lookupId()).find(
-      (step) => step.Step == request.RequestStage
-    ).Title;
+    const curStage = selectPipelineById(
+      request.ServiceType.get_lookupId()
+    ).find((step) => step.Step == request.RequestStage);
+    return curStage ? curStage.Title : "Closed";
   };
 
   self.estimateClosingDate = function (request) {
@@ -1095,6 +1272,7 @@ function koviewmodel() {
 
   self.currentView = ko.observable();
 
+  self.requestIsSaveable = ko.observable();
   self.requestAttachments = ko.observableArray();
 
   self.requestApprovals = ko.observableArray();
@@ -1173,6 +1351,8 @@ function koviewmodel() {
   self.requestHeader = ko.observable(); // This is the raw JSON object returned by the work order query.
   self.serviceTypeHeader = ko.observable(); // This is the raw JSON object object returned by the service type query.
 
+  self.requestDescription = ko.observable(); // The general description for this request. Some service types only have this
+
   self.requestStatus = ko.observable(); // Open, Closed, etc
   self.requestStageNum = ko.observable(0); // 0, 1, 2 etc, used for our view pipelines.
 
@@ -1210,6 +1390,16 @@ function koviewmodel() {
           .find((ro) => ro.ID == value.get_lookupId())
       );
     },
+  });
+
+  self.requestorOfficeUserOpt = ko.pureComputed(function () {
+    let groupIds = self.userGroupMembership().map((ug) => ug.ID);
+    let activeFilteredRO = self
+      .configRequestingOffices()
+      .filter((ro) => ro.Active) //Check if we're active
+      .filter((ro) => groupIds.includes(ro.ROGroup.get_lookupId()));
+
+    return activeFilteredRO;
   });
 
   self.requestSubmittedDate = ko.observable();

@@ -151,6 +151,12 @@ function isBusinessDay(date) {
   return true;
 }
 
+function timedNotification(message, timeout) {
+  let notifyId = SP.UI.Notify.addNotification(message, true);
+
+  window.setTimeout(SP.UI.Notify.removeNotification(notifyId), timeout);
+}
+
 function loadListDefsToSP() {
   $.each(woViews, function (name, view) {
     //vm["listRef" + name]().setValuePairs(["ListDef", JSON.stringify(view.listDef]));
@@ -178,5 +184,29 @@ function loadPipelinesToSP() {
     vm.listRefConfigPipelines().createListItem(vp, function (idx) {
       console.log("Index Created", idx);
     });
+  });
+}
+
+function buildROFolders() {
+  // Build a folder for each Requesting Office in each of our lists
+  window.alert = function () {};
+  vm.configServiceTypes().forEach((stype) => {
+    console.log("Creating ", stype);
+
+    if (stype.Active) {
+      vm.configRequestingOffices().forEach((ro) => {
+        let vp = [[]];
+        stype.listRef.createListFolder(ro.Title, () =>
+          console.log("Create Folder Success: ", ro.Title)
+        );
+      });
+    }
+  });
+}
+
+function createROGroups() {
+  // Create a group for each RO and assign the restricted read role.
+  vm.configRequestingOffices().forEach((ro) => {
+    createSiteGroup("RO_" + ro.Title, ["Restricted Read"], "workorder Owners");
   });
 }

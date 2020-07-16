@@ -72,6 +72,93 @@ sal.generateEmptyItem = function (viewFields) {
   return focusedItems;
 };
 
+function createSiteGroup(groupName, permissions, groupOwner) {
+  /* groupName: the name of the new SP Group
+   *  permissions: an array of permissions to assign to the group
+   * groupOwner: the name of the owner group
+   */
+
+  var clientContext = SP.ClientContext.get_current();
+  this.oWebsite = clientContext.get_web();
+
+  var groupCreationInfo = new SP.GroupCreationInformation();
+  groupCreationInfo.set_title(groupName);
+  this.oGroup = oWebsite.get_siteGroups().add(groupCreationInfo);
+  oGroup.set_owner(oWebsite.get_associatedOwnerGroup());
+
+  oGroup.update();
+  var collRoleDefinitionBinding = SP.RoleDefinitionBindingCollection.newObject(
+    clientContext
+  );
+
+  this.oRoleDefinitions = [];
+
+  permissions.forEach((perm) => {
+    let oRoleDefinition = oWebsite.get_roleDefinitions().getByName(perm);
+    this.oRoleDefinitions.push(oRoleDefinition);
+    collRoleDefinitionBinding.add(oRoleDefinition);
+  });
+
+  var collRollAssignment = oWebsite.get_roleAssignments();
+  collRollAssignment.add(oGroup, collRoleDefinitionBinding);
+
+  clientContext.load(oGroup, "Title");
+  //clientContext.load(oRoleDefinition, "Name");
+
+  clientContext.executeQueryAsync(
+    Function.createDelegate(this, this.onCreateGroupSucceeded),
+    Function.createDelegate(this, this.onCreateGroupFailed)
+  );
+}
+
+function onCreateGroupSucceeded() {
+  var roleInfo =
+    oGroup.get_title() +
+    " created and assigned to " +
+    oRoleDefinitions.forEach((rd) => rd + ", ");
+  console.log(roleInfo);
+}
+
+function onCreateGroupFailed(sender, args) {
+  alert("Request failed. " + args.get_message() + "\n" + args.get_stackTrace());
+}
+
+function getCurrentUserGroups(callback) {
+  var clientContext = SP.ClientContext.get_current();
+  oUser = clientContext.get_web().get_currentUser();
+  oGroups = oUser.get_groups();
+  this.getCurrentUserGroupsCallback = callback;
+  clientContext.load(oUser);
+  clientContext.load(oGroups);
+  clientContext.executeQueryAsync(
+    Function.createDelegate(this, function () {
+      var groupsInfo = "";
+      var groups = [];
+      var groupsEnumerator = oGroups.getEnumerator();
+      console.log("Count of current user groups: " + oGroups.get_count());
+      while (groupsEnumerator.moveNext()) {
+        var oGroup = groupsEnumerator.get_current();
+        var group = {};
+        group.ID = oGroup.get_id();
+        group.Title = oGroup.get_title();
+        groupsInfo +=
+          "\n" +
+          "Group ID: " +
+          oGroup.get_id() +
+          ", " +
+          "Title : " +
+          oGroup.get_title();
+        groups.push(group);
+      }
+      getCurrentUserGroupsCallback(groups);
+      console.log(groupsInfo.toString());
+    }),
+    Function.createDelegate(this, function () {
+      console.log("failed");
+    })
+  );
+}
+
 function SPList(listDef) {
   /*
       Expecting a list definition object in the following format:
@@ -174,7 +261,7 @@ function SPList(listDef) {
   /*****************************************************************
                                 createListItem      
     ******************************************************************/
-  self.createListItem = function (valuePairs, callback) {
+  self.createListItem = function (valuePairs, callback, folderName = "") {
     console.log("sal function", this);
     self.callbackCreateListItem = callback;
     //self.updateConfig();
@@ -182,6 +269,16 @@ function SPList(listDef) {
     console.log("context loaded: ", oList);
 
     var itemCreateInfo = new SP.ListItemCreationInformation();
+    if (folderName) {
+      let folderUrl =
+        sal.globalConfig.siteUrl +
+        "/Lists/" +
+        self.config.def.name +
+        "/" +
+        folderName;
+      itemCreateInfo.set_folderUrl(folderUrl);
+      console.log(folderUrl);
+    }
     this.oListItem = oList.addItem(itemCreateInfo);
     for (i = 0; i < valuePairs.length; i++) {
       this.oListItem.set_item(valuePairs[i][0], valuePairs[i][1]);
@@ -214,7 +311,8 @@ function SPList(listDef) {
     self.callbackGetListItem = callback;
     //self.updateConfig();
     console.log("context loaded", self.config);
-    var camlQuery = new SP.CamlQuery();
+    var camlQuery = new SP.CamlQuery.createAllItemsQuery();
+
     camlQuery.set_viewXml(caml);
     self.collListItem = self.config.listRef.getItems(camlQuery);
     self.config.currentContext.load(self.collListItem);
@@ -229,14 +327,14 @@ function SPList(listDef) {
     var listItemEnumerator = self.collListItem.getEnumerator();
     self.focusedItems = [];
     console.log("Get list succeeded");
+    var keys = [];
+    $.each(this.config.def.viewFields, function (field, obj) {
+      keys.push(field);
+    });
     while (listItemEnumerator.moveNext()) {
       var oListItem = listItemEnumerator.get_current();
       //console.log(oListItem);
       var listObj = {};
-      var keys = [];
-      $.each(this.config.def.viewFields, function (field, obj) {
-        keys.push(field);
-      });
       console.log("keys", keys);
       $.each(keys, function (idx, item) {
         var getItem = oListItem.get_item(item);
@@ -279,6 +377,29 @@ function SPList(listDef) {
   function onUpdateListItemsSucceeded(sender, args) {
     //alert('Item updated!');
     self.callbackUpdateListItem();
+  }
+
+  /*****************************************************************
+                            deleteListItem      
+    ******************************************************************/
+  self.deleteListItem = function (id, callback) {
+    //[["ColName", "Value"], ["Col2", "Value2"]]
+    self.callbackDeleteListItem = callback;
+    //self.updateConfig();
+    var oList = self.config.listRef;
+
+    this.oListItem = oList.getItemById(id);
+    this.oListItem.deleteObject();
+
+    self.config.currentContext.executeQueryAsync(
+      onDeleteListItemsSucceeded.bind(this),
+      onQueryFailed.bind(this)
+    );
+  };
+
+  function onDeleteListItemsSucceeded(sender, args) {
+    //alert('Item updated!');
+    self.callbackDeleteListItem();
   }
 
   /*****************************************************************
@@ -382,6 +503,7 @@ function SPList(listDef) {
   };
 
   self.createFolder = function (folderName, callback) {
+    // Used in document libraries
     self.requestedCallback = callback;
 
     var folder = self.config.listRef
@@ -389,6 +511,24 @@ function SPList(listDef) {
       .get_folders()
       .add(folderName);
     self.config.currentContext.load(folder);
+    self.config.currentContext.executeQueryAsync(function () {
+      self.requestedCallback();
+    }, onQueryFailed);
+  };
+
+  self.createListFolder = function (folderName, callback) {
+    // Used for lists, duh
+    self.requestedCallback = callback;
+
+    var itemCreateInfo = new SP.ListItemCreationInformation();
+    itemCreateInfo.set_underlyingObjectType(SP.FileSystemObjectType.folder);
+    itemCreateInfo.set_leafName(folderName);
+    var newItem = self.config.listRef.addItem(itemCreateInfo);
+    newItem.set_item("Title", folderName);
+
+    newItem.update();
+
+    self.config.currentContext.load(newItem);
     self.config.currentContext.executeQueryAsync(function () {
       self.requestedCallback();
     }, onQueryFailed);

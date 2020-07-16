@@ -288,16 +288,39 @@
                 <div id="wo-progress-pipeline"></div>
               </div>
             </div>
-            <div class="row">
+            <div
+              class="row"
+              data-bind="if: requestCurUserAssign || requestCurUserAdvance"
+            >
               <div class="four wide column">
-                <button
-                  type="button"
-                  class="ui fluid blue button"
-                  data-bind="visible: requestCurUserAssign() && requestStage().ActionType == 'Pending Assignment'"
-                  onclick="$('#wo-routing').accordion('toggle', 0)"
+                <div
+                  class="ui compact menu"
+                  data-bind="if: requestCurUserAssign()"
                 >
-                  Assign
-                </button>
+                  <select
+                    class="ui search dropdown"
+                    data-bind=" value: assignAssignee,
+                        options: assignCurUserAssignees, 
+                        optionsText: (AO) => {return AO.Title}, 
+                        optionsCaption: 'Select...'"
+                  ></select>
+                  <button
+                    type="button"
+                    class="ui primary right attached button"
+                    onclick="createAssignment()"
+                    data-bind="enable: assignAssignee"
+                  >
+                    Assign
+                  </button>
+                  <!-- <button
+                      type="button"
+                      class="ui primary button"
+                      onclick="newAssignment()"
+                      data-bind=""
+                    >
+                      New Assignment
+                    </button> -->
+                </div>
               </div>
               <div class="four wide column">
                 <button
@@ -361,7 +384,7 @@
                 <th>Role</th>
                 <th>Assignment Date</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <th data-bind="if: requestCurUserAssign">Actions</th>
               </tr>
             </thead>
             <tbody data-bind="foreach: requestAssignees">
@@ -378,38 +401,15 @@
                 <td>
                   <p>In Progress</p>
                 </td>
-                <td>
-                  <i class="fas fa-search"></i>
-                  <i class="fas fa-user-times"></i>
+                <td data-bind="if: $root.requestCurUserAssign">
+                  <i
+                    class="fas fa-user-times pointer"
+                    data-bind="click: $root.assignRemove"
+                  ></i>
                 </td>
               </tr>
             </tbody>
           </table>
-        </div>
-        <div class="aligned right" data-bind="visible: requestCurUserAssign">
-          <select
-            class="ui search dropdown"
-            data-bind=" value: assignAssignee,
-              options: assignCurUserAssignees, 
-              optionsText: (AO) => {return AO.Title}, 
-              optionsCaption: 'Select...'"
-          ></select>
-          <button
-            type="button"
-            class="ui primary button"
-            onclick="createAssignment()"
-            data-bind="enable: assignAssignee"
-          >
-            Assign
-          </button>
-          <!-- <button
-            type="button"
-            class="ui primary button"
-            onclick="newAssignment()"
-            data-bind=""
-          >
-            New Assignment
-          </button> -->
         </div>
       </div>
     </div>
@@ -422,125 +422,125 @@
               <h2 class="ui header">Requestor Information</h2>
             </div>
             <div class="content">
-              <table id="table-wo-request-info">
-                <tbody>
-                  <tr>
-                    <td style="align-content: flex-end;">
-                      <p>
-                        Request Status:
-                        <input
-                          class="non-editable-field"
-                          type="text"
-                          data-bind="value: requestStatus"
-                        />
-                      </p>
-                    </td>
-                    <td data-bind="visible: requestClosedDate">
-                      <p>
-                        Closed Date Date:<input
-                          class="non-editable-field"
-                          type="text"
-                          data-bind="value: requestClosedDate() ? requestClosedDate().toLocaleString() : ''"
-                        />
-                      </p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="align-content: flex-end;">
-                      <p>
-                        Request ID:
-                        <input
-                          class="non-editable-field"
-                          type="text"
-                          data-bind="value: requestID"
-                        />
-                      </p>
-                    </td>
-                    <td>
-                      <p data-bind="if: configRequestingOffices()">
-                        Requestor Office<span class="required">*</span>:
-                        <select
-                          class="editable-field new"
-                          type="text"
-                          data-bind="value: requestorOffice, 
-                            options: configRequestingOffices().filter((ro) => ro.Active), 
+              <div class="ui form" id="table-wo-request-info">
+                <div class="two fields">
+                  <div class="field">
+                    <label>
+                      Request Status:
+                    </label>
+                    <input
+                      class="non-editable-field"
+                      type="text"
+                      data-bind="value: requestStatus"
+                    />
+                  </div>
+                  <div class="field" data-bind="visible: requestClosedDate">
+                    <label>
+                      Closed Date Date:
+                    </label>
+                    <input
+                      class="non-editable-field"
+                      type="text"
+                      data-bind="value: requestClosedDate() ? requestClosedDate().toLocaleString() : ''"
+                    />
+                  </div>
+                </div>
+                <div class="two fields">
+                  <div class="field">
+                    <label>
+                      Request ID:
+                    </label>
+                    <input
+                      class="non-editable-field"
+                      type="text"
+                      data-bind="value: requestID"
+                    />
+                  </div>
+                  <div class="field">
+                    <label data-bind="if: configRequestingOffices()">
+                      Requestor Office<span class="required">*</span>:
+                    </label>
+                    <select
+                      class="editable-field new"
+                      type="text"
+                      data-bind="value: requestorOffice, 
+                            options: requestorOfficeUserOpt, 
                             optionsText: function(ro) {return ro.Title},
                             disable: currentView() == 'view'"
-                        ></select>
-                      </p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <p>
-                        Requestor Name:
-                        <input
-                          class="non-editable-field"
-                          type="text"
-                          data-bind="value: requestorName"
-                        />
-                      </p>
-                    </td>
-                    <td>
-                      <p data-bind="if: requestorOffice">
-                        Manager:
-                        <input
-                          class="non-editable-field"
-                          type="text"
-                          data-bind="value: requestorManager"
-                        />
-                      </p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <p>
-                        Requestor Phone:
-                        <input
-                          class="editable-field"
-                          type="text"
-                          data-bind="value: requestorTelephone, disable: currentView() == 'view'"
-                        />
-                      </p>
-                    </td>
-                    <td>
-                      <p>
-                        Requestor Email:
-                        <input
-                          class="non-editable-field"
-                          type="text"
-                          data-bind="value: requestorEmail"
-                        />
-                      </p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <p>
-                        Submitted Date:<input
-                          class="non-editable-field"
-                          type="text"
-                          data-bind="value: requestSubmittedDate() ? requestSubmittedDate().toLocaleString() : ''"
-                        />
-                      </p>
-                    </td>
-                    <td>
-                      <p>
-                        Service Type<span class="required">*</span>:
-                        <select
-                          class="editable-field new"
-                          type="select"
-                          data-bind="value: selectedServiceType,
+                    ></select>
+                  </div>
+                </div>
+                <div class="two fields">
+                  <div class="field">
+                    <label>
+                      Requestor Name:
+                    </label>
+                    <input
+                      class="non-editable-field"
+                      type="text"
+                      data-bind="value: requestorName"
+                    />
+                  </div>
+                  <div class="field">
+                    <label data-bind="if: requestorOffice">
+                      Manager:
+                    </label>
+                    <input
+                      class="non-editable-field"
+                      type="text"
+                      data-bind="value: requestorManager"
+                    />
+                  </div>
+                </div>
+                <div class="two fields">
+                  <div class="field">
+                    <label>
+                      Requestor Phone:
+                    </label>
+                    <input
+                      class="editable-field"
+                      type="text"
+                      data-bind="value: requestorTelephone, disable: currentView() == 'view'"
+                    />
+                  </div>
+                  <div class="field">
+                    <label>
+                      Requestor Email:
+                    </label>
+                    <input
+                      class="non-editable-field"
+                      type="text"
+                      data-bind="value: requestorEmail"
+                    />
+                  </div>
+                </div>
+                <div class="two fields">
+                  <div class="field">
+                    <label>
+                      Submitted Date:
+                    </label>
+                    <input
+                      class="non-editable-field"
+                      type="text"
+                      data-bind="value: requestSubmittedDate() ? requestSubmittedDate().toLocaleString() : ''"
+                    />
+                  </div>
+                  <div class="field">
+                    <label>
+                      Service Type<span class="required">*</span>:
+                    </label>
+                    <select
+                      class="editable-field new"
+                      type="select"
+                      data-bind="value: selectedServiceType,
                                                            options: configServiceTypes() ? configServiceTypes().filter((stype) => stype.Active) : [{}, {}],
                                                            optionsText: function(stype) {return stype.Title ? stype.Title : 'unknown'},
                                                            optionsCaption: 'Select...',
                                                            enable: currentView() == 'new'"
-                        ></select>
-                      </p>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                    ></select>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -598,8 +598,11 @@
               class="content"
               data-bind="visible: selectedServiceType().UID == 'access'"
             >
-              <p>Building access requests require the following information:</p>
-              <p>
+              <div class="ui form">
+                <h4 class="ui dividing header">
+                  Building access requests require the following information:
+                </h4>
+                <!-- <p>
                 Access Type:
                 <select
                   data-bind="value: accessType,
@@ -608,170 +611,182 @@
                                                   enable: currentView()=='new'"
                 ></select>
               </p>
-              <p>
-                Employee Type:
-                <select
-                  data-bind="value: accessEmployeeType,
+                <p>
+                  Employee Type:
+                  <select
+                    data-bind="value: accessEmployeeType,
                                                   options: accessEmployeeTypeOpts,
                                                   optionscaption: 'Select...',
                                                   enable: currentView()=='new'"
-                ></select>
-              </p>
-              <div class="ui grid">
-                <div class="eight wide column">
-                  <p>
-                    Full Name<span class="required">*</span>:
+                  ></select>
+                </p> -->
+                <div class="two fields">
+                  <div class="field">
+                    <label> Full Name<span class="required">*</span>: </label>
                     <input
                       type="text"
                       data-bind="value: accessFullName, disable: currentView()=='view'"
                     />
-                  </p>
-                </div>
-                <div class="eight wide column">
-                  <p>
-                    Badge Num<span class="required">*</span>:
+                  </div>
+                  <div class="field">
+                    <label> Badge Num<span class="required">*</span>: </label>
                     <input
                       type="text"
                       data-bind="value: accessBadgeNum, disable: currentView()=='view'"
                     />
-                  </p>
+                  </div>
                 </div>
-                <div class="eight wide column">
-                  <p>
-                    Expiration Date<span class="required">*</span>:
+                <div class="two fields">
+                  <div class="field">
+                    <label>
+                      Expiration Date<span class="required">*</span>:
+                    </label>
                     <input
                       type="date"
                       data-bind="value: accessExpirationDateStr, disable: currentView()=='view'"
                     />
-                  </p>
-                </div>
-                <div class="eight wide column">
-                  <p>
-                    Locations<span class="required">*</span>:
+                  </div>
+                  <div class="field">
+                    <label> Locations<span class="required">*</span>: </label>
                     <input
                       type="text"
                       data-bind="value: accessLocations, disable: currentView()=='view'"
                     />
-                  </p>
+                  </div>
                 </div>
+                <div class="field">
+                  <label>Justification<span class="required">*</span>:</label>
+                  <textarea
+                    class="editable-field"
+                    data-bind="textInput: accessJustification, disable: currentView()=='view'"
+                  ></textarea>
+                </div>
+                <!-- <p>Description<span class="required">*</span>:</p>
+                <textarea
+                  class="editable-field"
+                  data-bind="textInput: accessDesc, disable: currentView()=='view'"
+                ></textarea>
+                <p>Special Instructions:</p>
+                <textarea
+                  class="editable-field"
+                  data-bind="textInput: accessSpecInst, disable: currentView()=='view'"
+                ></textarea> -->
               </div>
-              <p>Justification<span class="required">*</span>:</p>
-              <textarea
-                class="editable-field"
-                data-bind="textInput: accessJustification, disable: currentView()=='view'"
-              ></textarea>
-              <p>Description<span class="required">*</span>:</p>
-              <textarea
-                class="editable-field"
-                data-bind="textInput: accessDesc, disable: currentView()=='view'"
-              ></textarea>
-              <p>Special Instructions:</p>
-              <textarea
-                class="editable-field"
-                data-bind="textInput: accessSpecInst, disable: currentView()=='view'"
-              ></textarea>
+            </div>
+            <div
+              class="content"
+              data-bind="visible: selectedServiceType().UID == 'facilities'"
+            >
+              <div data-bind="html: selectedServiceType().Description"></div>
+              <div class="ui form">
+                <h4 class="ui dividing header">For all other issues:</h4>
+              </div>
             </div>
             <div
               class="content"
               data-bind="visible: selectedServiceType().UID == 'diplomatic_passport'"
             >
               <!-- We're going to cheat and overload this for diplomatic visa's as well but let's put that off for now -->
-              <p>
-                Request Type<span class="required">*</span>:
-                <select
-                  class="editable-field"
-                  type="text"
-                  data-bind="disable: currentView() == 'view',
+              <div class="ui form">
+                <div class="six wide field">
+                  <label> Request Type<span class="required">*</span>: </label>
+                  <select
+                    class="editable-field"
+                    type="text"
+                    data-bind="disable: currentView() == 'view',
                         options: diplomaticPassportServiceTypes, optionsCaption: 'Select...', value: diplomaticPassportSelectedType"
-                ></select>
-              </p>
-              <table
-                data-bind="visible: diplomaticPassportSelectedType() != undefined"
-              >
-                <tr>
-                  <td>
-                    <p>
-                      Grade/Rank<span class="required">*</span>:
-                      <input
-                        class="editable-field"
-                        type="text"
-                        data-bind="value: diplomaticPassportGrade, disable: currentView() == 'view'"
-                      />
-                    </p>
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <p>
-                      Destination Country<span class="required">*</span>:
+                  ></select>
+                </div>
+                <div
+                  data-bind="visible: diplomaticPassportSelectedType() != undefined"
+                >
+                  <div class="eight wide field">
+                    <label> Grade/Rank<span class="required">*</span>: </label>
+                    <input
+                      class="editable-field"
+                      type="text"
+                      data-bind="value: diplomaticPassportGrade, disable: currentView() == 'view'"
+                    />
+                  </div>
+                  <h4 class="ui dividing header">Destination</h4>
+                  <div class="two fields">
+                    <div class="eight wide field">
+                      <label>
+                        Destination Country<span class="required">*</span>:
+                      </label>
                       <input
                         class="editable-field"
                         type="text"
                         data-bind="value: diplomaticPassportDestinationCountry, disable: currentView() == 'view'"
                       />
-                    </p>
-                  </td>
-                  <td>
-                    <p>
-                      Destination City<span class="required">*</span>:
+                    </div>
+                    <div class="eight wide field">
+                      <label>
+                        Destination City<span class="required">*</span>:
+                      </label>
                       <input
                         class="editable-field"
                         type="text"
                         data-bind="value: diplomaticPassportDestinationCity, disable: currentView() == 'view'"
                       />
-                    </p>
-                  </td>
-                </tr>
-                <tr
-                  data-bind="visible: diplomaticPassportSelectedType() == 'Renewal'"
-                >
-                  <td>
-                    <p>
-                      State/Country of Birth<span class="required">*</span>:
+                    </div>
+                  </div>
+                  <h4
+                    class="ui dividing header"
+                    data-bind="visible: diplomaticPassportSelectedType() == 'Renewal'"
+                  >
+                    Renewal Information
+                  </h4>
+                  <div
+                    class="two fields"
+                    data-bind="visible: diplomaticPassportSelectedType() == 'Renewal'"
+                  >
+                    <div class="field">
+                      <label>
+                        State/Country of Birth<span class="required">*</span>:
+                      </label>
                       <input
                         class="editable-field"
                         type="text"
                         data-bind="value: diplomaticPassportBirthLocation, disable: currentView() == 'view'"
                       />
-                    </p>
-                  </td>
-                  <td>
-                    <p>
-                      Expiration Date (of most recent Passport)<span
-                        class="required"
-                        >*</span
-                      >:
+                    </div>
+                    <div class="field">
+                      <label>
+                        Expiration Date (of most recent Passport)<span
+                          class="required"
+                          >*</span
+                        >:
+                      </label>
                       <input
                         class="editable-field"
                         type="date"
+                        placeholder="Passport Expiration Date"
                         data-bind="value: diplomaticPassportExpirationStr, disable: currentView() == 'view'"
                       />
-                    </p>
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <p>
-                      Departure<span class="required">*</span>:
+                    </div>
+                  </div>
+                  <h4 class="ui dividing header">Travel Dates</h4>
+                  <div class="two fields">
+                    <div class="field">
+                      <label> Departure<span class="required">*</span>: </label>
                       <input
                         class="editable-field"
                         type="date"
                         data-bind="value: diplomaticPassportDepartureStr, disable: currentView() == 'view'"
                       />
-                    </p>
-                  </td>
-                  <td>
-                    <p>
-                      Return<span class="required">*</span>:
+                    </div>
+                    <div class="eight wide field">
+                      <label> Return<span class="required">*</span>: </label>
                       <input
                         class="editable-field"
                         type="date"
                         data-bind="value: diplomaticPassportReturnStr, disable: currentView() == 'view'"
                       />
-                    </p>
-                  </td>
-                </tr>
-              </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
             <div
               class="content"
@@ -801,7 +816,7 @@
                   <p>
                     POC<span class="required">*</span>:
                     <input
-                      type="date"
+                      type="text"
                       data-bind="value: itHardwarePOCName, disable: currentView()=='view'"
                     />
                   </p>
@@ -1126,7 +1141,7 @@
             <div class="content aligned right">
               <button
                 type="button"
-                class="ui primary button editable-field"
+                class="ui primary button"
                 onclick="newAttachment()"
                 data-bind="disable: requestStatus() == 'Closed'"
               >
@@ -1135,7 +1150,7 @@
             </div>
           </div>
         </div>
-        <div class="ten wide column">
+        <div class="ten wide column" data-bind="visible: showActionsTable">
           <!-- Approvals here -->
           <div
             id="wo-approvals"
@@ -1239,7 +1254,7 @@
       </div>
     </div>
     <br />
-    <div>
+    <div data-bind="visible: requestStatus() != 'Closed'">
       <button
         type="button"
         class="editable-field ui primary button"

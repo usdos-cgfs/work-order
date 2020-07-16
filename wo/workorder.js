@@ -13,6 +13,7 @@ function initStaticListRefs() {
   vm.libRefWODocs(new SPList(workOrderDocDef));
   vm.listRefAssignment(new SPList(assignmentListDef));
   vm.listRefComment(new SPList(commentListDef));
+  vm.listRefWOEmails(new SPList(workOrderEmailsListDef));
 
   /* Configuration lists */
   vm.listRefConfigActionOffices(new SPList(configActionOfficesListDef));
@@ -121,7 +122,7 @@ function viewWorkOrderItem(woID) {
   });
 
   var camlq =
-    "<View><Query><Where><Eq>" +
+    '<View Scope="RecursiveAll"><Query><Where><Eq>' +
     '<FieldRef Name="Title"/><Value Type="Text">' +
     vm.requestID() +
     "</Value>" +
@@ -141,7 +142,7 @@ function viewWorkOrderItem(woID) {
 function viewServiceTypeItem() {
   // Fetches the list item info from the currently selected service type and record.
   var serviceTypeCaml =
-    '<View><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' +
+    '<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' +
     vm.requestID() +
     "</Value></Eq></Where></Query></View>";
   vm.selectedServiceType().listRef.getListItems(serviceTypeCaml, function (
@@ -220,11 +221,17 @@ function buildPipelineElement() {
 }
 
 function actionComplete() {
-  // Save the changes to the workorder
-  //saveWorkOrder();
-  // Update the Assignment to show Completion
-  //vm.listRefAssignment().
+  // Progress to the next stage
+  SP.UI.ModalDialog.showWaitScreenWithNoClose(
+    "Progressing to Next Stage",
+    "Please wait..."
+  );
+  // TODO: Anything that needs to be closed out before we enter the next stage
+
+  // Enter the next stage, close if necessary.
   pipelineForward();
+
+  // TODO: Anything that needs to be done in the new stage
 }
 
 function editWorkOrder() {
@@ -234,6 +241,8 @@ function editWorkOrder() {
 }
 
 function saveWorkOrder() {
+  // TODO: save each workorder type under a separate list for each requesting office
+
   /* Save button handler switch based off of current view: 
         Saving edits to an already existing document
         Saving a new document
@@ -242,63 +251,71 @@ function saveWorkOrder() {
     "Saving Work Order...",
     "Please wait..."
   );
+
+  vm.requestIsSaveable(true);
+
+  var requestValuePairs = getValuePairs(workOrderListDef.viewFields);
+
   var typeValuePairs = getValuePairs(
     JSON.parse(vm.selectedServiceType().ListDef).viewFields
   );
 
-  // First, save or update the parent work order item.
-  switch (vm.currentView()) {
-    case "edit":
-      // We are saving an edit form, get the id and update.
-      setTimeout(function () {
-        onSaveEditWorkOrderCallback("12");
-      }, 1000);
-      vm.selectedServiceType().listRef.updateListItem(
-        vm.serviceTypeHeader().ID,
-        typeValuePairs,
-        onSaveNewWorkOrderMaster
-      );
-      break;
+  // If all of our required fields are present.
+  if (vm.requestIsSaveable()) {
+    // First, save or update the parent work order item.
+    switch (vm.currentView()) {
+      case "edit":
+        // We are saving an edit form, get the id and update.
+        vm.listRefWO().updateListItem(
+          vm.requestHeader().ID,
+          requestValuePairs,
+          () => {
+            console.log("Workorder header saved");
+          }
+        );
 
-    case "new":
-      // we are saving a new record, create a new copy of each of the record types.
-      // Save the current work order
-      vm.requestStageNum(1);
-      vm.requestStatus("Open");
-      var valuePairs = getValuePairs(workOrderListDef.viewFields);
+        vm.selectedServiceType().listRef.updateListItem(
+          vm.serviceTypeHeader().ID,
+          typeValuePairs,
+          onSaveNewWorkOrderMaster
+        );
+        break;
 
-      // TODO: Figure out how to submit people to people picker fields.
-      console.log("vp", valuePairs);
-      vm.listRefWO().createListItem(valuePairs, function (id) {
-        console.log("saved", id);
-      });
-      //setTimeout(function () {onSaveNewWorkOrderMaster('12')}, 1200);
-      vm.requestSubmittedDate(new Date().toLocaleString());
+      case "new":
+        // we are saving a new record, create a new copy of each of the record types.
+        // Save the current work order
+        vm.requestStageNum(1);
+        vm.requestStatus("Open");
+        var valuePairs = getValuePairs(workOrderListDef.viewFields);
 
-      // Save the workorder specific info here:
-      vm.selectedServiceType().listRef.createListItem(
-        typeValuePairs,
-        onSaveNewWorkOrderMaster
-      );
-      break;
+        // TODO: Figure out how to submit people to people picker fields.
+        console.log("vp", valuePairs);
+        vm.listRefWO().createListItem(
+          valuePairs,
+          function (id) {
+            console.log("saved", id);
+          },
+          vm.requestorOffice().Title
+        );
+        //setTimeout(function () {onSaveNewWorkOrderMaster('12')}, 1200);
+        vm.requestSubmittedDate(new Date().toLocaleString());
+
+        // Save the workorder specific info here:
+        vm.selectedServiceType().listRef.createListItem(
+          typeValuePairs,
+          onSaveNewWorkOrderMaster,
+          vm.requestorOffice().Title
+        );
+        break;
+    }
+
+    viewWorkOrderItem(vm.requestID());
+  } else {
+    SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
   }
 
-  switch (vm.selectedServiceType().UID) {
-    case "pu10k":
-      save_pu10k();
-      break;
-    case "tel":
-      save_tel();
-      break;
-    case "presentation":
-      break;
-    case "rsa":
-      break;
-    default:
-      onSaveNewWorkOrderMaster("01");
-  }
+  //onSaveNewWorkOrderMaster("01");
 
-  viewWorkOrderItem(vm.requestID());
   //$('.editable-field').prop('disabled', true)
   //vm.currentView('view');
 }
@@ -365,24 +382,32 @@ function save_tel() {
 }
 
 function getValuePairs(listDef) {
+  console.log(listDef);
   var valuePairs = [];
   $.each(listDef, function (field, obj) {
+    console.log(field, obj);
+
     // For each mapped field in our List Def viewfields, push the bound
     // KO object to it.
     if (!["ID", "ClosedDate", "Created"].includes(field)) {
+      let koMap = obj.koMap;
+      console.log(koMap);
+      let fieldValue = !$.isEmptyObject(vm[koMap]()) ? vm[koMap]() : "";
+
+      // Based on the field type, do any casting or conversions here
       switch (obj.type) {
         case "DateTime":
-          valuePairs.push([
-            field,
-            !$.isEmptyObject(vm[obj.koMap]())
-              ? vm[obj.koMap]().toISOString()
-              : "",
-          ]);
+          fieldValue = fieldValue.toISOString();
+          break;
         default:
-          valuePairs.push([
-            field,
-            !$.isEmptyObject(vm[obj.koMap]()) ? vm[obj.koMap]() : "",
-          ]);
+      }
+      // Check if this field is required
+      // TODO: highlight the offending field
+      if (obj.required && !fieldValue) {
+        alert(field + " field is required");
+        vm.requestIsSaveable(false);
+      } else {
+        valuePairs.push([field, fieldValue]);
       }
     }
   });
@@ -443,16 +468,21 @@ function fetchConfigListData(callback) {
  * Work Orders
  ************************************************************/
 function fetchOpenOrders(callback) {
-  vm.listRefWO().getListItems("<Query></Query>", (items) => {
-    console.log("loading open orders", items);
-    vm.allOpenOrders(items);
-    if (items.length > 0) {
-      makeDataTable("#wo-open-orders");
+  vm.listRefWO().getListItems(
+    '<View Scope="RecursiveAll"><Query><Where><Eq>' +
+      '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
+      "</Eq></Where></Query></View>",
+    (items) => {
+      console.log("loading open orders", items);
+      vm.allOpenOrders(items);
+      if (items.length > 0) {
+        makeDataTable("#wo-open-orders");
+      }
+      if (callback) {
+        callback();
+      }
     }
-    if (callback) {
-      callback();
-    }
-  });
+  );
 }
 
 /************************************************************
@@ -508,14 +538,20 @@ function createAssignment() {
     ];
     vm.listRefAssignment().createListItem(vp, (id) => {
       console.log("Assigned: ", id);
+      SP.UI.Notify.addNotification(
+        vm.assignAssignee().Title + " assigned",
+        true
+      );
+      $("#wo-routing").accordion("open", 0);
       fetchAssignments();
+      vm.assignAssignee(null);
     });
   }
 }
 
 function fetchAssignments() {
   var camlq =
-    '<View><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' +
+    '<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' +
     vm.requestID() +
     "</Value></Eq></Where></Query></View>";
   vm.listRefAssignment().getListItems(camlq, function (assignments) {
@@ -525,7 +561,7 @@ function fetchAssignments() {
 
 function fetchAllAssignments() {
   var camlq =
-    '<View><Query><Where><Eq><FieldRef Name="Assignee"/><Value Type="Integer"><UserID /></Value></Eq></Where></Query></View>';
+    '<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name="Assignee"/><Value Type="Integer"><UserID /></Value></Eq></Where></Query></View>';
   vm.listRefAssignment().getListItems(camlq, function (assignments) {
     console.log(assignments);
     vm.allAssignments(assignments);
@@ -555,7 +591,7 @@ function newApproval() {
 
 function fetchApprovals(callback) {
   var camlq =
-    '<View><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' +
+    '<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' +
     vm.requestID() +
     "</Value></Eq></Where></Query></View>";
   vm.listRefApproval().getListItems(camlq, function (approvals) {
@@ -606,7 +642,7 @@ function newComment() {
 
 function fetchComments(callback) {
   var camlq =
-    '<View><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' +
+    '<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' +
     vm.requestID() +
     "</Value></Eq></Where></Query></View>";
   vm.listRefComment().getListItems(camlq, function (comments) {
@@ -638,6 +674,7 @@ function pipelineForward() {
   var t = parseInt(vm.requestStageNum()) + 1;
   vm.requestStageNum(t);
   var valuepairs = [["RequestStage", vm.requestStageNum()]];
+
   vm.listRefWO().updateListItem(vm.requestHeader().ID, valuepairs, function () {
     SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
     console.log("pipeline moved to next stage.");
@@ -679,9 +716,10 @@ function initApp() {
   // Setup models for each of the config lists we may connect to
   initStaticListRefs();
   // initPageListeners();
-
   fetchConfigListData();
 
+  // Get our current user groups and store them
+  getCurrentUserGroups((groups) => vm.userGroupMembership(groups));
   //if (hash != '') {
   //    viewWorkOrder(hash);
   //}

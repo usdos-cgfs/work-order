@@ -97,6 +97,10 @@
     table-layout: fixed !important;
 }*/
 
+.pointer {
+  cursor: pointer;
+}
+
 .sticky {
   position: sticky;
   top: 0;
