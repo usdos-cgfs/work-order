@@ -30,19 +30,21 @@
 <link rel="stylesheet" href="../SiteAssets/wo/workorder.css" />
 <!-- common/RDT/app"  -->
 
-<div id="tabs">
+<div id="tabs" style="display: none;">
   <div class="ui top attached tabular menu">
     <a class="item" data-tab="open-orders">Open Orders</a>
     <a
       class="item"
       data-tab="assigned-orders"
-      data-bind="if: assignedOpenOrders().length > 0"
+      data-bind="enabled: assignedOpenOrders().length > 0"
       >Assigned Orders</a
     >
     <a class="item" data-tab="order-new">New Order</a>
+    <!-- ko if: selectedServiceType -->
     <a class="item" data-tab="order-detail" data-bind="if: selectedServiceType"
       >Detail View</a
     >
+    <!-- /ko -->
   </div>
   <div
     id="open-orders"
@@ -146,7 +148,7 @@
       <h2>You currently have no assigned orders.</h2>
     </div>
     <table
-      id="wo-open-orders"
+      id="wo-assigned-orders"
       class="data-table"
       data-bind="visible: assignedOpenOrders().length > 0"
     >
@@ -167,7 +169,7 @@
             <p data-bind="text: ServiceType.get_lookupValue()"></p>
           </td>
           <td>
-            <p data-bind="text: RequestorOffice"></p>
+            <p data-bind="text: RequestorOffice.get_lookupValue()"></p>
           </td>
           <td>
             <p data-bind="text: RequestorName"></p>
@@ -1082,6 +1084,27 @@
                 class="editable-field"
                 data-bind="textInput: requisitionComments, disable: currentView()=='view'"
               ></textarea>
+            </div>
+            <!-- Generic description field goes here -->
+            <div
+              class="content"
+              data-bind="visible: selectedServiceType().DescriptionRequired"
+            >
+              <div class="ui form">
+                <div class="field">
+                  <label
+                    >Description<span
+                      class="required"
+                      data-bind="visible: selectedServiceType().DescriptionRequired"
+                      >*</span
+                    ></label
+                  >
+                  <textarea
+                    class="editable-field"
+                    data-bind="textInput: requestDescription, disable: currentView()=='view'"
+                  ></textarea>
+                </div>
+              </div>
             </div>
           </div>
         </div>

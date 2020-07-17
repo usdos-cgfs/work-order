@@ -80,7 +80,9 @@ function newWorkOrder() {
   //set the select for which view we're on.
   vm.currentView("new");
 
-  clearValuePairs(vm.selectedServiceType().ListDef.viewFields);
+  if (vm.selectedServiceType().ListDef) {
+    clearValuePairs(vm.selectedServiceType().ListDef.viewFields);
+  }
 
   // Set our VM fields
   vm.requestID(new Date().getTime());
@@ -131,8 +133,11 @@ function viewWorkOrderItem(woID) {
   vm.listRefWO().getListItems(camlq, function (items) {
     vm.requestHeader(items[0]);
     console.log("workorder fetched - setting value pairs");
+    vm.selectedServiceType("");
     setValuePairs(workOrderListDef.viewFields, vm.requestHeader());
-    viewServiceTypeItem();
+    if (vm.selectedServiceType().ListDef) {
+      viewServiceTypeItem();
+    }
     buildPipelineElement();
     $(".editable-field").prop("disabled", true);
     vm.tab("order-detail");
@@ -256,9 +261,11 @@ function saveWorkOrder() {
 
   var requestValuePairs = getValuePairs(workOrderListDef.viewFields);
 
-  var typeValuePairs = getValuePairs(
-    JSON.parse(vm.selectedServiceType().ListDef).viewFields
-  );
+  if (vm.selectedServiceType().ListDef) {
+    var typeValuePairs = getValuePairs(
+      JSON.parse(vm.selectedServiceType().ListDef).viewFields
+    );
+  }
 
   // If all of our required fields are present.
   if (vm.requestIsSaveable()) {
@@ -274,11 +281,13 @@ function saveWorkOrder() {
           }
         );
 
-        vm.selectedServiceType().listRef.updateListItem(
-          vm.serviceTypeHeader().ID,
-          typeValuePairs,
-          onSaveNewWorkOrderMaster
-        );
+        if (typeValuePairs) {
+          vm.selectedServiceType().listRef.updateListItem(
+            vm.serviceTypeHeader().ID,
+            typeValuePairs,
+            onSaveNewWorkOrderMaster
+          );
+        }
         break;
 
       case "new":
@@ -299,13 +308,16 @@ function saveWorkOrder() {
         );
         //setTimeout(function () {onSaveNewWorkOrderMaster('12')}, 1200);
         vm.requestSubmittedDate(new Date().toLocaleString());
-
-        // Save the workorder specific info here:
-        vm.selectedServiceType().listRef.createListItem(
-          typeValuePairs,
-          onSaveNewWorkOrderMaster,
-          vm.requestorOffice().Title
-        );
+        if (typeValuePairs) {
+          // Save the workorder specific info here:
+          vm.selectedServiceType().listRef.createListItem(
+            typeValuePairs,
+            onSaveNewWorkOrderMaster,
+            vm.requestorOffice().Title
+          );
+        } else {
+          onSaveNewWorkOrderMaster();
+        }
         break;
     }
 
@@ -561,7 +573,16 @@ function fetchAssignments() {
 
 function fetchAllAssignments() {
   var camlq =
-    '<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name="Assignee"/><Value Type="Integer"><UserID /></Value></Eq></Where></Query></View>';
+    '<View Scope="RecursiveAll"><Query><Where><In>' +
+    '<FieldRef Name="ActionOffice" LookupId="TRUE"/><Values>' +
+    vm
+      .userActionOfficeMembership()
+      .map((ao) => {
+        return '<Value Type="Lookup">' + ao.ID + "</Value>";
+      })
+      .join("") +
+    "</Values></In></Where></Query></View>";
+
   vm.listRefAssignment().getListItems(camlq, function (assignments) {
     console.log(assignments);
     vm.allAssignments(assignments);
@@ -574,6 +595,7 @@ function fetchAllAssignments() {
     });
     var vanilla = $.makeArray(filtered);
     vm.assignedOpenOrders(vanilla);
+    makeDataTable("#wo-assigned-orders");
   });
 }
 
@@ -743,9 +765,9 @@ function initComplete() {
         viewWorkOrderItem(hash);
       } else {
         vm.tab("open-orders");
-
         //$('.ui.menu').find('.item').tab('change tab', 'open-orders');
       }
+      fetchAllAssignments();
       SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
     });
   } else if (href.indexOf("approval.aspx") !== -1) {
@@ -763,6 +785,7 @@ function initComplete() {
     });
     fetchAllAssignments();
   }
+  $("#tabs").show();
 }
 
 $(document).ready(function () {

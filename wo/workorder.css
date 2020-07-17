@@ -40,6 +40,10 @@
   text-align: center;
 }
 
+#wo-assigned-orders {
+  width: 100% !important;
+}
+
 .trix-button-group--file-tools {
   display: none;
 }

@@ -1056,6 +1056,7 @@ var configServiceTypeListDef = {
     Active: { type: "Text", koMap: "empty" },
     st_list: { type: "Text", koMap: "empty" },
     Description: { type: "Text", koMap: "empty" },
+    DescriptionRequired: { type: "Bool", koMap: "empty" },
     AttachmentRequired: { type: "Text", koMap: "empty" },
     AttachmentDescription: { type: "Text", koMap: "empty" },
     ListDef: { type: "Text", koMap: "empty" },
