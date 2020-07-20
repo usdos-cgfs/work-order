@@ -393,6 +393,10 @@ function save_tel() {
   }
 }
 
+/************************************************************
+ * Manage knockout value pairs
+ ************************************************************/
+
 function getValuePairs(listDef) {
   console.log(listDef);
   var valuePairs = [];
