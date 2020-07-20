@@ -1,0 +1,30 @@
+<div>
+  <select
+    data-bind="value: selectedServiceType, options: serviceTypeOptions, optionsText: (stype) => stype.Title, optionsCaption: 'Select'"
+  ></select>
+  <!-- ko if: selectedServiceType -->
+  <!-- <div>
+    <textarea
+      rows="15"
+      cols="50"
+      data-bind="if: selectedServiceType(), textInput: selectedServiceType().ListDef"
+    ></textarea>
+  </div> -->
+  <div>
+    <textarea
+      rows="15"
+      cols="50"
+      data-bind="textInput: prettifyJson"
+    ></textarea>
+  </div>
+  <div>
+    <button type="button" onclick="updateServiceDef()">Update</button>
+  </div>
+  <!-- /ko -->
+</div>
+
+<script src="../SiteAssets/common/sal.js"></script>
+<script src="../SiteAssets/vendor/knockout/knockout-3.5.0.js"></script>
+<script src="../SiteAssets/common/common.js"></script>
+<script src="../SiteAssets/vendor/jquery/jquery-3.3.1.min.js"></script>
+<script src="../SiteAssets/wo/config_maintenance.js"></script>

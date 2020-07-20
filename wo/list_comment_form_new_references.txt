@@ -1,0 +1,8 @@
+<link rel="stylesheet" href="../../SiteAssets/wo/workorder.css" />
+
+<script src="../../SiteAssets/vendor/jquery/jquery-3.3.1.min.js"></script>
+<script src="../../SiteAssets/common/sal.js"></script>
+<!-- <script src="../../SiteAssets/common/common.js"></script> -->
+
+<script src="../../SiteAssets/wo/viewmodels.js"></script>
+<script src="../../SiteAssets/wo/list_comment_form_new.js"></script>
