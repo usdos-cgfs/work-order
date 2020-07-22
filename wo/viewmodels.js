@@ -1367,8 +1367,6 @@ function koviewmodel() {
     }
   });
 
-  // this is a test
-
   // Requestor/Header Info
   self.requestorName = ko.observable();
   self.requestorTelephone = ko.observable();
