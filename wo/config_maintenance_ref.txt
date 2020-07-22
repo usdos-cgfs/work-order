@@ -23,8 +23,8 @@
   <!-- /ko -->
 </div>
 
-<script src="../SiteAssets/common/sal.js"></script>
-<script src="../SiteAssets/vendor/knockout/knockout-3.5.0.js"></script>
-<script src="../SiteAssets/common/common.js"></script>
-<script src="../SiteAssets/vendor/jquery/jquery-3.3.1.min.js"></script>
-<script src="../SiteAssets/wo/config_maintenance.js"></script>
+<script src="../SiteAssets/workorder/common/sal.js"></script>
+<script src="../SiteAssets/workorder/vendor/knockout/knockout-3.5.0.js"></script>
+<script src="../SiteAssets/workorder/common/common.js"></script>
+<script src="../SiteAssets/workorder/vendor/jquery/jquery-3.3.1.min.js"></script>
+<script src="../SiteAssets/workorder/wo/config_maintenance.js"></script>
