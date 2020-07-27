@@ -920,10 +920,10 @@ var workOrderListDef = {
     RequestorName: { type: "Text", koMap: "requestorName" },
     RequestorPhone: { type: "Text", koMap: "requestorTelephone" },
     RequestorEmail: { type: "Text", koMap: "requestorEmail" },
-    RequestorOffice: { type: "Text", koMap: "requestorOfficeLookupId" },
+    RequestorOffice: { type: "Person", koMap: "requestorOfficeLookupId" },
     RequestStage: { type: "Text", koMap: "requestStageNum" },
     RequestStatus: { type: "Text", koMap: "requestStatus" },
-    RequestDescription: { type: "Text", koMap: "requestDescription" },
+    RequestDescription: { type: "Text", koMap: "requestDescriptionHTML" },
     ServiceType: { type: "Text", koMap: "requestServiceTypeLookupId" },
     ClosedDate: { type: "Text", koMap: "requestClosedDate" },
     Created: { type: "Date", koMap: "requestSubmittedDate" },
@@ -1351,8 +1351,23 @@ function koviewmodel() {
 
   self.requestHeader = ko.observable(); // This is the raw JSON object returned by the work order query.
   self.serviceTypeHeader = ko.observable(); // This is the raw JSON object object returned by the service type query.
+  // The general description for this request. Some service types only have this
+  self.requestDescriptionHTML = ko.observable();
 
-  self.requestDescription = ko.observable(); // The general description for this request. Some service types only have this
+  // self.requestDescription = ko.pureComputed({
+  //   read: function () {
+  //     if (self.currentView() != "view") {
+  //       console.log("we are editing");
+  //       return $("#request-description").val();
+  //     } else {
+  //       console.log("we are viewing");
+  //       return self.requestDescriptionHTML();
+  //     }
+  //   },
+  //   write: (val) => {
+  //     self.requestDescriptionHTML(val);
+  //   },
+  // });
 
   self.requestStatus = ko.observable(); // Open, Closed, etc
   self.requestStageNum = ko.observable(0); // 0, 1, 2 etc, used for our view pipelines.
@@ -1385,11 +1400,15 @@ function koviewmodel() {
       }
     },
     write: function (value) {
-      self.requestorOffice(
-        self
-          .configRequestingOffices()
-          .find((ro) => ro.ID == value.get_lookupId())
-      );
+      if (value) {
+        self.requestorOffice(
+          self
+            .configRequestingOffices()
+            .find((ro) => ro.ID == value.get_lookupId())
+        );
+      } else {
+        self.requestorOffice("");
+      }
     },
   });
 
@@ -1695,20 +1714,24 @@ function koviewmodel() {
 //     }
 // };
 
-// ko.bindingHandlers.trix = {
-//     init: function(element, valueAccessor) {
-//         console.log(element)
-//         var value = valueAccessor();
-//         var areachangefc = function() {
-//             console.log('change registered')
-//             value(textAreaContentElement.html());
-//         };
-//         var textAreaContentElement = $(element);
-//         //$(element).keyup(areachangefc);
-//         $(element).bind('DOMNodeInserted DOMNodeRemoved', areachangefc)
-//         textAreaContentElement.html(valueAccessor());
-//     }
-// }
+ko.bindingHandlers.trix = {
+  init: function (element, valueAccessor) {
+    console.log(element);
+    var value = valueAccessor();
+    var areachangefc = function () {
+      //console.log("change registered");
+      value(textAreaContentElement.html());
+    };
+    var textAreaContentElement = $(element);
+    $(element).keyup(areachangefc);
+    $(element).bind("DOMNodeInserted DOMNodeRemoved", areachangefc);
+    textAreaContentElement.html(value());
+  },
+  update: function (element, valueAccessor) {
+    console.log("Doing something in trix");
+    //$(element).html(valueAccessor());
+  },
+};
 
 var camlq = "<Query></Query>";
 var callback = function (items) {

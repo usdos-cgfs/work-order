@@ -80,6 +80,9 @@ function newWorkOrder() {
   //set the select for which view we're on.
   vm.currentView("new");
 
+  // Clear the workorder valuepairs
+  //clearValuePairs(workOrderListDef.viewFields);
+  //  Clear the selected service type valuepairs
   if (vm.selectedServiceType().ListDef) {
     clearValuePairs(vm.selectedServiceType().ListDef.viewFields);
   }
@@ -91,7 +94,6 @@ function newWorkOrder() {
   vm.requestorName(sal.globalConfig.currentUser.get_title());
   vm.requestorTelephone("703-875-7070");
   vm.requestorEmail(sal.globalConfig.currentUser.get_email());
-  vm.requestorOffice();
   vm.requestStageNum(0);
   vm.requestStatus("Draft");
 
@@ -243,6 +245,8 @@ function editWorkOrder() {
   //make the editable fields editable.
   //$('.editable-field').prop('disabled', false)
   vm.currentView("edit");
+  // Need to do this to update the trix editor
+  vm.requestDescriptionHTML.valueHasMutated();
 }
 
 function saveWorkOrder() {
@@ -259,6 +263,7 @@ function saveWorkOrder() {
 
   vm.requestIsSaveable(true);
 
+  vm.requestDescriptionHTML($("#trix-request-description").html());
   var requestValuePairs = getValuePairs(workOrderListDef.viewFields);
 
   if (vm.selectedServiceType().ListDef) {
@@ -278,16 +283,20 @@ function saveWorkOrder() {
           requestValuePairs,
           () => {
             console.log("Workorder header saved");
+            if (!vm.selectedServiceType().ListDef) {
+              onSaveEditWorkOrderCallback();
+            }
           }
         );
-
-        if (typeValuePairs) {
+        if (vm.selectedServiceType().ListDef) {
+          // If we are saving to any other list.
           vm.selectedServiceType().listRef.updateListItem(
             vm.serviceTypeHeader().ID,
             typeValuePairs,
-            onSaveNewWorkOrderMaster
+            onSaveEditWorkOrderCallback
           );
         }
+
         break;
 
       case "new":
@@ -320,8 +329,6 @@ function saveWorkOrder() {
         }
         break;
     }
-
-    viewWorkOrderItem(vm.requestID());
   } else {
     SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
   }
@@ -335,11 +342,13 @@ function saveWorkOrder() {
 function onSaveNewWorkOrderMaster(id) {
   console.log("callback this: ", this);
   console.log("callback val: ", id);
+  viewWorkOrderItem(vm.requestID());
   SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
 
 function onSaveEditWorkOrderCallback(val) {
   console.log("callback val: ", val);
+  viewWorkOrderItem(vm.requestID());
   SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
 
@@ -430,7 +439,8 @@ function setValuePairs(listDef, jObject) {
   // The inverse of our getValuePairs function, set the KO observables
   // from our returned object.
   $.each(listDef, function (field, obj) {
-    console.log(field + " " + obj.koMap);
+    //console.log(field + " " + obj.koMap + " " );
+    console.log(`Setting ${obj.koMap} to ${jObject[field]} from ${field}`);
     vm[obj.koMap](jObject[field]);
   });
 }
