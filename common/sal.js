@@ -482,13 +482,16 @@ function SPList(listDef) {
     options.title = title;
     options.dialogReturnValueCallback = callback;
 
+    let siteString =
+      sal.globalConfig.siteUrl == "/" ? "" : sal.globalConfig.siteUrl;
+
     options.args = JSON.stringify(args);
     options.url =
       sal.globalConfig.siteUrl +
       "/_layouts/Upload.aspx?List=" +
       self.config.guid +
       "&RootFolder=" +
-      sal.globalConfig.siteUrl +
+      siteString +
       "/" +
       self.config.def.name +
       "/" +
