@@ -89,6 +89,7 @@ function newWorkOrder() {
 
   // Set our VM fields
   vm.requestID(new Date().getTime());
+  updateUrlParam("reqid", vm.requestID());
   //vm.requestID('209Z');
   //fetchAttachments();
   vm.requestorName(sal.globalConfig.currentUser.get_title());
@@ -250,8 +251,6 @@ function editWorkOrder() {
 }
 
 function saveWorkOrder() {
-  // TODO: save each workorder type under a separate list for each requesting office
-
   /* Save button handler switch based off of current view: 
         Saving edits to an already existing document
         Saving a new document
@@ -263,7 +262,9 @@ function saveWorkOrder() {
 
   vm.requestIsSaveable(true);
 
+  // Need to get the value of the trix editor.
   vm.requestDescriptionHTML($("#trix-request-description").html());
+
   var requestValuePairs = getValuePairs(workOrderListDef.viewFields);
 
   if (vm.selectedServiceType().ListDef) {
@@ -332,11 +333,6 @@ function saveWorkOrder() {
   } else {
     SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
   }
-
-  //onSaveNewWorkOrderMaster("01");
-
-  //$('.editable-field').prop('disabled', true)
-  //vm.currentView('view');
 }
 
 function onSaveNewWorkOrderMaster(id) {
@@ -353,54 +349,8 @@ function onSaveEditWorkOrderCallback(val) {
 }
 
 /************************************************************
- * Work Order Specific handlers.
+ * ValuePair Binding Getters and Setters
  ************************************************************/
-function save_pu10k() {
-  // console.log('master wo saved')
-  vm.pu10kDescription($("#textpu10kDescription").val());
-  var valuePairs = getValuePairs(vm.selectedServiceType().ListDef.viewFields);
-  console.log("pu10k valuepairs", valuePairs);
-  // Use our workaround to get the pu10k description text.
-  switch (vm.currentView()) {
-    case "new":
-      vm.pu10kStage(0);
-      vm.listRefpu10k().createListItem(valuePairs, onSaveNewWorkOrderMaster);
-      //vm.requestProgress(20);
-      break;
-    case "edit":
-      // TODO: Pass the correct item
-      vm.listRefpu10k().updateListItem(
-        vm.serviceTypeHeader().ID,
-        valuePairs,
-        onSaveEditWorkOrderCallback
-      );
-      break;
-    default:
-  }
-}
-
-function save_tel() {
-  var valuePairs = getValuePairs(vm.selectedServiceType().ListDef.viewFields);
-  switch (vm.currentView()) {
-    case "new":
-      //vm.pu10kStage(0);
-      vm.selectedServiceType().listRef.createListItem(
-        valuePairs,
-        onSaveNewWorkOrderMaster
-      );
-      //vm.requestProgress(20);
-      break;
-    case "edit":
-      // TODO: Pass the correct item
-      vm.selectedServiceType().listRef.updateListItem(
-        vm.serviceTypeHeader().ID,
-        valuePairs,
-        onSaveEditWorkOrderCallback
-      );
-      break;
-    default:
-  }
-}
 
 function getValuePairs(listDef) {
   console.log(listDef);
@@ -665,7 +615,7 @@ function newApprovalCallback(result, value) {
  ************************************************************/
 function newComment() {
   vm.listRefComment().showModal(
-    "NewForm.aspx",
+    "CustomNewForm.aspx",
     "New Comment",
     { woId: vm.requestID() },
     newCommentCallback
@@ -764,6 +714,13 @@ function initComplete() {
   //Initialization complete: load the current tab.
   var href = window.location.href.toLowerCase();
   var hash = window.location.hash.replace("#", "");
+
+  const queryString = window.location.search;
+
+  const urlParams = new URLSearchParams(queryString);
+
+  //vm.tab(urlParams.get('page_type'))
+
   // check that we are on the app page
   if (
     href.indexOf("app.aspx") !== -1 ||
@@ -771,29 +728,22 @@ function initComplete() {
   ) {
     vm.page("app");
     fetchOpenOrders(function () {
-      if (hash != "") {
-        viewWorkOrderItem(hash);
+      let tab = urlParams.get("tab");
+      let id = urlParams.get("reqid");
+
+      if (id) {
+        // Viewing workorder now
+        console.log("Viewing the workorder: ", id);
+        viewWorkOrderItem(id);
+      } else if (tab) {
+        vm.tab(tab);
+        //$('.ui.menu').find('.item').tab('change tab', 'open-orders');
       } else {
         vm.tab("open-orders");
-        //$('.ui.menu').find('.item').tab('change tab', 'open-orders');
       }
       fetchAllAssignments();
       SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
     });
-  } else if (href.indexOf("approval.aspx") !== -1) {
-    vm.page("approval");
-    $("#li-open-orders").hide();
-    $("#li-new-orders").hide();
-    SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
-  } else if (href.indexOf("admin.aspx") !== -1) {
-    vm.page("admin");
-    $("#li-new-orders").hide();
-    fetchOpenOrders(function () {
-      vm.tab("open-orders");
-      //$('.ui.menu').find('.item').tab('change tab', 'open-orders');
-      SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
-    });
-    fetchAllAssignments();
   }
   $("#tabs").show();
 }

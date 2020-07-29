@@ -31,6 +31,15 @@ function convertModelToViewfield(model) {
   return vf;
 }
 
+function updateUrlParam(param, val) {
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+
+  urlParams.set(param, val);
+
+  window.history.pushState({}, "", "?" + urlParams.toString());
+}
+
 var pageViewModel = ["Title", "ViewArea", "ViewBody"];
 
 var linkViewModel = ["Title", "LinkType", "LinkUrl"];

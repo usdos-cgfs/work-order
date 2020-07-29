@@ -195,8 +195,13 @@ function SPList(listDef) {
     ******************************************************************/
   onQueryFailed = function (sender, args) {
     console.log("unsuccessful read", sender);
+    // alert(
+    //   "Request failed: " + args.get_message() + "\n" + args.get_stackTrace()
+    // );
     alert(
-      "Request failed. " + args.get_message() + "\n" + args.get_stackTrace()
+      `Request on list ${
+        self.config.def.name
+      } failed, producing the following error: \n ${args.get_message()} \nStackTrack: \n ${args.get_stackTrace()}`
     );
   };
 
@@ -462,8 +467,12 @@ function SPList(listDef) {
       //alert(id);
     }
     options.args = JSON.stringify(args);
+
+    let siteString =
+      sal.globalConfig.siteUrl == "/" ? "" : sal.globalConfig.siteUrl;
+
     options.url =
-      sal.globalConfig.siteUrl +
+      siteString +
       "/Lists/" +
       self.config.def.name +
       "/" +
@@ -487,7 +496,7 @@ function SPList(listDef) {
 
     options.args = JSON.stringify(args);
     options.url =
-      sal.globalConfig.siteUrl +
+      siteString +
       "/_layouts/Upload.aspx?List=" +
       self.config.guid +
       "&RootFolder=" +

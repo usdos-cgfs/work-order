@@ -154,6 +154,10 @@ input[disabled] {
   color: red;
 }
 
+.optional {
+  color: gray;
+}
+
 #open-orders h2 {
   margin: 25px 25%;
 }

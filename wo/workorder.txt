@@ -41,9 +41,7 @@
     >
     <a class="item" data-tab="order-new">New Order</a>
     <!-- ko if: selectedServiceType -->
-    <a class="item" data-tab="order-detail" data-bind="if: selectedServiceType"
-      >Detail View</a
-    >
+    <a class="item" data-tab="order-detail">Detail View</a>
     <!-- /ko -->
   </div>
   <div
@@ -279,8 +277,15 @@
     id="order-detail"
     data-tab="order-detail"
     class="ui bottom attached tab segment"
-    data-bind="if: selectedServiceType"
   >
+    <!-- ko if: !selectedServiceType -->
+    <div class="ui fluid card">
+      <div class="content">
+        <h2>Please select a request</h2>
+      </div>
+    </div>
+    <!-- /ko -->
+    <!-- ko if: selectedServiceType -->
     <div class="sticky">
       <div class="ui fluid card">
         <div class="content">
@@ -543,6 +548,16 @@
                                                            enable: currentView() == 'new'"
                     ></select>
                   </div>
+                </div>
+                <div class="field">
+                  <label>
+                    Request Subject <span class="optional">(Optional)</span>:
+                  </label>
+                  <input
+                    class="editable-field"
+                    data-bind="value: requestSubject"
+                    placeholder="Enter a short description..."
+                  />
                 </div>
               </div>
             </div>
@@ -1324,6 +1339,7 @@
         Close
       </button>
     </div>
+    <!-- /ko -->
   </div>
 </div>
 

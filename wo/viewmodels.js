@@ -923,6 +923,7 @@ var workOrderListDef = {
     RequestorOffice: { type: "Person", koMap: "requestorOfficeLookupId" },
     RequestStage: { type: "Text", koMap: "requestStageNum" },
     RequestStatus: { type: "Text", koMap: "requestStatus" },
+    RequestSubject: { type: "Text", koMap: "requestSubject" },
     RequestDescription: { type: "Text", koMap: "requestDescriptionHTML" },
     ServiceType: { type: "Text", koMap: "requestServiceTypeLookupId" },
     ClosedDate: { type: "Text", koMap: "requestClosedDate" },
@@ -1211,6 +1212,11 @@ function koviewmodel() {
       console.log("Activate Accordion");
       $(".ui.accordion").accordion();
     }
+
+    if (self.requestID()) {
+      updateUrlParam("reqid", self.requestID());
+    }
+    updateUrlParam("tab", newPage);
   });
 
   /************************************************************
@@ -1351,6 +1357,7 @@ function koviewmodel() {
 
   self.requestHeader = ko.observable(); // This is the raw JSON object returned by the work order query.
   self.serviceTypeHeader = ko.observable(); // This is the raw JSON object object returned by the service type query.
+  self.requestSubject = ko.observable();
   // The general description for this request. Some service types only have this
   self.requestDescriptionHTML = ko.observable();
 
