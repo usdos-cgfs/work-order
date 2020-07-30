@@ -265,6 +265,17 @@ function saveWorkOrder() {
   // Need to get the value of the trix editor.
   vm.requestDescriptionHTML($("#trix-request-description").html());
 
+  // Check the submitted date, if it's between 3 pm, (19 UTC) and midnight (4 UTC)
+  // it needs to be set as submitted the next business day
+  let now = new Date();
+  if (now.getUTCHours() >= 19 || now.getUTCHours() < 4) {
+    console.log("its after 3, this is submitted tomorrow");
+    let tomorrow = businessDaysFromDate(now, 1);
+    tomorrow.setUTCHours(13);
+    tomorrow.setUTCMinutes(0);
+    vm.requestSubmittedDate(tomorrow);
+  }
+
   var requestValuePairs = getValuePairs(workOrderListDef.viewFields);
 
   if (vm.selectedServiceType().ListDef) {

@@ -22,7 +22,11 @@ sal.site = sal.site || {};
 function initSal() {
   console.log("we are initing sal");
   // Initialize the sitewide settings here.
-  sal.globalConfig.siteUrl = _spPageContextInfo.webServerRelativeUrl;
+  sal.globalConfig.siteUrl =
+    _spPageContextInfo.webServerRelativeUrl == "/"
+      ? ""
+      : _spPageContextInfo.webServerRelativeUrl;
+
   //sal.globalConfig.user =
   sal.globalConfig.listServices = "../_vti_bin/ListData.svc/";
 
@@ -32,9 +36,14 @@ function initSal() {
 
   var user = sal.globalConfig.website.get_currentUser(); //must load this to access info.
   sal.globalConfig.currentContext.load(user);
+
+  var siteGroupCollection = sal.globalConfig.website.get_siteGroups();
+  sal.globalConfig.currentContext.load(siteGroupCollection);
+
   sal.globalConfig.currentContext.executeQueryAsync(
     function () {
       sal.globalConfig.currentUser = user;
+      sal.globalConfig.siteGroups = m_fnLoadSiteGroups(siteGroupCollection);
       //alert("User is: " + user.get_title()); //there is also id, email, so this is pretty useful.
     },
     function () {
@@ -43,23 +52,40 @@ function initSal() {
   );
   // console.log()
 }
+function m_fnLoadSiteGroups(itemColl) {
+  let m_arrSiteGroups = new Array();
 
-sal.siteConnection = function () {
-  function userInGroup(group) {
-    $().SPServices({
-      operation: "GetGroupCollectionFromUser",
-      userLoginName: $().SPServices.SPGetCurrentUser(),
-      async: false,
-      completefunc: function (xData, Status) {
-        if (
-          $(xData.responseXML).find('Group[Name="' + group + '"]').length == 1
-        ) {
-          alert("login inside of the Group user");
-        } else {
-          alert("login outside of the Group user");
-        }
-      },
-    });
+  var listItemEnumerator = itemColl.getEnumerator();
+  while (listItemEnumerator.moveNext()) {
+    var oListItem = listItemEnumerator.get_current();
+
+    var id = oListItem.get_id();
+    var loginName = oListItem.get_loginName();
+    var title = oListItem.get_title();
+
+    var groupObject = new Object();
+    groupObject["ID"] = id;
+    groupObject["loginName"] = loginName;
+    groupObject["title"] = title;
+    groupObject["group"] = oListItem;
+
+    m_arrSiteGroups.push(groupObject);
+  }
+
+  return m_arrSiteGroups;
+}
+
+sal.getSPSiteGroupByName = function (groupName) {
+  var userGroup = null;
+  if (this.globalConfig.siteGroups != null) {
+    userGroup = this.globalConfig.siteGroups.find(
+      (group) => group.title == groupName
+    );
+  }
+  if (userGroup) {
+    return userGroup.group;
+  } else {
+    return null;
   }
 };
 
@@ -348,6 +374,7 @@ function SPList(listDef) {
         //console.log(item + ' item: ', getItem)
         listObj[item] = getItem;
       });
+      listObj.oListItem = oListItem;
       self.focusedItems.push(listObj);
     }
     //this.setState({ focusedItems })
@@ -406,6 +433,67 @@ function SPList(listDef) {
     //alert('Item updated!');
     self.callbackDeleteListItem();
   }
+
+  /*****************************************************************
+                            Set Item Permissions  
+    ******************************************************************/
+  /**
+   * Documentation - setItemPermissions
+   * @param {number} id Item identifier, obtain using getListItems above
+   * @param {Array} valuePairs A 2d array containing groups and permission levels
+   *    e.g. [["Owners", "Full Control"], ["Members", "Contribute"]]
+   */
+  self.setItemPermissions = function (id, valuePairs) {
+    //TODO: Validate that the groups and permissions exist on the site.
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+
+    var oList = web.get_lists().getByTitle(self.config.def.title);
+
+    let oListItem = oList.getItemById(id);
+    oListItem.resetRoleInheritance();
+    oListItem.breakRoleInheritance(false, false);
+
+    valuePairs.forEach((vp) => {
+      let roleDefBindingColl = SP.RoleDefinitionBindingCollection.newObject(
+        currCtx
+      );
+      roleDefBindingColl.add(web.get_roleDefinitions().getByName(vp[1]));
+      oListItem
+        .get_roleAssignments()
+        .add(sal.getSPSiteGroupByName(vp[0]), roleDefBindingColl);
+    });
+
+    oListItem
+      .get_roleAssignments()
+      .getByPrincipal(sal.globalConfig.currentUser)
+      .deleteObject();
+
+    function onUpdatePermsSucceeded() {
+      console.log(
+        "Successfully set permissions on " + this.oListItem.get_item("Title")
+      );
+    }
+
+    function onUpdatePermsFailed(sender, args) {
+      SP.UI.Notify.addNotification(
+        "Failed to update permissions on item: " +
+          this.title +
+          args.get_message() +
+          "\n" +
+          args.get_stackTrace(),
+        false
+      );
+    }
+    let data = { oListItem: oListItem };
+    //let data = { title: oListItem.get_item("Title"), oListItem: oListItem };
+
+    currCtx.load(oListItem);
+    currCtx.executeQueryAsync(
+      Function.createDelegate(data, onUpdatePermsSucceeded),
+      Function.createDelegate(data, onUpdatePermsFailed)
+    );
+  };
 
   /*****************************************************************
                             getFolderContents          
