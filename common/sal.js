@@ -542,6 +542,7 @@ function SPList(listDef) {
           title: file.get_title(),
           name: file.get_name(),
           created: file.get_timeCreated(),
+          id: file.get_item("ID"),
         });
       }
 
