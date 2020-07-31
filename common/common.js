@@ -163,7 +163,7 @@ function isBusinessDay(date) {
 function timedNotification(message, timeout = 2000) {
   let notifyId = SP.UI.Notify.addNotification(message, true);
 
-  window.setTimeout(SP.UI.Notify.removeNotification(notifyId), timeout);
+  window.setTimeout(() => SP.UI.Notify.removeNotification(notifyId), timeout);
 }
 
 function loadListDefsToSP() {
