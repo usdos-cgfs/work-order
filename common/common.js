@@ -160,7 +160,7 @@ function isBusinessDay(date) {
   return true;
 }
 
-function timedNotification(message, timeout) {
+function timedNotification(message, timeout = 2000) {
   let notifyId = SP.UI.Notify.addNotification(message, true);
 
   window.setTimeout(SP.UI.Notify.removeNotification(notifyId), timeout);
@@ -217,5 +217,23 @@ function createROGroups() {
   // Create a group for each RO and assign the restricted read role.
   vm.configRequestingOffices().forEach((ro) => {
     createSiteGroup("RO_" + ro.Title, ["Restricted Read"], "workorder Owners");
+  });
+}
+
+//For Each open request, get the servicetyp
+function fetchServiceTypesfromRequest() {
+  vm.allOpenOrders().forEach((req) => {
+    vm.listRefConfigServiceType().getListItems(
+      '<View><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' +
+        req.ServiceType.get_lookupValue() +
+        "</Value></Eq></Where></Query></View>",
+      (val) =>
+        console.log(
+          "Found Match: " +
+            req.ServiceType.get_lookupValue() +
+            " == " +
+            val[0].Title
+        )
+    );
   });
 }

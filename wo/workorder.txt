@@ -278,10 +278,14 @@
     data-tab="order-detail"
     class="ui bottom attached tab segment"
   >
-    <!-- ko if: !selectedServiceType -->
+    <!-- ko ifnot: selectedServiceType -->
     <div class="ui fluid card">
       <div class="content">
-        <h2>Please select a request</h2>
+        <h3>
+          Please select an open request from the
+          <a href="./app.aspx?tab=open-orders">Open Orders</a> Tab or
+          <a href="./app.aspx?tab=order-new"> Create a New Order</a>
+        </h3>
       </div>
     </div>
     <!-- /ko -->

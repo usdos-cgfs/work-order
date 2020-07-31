@@ -293,13 +293,11 @@ function SPList(listDef) {
                                 createListItem      
     ******************************************************************/
   self.createListItem = function (valuePairs, callback, folderName = "") {
-    console.log("sal function", this);
-    self.callbackCreateListItem = callback;
     //self.updateConfig();
     var oList = self.config.listRef;
-    console.log("context loaded: ", oList);
 
     var itemCreateInfo = new SP.ListItemCreationInformation();
+
     if (folderName) {
       let folderUrl =
         sal.globalConfig.siteUrl +
@@ -308,28 +306,35 @@ function SPList(listDef) {
         "/" +
         folderName;
       itemCreateInfo.set_folderUrl(folderUrl);
-      console.log(folderUrl);
     }
-    this.oListItem = oList.addItem(itemCreateInfo);
+
+    let oListItem = oList.addItem(itemCreateInfo);
     for (i = 0; i < valuePairs.length; i++) {
-      this.oListItem.set_item(valuePairs[i][0], valuePairs[i][1]);
+      oListItem.set_item(valuePairs[i][0], valuePairs[i][1]);
     }
-    this.oListItem.update();
 
-    self.config.currentContext.load(this.oListItem);
+    oListItem.update();
+
+    function onCreateListItemSucceeded(sender, args) {
+      var self = this;
+      self.callback(self.oListItem.get_id());
+    }
+
+    function onCreateListItemFailed(sender, args) {
+      timedNotification(
+        "Failed to create new item :" +
+          args.get_message() +
+          "\n" +
+          args.get_stackTrace()
+      );
+    }
+    data = { oListItem, callback };
+
+    self.config.currentContext.load(oListItem);
     self.config.currentContext.executeQueryAsync(
-      onCreateListItemSucceeded.bind(this),
-      Function.createDelegate(this, onQueryFailed)
+      Function.createDelegate(data, onCreateListItemSucceeded),
+      Function.createDelegate(data, onCreateListItemFailed)
     );
-  };
-
-  onCreateListItemSucceeded = function () {
-    var self = this;
-    console.log("sal callback", this);
-    //alert('Item created: ' + this.oListItem.get_id());
-    console.log("calling callback create");
-
-    self.callbackCreateListItem(this.oListItem.get_id());
   };
 
   /*****************************************************************
@@ -339,47 +344,62 @@ function SPList(listDef) {
     /*
         Obtain all list items that match the querystring passed by caml.
         */
-    self.callbackGetListItem = callback;
     //self.updateConfig();
     console.log("context loaded", self.config);
     var camlQuery = new SP.CamlQuery.createAllItemsQuery();
 
     camlQuery.set_viewXml(caml);
-    self.collListItem = self.config.listRef.getItems(camlQuery);
-    self.config.currentContext.load(self.collListItem);
-    self.config.currentContext.executeQueryAsync(
-      onGetListItemsSucceeded.bind(this),
-      onQueryFailed.bind(this)
-    );
-  };
+    let collListItem = self.config.listRef.getItems(camlQuery);
 
-  onGetListItemsSucceeded = function (sender, args) {
-    var self = this;
-    var listItemEnumerator = self.collListItem.getEnumerator();
-    self.focusedItems = [];
-    console.log("Get list succeeded");
-    var keys = [];
-    $.each(this.config.def.viewFields, function (field, obj) {
-      keys.push(field);
-    });
-    while (listItemEnumerator.moveNext()) {
-      var oListItem = listItemEnumerator.get_current();
-      //console.log(oListItem);
-      var listObj = {};
-      console.log("keys", keys);
-      $.each(keys, function (idx, item) {
-        var getItem = oListItem.get_item(item);
-        console.log("getting: " + item + " " + getItem);
-        //console.log(getItem)
-        //console.log(item + ' item: ', getItem)
-        listObj[item] = getItem;
+    function onGetListItemsSucceeded(sender, args) {
+      var self = this;
+      var listItemEnumerator = self.collListItem.getEnumerator();
+      self.focusedItems = [];
+      console.log("Get list succeeded");
+      var keys = [];
+      $.each(this.def.viewFields, function (field, obj) {
+        keys.push(field);
       });
-      listObj.oListItem = oListItem;
-      self.focusedItems.push(listObj);
+      while (listItemEnumerator.moveNext()) {
+        var oListItem = listItemEnumerator.get_current();
+        //console.log(oListItem);
+        var listObj = {};
+        console.log("keys", keys);
+        $.each(keys, function (idx, item) {
+          var getItem = oListItem.get_item(item);
+          //console.log("getting: " + item + " " + getItem);
+          //console.log(getItem)
+          //console.log(item + ' item: ', getItem)
+          listObj[item] = getItem;
+        });
+        listObj.oListItem = oListItem;
+        self.focusedItems.push(listObj);
+      }
+      //this.setState({ focusedItems })
+      console.log("calling callback get list");
+      callback(self.focusedItems);
     }
-    //this.setState({ focusedItems })
-    console.log("calling callback get list");
-    self.callbackGetListItem(self.focusedItems);
+
+    function onGetListItemsFailed(sender, args) {
+      console.log("unsuccessful read", sender);
+
+      alert(
+        `Request on list ${
+          this.def.name
+        } failed, producing the following error: \n ${args.get_message()} \nStackTrack: \n ${args.get_stackTrace()}`
+      );
+    }
+    let data = {
+      collListItem,
+      callback,
+      def: this.config.def,
+    };
+
+    self.config.currentContext.load(collListItem);
+    self.config.currentContext.executeQueryAsync(
+      Function.createDelegate(data, onGetListItemsSucceeded),
+      Function.createDelegate(data, onGetListItemsFailed)
+    );
   };
 
   /*****************************************************************
@@ -387,29 +407,30 @@ function SPList(listDef) {
     ******************************************************************/
   self.updateListItem = function (id, valuePairs, callback) {
     //[["ColName", "Value"], ["Col2", "Value2"]]
-    self.callbackUpdateListItem = callback;
     //self.updateConfig();
     var oList = self.config.listRef;
 
-    this.oListItem = oList.getItemById(id);
+    let oListItem = oList.getItemById(id);
     for (i = 0; i < valuePairs.length; i++) {
-      this.oListItem.set_item(valuePairs[i][0], valuePairs[i][1]);
+      oListItem.set_item(valuePairs[i][0], valuePairs[i][1]);
     }
 
     //oListItem.set_item('Title', 'My Updated Title');
-    this.oListItem.update();
+    oListItem.update();
 
-    self.config.currentContext.load(this.oListItem);
+    function onUpdateListItemsSucceeded(sender, args) {
+      //alert('Item updated!');
+      console.log("Successfully updated " + this.oListItem.get_item("Title"));
+      this.callback();
+    }
+
+    self.config.currentContext.load(oListItem);
+    data = { oListItem, callback };
     self.config.currentContext.executeQueryAsync(
-      onUpdateListItemsSucceeded.bind(this),
-      onQueryFailed.bind(this)
+      Function.createDelegate(data, onUpdateListItemsSucceeded),
+      Function.createDelegate(data, onQueryFailed)
     );
   };
-
-  function onUpdateListItemsSucceeded(sender, args) {
-    //alert('Item updated!');
-    self.callbackUpdateListItem();
-  }
 
   /*****************************************************************
                             deleteListItem      
@@ -507,38 +528,38 @@ function SPList(listDef) {
         "/" +
         encodeURI(folderName)
     );
-    this.files = folder.get_files();
+    files = folder.get_files();
 
-    self.config.currentContext.load(this.files);
-    self.config.currentContext.executeQueryAsync(
-      onGetListFilesSucceeded.bind(this),
-      ongetListFilesFailed.bind(this)
-    );
-  };
+    function onGetListFilesSucceeded(sender, args) {
+      var fileArr = [];
+      var listItemEnumerator = this.files.getEnumerator();
+      while (listItemEnumerator.moveNext()) {
+        var file = listItemEnumerator.get_current();
+        //console.log(file);
+        var fileUrl = file.get_serverRelativeUrl();
+        fileArr.push({
+          fileUrl: fileUrl,
+          title: file.get_title(),
+          name: file.get_name(),
+          created: file.get_timeCreated(),
+        });
+      }
 
-  onGetListFilesSucceeded = function (sender, args) {
-    var fileArr = [];
-    var listItemEnumerator = this.files.getEnumerator();
-    while (listItemEnumerator.moveNext()) {
-      var file = listItemEnumerator.get_current();
-      //console.log(file);
-      var fileUrl = file.get_serverRelativeUrl();
-      fileArr.push({
-        fileUrl: fileUrl,
-        title: file.get_title(),
-        name: file.get_name(),
-        created: file.get_timeCreated(),
-      });
+      callback(fileArr);
     }
-    console.log("filearr", fileArr);
-    console.log("this", this);
-    console.log("self", self);
-    this.callbackGetFolderContents(fileArr);
-  };
 
-  ongetListFilesFailed = function (sender, args) {
-    // let's log this but suppress any alerts
-    console.log("WARN: something went wrong fetching files", args);
+    function ongetListFilesFailed(sender, args) {
+      // let's log this but suppress any alerts
+      timedNotification("WARN: something went wrong fetching files: " + args);
+    }
+
+    data = { files, callback };
+
+    self.config.currentContext.load(files);
+    self.config.currentContext.executeQueryAsync(
+      Function.createDelegate(data, onGetListFilesSucceeded),
+      Function.createDelegate(data, ongetListFilesFailed)
+    );
   };
 
   /*****************************************************************
