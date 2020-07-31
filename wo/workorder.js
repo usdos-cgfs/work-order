@@ -1,8 +1,9 @@
 tabsEnum = {
   "#open-orders": 0,
   "#assigned-orders": 1,
-  "#order-new": 2,
-  "#order-detail": 3,
+  "#order-lookup": 2,
+  "#order-new": 3,
+  "#order-detail": 4,
 };
 
 function initStaticListRefs() {

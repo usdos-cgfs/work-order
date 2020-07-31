@@ -39,6 +39,7 @@
       data-bind="enabled: assignedOpenOrders().length > 0"
       >Assigned Orders</a
     >
+    <a class="item" data-tab="order-lookup">Lookup</a>
     <a class="item" data-tab="order-new">New Order</a>
     <!-- ko if: selectedServiceType -->
     <a class="item" data-tab="order-detail">Detail View</a>
@@ -175,6 +176,13 @@
         </tr>
       </tbody>
     </table>
+  </div>
+  <div
+    id="order-lookup"
+    data-tab="order-lookup"
+    class="ui bottom attached tab segment"
+  >
+    <h2>Here is our lookup table, get ready!</h2>
   </div>
   <div
     id="order-new"
