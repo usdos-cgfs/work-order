@@ -1,0 +1,40 @@
+<table id="lookup-orders" class="data-table">
+  <thead>
+    <tr>
+      <td>Order ID</td>
+      <td>Requesting Office</td>
+      <td>Requestor</td>
+      <td>Description</td>
+      <!-- ko foreach: lookupTableCol -->
+      <td class="disposable" data-bind="text: $root.lookupColNames($data)"></td>
+      <!-- /ko -->
+    </tr>
+  </thead>
+  <tbody data-bind="foreach: {data: $root.lookupOrders, as: 'order'}">
+    <tr>
+      <td data-bind="click: $root.showWorkOrder, text: Title"></td>
+      <td data-bind="text: order.RequestorOffice.get_lookupValue()"></td>
+      <td data-bind="text: order.RequestorName"></td>
+      <td data-bind="text: $(RequestDescription).text()"></td>
+      <!-- ko if: $root.lookupTableCol -->
+      <!-- ko foreach: { data: $root.lookupTableCol, as: 'col' } -->
+      <td
+        class="disposable"
+        data-bind="text: $root.lookupParseText(col, order.ServiceItem[col])"
+      ></td>
+      <!-- /ko -->
+      <!-- /ko -->
+    </tr>
+  </tbody>
+  <tfoot>
+    <tr>
+      <td>Order ID</td>
+      <td>Requesting Office</td>
+      <td>Requestor</td>
+      <td>Description</td>
+      <!-- ko foreach: lookupTableCol -->
+      <td class="disposable" data-bind="text: $root.lookupColNames($data)"></td>
+      <!-- /ko -->
+    </tr>
+  </tfoot>
+</table>
