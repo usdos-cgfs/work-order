@@ -182,7 +182,29 @@
     data-tab="order-lookup"
     class="ui bottom attached tab segment"
   >
+    <!-- ko if: configServiceTypes -->
     <h2>Here is our lookup table, get ready!</h2>
+    <select
+      class="ui select"
+      type="select"
+      data-bind="value: lookupServiceType,
+                                         options: configServiceTypes(),
+                                         optionsText: function(stype) {return stype.Title ? stype.Title : 'unknown'},
+                                         optionsCaption: 'Select...'"
+    ></select>
+    <div class="">
+      <label>Include Inactive?</label>
+      <input
+        type="checkbox"
+        name="include"
+        data-bind="checked: lookupInactiveBool"
+      />
+    </div>
+    <!-- <div class="ui primary button" data-bind="click: lookupOrderUpdate">
+      Update
+    </div> -->
+    <div id="lookup-orders-container"></div>
+    <!-- /ko -->
   </div>
   <div
     id="order-new"

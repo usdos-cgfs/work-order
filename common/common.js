@@ -40,6 +40,12 @@ function updateUrlParam(param, val) {
   window.history.pushState({}, "", "?" + urlParams.toString());
 }
 
+function getUrlParam(param) {
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+  return urlParams.get(param);
+}
+
 var pageViewModel = ["Title", "ViewArea", "ViewBody"];
 
 var linkViewModel = ["Title", "LinkType", "LinkUrl"];
@@ -92,12 +98,27 @@ function businessDaysFromDate(date, businessDays) {
     tmp = new Date(date);
   while (businessDays >= 0) {
     tmp.setTime(date.getTime() + counter * 86400000);
-    if (isBusinessDay(tmp)) {
+    if (isBusinessDay(tmp) && !isConfigHoliday(tmp)) {
       --businessDays;
     }
     ++counter;
   }
   return tmp;
+}
+
+function isConfigHoliday(date) {
+  let isHoliday = vm.configHolidays().find((hol) => {
+    let day = hol.Date.getUTCDate() == date.getUTCDate();
+    let month = hol.Date.getUTCMonth() == date.getUTCMonth();
+    let year = hol.Date.getUTCFullYear() == date.getUTCFullYear();
+
+    if (hol.Repeating) {
+      year = true;
+    }
+    return day && month && year;
+  });
+
+  return isHoliday;
 }
 
 function isBusinessDay(date) {

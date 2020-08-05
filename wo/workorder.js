@@ -34,6 +34,7 @@ function initServiceTypeListRefs() {
       let servID = serviceType.ID;
       console.log("Creating List Ref for: ", servID);
       serviceType.listRef = new SPList(JSON.parse(serviceType.ListDef));
+      serviceType.listDef = JSON.parse(serviceType.ListDef);
     }
   });
 }
@@ -453,9 +454,14 @@ function fetchConfigListData(callback) {
  ************************************************************/
 function fetchOpenOrders(callback) {
   vm.listRefWO().getListItems(
-    '<View Scope="RecursiveAll"><Query><Where><Eq>' +
+    '<View Scope="RecursiveAll"><Query><Where><And>' +
+      "<Eq>" +
       '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
-      "</Eq></Where></Query></View>",
+      "</Eq>" +
+      "<Neq>" +
+      '<FieldRef Name="RequestStatus"/><Value Type="Text">Closed</Value>' +
+      "</Neq>" +
+      "</And></Where></Query></View>",
     (items) => {
       console.log("loading open orders", items);
       vm.allOpenOrders(items);
@@ -742,6 +748,13 @@ function initComplete() {
     fetchOpenOrders(function () {
       let tab = urlParams.get("tab");
       let id = urlParams.get("reqid");
+      let stypeId = urlParams.get("stype");
+      let stype = null;
+      if (stypeId) {
+        stype = vm
+          .configServiceTypes()
+          .find((serviceType) => serviceType.UID == stypeId);
+      }
 
       if (id) {
         // Viewing workorder now
@@ -749,6 +762,7 @@ function initComplete() {
         viewWorkOrderItem(id);
       } else if (tab) {
         vm.tab(tab);
+        //vm.lookupOrderUpdate(stype);
         //$('.ui.menu').find('.item').tab('change tab', 'open-orders');
       } else {
         vm.tab("open-orders");

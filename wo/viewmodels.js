@@ -1244,6 +1244,147 @@ function koviewmodel() {
   self.allOpenOrders = ko.observableArray();
   self.assignedOpenOrders = ko.observableArray();
   self.allAssignments = ko.observableArray();
+  self.lookupOrders = ko.observableArray();
+
+  /************************************************************
+   * Lookup Tab
+   ************************************************************/
+  self.lookupServiceType = ko.observable();
+  self.lookupInactiveBool = ko.observable(false);
+
+  self.lookupTableCol = ko.observableArray([]);
+
+  self.lookupServiceType.subscribe(
+    (oldstype) => {
+      let tableElements = $("#lookup-orders-container").children();
+      //ko.removeNode(document.getElementById("lookup-orders_wrapper"));
+      if (tableElements.length) {
+        ko.unapplyBindings(tableElements, true);
+        //$("#lookup-table-container").children().remove();
+      }
+    },
+    null,
+    "beforeChange"
+  );
+
+  self.lookupServiceType.subscribe((stype) => {
+    let tableElements = $("#lookup-orders-container").children();
+    //ko.removeNode(document.getElementById("lookup-orders_wrapper"));
+    // if (tableElements.length) {
+    //   ko.unapplyBindings(tableElements, true);
+    //   //$("#lookup-table-container").children().remove();
+    // }
+    // tableElements.hide();
+    if (stype != undefined) {
+      updateUrlParam("ServiceType", stype.UID);
+
+      self.lookupTableCol([]);
+
+      stype = self.lookupServiceType();
+
+      if (stype.listDef) {
+        let lookupKeys = Object.keys(
+          self.lookupServiceType().listDef.viewFields
+        ).filter((col) => col != "ID" && col != "Title");
+
+        self.lookupTableCol(lookupKeys);
+      }
+      self.lookupOrderUpdate();
+    }
+  });
+
+  self.lookupInactiveBool.subscribe((Inactive) => {
+    self.lookupOrderUpdate();
+  });
+
+  self.lookupOrderUpdate = function () {
+    self.lookupOrders([]);
+    stype = self.lookupServiceType();
+
+    // Take the selected service type and updated the open orders table
+    if (self.lookupInactiveBool()) {
+      //Include inactive requests
+      let camlq =
+        '<View Scope="RecursiveAll"><Query><Where><Eq>' +
+        '<FieldRef Name="ServiceType" LookupId="TRUE"/>' +
+        '<Value Type="Lookup">' +
+        stype.ID +
+        "</Value>" +
+        "</Eq></Where></Query></View>";
+
+      self.listRefWO().getListItems(camlq, (lookupOrdersTemp) => {
+        self.lookupUpdateRelated(lookupOrdersTemp);
+      });
+    } else {
+      let lookupOrdersTemp = self.allOpenOrders().filter((order) => {
+        return order.ServiceType.get_lookupId() == stype.ID;
+      });
+
+      self.lookupUpdateRelated(lookupOrdersTemp);
+    }
+  };
+
+  self.lookupUpdateRelated = function (lookupOrdersTemp) {
+    // If there's an associated lookup list, let's add it.
+    if (stype.ListDef) {
+      let count = lookupOrdersTemp.length - 1;
+      let i = 0;
+      lookupOrdersTemp.forEach((order) => {
+        let camlq =
+          '<View Scope="RecursiveAll"><Query><Where><Eq>' +
+          '<FieldRef Name="Title"/>' +
+          '<Value Type="Text">' +
+          order.Title +
+          "</Value>" +
+          "</Eq></Where></Query></View>";
+
+        stype.listRef.getListItems(camlq, function (val) {
+          order.ServiceItem = val[0];
+          self.lookupOrders.push(order);
+          if (i == count) {
+            $("#lookup-orders-container").load(
+              "../SiteAssets/workorder/wo/lookupTable.txt",
+              () => {
+                ko.applyBindings(
+                  self,
+                  document.getElementById("lookup-orders")
+                );
+
+                makeDataTable("#lookup-orders");
+                //self.lookupOrders.valueHasMutated();
+              }
+            );
+          } else {
+            console.log(i + "/" + count);
+            i++;
+          }
+        });
+      });
+    } else {
+      self.lookupOrders(lookupOrdersTemp);
+      makeDataTable("#lookup-orders");
+    }
+  };
+
+  self.lookupColNames = function (col) {
+    console.log("looking up column: ", col);
+    return self.lookupServiceType().listDef.viewFields[col].displayName;
+  };
+
+  self.lookupServiceTypeListDef = ko.pureComputed(() => {
+    return JSON.parse(self.lookupServiceType().ListDef);
+  });
+
+  self.lookupParseText = function (col, val) {
+    // Parse the type of val and return text
+    switch (self.lookupServiceTypeListDef().viewFields[col].type) {
+      case "RichText":
+        return $(val).text();
+        break;
+      default:
+        return val;
+    }
+  };
 
   /************************************************************
    * allOpenOrders Table Handlers
@@ -1744,4 +1885,18 @@ ko.bindingHandlers.trix = {
 var camlq = "<Query></Query>";
 var callback = function (items) {
   console.log(items);
+};
+
+ko.unapplyBindings = function ($node, remove = false) {
+  // unbind events
+  $node.find("*").each(function () {
+    $(this).unbind();
+  });
+
+  // Remove KO subscriptions and references
+  if (remove) {
+    ko.removeNode($node[0]);
+  } else {
+    ko.cleanNode($node[0]);
+  }
 };

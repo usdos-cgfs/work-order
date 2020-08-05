@@ -549,7 +549,9 @@ function SPList(listDef) {
 
     function ongetListFilesFailed(sender, args) {
       // let's log this but suppress any alerts
-      timedNotification("WARN: something went wrong fetching files: " + args);
+      timedNotification(
+        "WARN: something went wrong fetching files: " + args.toString()
+      );
     }
 
     data = { files, callback };
