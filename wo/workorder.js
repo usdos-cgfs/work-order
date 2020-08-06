@@ -1,8 +1,9 @@
 tabsEnum = {
   "#open-orders": 0,
   "#assigned-orders": 1,
-  "#order-new": 2,
-  "#order-detail": 3,
+  "#order-lookup": 2,
+  "#order-new": 3,
+  "#order-detail": 4,
 };
 
 function initStaticListRefs() {
@@ -10,6 +11,7 @@ function initStaticListRefs() {
   //vm.listRefpu10k(new SPList(pu10kListDef));
 
   vm.listRefApproval(new SPList(approvalListDef));
+  vm.listRefAction(new SPList(actionListDef));
   vm.libRefWODocs(new SPList(workOrderDocDef));
   vm.listRefAssignment(new SPList(assignmentListDef));
   vm.listRefComment(new SPList(commentListDef));
@@ -33,6 +35,7 @@ function initServiceTypeListRefs() {
       let servID = serviceType.ID;
       console.log("Creating List Ref for: ", servID);
       serviceType.listRef = new SPList(JSON.parse(serviceType.ListDef));
+      serviceType.listDef = JSON.parse(serviceType.ListDef);
     }
   });
 }
@@ -84,7 +87,7 @@ function newWorkOrder() {
   //clearValuePairs(workOrderListDef.viewFields);
   //  Clear the selected service type valuepairs
   if (vm.selectedServiceType().ListDef) {
-    clearValuePairs(vm.selectedServiceType().ListDef.viewFields);
+    clearValuePairs(vm.selectedServiceType().listDef.viewFields);
   }
 
   // Set our VM fields
@@ -101,6 +104,7 @@ function newWorkOrder() {
   //Clear our requested fields.
   vm.requestClosedDate(null);
   vm.requestSubmittedDate(null);
+  vm.requestActions([]);
   vm.requestApprovals([]);
   vm.requestAttachments([]);
   vm.requestAssignees([]);
@@ -118,6 +122,9 @@ function viewWorkOrderItem(woID) {
   vm.currentView("view");
   vm.requestID(woID);
   fetchAssignments();
+  fetchActions(function () {
+    console.log("actions fetched");
+  });
   fetchApprovals(function () {
     console.log("approvals fetched");
   });
@@ -153,14 +160,12 @@ function viewServiceTypeItem() {
     '<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' +
     vm.requestID() +
     "</Value></Eq></Where></Query></View>";
-  vm.selectedServiceType().listRef.getListItems(serviceTypeCaml, function (
-    items
-  ) {
+  vm.selectedServiceType().listRef.getListItems(serviceTypeCaml, (items) => {
     let res = items[0];
     vm.serviceTypeHeader(res);
     console.log("service type fetched -- setting valuepairs", items);
     setValuePairs(
-      JSON.parse(vm.selectedServiceType().ListDef).viewFields,
+      vm.selectedServiceType().listDef.viewFields,
       vm.serviceTypeHeader()
     );
   });
@@ -265,19 +270,6 @@ function saveWorkOrder() {
   // Need to get the value of the trix editor.
   vm.requestDescriptionHTML($("#trix-request-description").html());
 
-  // Check the submitted date, if it's between 3 pm, (19 UTC) and midnight (4 UTC)
-  // it needs to be set as submitted the next business day
-  let now = new Date();
-  if (now.getUTCHours() >= 19 || now.getUTCHours() < 4) {
-    console.log("its after 3, this is submitted tomorrow");
-    let tomorrow = businessDaysFromDate(now, 1);
-    tomorrow.setUTCHours(13);
-    tomorrow.setUTCMinutes(0);
-    vm.requestSubmittedDate(tomorrow);
-  }
-
-  var requestValuePairs = getValuePairs(workOrderListDef.viewFields);
-
   if (vm.selectedServiceType().ListDef) {
     var typeValuePairs = getValuePairs(
       JSON.parse(vm.selectedServiceType().ListDef).viewFields
@@ -289,6 +281,8 @@ function saveWorkOrder() {
     // First, save or update the parent work order item.
     switch (vm.currentView()) {
       case "edit":
+        var requestValuePairs = getValuePairs(workOrderListDef.viewFields);
+
         // We are saving an edit form, get the id and update.
         vm.listRefWO().updateListItem(
           vm.requestHeader().ID,
@@ -302,18 +296,33 @@ function saveWorkOrder() {
         );
         if (vm.selectedServiceType().ListDef) {
           // If we are saving to any other list.
+          var typeValuePairs = getValuePairs(
+            vm.selectedServiceType().listDef.viewFields
+          );
           vm.selectedServiceType().listRef.updateListItem(
             vm.serviceTypeHeader().ID,
             typeValuePairs,
             onSaveEditWorkOrderCallback
           );
         }
-
+        createAction("Edited", `The request has been edited.`);
         break;
 
       case "new":
         // we are saving a new record, create a new copy of each of the record types.
         // Save the current work order
+
+        // Check the submitted date, if it's between 3 pm, (19 UTC) and midnight (4 UTC)
+        // it needs to be set as submitted the next business day
+        let now = new Date();
+        if (now.getUTCHours() >= 19 || now.getUTCHours() < 4) {
+          console.log("its after 3, this is submitted tomorrow");
+          let tomorrow = businessDaysFromDate(now, 1);
+          tomorrow.setUTCHours(13);
+          tomorrow.setUTCMinutes(0);
+          vm.requestSubmittedDate(tomorrow);
+        }
+
         vm.requestStageNum(1);
         vm.requestStatus("Open");
         var valuePairs = getValuePairs(workOrderListDef.viewFields);
@@ -327,8 +336,7 @@ function saveWorkOrder() {
           },
           vm.requestorOffice().Title
         );
-        //setTimeout(function () {onSaveNewWorkOrderMaster('12')}, 1200);
-        vm.requestSubmittedDate(new Date().toLocaleString());
+
         if (typeValuePairs) {
           // Save the workorder specific info here:
           vm.selectedServiceType().listRef.createListItem(
@@ -339,6 +347,14 @@ function saveWorkOrder() {
         } else {
           onSaveNewWorkOrderMaster();
         }
+
+        createAction(
+          "Created",
+          `The request was submitted with an effective submission date of ${vm
+            .requestSubmittedDate()
+            .toDateString()}`,
+          true
+        );
         break;
     }
   } else {
@@ -452,9 +468,14 @@ function fetchConfigListData(callback) {
  ************************************************************/
 function fetchOpenOrders(callback) {
   vm.listRefWO().getListItems(
-    '<View Scope="RecursiveAll"><Query><Where><Eq>' +
+    '<View Scope="RecursiveAll"><Query><Where><And>' +
+      "<Eq>" +
       '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
-      "</Eq></Where></Query></View>",
+      "</Eq>" +
+      "<Neq>" +
+      '<FieldRef Name="RequestStatus"/><Value Type="Text">Closed</Value>' +
+      "</Neq>" +
+      "</And></Where></Query></View>",
     (items) => {
       console.log("loading open orders", items);
       vm.allOpenOrders(items);
@@ -527,6 +548,12 @@ function createAssignment() {
       );
       $("#wo-routing").accordion("open", 0);
       fetchAssignments();
+      createAction(
+        "Assignment",
+        `The following Action Office has been assigned to this request: ${
+          vm.assignAssignee().Title
+        }`
+      );
       vm.assignAssignee(null);
     });
   }
@@ -620,6 +647,56 @@ function newApprovalCallback(result, value) {
     });
   }
 }
+/************************************************************
+ * Action
+ ************************************************************/
+function newAction() {
+  vm.listRefAction().showModal(
+    "CustomNewForm.aspx",
+    "New Action",
+    { woId: vm.requestID() },
+    newActionCallback
+  );
+}
+
+function createAction(type, desc, sendEmail = false) {
+  let vp = [
+    ["Title", vm.requestID()],
+    ["ActionType", type],
+    ["Description", desc],
+    ["SendEmail", sendEmail],
+  ];
+  vm.listRefAction().createListItem(
+    vp,
+    () => newActionCallback(SP.UI.DialogResult.OK, null),
+    vm.requestorOffice().Title
+  );
+}
+
+function fetchActions(callback) {
+  var camlq =
+    '<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' +
+    vm.requestID() +
+    "</Value></Eq></Where></Query></View>";
+  vm.listRefAction().getListItems(camlq, function (actions) {
+    vm.requestActions(actions);
+    callback();
+  });
+}
+
+function newActionCallback(result, value) {
+  console.log("Action callback: " + result, value);
+  if (result === SP.UI.DialogResult.OK) {
+    SP.UI.ModalDialog.showWaitScreenWithNoClose("Refreshing Actions List...");
+    //$(".admin-action-zone").hide();
+    console.log(value);
+    fetchActions(function () {
+      SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+      // Let's branch based on whether the last approval was approve or reject.
+      console.log("actions fetched");
+    });
+  }
+}
 
 /************************************************************
  * Comments
@@ -672,6 +749,12 @@ function pipelineForward() {
     SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
     console.log("pipeline moved to next stage.");
     buildPipelineElement();
+    createAction(
+      vm.requestStage().Title == "Closed" ? "Closed" : "Progressed",
+      `${sal.globalConfig.currentUser.get_title()} has moved the request to stage ${
+        vm.requestStage().Step
+      }: ${vm.requestStage().Title}`
+    );
   });
 }
 
@@ -684,18 +767,19 @@ function initApp() {
   //textpu10kDescription = new nicEditor({fullPanel : true}).panelInstance('textpu10kDescription')
   $(".non-editable-field").prop("disabled", true);
   //$("#tabs").tabs();
-  $("#wo-progress-bar").progressbar({
-    value: 0,
-  });
-  //$('.ui.sticky').sticky();
-  $(".ui.accordion").accordion();
-  $(".ui.popup").popup();
-  $(".menu .item").tab();
-  $(".top.menu .item").tab({
-    onVisible: function () {
-      vm.tab(this.id);
-    },
-  });
+  // $("#wo-progress-bar").progressbar({
+  //   value: 0,
+  // });
+  // //$('.ui.sticky').sticky();
+  // $(".ui.checkbox").checkbox();
+  // $(".ui.accordion").accordion();
+  // $(".ui.popup").popup();
+  // $(".menu .item").tab();
+  // $(".top.menu .item").tab({
+  //   onVisible: function () {
+  //     vm.tab(this.id);
+  //   },
+  // });
 
   console.log("initialized listeners");
 
@@ -721,7 +805,7 @@ function initApp() {
 function initComplete() {
   //Initialize the rest of our list references
   initServiceTypeListRefs();
-
+  initUIComponents();
   //Initialization complete: load the current tab.
   var href = window.location.href.toLowerCase();
   var hash = window.location.hash.replace("#", "");
@@ -741,6 +825,13 @@ function initComplete() {
     fetchOpenOrders(function () {
       let tab = urlParams.get("tab");
       let id = urlParams.get("reqid");
+      let stypeId = urlParams.get("stype");
+      let stype = null;
+      if (stypeId) {
+        stype = vm
+          .configServiceTypes()
+          .find((serviceType) => serviceType.UID == stypeId);
+      }
 
       if (id) {
         // Viewing workorder now
@@ -748,6 +839,7 @@ function initComplete() {
         viewWorkOrderItem(id);
       } else if (tab) {
         vm.tab(tab);
+        //vm.lookupOrderUpdate(stype);
         //$('.ui.menu').find('.item').tab('change tab', 'open-orders');
       } else {
         vm.tab("open-orders");
@@ -757,6 +849,18 @@ function initComplete() {
     });
   }
   $("#tabs").show();
+}
+
+function initUIComponents() {
+  $(".ui.checkbox").checkbox();
+  $(".ui.accordion").accordion();
+  $(".ui.popup").popup();
+  $(".menu .item").tab();
+  $(".top.menu .item").tab({
+    onVisible: function () {
+      vm.tab(this.id);
+    },
+  });
 }
 
 $(document).ready(function () {

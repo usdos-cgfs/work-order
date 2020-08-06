@@ -40,6 +40,12 @@ function updateUrlParam(param, val) {
   window.history.pushState({}, "", "?" + urlParams.toString());
 }
 
+function getUrlParam(param) {
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+  return urlParams.get(param);
+}
+
 var pageViewModel = ["Title", "ViewArea", "ViewBody"];
 
 var linkViewModel = ["Title", "LinkType", "LinkUrl"];
@@ -50,6 +56,7 @@ function makeDataTable(id) {
     iDisplayLength: 25,
     deferRender: true,
     bDestroy: true,
+    columnDefs: [{ width: "25%", targets: 0 }],
     initComplete: function () {
       //this.api().columns([1, 3, 4]).every( function () {
       this.api()
@@ -92,12 +99,27 @@ function businessDaysFromDate(date, businessDays) {
     tmp = new Date(date);
   while (businessDays >= 0) {
     tmp.setTime(date.getTime() + counter * 86400000);
-    if (isBusinessDay(tmp)) {
+    if (isBusinessDay(tmp) && !isConfigHoliday(tmp)) {
       --businessDays;
     }
     ++counter;
   }
   return tmp;
+}
+
+function isConfigHoliday(date) {
+  let isHoliday = vm.configHolidays().find((hol) => {
+    let day = hol.Date.getUTCDate() == date.getUTCDate();
+    let month = hol.Date.getUTCMonth() == date.getUTCMonth();
+    let year = hol.Date.getUTCFullYear() == date.getUTCFullYear();
+
+    if (hol.Repeating) {
+      year = true;
+    }
+    return day && month && year;
+  });
+
+  return isHoliday;
 }
 
 function isBusinessDay(date) {
@@ -196,7 +218,7 @@ function loadPipelinesToSP() {
   });
 }
 
-function buildROFolders() {
+function buildROFoldersServiceTypes() {
   // Build a folder for each Requesting Office in each of our lists
   window.alert = function () {};
   vm.configServiceTypes().forEach((stype) => {
@@ -210,6 +232,18 @@ function buildROFolders() {
         );
       });
     }
+  });
+}
+
+function buildROFolders(listRef) {
+  // Build a folder for each Requesting Office in each of our lists
+  window.alert = function () {};
+
+  vm.configRequestingOffices().forEach((ro) => {
+    let vp = [[]];
+    listRef.createListFolder(ro.Title, () =>
+      console.log("Create Folder Success: ", ro.Title)
+    );
   });
 }
 
