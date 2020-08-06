@@ -632,10 +632,17 @@ function SPList(listDef) {
       .get_rootFolder()
       .get_folders()
       .add(folderName);
+
+    function onCreateFolderSucceeded(sender, args) {
+      this.callback();
+    }
+
+    let data = { folderName, callback, folder };
     self.config.currentContext.load(folder);
-    self.config.currentContext.executeQueryAsync(function () {
-      self.requestedCallback();
-    }, onQueryFailed);
+    self.config.currentContext.executeQueryAsync(
+      Function.createDelegate(data, onCreateFolderSucceeded),
+      onQueryFailed
+    );
   };
 
   self.createListFolder = function (folderName, callback) {
@@ -650,10 +657,17 @@ function SPList(listDef) {
 
     newItem.update();
 
+    function onCreateFolderSucceeded(sender, args) {
+      this.callback();
+    }
+
+    let data = { folderName, callback, newItem };
+
     self.config.currentContext.load(newItem);
-    self.config.currentContext.executeQueryAsync(function () {
-      self.requestedCallback();
-    }, onQueryFailed);
+    self.config.currentContext.executeQueryAsync(
+      Function.createDelegate(data, onCreateFolderSucceeded),
+      onQueryFailed
+    );
   };
 
   self.showListView = function (filter) {

@@ -56,6 +56,7 @@ function makeDataTable(id) {
     iDisplayLength: 25,
     deferRender: true,
     bDestroy: true,
+    columnDefs: [{ width: "25%", targets: 0 }],
     initComplete: function () {
       //this.api().columns([1, 3, 4]).every( function () {
       this.api()
@@ -217,7 +218,7 @@ function loadPipelinesToSP() {
   });
 }
 
-function buildROFolders() {
+function buildROFoldersServiceTypes() {
   // Build a folder for each Requesting Office in each of our lists
   window.alert = function () {};
   vm.configServiceTypes().forEach((stype) => {
@@ -231,6 +232,18 @@ function buildROFolders() {
         );
       });
     }
+  });
+}
+
+function buildROFolders(listRef) {
+  // Build a folder for each Requesting Office in each of our lists
+  window.alert = function () {};
+
+  vm.configRequestingOffices().forEach((ro) => {
+    let vp = [[]];
+    listRef.createListFolder(ro.Title, () =>
+      console.log("Create Folder Success: ", ro.Title)
+    );
   });
 }
 

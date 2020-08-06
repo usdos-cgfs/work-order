@@ -71,7 +71,7 @@
       </h2>
     </div>
     <div class="container" data-bind="visible: allOpenOrders().length > 0">
-      <table id="wo-open-orders" class="display">
+      <table id="wo-open-orders" class="display data-table">
         <thead>
           <tr>
             <th>Order ID</th>
@@ -91,12 +91,10 @@
         </thead>
         <tbody data-bind="foreach: allOpenOrders">
           <tr>
-            <td>
-              <a
-                href="#"
-                data-bind="click: $root.showWorkOrder, text: Title"
-              ></a>
-            </td>
+            <td
+              class="wo-id"
+              data-bind="click: $root.showWorkOrder, text: Title"
+            ></td>
             <td data-bind="text: ServiceType.get_lookupValue()"></td>
             <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
             <td data-bind="text: RequestorName"></td>
@@ -161,9 +159,10 @@
       </thead>
       <tbody data-bind="foreach: assignedOpenOrders">
         <tr>
-          <td>
-            <a href="#" data-bind="click: $root.showWorkOrder, text: Title"></a>
-          </td>
+          <td
+            class="wo-id"
+            data-bind="click: $root.showWorkOrder, text: Title"
+          ></td>
           <td>
             <p data-bind="text: ServiceType.get_lookupValue()"></p>
           </td>
@@ -175,6 +174,14 @@
           </td>
         </tr>
       </tbody>
+      <tfooter>
+        <tr>
+          <td>Order ID</td>
+          <td>Service Type</td>
+          <td>Requesting Office</td>
+          <td>Requestor</td>
+        </tr>
+      </tfooter>
     </table>
   </div>
   <div
@@ -183,22 +190,32 @@
     class="ui bottom attached tab segment"
   >
     <!-- ko if: configServiceTypes -->
-    <h2>Here is our lookup table, get ready!</h2>
-    <select
-      class="ui select"
-      type="select"
-      data-bind="value: lookupServiceType,
+    <h2>Lookup orders by service type:</h2>
+    <div class="ui form">
+      <div class="">
+        <div class="field">
+          <label>Service Type:</label>
+          <select
+            class="ui select"
+            type="select"
+            data-bind="value: lookupServiceType,
                                          options: configServiceTypes(),
                                          optionsText: function(stype) {return stype.Title ? stype.Title : 'unknown'},
-                                         optionsCaption: 'Select...'"
-    ></select>
-    <div class="">
-      <label>Include Inactive?</label>
-      <input
-        type="checkbox"
-        name="include"
-        data-bind="checked: lookupInactiveBool"
-      />
+                                         optionsCaption: 'Select...',
+                                         disable: lookupServiceType"
+          ></select>
+        </div>
+        <div class="field">
+          <div class="ui checkbox">
+            <label>Include Inactive?</label>
+            <input
+              type="checkbox"
+              name="include"
+              data-bind="checked: lookupInactiveBool"
+            />
+          </div>
+        </div>
+      </div>
     </div>
     <!-- <div class="ui primary button" data-bind="click: lookupOrderUpdate">
       Update
@@ -1243,11 +1260,7 @@
         </div>
         <div class="ten wide column" data-bind="visible: showActionsTable">
           <!-- Approvals here -->
-          <div
-            id="wo-approvals"
-            class="ui styled fluid accordion"
-            data-bind="visible: requestStageNum() > 0"
-          >
+          <div id="wo-approvals" class="ui styled fluid accordion">
             <div class="title">
               <h2 class="ui header">
                 <i class="dropdown icon"></i>
@@ -1264,28 +1277,28 @@
                                 <p>This request has not been approved yet, check back later.</p>
                             </div>-->
               <table
-                id="table-approvals"
+                id="table-actions"
                 class="ui celled very basic table"
-                data-bind="visible: requestApprovals().length > 0"
+                data-bind="visible: requestActions().length > 0"
               >
                 <thead>
                   <tr>
-                    <th>Approver</th>
-                    <th>Adjudication</th>
-                    <th>Comment</th>
+                    <th>Action Taker</th>
+                    <th>Action Type</th>
+                    <th>Description</th>
                     <th>Date</th>
                   </tr>
                 </thead>
-                <tbody data-bind="foreach: requestApprovals">
+                <tbody data-bind="foreach: requestActions">
                   <tr>
                     <td class="collapsing">
                       <p data-bind="text: Author.get_lookupValue()"></p>
                     </td>
                     <td class="collapsing">
-                      <p data-bind="text: Adjudication"></p>
+                      <p data-bind="text: ActionType"></p>
                     </td>
                     <td>
-                      <p data-bind="text: Comment"></p>
+                      <p data-bind="text: Description"></p>
                     </td>
                     <td class="right aligned collapsing">
                       <p data-bind="text: Created.toLocaleString()"></p>

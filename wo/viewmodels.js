@@ -211,23 +211,41 @@ woViews = {
       },
     },
     listDef: {
-      name: "st_it_hardware",
-      title: "st_it_hardware",
+      name: "st_IT_hardware",
+      title: "st_IT_hardware",
       viewFields: {
-        ID: { type: "Text", koMap: "empty", required: false },
-        Title: { type: "Text", koMap: "requestID", required: false },
-        Name: { type: "Text", koMap: "itHardwareName", required: false },
+        ID: {
+          type: "Text",
+          koMap: "empty",
+        },
+        Title: {
+          type: "Text",
+          koMap: "requestID",
+          required: false,
+        },
+        Name: {
+          type: "Text",
+          koMap: "itHardwareName",
+          required: false,
+          displayName: "Hardware Name",
+        },
         Quantity: {
           type: "Text",
           koMap: "itHardwareQuantity",
           required: false,
+          displayName: "Quantity",
         },
-        POCName: { type: "Text", koMap: "itHardwarePOCName", required: false },
-        Cost: { type: "Text", koMap: "itHardwareCost", required: true },
-        Description: {
+        POCName: {
           type: "Text",
-          koMap: "itHardwareDescription",
-          required: false,
+          koMap: "itHardwarePOCName",
+          required: true,
+          displayName: "POC Name",
+        },
+        Cost: {
+          type: "Text",
+          koMap: "itHardwareCost",
+          required: true,
+          displayName: "Cost",
         },
       },
     },
@@ -932,6 +950,20 @@ var workOrderListDef = {
   },
 };
 
+var actionListDef = {
+  name: "Action",
+  title: "Action",
+  viewFields: {
+    ID: { type: "Text", koMap: "empty" },
+    Title: { type: "Text", koMap: "requestID" },
+    ActionType: { type: "Choice", koMap: "empty" },
+    Description: { type: "Text", koMap: "empty" },
+    SendEmail: { type: "Bool", koMap: "empty" },
+    Author: { type: "Text", koMap: "empty" },
+    Created: { type: "Text", koMap: "empty" },
+  },
+};
+
 var approvalListDef = {
   name: "Adjudication",
   title: "Adjudication",
@@ -1121,7 +1153,7 @@ function koviewmodel() {
    * ADMIN: Assignment
    ************************************************************/
   self.requestCurUserAssign = ko.pureComputed(function () {
-    if (self.requestStage()) {
+    if (self.requestStage() && self.requestStage().Title != "Closed") {
       // does the current user have CanAssign to any offices?
       let uao = self.userActionOfficeOwnership().map((uao) => uao.Office);
 
@@ -1178,7 +1210,7 @@ function koviewmodel() {
    * ADMIN: Advance
    ************************************************************/
   self.requestCurUserAdvance = ko.pureComputed(function () {
-    if (self.requestStage()) {
+    if (self.requestStage() && self.requestStage().Title != "Closed") {
       // which offices is the current user a member of?
       let uao = self.userActionOfficeMembership().map((uao) => uao.Office);
 
@@ -1195,7 +1227,7 @@ function koviewmodel() {
    * ADMIN: Approvals/Actions Table
    ************************************************************/
   self.showActionsTable = ko.pureComputed(() => {
-    return false;
+    return true;
   });
 
   /************************************************************
@@ -1225,6 +1257,7 @@ function koviewmodel() {
    ************************************************************/
   self.listRefWO = ko.observable();
   self.libRefWODocs = ko.observable();
+  self.listRefAction = ko.observable();
   self.listRefApproval = ko.observable();
   self.listRefAssignment = ko.observable();
   self.listRefComment = ko.observable();
@@ -1424,6 +1457,7 @@ function koviewmodel() {
   self.requestIsSaveable = ko.observable();
   self.requestAttachments = ko.observableArray();
 
+  self.requestActions = ko.observableArray();
   self.requestApprovals = ko.observableArray();
 
   self.requestAssignees = ko.observableArray();
@@ -1523,9 +1557,11 @@ function koviewmodel() {
 
   self.requestStage = ko.pureComputed(function () {
     if (self.selectedServiceType() && self.requestStageNum()) {
-      return self
+      let stage = self
         .selectedPipeline()
         .find((stage) => stage.Step == self.requestStageNum());
+
+      return stage ? stage : { Step: self.requestStageNum(), Title: "Closed" };
     } else {
       return "";
     }
