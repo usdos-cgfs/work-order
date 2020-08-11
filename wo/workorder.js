@@ -745,6 +745,10 @@ function pipelineForward() {
   vm.requestStageNum(t);
   var valuepairs = [["RequestStage", vm.requestStageNum()]];
 
+  if (vm.requestStage().Title == "Closed") {
+    valuepairs.push(["RequestStatus", "Closed"]);
+  }
+
   vm.listRefWO().updateListItem(vm.requestHeader().ID, valuepairs, function () {
     SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
     console.log("pipeline moved to next stage.");
