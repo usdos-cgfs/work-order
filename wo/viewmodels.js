@@ -1330,44 +1330,75 @@ function koviewmodel() {
   self.lookupServiceType = ko.observable();
   self.lookupInactiveBool = ko.observable(false);
 
+  self.lookupTables = ko.observableArray();
+
   self.lookupTableCol = ko.observableArray([]);
 
-  self.lookupServiceType.subscribe(
-    (oldstype) => {
-      let tableElements = $("#lookup-orders-container").children();
-      //ko.removeNode(document.getElementById("lookup-orders_wrapper"));
-      if (tableElements.length) {
-        ko.unapplyBindings(tableElements, true);
-        //$("#lookup-table-container").children().remove();
-      }
-    },
-    null,
-    "beforeChange"
-  );
-
   self.lookupServiceType.subscribe((stype) => {
-    let tableElements = $("#lookup-orders-container").children();
-    //ko.removeNode(document.getElementById("lookup-orders_wrapper"));
-    // if (tableElements.length) {
-    //   ko.unapplyBindings(tableElements, true);
-    //   //$("#lookup-table-container").children().remove();
-    // }
-    // tableElements.hide();
     if (stype != undefined) {
-      updateUrlParam("ServiceType", stype.UID);
-
       self.lookupTableCol([]);
 
-      stype = self.lookupServiceType();
+      let newServiceTable = {};
+      newServiceTable.id = stype.UID + "-lookup-table";
+      newServiceTable.stype = stype;
+
+      newServiceTable.cols = new Array();
+      newServiceTable.requests = new Array();
 
       if (stype.listDef) {
-        let lookupKeys = Object.keys(
-          self.lookupServiceType().listDef.viewFields
-        ).filter((col) => col != "ID" && col != "Title");
+        let lookupKeys = Object.keys(stype.listDef.viewFields).filter(
+          (col) => col != "ID" && col != "Title"
+        );
 
-        self.lookupTableCol(lookupKeys);
+        //self.lookupTableCol(lookupKeys);
+        newServiceTable.cols = lookupKeys;
+        newServiceTable.viewFields = stype.listDef.viewFields;
       }
-      self.lookupOrderUpdate();
+
+      let camlq =
+        '<View Scope="RecursiveAll"><Query><Where><Eq>' +
+        '<FieldRef Name="ServiceType" LookupId="TRUE"/>' +
+        '<Value Type="Lookup">' +
+        stype.ID +
+        "</Value>" +
+        "</Eq></Where></Query></View>";
+
+      self.listRefWO().getListItems(camlq, (lookupOrdersTemp) => {
+        if (stype.listDef) {
+          // If this request type has related orders, let's query those
+          let count = lookupOrdersTemp.length - 1;
+          let i = 0;
+          lookupOrdersTemp.forEach((order) => {
+            let camlq =
+              '<View Scope="RecursiveAll"><Query><Where><Eq>' +
+              '<FieldRef Name="Title"/>' +
+              '<Value Type="Text">' +
+              order.Title +
+              "</Value>" +
+              "</Eq></Where></Query></View>";
+
+            stype.listRef.getListItems(camlq, function (val) {
+              order.ServiceItem = val[0];
+              //self.lookupOrders.push(order);
+              newServiceTable.requests.push(order);
+
+              if (i == count) {
+                self.lookupTables.push(newServiceTable);
+                makeDataTable("#" + newServiceTable.id);
+              } else {
+                console.log(i + "/" + count);
+                i++;
+              }
+            });
+          });
+        } else {
+          newServiceTable.requests = lookupOrdersTemp;
+
+          self.lookupTables.push(newServiceTable);
+          makeDataTable("#" + newServiceTable.id);
+        }
+      });
+      //self.lookupOrderUpdate();
     }
   });
 

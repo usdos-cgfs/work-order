@@ -873,7 +873,7 @@ function initUIComponents() {
   });
 
   $(".ui.secondary.menu").find(".item").tab("change tab", "my-open-orders");
-  $(".ui.top.menu").find(".item").tab("change tab", "my-orders");
+  //$(".ui.top.menu").find(".item").tab("change tab", "my-orders");
 }
 
 $(document).ready(function () {
