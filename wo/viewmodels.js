@@ -934,6 +934,7 @@ var workOrderListDef = {
   viewFields: {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "requestID" },
+    EstClosedDate: { type: "Date", koMap: "requestEstClosed" },
     ManagingDirector: { type: "Person", koMap: "requestorManager" },
     RequestDescription: { type: "Text", koMap: "requestDescriptionHTML" },
     RequestorEmail: { type: "Text", koMap: "requestorEmail" },
@@ -1274,10 +1275,54 @@ function koviewmodel() {
    * Hold current info about our lists
    ************************************************************/
   self.woCount = ko.observable();
-  self.allOpenOrders = ko.observableArray();
+  self.allOrders = ko.observableArray();
   self.assignedOpenOrders = ko.observableArray();
   self.allAssignments = ko.observableArray();
   self.lookupOrders = ko.observableArray();
+
+  /************************************************************
+   * My Orders Tab
+   ************************************************************/
+
+  self.allOpenOrders = ko.pureComputed(() =>
+    self.allOrders().filter((req) => req.RequestStatus == "Open")
+  );
+
+  self.allClosedOrders = ko.pureComputed(() =>
+    self.allOrders().filter((req) => req.RequestStatus == "Closed")
+  );
+
+  self.allCancelledOrders = ko.pureComputed(() =>
+    self.allOrders().filter((req) => req.RequestStatus == "Cancelled")
+  );
+
+  /************************************************************
+   * allOpenOrders Table Handlers
+   ************************************************************/
+  self.showWorkOrder = function (request) {
+    console.log("clicked", request);
+    viewWorkOrderItem(request.Title);
+  };
+
+  self.getRequestStage = function (request) {
+    const curStage = selectPipelineById(
+      request.ServiceType.get_lookupId()
+    ).find((step) => step.Step == request.RequestStage);
+    return curStage ? curStage.Title : "Closed";
+  };
+
+  self.estimateClosingDate = function (request) {
+    // TODO: Add the holidays list in here somewhere
+    console.log("est closing date", request);
+
+    let daysOffset = self
+      .configServiceTypes()
+      .find((stype) => stype.ID == request.ServiceType.get_lookupId())
+      .DaysToCloseDisp;
+
+    var closeDate = businessDaysFromDate(request.Created, daysOffset);
+    return closeDate.format("yyyy-MM-dd");
+  };
 
   /************************************************************
    * Lookup Tab
@@ -1349,7 +1394,7 @@ function koviewmodel() {
         self.lookupUpdateRelated(lookupOrdersTemp);
       });
     } else {
-      let lookupOrdersTemp = self.allOpenOrders().filter((order) => {
+      let lookupOrdersTemp = self.allOrders().filter((order) => {
         return order.ServiceType.get_lookupId() == stype.ID;
       });
 
@@ -1417,34 +1462,6 @@ function koviewmodel() {
       default:
         return val;
     }
-  };
-
-  /************************************************************
-   * allOpenOrders Table Handlers
-   ************************************************************/
-  self.showWorkOrder = function (request) {
-    console.log("clicked", request);
-    viewWorkOrderItem(request.Title);
-  };
-
-  self.getRequestStage = function (request) {
-    const curStage = selectPipelineById(
-      request.ServiceType.get_lookupId()
-    ).find((step) => step.Step == request.RequestStage);
-    return curStage ? curStage.Title : "Closed";
-  };
-
-  self.estimateClosingDate = function (request) {
-    // TODO: Add the holidays list in here somewhere
-    console.log("est closing date", request);
-
-    let daysOffset = self
-      .configServiceTypes()
-      .find((stype) => stype.ID == request.ServiceType.get_lookupId())
-      .DaysToCloseDisp;
-
-    var closeDate = businessDaysFromDate(request.Created, daysOffset);
-    return closeDate.format("yyyy-MM-dd");
   };
 
   /************************************************************
@@ -1536,6 +1553,7 @@ function koviewmodel() {
   self.requestSubject = ko.observable();
   // The general description for this request. Some service types only have this
   self.requestDescriptionHTML = ko.observable();
+  self.requestEstClosed = ko.observable();
 
   // self.requestDescription = ko.pureComputed({
   //   read: function () {
