@@ -1,5 +1,5 @@
 tabsEnum = {
-  "#open-orders": 0,
+  "#my-orders": 0,
   "#assigned-orders": 1,
   "#order-lookup": 2,
   "#order-new": 3,
@@ -323,6 +323,14 @@ function saveWorkOrder() {
           vm.requestSubmittedDate(tomorrow);
         }
 
+        // Set the est closed date based off our submit date
+        vm.requestEstClosed(
+          businessDaysFromDate(
+            vm.requestSubmittedDate(),
+            vm.selectedServiceType().DaysToCloseDisp
+          )
+        );
+
         vm.requestStageNum(1);
         vm.requestStatus("Open");
         var valuePairs = getValuePairs(workOrderListDef.viewFields);
@@ -466,21 +474,19 @@ function fetchConfigListData(callback) {
 /************************************************************
  * Work Orders
  ************************************************************/
-function fetchOpenOrders(callback) {
+function fetchAllOrders(callback) {
   vm.listRefWO().getListItems(
-    '<View Scope="RecursiveAll"><Query><Where><And>' +
+    '<View Scope="RecursiveAll"><Query><Where>' +
       "<Eq>" +
       '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
-      "</Eq>" +
-      "<Neq>" +
-      '<FieldRef Name="RequestStatus"/><Value Type="Text">Closed</Value>' +
-      "</Neq>" +
-      "</And></Where></Query></View>",
+      "</Eq></Where></Query></View>",
     (items) => {
       console.log("loading open orders", items);
-      vm.allOpenOrders(items);
+      vm.allOrders(items);
       if (items.length > 0) {
         makeDataTable("#wo-open-orders");
+        makeDataTable("#wo-closed-orders");
+        makeDataTable("#wo-cancelled-orders");
       }
       if (callback) {
         callback();
@@ -588,7 +594,7 @@ function fetchAllAssignments() {
     $(vm.allAssignments()).each(function () {
       idarr.push(this.Title);
     });
-    var filtered = $(vm.allOpenOrders()).filter(function () {
+    var filtered = $(vm.allOrders()).filter(function () {
       return idarr.includes(this.Title);
     });
     var vanilla = $.makeArray(filtered);
@@ -826,7 +832,7 @@ function initComplete() {
     href.indexOf("workorder.aspx") !== -1
   ) {
     vm.page("app");
-    fetchOpenOrders(function () {
+    fetchAllOrders(function () {
       let tab = urlParams.get("tab");
       let id = urlParams.get("reqid");
       let stypeId = urlParams.get("stype");
@@ -846,7 +852,7 @@ function initComplete() {
         //vm.lookupOrderUpdate(stype);
         //$('.ui.menu').find('.item').tab('change tab', 'open-orders');
       } else {
-        vm.tab("open-orders");
+        vm.tab("my-orders");
       }
       fetchAllAssignments();
       SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
@@ -865,6 +871,9 @@ function initUIComponents() {
       vm.tab(this.id);
     },
   });
+
+  $(".ui.secondary.menu").find(".item").tab("change tab", "my-open-orders");
+  $(".ui.top.menu").find(".item").tab("change tab", "my-orders");
 }
 
 $(document).ready(function () {
