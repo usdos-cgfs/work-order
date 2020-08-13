@@ -338,27 +338,14 @@
                                          optionsCaption: 'Select...'"
           ></select>
         </div>
-        <!-- <div class="field">
-          <div class="ui checkbox">
-            <label>Include Inactive?</label>
-            <input
-              type="checkbox"
-              name="include"
-              data-bind="checked: lookupInactiveBool"
-            />
-          </div>
-        </div> -->
       </div>
     </div>
-    <!-- <div class="ui primary button" data-bind="click: lookupOrderUpdate">
-      Update
-    </div> -->
     <div
       id="lookup-tables-container"
       data-bind="foreach: {data: lookupTables, as:'stypeTable'}"
     >
       <div class="ui fluid container">
-        <h4 data-bind="text: stypeTable.stype.Title"></h4>
+        <h3 data-bind="text: stypeTable.stype.Title"></h3>
         <table class="data-table" data-bind="attr: {id: stypeTable.id}">
           <thead>
             <tr>
@@ -386,7 +373,7 @@
               <!-- ko foreach: { data: stypeTable.cols, as: 'col' } -->
               <td
                 class="disposable"
-                data-bind="text: $root.lookupParseText(col, order.ServiceItem[col])"
+                data-bind="text: $root.lookupParseText(col, stypeTable.viewFields, order.ServiceItem[col])"
               ></td>
               <!-- /ko -->
               <!-- /ko -->
@@ -401,7 +388,7 @@
               <!-- ko foreach: stypeTable.cols -->
               <td
                 class="disposable"
-                data-bind="text: $root.lookupColNames($data)"
+                data-bind="text: stypeTable.viewFields[$data].displayName"
               ></td>
               <!-- /ko -->
             </tr>
