@@ -335,26 +335,67 @@
             data-bind="value: lookupServiceType,
                                          options: configServiceTypes(),
                                          optionsText: function(stype) {return stype.Title ? stype.Title : 'unknown'},
-                                         optionsCaption: 'Select...',
-                                         disable: lookupServiceType"
+                                         optionsCaption: 'Select...'"
           ></select>
-        </div>
-        <div class="field">
-          <div class="ui checkbox">
-            <label>Include Inactive?</label>
-            <input
-              type="checkbox"
-              name="include"
-              data-bind="checked: lookupInactiveBool"
-            />
-          </div>
         </div>
       </div>
     </div>
-    <!-- <div class="ui primary button" data-bind="click: lookupOrderUpdate">
-      Update
-    </div> -->
-    <div id="lookup-orders-container"></div>
+    <div
+      id="lookup-tables-container"
+      data-bind="foreach: {data: lookupTables, as:'stypeTable'}"
+    >
+      <div class="ui fluid container">
+        <h3 data-bind="text: stypeTable.stype.Title"></h3>
+        <table class="data-table" data-bind="attr: {id: stypeTable.id}">
+          <thead>
+            <tr>
+              <td>Order ID</td>
+              <td>Requesting Office</td>
+              <td>Requestor</td>
+              <td>Description</td>
+              <!-- ko foreach: stypeTable.cols -->
+              <td
+                class="disposable"
+                data-bind="text: stypeTable.viewFields[$data].displayName"
+              ></td>
+              <!-- /ko -->
+            </tr>
+          </thead>
+          <tbody data-bind="foreach: {data: stypeTable.requests, as: 'order'}">
+            <tr>
+              <td data-bind="click: $root.showWorkOrder, text: Title"></td>
+              <td
+                data-bind="text: order.RequestorOffice.get_lookupValue()"
+              ></td>
+              <td data-bind="text: order.RequestorName"></td>
+              <td data-bind="text: $(RequestDescription).text()"></td>
+              <!-- ko if: stypeTable.cols.length -->
+              <!-- ko foreach: { data: stypeTable.cols, as: 'col' } -->
+              <td
+                class="disposable"
+                data-bind="text: $root.lookupParseText(col, stypeTable.viewFields, order.ServiceItem[col])"
+              ></td>
+              <!-- /ko -->
+              <!-- /ko -->
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>Order ID</td>
+              <td>Requesting Office</td>
+              <td>Requestor</td>
+              <td>Description</td>
+              <!-- ko foreach: stypeTable.cols -->
+              <td
+                class="disposable"
+                data-bind="text: stypeTable.viewFields[$data].displayName"
+              ></td>
+              <!-- /ko -->
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
     <!-- /ko -->
   </div>
   <div
