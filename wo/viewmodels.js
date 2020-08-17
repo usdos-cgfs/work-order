@@ -1335,7 +1335,14 @@ function koviewmodel() {
   self.lookupTableCol = ko.observableArray([]);
 
   self.lookupServiceType.subscribe((stype) => {
-    if (stype != undefined) {
+    // First verify we have a valid servicetype that hasn't already been
+    // looked up.
+    if (
+      stype != undefined &&
+      !self.lookupTables().find((tstype) => {
+        return tstype.stype.UID == stype.UID;
+      })
+    ) {
       self.lookupTableCol([]);
 
       let newServiceTable = {};
