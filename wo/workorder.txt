@@ -344,7 +344,10 @@
       id="lookup-tables-container"
       data-bind="foreach: {data: lookupTables, as:'stypeTable'}"
     >
-      <div class="ui fluid container">
+      <div
+        class="ui fluid container"
+        data-bind="visible: stypeTable.stype.UID == $root.lookupServiceType().UID"
+      >
         <h3 data-bind="text: stypeTable.stype.Title"></h3>
         <table class="data-table" data-bind="attr: {id: stypeTable.id}">
           <thead>
