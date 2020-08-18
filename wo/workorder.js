@@ -561,22 +561,26 @@ function createAssignment() {
       ["Role", "Action Resolver"],
       ["ActionOffice", vm.assignAssignee().ID],
     ];
-    vm.listRefAssignment().createListItem(vp, (id) => {
-      console.log("Assigned: ", id);
-      SP.UI.Notify.addNotification(
-        vm.assignAssignee().Title + " assigned",
-        true
-      );
-      $("#wo-routing").accordion("open", 0);
-      fetchAssignments();
-      createAction(
-        "Assignment",
-        `The following Action Office has been assigned to this request: ${
-          vm.assignAssignee().Title
-        }`
-      );
-      vm.assignAssignee(null);
-    });
+    vm.listRefAssignment().createListItem(
+      vp,
+      (id) => {
+        console.log("Assigned: ", id);
+        SP.UI.Notify.addNotification(
+          vm.assignAssignee().Title + " assigned",
+          true
+        );
+        $("#wo-routing").accordion("open", 0);
+        fetchAssignments();
+        createAction(
+          "Assignment",
+          `The following Action Office has been assigned to this request: ${
+            vm.assignAssignee().Title
+          }`
+        );
+        vm.assignAssignee(null);
+      },
+      vm.requestorOffice().Title
+    );
   }
 }
 

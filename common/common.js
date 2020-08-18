@@ -222,10 +222,20 @@ function buildROFoldersServiceTypes() {
   // Build a folder for each Requesting Office in each of our lists
   window.alert = function () {};
   vm.configServiceTypes().forEach((stype) => {
-    console.log("Creating ", stype);
-
-    buildROFolders(stype.listRef);
+    if (stype.listRef) {
+      console.log("Creating ", stype.Title);
+      //buildROFolders(stype.listRef);
+    }
   });
+}
+
+function buildROFoldersAssocLists() {
+  buildROFolders(vm.listRefAction());
+  buildROFolders(vm.listRefApproval());
+  buildROFolders(vm.listRefAssignment());
+  buildROFolders(vm.listRefComment());
+  buildROFolders(vm.listRefWO());
+  buildROFolders(vm.libRefWODocs());
 }
 
 function buildROFolders(listRef) {
