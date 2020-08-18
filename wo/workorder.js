@@ -121,17 +121,6 @@ function viewWorkOrderItem(woID) {
   //$("#tabs").tabs({ active: tabsEnum['#order-detail'] });
   vm.currentView("view");
   vm.requestID(woID);
-  fetchAssignments();
-  fetchActions(function () {
-    console.log("actions fetched");
-  });
-  fetchApprovals(function () {
-    console.log("approvals fetched");
-  });
-  fetchAttachments();
-  fetchComments(function () {
-    console.log("comments fetched");
-  });
 
   var camlq =
     '<View Scope="RecursiveAll"><Query><Where><Eq>' +
@@ -145,6 +134,21 @@ function viewWorkOrderItem(woID) {
     console.log("workorder fetched - setting value pairs");
     vm.selectedServiceType("");
     setValuePairs(workOrderListDef.viewFields, vm.requestHeader());
+
+    /* Fetch all associated Items */
+    fetchAssignments();
+    fetchActions(function () {
+      console.log("actions fetched");
+    });
+    fetchApprovals(function () {
+      console.log("approvals fetched");
+    });
+    fetchAttachments();
+    fetchComments(function () {
+      console.log("comments fetched");
+    });
+
+    /* Fetch the associated service type items */
     if (vm.selectedServiceType().ListDef) {
       viewServiceTypeItem();
     }
@@ -499,9 +503,10 @@ function fetchAllOrders(callback) {
  * Attachments
  ************************************************************/
 function newAttachment() {
-  vm.libRefWODocs().createFolder(vm.requestID(), function () {
+  let folderPath = vm.requestorOffice().Title + "/" + vm.requestID();
+  vm.libRefWODocs().createFolderRec(folderPath, () => {
     vm.libRefWODocs().uploadNewDocument(
-      vm.requestID(),
+      folderPath,
       "Attach a New Document",
       { id: vm.requestID() },
       function () {
@@ -513,11 +518,21 @@ function newAttachment() {
 }
 
 function fetchAttachments() {
+  let folderPath = vm.requestorOffice().Title + "/" + vm.requestID();
+
   //Update the attachments from SAL and load them to the page.
-  vm.libRefWODocs().getFolderContents(vm.requestID(), function (files) {
-    console.log("attachments fetched");
-    vm.requestAttachments(files);
+  let camlq =
+    '<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name="WorkOrderID"/><Value Type="Text">' +
+    vm.requestID() +
+    "</Value></Eq></Where></Query></View>";
+  vm.libRefWODocs().getListItems(camlq, function (items) {
+    vm.requestAttachments(items);
   });
+
+  // vm.libRefWODocs().getFolderContents(folderPath, function (files) {
+  //   console.log("attachments fetched");
+  //   vm.requestAttachments(files);
+  // });
 }
 
 /************************************************************

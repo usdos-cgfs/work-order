@@ -1025,6 +1025,8 @@ var workOrderDocDef = {
   viewFields: {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "empty" },
+    FileRef: { type: "Text", koMap: "empty" },
+    IsActive: { type: "Text", koMap: "empty" },
     WorkOrderID: { type: "Text", koMap: "empty" },
   },
 };
@@ -1444,6 +1446,30 @@ function koviewmodel() {
   //    return approval.Author.get_lookupValue();
   //}
 
+  /************************************************************
+   * Many to One - Attachments
+   ************************************************************/
+  self.attachmentView = function (attachment) {
+    self
+      .libRefWODocs()
+      .showModal(
+        "DispForm.aspx",
+        `View ${attachment.Title}`,
+        { id: attachment.ID },
+        () => {
+          fetchAttachments;
+        }
+      );
+  };
+
+  self.attachmentRemove = function (attachment) {
+    console.log("removing attachment");
+    self
+      .libRefWODocs()
+      .updateListItem(attachment.ID, [["IsActive", 0]], () =>
+        fetchAttachments()
+      );
+  };
   /************************************************************
    * Declare our form input computed functions
    ************************************************************/

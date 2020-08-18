@@ -224,14 +224,7 @@ function buildROFoldersServiceTypes() {
   vm.configServiceTypes().forEach((stype) => {
     console.log("Creating ", stype);
 
-    if (stype.Active) {
-      vm.configRequestingOffices().forEach((ro) => {
-        let vp = [[]];
-        stype.listRef.createListFolder(ro.Title, () =>
-          console.log("Create Folder Success: ", ro.Title)
-        );
-      });
-    }
+    buildROFolders(stype.listRef);
   });
 }
 
@@ -239,11 +232,23 @@ function buildROFolders(listRef) {
   // Build a folder for each Requesting Office in each of our lists
   window.alert = function () {};
 
+  let actionOffices = [
+    ...new Set(
+      vm.configActionOffices().map((ao) => ao.AOGroup.get_lookupValue())
+    ),
+  ];
+
   vm.configRequestingOffices().forEach((ro) => {
     let vp = [[]];
-    listRef.createListFolder(ro.Title, () =>
-      console.log("Create Folder Success: ", ro.Title)
-    );
+    listRef.createListFolder(ro.Title, (id) => {
+      console.log(`Create Folder Success:  ${ro.Title} id: ${id}`);
+      let vp = [[ro.ROGroup.get_lookupValue(), "Restricted Contribute"]];
+      vp.push(["workorder Owners", "Full Control"]);
+      vp.push(["workorder Members", "Contribute"]);
+      actionOffices.forEach((ao) => vp.push([ao, "Restricted Contribute"]));
+      listRef.setItemPermissions(id, vp);
+      console.log(`Setting Permissions: ${vp[0][0]} - ${vp[0][1]}`);
+    });
   });
 }
 

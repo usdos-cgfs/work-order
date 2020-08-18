@@ -372,6 +372,7 @@ function SPList(listDef) {
           //console.log(item + ' item: ', getItem)
           listObj[item] = getItem;
         });
+        //listObj.fileUrl = oListItem.get_item("FileRef");
         listObj.oListItem = oListItem;
         self.focusedItems.push(listObj);
       }
@@ -520,15 +521,11 @@ function SPList(listDef) {
                             getFolderContents          
     ******************************************************************/
   self.getFolderContents = function (folderName, callback) {
-    this.callbackGetFolderContents = callback;
     var folder = sal.globalConfig.website.getFolderByServerRelativeUrl(
-      sal.globalConfig.siteUrl +
-        "/" +
-        self.config.def.name +
-        "/" +
-        encodeURI(folderName)
+      sal.globalConfig.siteUrl + "/" + self.config.def.name + "/" + folderName
     );
     files = folder.get_files();
+    //files.get_listItemAllFields();
 
     function onGetListFilesSucceeded(sender, args) {
       var fileArr = [];
@@ -542,6 +539,7 @@ function SPList(listDef) {
           title: file.get_title(),
           name: file.get_name(),
           created: file.get_timeCreated(),
+          file: file,
         });
       }
       callback(fileArr);
@@ -573,19 +571,21 @@ function SPList(listDef) {
     options.title = title;
     options.dialogReturnValueCallback = callback;
     if (args.id) {
-      id = getItemId(args.id.fieldRef, args.id.valueType, args.id.value);
-      //alert(id);
+      id = args.id;
     }
     options.args = JSON.stringify(args);
 
-    let siteString =
-      sal.globalConfig.siteUrl == "/" ? "" : sal.globalConfig.siteUrl;
+    //Check if we are a document library or a list
+    // Basetype 1 = lib
+    // BaseType 0 = list
+    //Document library
+    let formsPath = self.config.listRef.get_baseType()
+      ? `/${self.config.def.name}/Forms/`
+      : `/Lists/${self.config.def.name}/`;
 
     options.url =
-      siteString +
-      "/Lists/" +
-      self.config.def.name +
-      "/" +
+      sal.globalConfig.siteUrl +
+      formsPath +
       formName +
       "?ID=" +
       id +
@@ -624,15 +624,21 @@ function SPList(listDef) {
     SP.UI.ModalDialog.showModalDialog(options);
   };
 
-  self.createFolder = function (folderName, callback) {
+  self.createFolder = function (folderName, callback, requestingOffice = null) {
     // Used in document libraries
     self.requestedCallback = callback;
 
-    var folder = self.config.listRef
-      .get_rootFolder()
-      .get_folders()
-      .add(folderName);
-
+    if (requestingOffice) {
+      var folder = self.config.listRef
+        .get_rootFolder()
+        .get_folders()
+        .add(folderName);
+    } else {
+      var folder = self.config.listRef
+        .get_rootFolder()
+        .get_folders()
+        .add(folderName);
+    }
     function onCreateFolderSucceeded(sender, args) {
       this.callback();
     }
@@ -645,20 +651,30 @@ function SPList(listDef) {
     );
   };
 
-  self.createListFolder = function (folderName, callback) {
+  self.createListFolder = function (folderName, callback, path = "") {
     // Used for lists, duh
     self.requestedCallback = callback;
 
     var itemCreateInfo = new SP.ListItemCreationInformation();
     itemCreateInfo.set_underlyingObjectType(SP.FileSystemObjectType.folder);
     itemCreateInfo.set_leafName(folderName);
+    if (path) {
+      let folderUrl =
+        sal.globalConfig.siteUrl +
+        "/Lists/" +
+        self.config.def.name +
+        "/" +
+        path;
+      itemCreateInfo.set_folderUrl(folderUrl);
+    }
+
     var newItem = self.config.listRef.addItem(itemCreateInfo);
     newItem.set_item("Title", folderName);
 
     newItem.update();
 
     function onCreateFolderSucceeded(sender, args) {
-      this.callback();
+      this.callback(this.newItem.get_id());
     }
 
     let data = { folderName, callback, newItem };
@@ -668,6 +684,34 @@ function SPList(listDef) {
       Function.createDelegate(data, onCreateFolderSucceeded),
       onQueryFailed
     );
+  };
+
+  self.createFolderRec = function (folderUrl, success) {
+    var ctx = SP.ClientContext.get_current();
+    var list = self.config.listRef;
+    var createFolderInternal = function (parentFolder, folderUrl, success) {
+      var ctx = parentFolder.get_context();
+      var folderNames = folderUrl.split("/");
+      var folderName = folderNames[0];
+      var curFolder = parentFolder.get_folders().add(folderName);
+      ctx.load(curFolder);
+      ctx.executeQueryAsync(
+        function () {
+          if (folderNames.length > 1) {
+            var subFolderUrl = folderNames
+              .slice(1, folderNames.length)
+              .join("/");
+            createFolderInternal(curFolder, subFolderUrl, success);
+          } else {
+            success(curFolder);
+          }
+        },
+        function () {
+          console.log("error creating new folder");
+        }
+      );
+    };
+    createFolderInternal(list.get_rootFolder(), folderUrl, success);
   };
 
   self.showListView = function (filter) {

@@ -1408,17 +1408,25 @@
                     <th>Actions</th>
                   </tr>
                 </thead>
-                <tbody data-bind="foreach: requestAttachments">
+                <tbody
+                  data-bind="foreach: requestAttachments().filter((att) => att.IsActive)"
+                >
                   <tr>
                     <td>
                       <a
                         target="_blank"
-                        data-bind="attr: { href: fileUrl }, text: title"
+                        data-bind="attr: { href: FileRef }, text: Title"
                       ></a>
                     </td>
                     <td>
-                      <i class="fas fa-search"></i>
-                      <i class="fas fa-trash"></i>
+                      <i
+                        class="fas fa-search"
+                        data-bind="click: $root.attachmentView"
+                      ></i>
+                      <i
+                        class="fas fa-trash"
+                        data-bind="click: $root.attachmentRemove"
+                      ></i>
                     </td>
                   </tr>
                 </tbody>
