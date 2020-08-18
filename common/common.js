@@ -56,15 +56,15 @@ function makeDataTable(id) {
     iDisplayLength: 25,
     deferRender: true,
     bDestroy: true,
-    columnDefs: [{ width: "25%", targets: 0 }],
+    columnDefs: [{ width: "10%", targets: 0 }],
     initComplete: function () {
       //this.api().columns([1, 3, 4]).every( function () {
-      this.api()
-        .columns()
-        .every(function () {
-          var tempCol = this;
-          $("").appendTo($(tempCol.header()));
-        });
+      // this.api()
+      //   .columns()
+      //   .every(function () {
+      //     var tempCol = this;
+      //     $("").appendTo($(tempCol.header()));
+      //   });
       this.api()
         .columns()
         .every(function () {
