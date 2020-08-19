@@ -1094,6 +1094,7 @@ var configServiceTypeListDef = {
     st_list: { type: "Text", koMap: "empty" },
     Description: { type: "Text", koMap: "empty" },
     DescriptionRequired: { type: "Bool", koMap: "empty" },
+    DescriptionTitle: { type: "Bool", koMap: "empty" },
     AttachmentRequired: { type: "Text", koMap: "empty" },
     AttachmentDescription: { type: "Text", koMap: "empty" },
     ListDef: { type: "Text", koMap: "empty" },
@@ -1276,7 +1277,6 @@ function koviewmodel() {
   /************************************************************
    * Hold current info about our lists
    ************************************************************/
-  self.woCount = ko.observable();
   self.allOrders = ko.observableArray();
   self.assignedOpenOrders = ko.observableArray();
   self.allAssignments = ko.observableArray();
@@ -1505,6 +1505,17 @@ function koviewmodel() {
   // Hold the selected configServiceTypes
   self.selectedServiceType = ko.observable();
 
+  self.selectedServiceType.subscribe((stype) => {
+    console.error("Service Type Changed!", stype);
+    // Load our html file into the service type form section
+    $("#service-type-form").load(
+      `${sal.globalConfig.siteUrl}/SiteAssets/workorder/wo/ServiceTypeTemplates/${stype.UID}.txt`,
+      () => {
+        console.log("loaded");
+      }
+    );
+  });
+
   // return the selected service type pipeline
   self.selectedPipeline = ko.pureComputed(function () {
     if (self.selectedServiceType()) {
@@ -1641,83 +1652,6 @@ function koviewmodel() {
   self.requestorOffice.subscribe(function () {
     // When the requesting office changes, so changes the manager
     self.requestorManager(managingDirectors[self.requestorOffice()]);
-  });
-
-  /************************************************************
-   * Building Access
-   ************************************************************/
-  self.accessTypeOpts = ko.observableArray([
-    "Normal work day",
-    "24/7",
-    "FLETC",
-    "Other",
-  ]);
-  self.accessEmployeeTypeOpts = ko.observable([
-    "CGFS Government",
-    "CGFS Contractor",
-    "Other",
-  ]);
-
-  self.accessType = ko.observable();
-  self.accessEmployeeType = ko.observable();
-  self.accessDesc = ko.observable();
-  self.accessSpecInst = ko.observable();
-
-  self.accessFullName = ko.observable();
-  self.accessBadgeNum = ko.observable();
-  self.accessExpirationDate = ko.observable();
-  self.accessLocations = ko.observable();
-  self.accessJustification = ko.observable();
-
-  self.accessExpirationDateStr = ko.pureComputed({
-    read: function () {
-      return new Date(self.accessExpirationDate()).format("yyyy-MM-dd");
-    },
-    write: function (val) {
-      self.accessExpirationDate(new Date(val + "T00:00:00"));
-    },
-  });
-
-  /************************************************************
-   * Diplomatic Passport
-   ************************************************************/
-  self.diplomaticPassportSelectedType = ko.observable();
-  self.diplomaticPassportGrade = ko.observable();
-  self.diplomaticPassportDestinationCity = ko.observable();
-  self.diplomaticPassportDestinationCountry = ko.observable();
-  self.diplomaticPassportDeparture = ko.observable();
-  self.diplomaticPassportReturn = ko.observable();
-  self.diplomaticPassportPurpose = ko.observable();
-  self.diplomaticPassportBirthLocation = ko.observable();
-  self.diplomaticPassportExpiration = ko.observable();
-
-  self.diplomaticPassportServiceTypes = ko.observableArray(["New", "Renewal"]);
-
-  self.diplomaticPassportExpirationStr = ko.pureComputed({
-    read: function () {
-      return new Date(self.diplomaticPassportExpiration()).format("yyyy-MM-dd");
-    },
-    write: function (val) {
-      self.diplomaticPassportExpiration(new Date(val + "T00:00:00"));
-    },
-  });
-
-  self.diplomaticPassportDepartureStr = ko.pureComputed({
-    read: function () {
-      return new Date(self.diplomaticPassportDeparture()).format("yyyy-MM-dd");
-    },
-    write: function (val) {
-      self.diplomaticPassportDeparture(new Date(val + "T00:00:00"));
-    },
-  });
-
-  self.diplomaticPassportReturnStr = ko.pureComputed({
-    read: function () {
-      return new Date(self.diplomaticPassportReturn()).format("yyyy-MM-dd");
-    },
-    write: function (val) {
-      self.diplomaticPassportReturn(new Date(val + "T00:00:00"));
-    },
   });
 
   /************************************************************

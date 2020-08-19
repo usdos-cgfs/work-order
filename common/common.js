@@ -224,7 +224,7 @@ function buildROFoldersServiceTypes() {
   vm.configServiceTypes().forEach((stype) => {
     if (stype.listRef) {
       console.log("Creating ", stype.Title);
-      //buildROFolders(stype.listRef);
+      buildROFolders(stype.listRef);
     }
   });
 }
