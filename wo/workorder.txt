@@ -1532,14 +1532,23 @@
             </tbody>
           </table>
         </div>
+
         <div class="content">
-          <button
-            type="button"
-            class="ui primary button"
-            onclick="newComment()"
-          >
-            New Comment
-          </button>
+          <div class="ui form">
+            <div class="field">
+              <textarea
+                placeholder="Enter a new comment..."
+                data-bind="value: commentNew"
+              ></textarea>
+            </div>
+            <button
+              type="button"
+              class="ui primary button"
+              onclick="submitComment()"
+            >
+              Submit Comment
+            </button>
+          </div>
         </div>
       </div>
     </div>

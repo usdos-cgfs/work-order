@@ -730,9 +730,42 @@ function newComment() {
   vm.listRefComment().showModal(
     "CustomNewForm.aspx",
     "New Comment",
-    { woId: vm.requestID() },
+    { woId: vm.requestID(), rootFolder: vm.requestorOffice().Title + "/" },
     newCommentCallback
   );
+}
+
+function newCommentCallback(result, value) {
+  console.log("approval callback: " + result, value);
+  if (result === SP.UI.DialogResult.OK) {
+    vm.commentNew("");
+    $(".admin-action-zone").hide();
+    console.log(value);
+    fetchComments(function () {
+      SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+      // Let's branch based on whether the last approval was approve or reject.
+      console.log("comments fetched");
+    });
+  }
+}
+
+function submitComment() {
+  SP.UI.ModalDialog.showWaitScreenWithNoClose("Submitting Comment...");
+  vm.listRefComment().createListItem(
+    [
+      ["Title", vm.requestID()],
+      ["Comment", vm.commentNew()],
+    ],
+    submitCommentCallback,
+    vm.requestorOffice().Title
+  );
+}
+
+function submitCommentCallback(id) {
+  vm.commentNew("");
+  fetchComments(() => {
+    SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+  });
 }
 
 function fetchComments(callback) {
@@ -744,20 +777,6 @@ function fetchComments(callback) {
     vm.requestComments(comments);
     callback();
   });
-}
-
-function newCommentCallback(result, value) {
-  console.log("approval callback: " + result, value);
-  if (result === SP.UI.DialogResult.OK) {
-    SP.UI.ModalDialog.showWaitScreenWithNoClose("Saving Work Order...");
-    $(".admin-action-zone").hide();
-    console.log(value);
-    fetchComments(function () {
-      SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
-      // Let's branch based on whether the last approval was approve or reject.
-      console.log("comments fetched");
-    });
-  }
 }
 
 /************************************************************

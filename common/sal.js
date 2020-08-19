@@ -573,6 +573,18 @@ function SPList(listDef) {
     if (args.id) {
       id = args.id;
     }
+
+    let listPath = self.config.listRef.get_baseType()
+      ? `/${self.config.def.name}/`
+      : `/Lists/${self.config.def.name}/`;
+
+    let rootFolder = "";
+
+    if (args.rootFolder) {
+      rootFolder = sal.globalConfig.siteUrl + listPath;
+      rootFolder += args.rootFolder;
+    }
+
     options.args = JSON.stringify(args);
 
     //Check if we are a document library or a list
@@ -590,7 +602,9 @@ function SPList(listDef) {
       "?ID=" +
       id +
       "&Source=" +
-      location.pathname;
+      location.pathname +
+      "&RootFolder=" +
+      rootFolder;
     console.log("Options url: " + options.url);
     SP.UI.ModalDialog.showModalDialog(options);
   };
