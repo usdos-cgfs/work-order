@@ -286,3 +286,28 @@ function fetchServiceTypesfromRequest() {
     );
   });
 }
+
+function syncListDefs() {
+  let cnt = 0;
+  vm.listDefs().forEach((listDef) => {
+    let strListDef = JSON.stringify(listDef);
+    let stype = vm
+      .configServiceTypes()
+      .find((stype) => stype.UID == listDef.uid);
+    if (stype.ListDef != strListDef) {
+      cnt++;
+      //Our listdefs don't match, update the sharepoint item.
+      vm.listRefConfigServiceType().updateListItem(
+        stype.ID,
+        [["ListDef", strListDef]],
+        () => {
+          console.log("updated: ", stype.Title);
+          if (!--cnt) {
+            alert("Synchronized all lists, reloading");
+            location.reload();
+          }
+        }
+      );
+    }
+  });
+}

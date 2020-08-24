@@ -1104,6 +1104,7 @@ var configServiceTypeListDef = {
     KPIThresholdYellow: { type: "Text", koMap: "empty" },
     KPIThresholdGreen: { type: "Text", koMap: "empty" },
     Icon: { type: "Text", koMap: "empty" },
+    TemplateName: { type: "Lookup", koMap: "empty" },
     UID: { type: "Text", koMap: "empty" },
   },
 };
@@ -1273,6 +1274,9 @@ function koviewmodel() {
   self.listRefConfigPipelines = ko.observable();
   self.listRefConfigRequestingOffices = ko.observable();
   self.listRefConfigServiceType = ko.observable();
+
+  //hold a copy of our list defs, we'll use this for synchronization.
+  self.listDefs = ko.observableArray();
 
   /************************************************************
    * Hold current info about our lists
@@ -1505,16 +1509,30 @@ function koviewmodel() {
   // Hold the selected configServiceTypes
   self.selectedServiceType = ko.observable();
 
-  self.selectedServiceType.subscribe((stype) => {
-    console.error("Service Type Changed!", stype);
-    // Load our html file into the service type form section
-    $("#service-type-form").load(
-      `${sal.globalConfig.siteUrl}/SiteAssets/workorder/wo/ServiceTypeTemplates/${stype.UID}.txt`,
-      () => {
-        console.log("loaded");
-      }
-    );
-  });
+  self.selectedServiceTypeTemplate = function () {
+    if (vm.selectedServiceType()) {
+      return "tmpl_" + vm.selectedServiceType().UID;
+    } else {
+      return "";
+    }
+  };
+
+  self.setServiceTypeByUID = function (uid) {
+    let newServiceType = self
+      .configServiceTypes()
+      .find((stype) => stype.UID == uid);
+    if (newServiceType) {
+      self.selectedServiceType(newServiceType);
+    } else {
+      timedNotification("Error selecting service type: " + uid);
+    }
+  };
+
+  self.getServiceTypeByUID = function (uid) {
+    return self.configServiceTypes().find((stype) => stype.UID == uid);
+  };
+
+  self.selectedServiceType.subscribe((stype) => {});
 
   // return the selected service type pipeline
   self.selectedPipeline = ko.pureComputed(function () {
@@ -1664,11 +1682,6 @@ function koviewmodel() {
   /************************************************************
    * IT Hardware
    ************************************************************/
-  self.itHardwareName = ko.observable();
-  self.itHardwareQuantity = ko.observable();
-  self.itHardwarePOCName = ko.observable();
-  self.itHardwareCost = ko.observable();
-  self.itHardwareDescription = ko.observable();
 
   /************************************************************
    * Network Drop

@@ -325,6 +325,8 @@ function saveWorkOrder() {
           tomorrow.setUTCHours(13);
           tomorrow.setUTCMinutes(0);
           vm.requestSubmittedDate(tomorrow);
+        } else {
+          vm.requestSubmittedDate(new Date());
         }
 
         // Set the est closed date based off our submit date
@@ -854,6 +856,7 @@ function initComplete() {
   //Initialize the rest of our list references
   initServiceTypeListRefs();
   initUIComponents();
+  initTemplates();
   //Initialization complete: load the current tab.
   var href = window.location.href.toLowerCase();
   var hash = window.location.hash.replace("#", "");
@@ -912,6 +915,18 @@ function initUIComponents() {
 
   $(".ui.secondary.menu").find(".item").tab("change tab", "my-open-orders");
   //$(".ui.top.menu").find(".item").tab("change tab", "my-orders");
+}
+
+function initTemplates() {
+  vm.configServiceTypes().forEach((stype) => {
+    if (stype.TemplateName)
+      $.get(
+        `${sal.globalConfig.siteUrl}/SiteAssets/workorder/wo/ServiceTypeTemplates/${stype.TemplateName}`,
+        function (template) {
+          $("#service-type-templates").append(template);
+        }
+      );
+  });
 }
 
 $(document).ready(function () {

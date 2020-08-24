@@ -838,7 +838,12 @@
             </div>
             <div class="content">
               <!-- Specific request type forms inserted here -->
-              <div id="service-type-form"></div>
+              <!-- ko if: selectedServiceType().TemplateName -->
+              <div
+                id="service-type-form"
+                data-bind="template: { name: selectedServiceTypeTemplate }"
+              ></div>
+              <!-- /ko -->
               <!-- Generic description field goes here -->
               <!-- ko if: selectedServiceType -->
               <div
@@ -1095,6 +1100,7 @@
     <!-- /ko -->
   </div>
 </div>
+<div id="service-type-templates"></div>
 
 <!--<script src="/_layouts/15/SP.Runtime.js"></script>
 <script src="/_layouts/15/SP.js"></script>
