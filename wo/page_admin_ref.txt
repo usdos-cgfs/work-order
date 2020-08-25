@@ -32,242 +32,11 @@
 
 <div id="tabs" style="display: none;">
   <div class="ui top attached tabular menu">
-    <a class="item" data-tab="my-orders">Open Orders</a>
-    <a
-      class="item"
-      data-tab="assigned-orders"
-      data-bind="enabled: assignedOpenOrders().length > 0"
-      >Assigned Orders</a
-    >
+    <a class="item" data-tab="assigned-orders">Assigned Orders</a>
     <a class="item" data-tab="order-lookup">Lookup</a>
-    <a class="item" data-tab="order-new">New Order</a>
     <!-- ko if: selectedServiceType -->
     <a class="item" data-tab="order-detail">Detail View</a>
     <!-- /ko -->
-  </div>
-  <div
-    id="my-orders"
-    data-tab="my-orders"
-    class="ui bottom attached tab segment"
-  >
-    <div
-      class="ui primary button"
-      data-bind="visible: page() == 'app'"
-      onclick="navSelectWorkOrder()"
-    >
-      New Workorder
-    </div>
-
-    <div class="ui grid">
-      <div class="two wide column">
-        <div class="ui secondary fluid vertical pointing menu">
-          <a class="item active" data-tab="my-open-orders">
-            Open
-          </a>
-          <a class="item" data-tab="my-closed-orders">
-            Closed
-          </a>
-          <a class="item" data-tab="my-cancelled-orders">
-            Cancelled
-          </a>
-        </div>
-      </div>
-      <div class="fourteen wide column">
-        <div
-          id="my-open-orders"
-          data-tab="my-open-orders"
-          class="ui right attached tab fluid"
-        >
-          <div data-bind="visible: allOpenOrders().length == 0">
-            <h2>
-              You currently have no open orders<span
-                data-bind="visible: page() == 'app'"
-              >
-                ,
-                <a href="javascript:void(0)" onclick="navSelectWorkOrder()">
-                  create
-                </a>
-                a new one </span
-              >.
-            </h2>
-          </div>
-          <div data-bind="visible: allOpenOrders().length > 0">
-            <h2>Open Orders</h2>
-            <table id="wo-open-orders" class="display data-table">
-              <thead>
-                <tr>
-                  <th>Order ID</th>
-                  <th>Service Type</th>
-                  <th>Requesting Office</th>
-                  <th>Requestor</th>
-                  <th>Submitted Date</th>
-                  <th>Est. Completion Date<span class="ui blue">*</span></th>
-                </tr>
-              </thead>
-              <tbody data-bind="foreach: allOpenOrders">
-                <tr>
-                  <td
-                    class="wo-id"
-                    data-bind="click: $root.showWorkOrder, text: Title"
-                  ></td>
-                  <td data-bind="text: ServiceType.get_lookupValue()"></td>
-                  <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
-                  <td data-bind="text: RequestorName"></td>
-                  <td data-bind="text: Created.format('yyyy-MM-dd')"></td>
-                  <td data-bind="text: $root.estimateClosingDate($data)"></td>
-                </tr>
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td>Order ID</td>
-                  <td>Service Type</td>
-                  <td>Requesting Office</td>
-                  <td>Requestor</td>
-                  <td>Submitted Date</td>
-                  <td>Est. Completion Date<span class="ui blue">*</span></td>
-                </tr>
-              </tfoot>
-            </table>
-            <div class="ui info message">
-              <div class="header">
-                * Estimated Completion Date
-              </div>
-              <p>
-                The estimated completion date is based on the average number of
-                business days this service type is usually closed in and is not
-                a guarantee of completion.
-              </p>
-            </div>
-            <div
-              id="wo-est-completion-modal"
-              class="ui modal"
-              style="display: none;"
-            >
-              <div class="content">
-                <h2 class="ui header">Esimated Completion Date</h2>
-              </div>
-              <div class="content">
-                <p>How is</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div
-          id="my-closed-orders"
-          data-tab="my-closed-orders"
-          class="ui right attached tab fluid"
-        >
-          <div data-bind="visible: allClosedOrders().length == 0">
-            <h2>
-              You currently have no Closed orders<span
-                data-bind="visible: page() == 'app'"
-              >
-                ,
-                <a href="javascript:void(0)" onclick="navSelectWorkOrder()">
-                  create
-                </a>
-                a new one </span
-              >.
-            </h2>
-          </div>
-          <div data-bind="visible: allClosedOrders().length > 0">
-            <h2>Closed Orders</h2>
-            <table id="wo-closed-orders" class="display data-table">
-              <thead>
-                <tr>
-                  <th>Order ID</th>
-                  <th>Service Type</th>
-                  <th>Requesting Office</th>
-                  <th>Requestor</th>
-                  <th>Submitted Date</th>
-                  <th>Closed Date</th>
-                </tr>
-              </thead>
-              <tbody data-bind="foreach: allClosedOrders">
-                <tr>
-                  <td
-                    class="wo-id"
-                    data-bind="click: $root.showWorkOrder, text: Title"
-                  ></td>
-                  <td data-bind="text: ServiceType.get_lookupValue()"></td>
-                  <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
-                  <td data-bind="text: RequestorName"></td>
-                  <td data-bind="text: Created.format('yyyy-MM-dd')"></td>
-                  <td data-bind="text: ClosedDate"></td>
-                </tr>
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td>Order ID</td>
-                  <td>Service Type</td>
-                  <td>Requesting Office</td>
-                  <td>Requestor</td>
-                  <td>Submitted Date</td>
-                  <td>Closed Date</td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>
-        <div
-          id="my-cancelled-orders"
-          data-tab="my-cancelled-orders"
-          class="ui right attached tab fluid"
-        >
-          <div data-bind="visible: allCancelledOrders().length == 0">
-            <h2>
-              You currently have no Cancelled orders<span
-                data-bind="visible: page() == 'app'"
-              >
-                ,
-                <a href="javascript:void(0)" onclick="navSelectWorkOrder()">
-                  create
-                </a>
-                a new one </span
-              >.
-            </h2>
-          </div>
-          <div data-bind="visible: allCancelledOrders().length > 0">
-            <h2>Cancelled Orders</h2>
-            <table id="wo-cancelled-orders" class="display data-table">
-              <thead>
-                <tr>
-                  <th>Order ID</th>
-                  <th>Service Type</th>
-                  <th>Requesting Office</th>
-                  <th>Requestor</th>
-                  <th>Submitted Date</th>
-                  <th>Closed Date</th>
-                </tr>
-              </thead>
-              <tbody data-bind="foreach: allCancelledOrders">
-                <tr>
-                  <td
-                    class="wo-id"
-                    data-bind="click: $root.showWorkOrder, text: Title"
-                  ></td>
-                  <td data-bind="text: ServiceType.get_lookupValue()"></td>
-                  <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
-                  <td data-bind="text: RequestorName"></td>
-                  <td data-bind="text: Created.format('yyyy-MM-dd')"></td>
-                  <td data-bind="text: ClosedDate.format('yyyy-MM-dd')"></td>
-                </tr>
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td>Order ID</td>
-                  <td>Service Type</td>
-                  <td>Requesting Office</td>
-                  <td>Requestor</td>
-                  <td>Submitted Date</td>
-                  <td>Closed Date</td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
   <div
     id="assigned-orders"
@@ -278,42 +47,41 @@
     <div data-bind="visible: assignedOpenOrders().length == 0">
       <h2>You currently have no assigned orders.</h2>
     </div>
-    <table
-      id="wo-assigned-orders"
-      class="display data-table"
-      data-bind="visible: assignedOpenOrders().length > 0"
-    >
-      <thead>
-        <tr>
-          <td>Order ID</td>
-          <td>Service Type</td>
-          <td>Requesting Office</td>
-          <td>Requestor</td>
-          <td>Request Status</td>
-        </tr>
-      </thead>
-      <tbody data-bind="foreach: assignedOpenOrders">
-        <tr>
-          <td
-            class="wo-id"
-            data-bind="click: $root.showWorkOrder, text: Title"
-          ></td>
-          <td data-bind="text: ServiceType.get_lookupValue()"></td>
-          <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
-          <td data-bind="text: RequestorName"></td>
-          <td data-bind="text: RequestStatus"></td>
-        </tr>
-      </tbody>
-      <tfoot>
-        <tr>
-          <td>Order ID</td>
-          <td>Service Type</td>
-          <td>Requesting Office</td>
-          <td>Requestor</td>
-          <td>Request Status</td>
-        </tr>
-      </tfoot>
-    </table>
+
+    <div data-bind="visible: assignedOpenOrders().length > 0">
+      <table id="wo-assigned-orders" class="display data-table">
+        <thead>
+          <tr>
+            <td>Order ID</td>
+            <td>Service Type</td>
+            <td>Requesting Office</td>
+            <td>Requestor</td>
+            <td>Request Status</td>
+          </tr>
+        </thead>
+        <tbody data-bind="foreach: assignedOpenOrders">
+          <tr>
+            <td
+              class="wo-id"
+              data-bind="click: $root.showWorkOrder, text: Title"
+            ></td>
+            <td data-bind="text: ServiceType.get_lookupValue()"></td>
+            <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
+            <td data-bind="text: RequestorName"></td>
+            <td data-bind="text: RequestStatus"></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td>Order ID</td>
+            <td>Service Type</td>
+            <td>Requesting Office</td>
+            <td>Requestor</td>
+            <td>Request Status</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
   </div>
   <div
     id="order-lookup"
@@ -402,103 +170,6 @@
     <!-- /ko -->
   </div>
   <div
-    id="order-new"
-    data-tab="order-new"
-    class="ui bottom attached tab segment"
-  >
-    <p>Select the type of work order you would like to open:</p>
-    <div
-      class="ui four stackable cards"
-      data-bind="foreach: configServiceTypes"
-    >
-      <!-- ko if: Active -->
-      <div class="card" data-bind="click: showDescription.bind($data)">
-        <!--<div class="center aligned content">
-                    <div class="header" data-bind="text: vm.serviceTypeViews()[$data].name"></div>
-                </div>-->
-        <div class="center aligned content">
-          <i
-            class="fa fa-5x"
-            aria-hidden="true"
-            data-bind="class: $data.Icon"
-          ></i>
-          <!-- <div data-bind="html: vm.serviceTypeViews()[$data].icon"></div> -->
-        </div>
-        <div
-          class="ui bottom attached primary button"
-          data-bind="text: $data.Title"
-        >
-          Create
-        </div>
-
-        <!--<a data-bind="click: showDescription($data), title: vm.serviceTypeViews()[$data].name">
-                    <div data-bind="html: vm.serviceTypeViews()[$data].icon"></div>
-                    <p data-bind="text: vm.serviceTypeViews()[$data].name"></p>
-                </a>-->
-      </div>
-      <!-- /ko -->
-    </div>
-
-    <!--<table id="new-wo-table">
-            <tbody>
-                <tr>
-                    <td>
-                        <a onclick="showDescription('pu10k')" title="Purchase Under 10k">
-                            <i class="fa fa-credit-card fa-5x" aria-hidden="true"></i>
-                            <p>Purchase Under 10k</p>
-                        </a>
-                    </td>
-                    <td>
-                        <a onclick="showDescription('tel')" title="Telephone">
-                            <i class="fa fa-phone fa-5x" aria-hidden="true"></i>
-                            <p>Telephone</p>
-                        </a>
-                    </td>
-
-                </tr>
-                <tr>
-                    <td>
-                        <a onclick="showDescription('presentation')" title="Presentation">
-                            <i class="fa fa-desktop fa-5x" aria-hidden="true"></i>
-                            <p>Presentation</p>
-                        </a>
-                    </td>
-                    <td>
-                        <a onclick="showDescription('rsa')" title="RSA Token">
-                            <i class="fa fa-check-double fa-5x" aria-hidden="true"></i>
-                            <p>RSA Token</p>
-                        </a>
-                    </td>
-                </tr>
-            </tbody>
-        </table>-->
-    <div id="wo-description-modal" class="ui modal" style="display: none;">
-      <div
-        class="header"
-        data-bind="text: selectedServiceType() ? selectedServiceType().Title : 'Oops, something went wrong'"
-      ></div>
-      <div class="content">
-        <div
-          data-bind="html: selectedServiceType() ? selectedServiceType().Description : ''"
-        ></div>
-      </div>
-      <div class="actions">
-        <div class="actions">
-          <div class="ui black deny button" onclick="dismissDescription()">
-            Close
-          </div>
-          <div
-            class="ui positive right labeled icon button"
-            onclick="newWorkOrder()"
-          >
-            Create New
-            <i class="checkmark icon"></i>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div
     id="order-detail"
     data-tab="order-detail"
     class="ui bottom attached tab segment"
@@ -508,8 +179,7 @@
       <div class="content">
         <h3>
           Please select an open request from the
-          <a href="./app.aspx?tab=open-orders">Open Orders</a> Tab or
-          <a href="./app.aspx?tab=order-new"> Create a New Order</a>
+          <a href="./admin.aspx?tab=assigned-orders">Assigned Orders</a> Tab
         </h3>
       </div>
     </div>

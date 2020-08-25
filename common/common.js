@@ -311,3 +311,16 @@ function syncListDefs() {
     }
   });
 }
+
+function sortByTitle(a, b) {
+  var titleA = a.Title.toUpperCase();
+  var titleB = b.Title.toUpperCase();
+
+  if (titleA < titleB) {
+    return -1;
+  }
+  if (titleB < titleA) {
+    return 1;
+  }
+  return 0;
+}

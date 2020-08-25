@@ -348,28 +348,31 @@ function saveWorkOrder() {
           valuePairs,
           function (id) {
             console.log("saved", id);
+            //Once we've sucessfully saved the master document
+            if (id) {
+              if (typeValuePairs) {
+                // Save the workorder specific info here:
+                vm.selectedServiceType().listRef.createListItem(
+                  typeValuePairs,
+                  onSaveNewWorkOrderMaster,
+                  vm.requestorOffice().Title
+                );
+              } else {
+                onSaveNewWorkOrderMaster();
+              }
+
+              createAction(
+                "Created",
+                `The request was submitted with an effective submission date of ${vm
+                  .requestSubmittedDate()
+                  .toDateString()}`,
+                true
+              );
+            }
           },
           vm.requestorOffice().Title
         );
 
-        if (typeValuePairs) {
-          // Save the workorder specific info here:
-          vm.selectedServiceType().listRef.createListItem(
-            typeValuePairs,
-            onSaveNewWorkOrderMaster,
-            vm.requestorOffice().Title
-          );
-        } else {
-          onSaveNewWorkOrderMaster();
-        }
-
-        createAction(
-          "Created",
-          `The request was submitted with an effective submission date of ${vm
-            .requestSubmittedDate()
-            .toDateString()}`,
-          true
-        );
         break;
     }
   } else {
