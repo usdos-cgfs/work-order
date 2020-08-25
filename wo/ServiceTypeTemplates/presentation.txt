@@ -1,0 +1,79 @@
+<script>
+  /************************************************************
+   *    List Def: Presentation
+   ************************************************************/
+  vm.listDefs.push({
+    uid: "presentation",
+    name: "st_presentation",
+    title: "st_presentation",
+    viewFields: {
+      ID: { type: "Text", koMap: "empty" },
+      Title: { type: "Text", koMap: "empty" },
+      PresentationDate: { type: "Text", koMap: "presentationDate" },
+      Location: { type: "Text", koMap: "presentationLocation" },
+      Duration: { type: "Text", koMap: "presentationDuration" },
+      POC: { type: "Text", koMap: "presentationPOC" },
+    },
+  });
+
+  /***************************************************************
+   *    Declare Observables
+   ***************************************************************/
+  vm.presentationDate = ko.observable();
+
+  vm.presentationLocation = ko.observable();
+  vm.presentationDuration = ko.observable();
+  vm.presentationPOC = ko.observable();
+
+  vm.presentationDateStr = ko.pureComputed({
+    read: function () {
+      return new Date(vm.presentationDate()).format("yyyy-MM-dd");
+    },
+    write: function (val) {
+      vm.presentationDate(new Date(val));
+    },
+  });
+</script>
+
+<script type="text/html" id="tmpl_presentation">
+  <div class="ui form">
+    <div class="eight wide field">
+      <label>Presentation Date and Time:</label>
+      <input
+        class="editable-field"
+        type="datetime-local"
+        data-bind="disabled:
+      currentView() == 'view', value: presentationDateStr"
+      />
+    </div>
+    <div class="two fields">
+      <div class="eight wide field">
+        <label>Location:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+              value: presentationLocation"
+        />
+      </div>
+      <div class="eight wide field">
+        <label>Duration:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+                value: presentationDuration"
+        />
+      </div>
+    </div>
+    <div class="eight wide field">
+      <label>POC</label>
+      <input
+        class="editable-field"
+        type="text"
+        data-bind="disable: currentView() == 'view',
+            value: presentationPOC"
+      />
+    </div>
+  </div>
+</script>

@@ -1,0 +1,80 @@
+<script>
+  /************************************************************
+   *    List Def: Iron Key
+   ************************************************************/
+  vm.listDefs.push({
+    uid: "rsa",
+    name: "st_rsa",
+    title: "st_rsa",
+    viewFields: {
+      ID: { type: "Text", koMap: "empty", required: false },
+      Title: { type: "Text", koMap: "requestID", required: false },
+      User: { type: "Text", koMap: "rsaUserName", required: false },
+      EmployeeType: {
+        type: "Text",
+        koMap: "rsaEmployeeType",
+        required: false,
+      },
+      RequestType: {
+        type: "Text",
+        koMap: "rsaRequestType",
+        required: false,
+      },
+      Supervisor: { type: "Text", koMap: "rsaSupervisor", required: false },
+    },
+  });
+
+  /***************************************************************
+   *    Declare Observables
+   ***************************************************************/
+
+  vm.rsaUserName = ko.observable();
+  vm.rsaEmployeeType = ko.observable();
+  vm.rsaEmployeeTypes = ko.observableArray(["FTE", "Contractor"]);
+  vm.rsaRequestType = ko.observable();
+  vm.rsaRequestTypes = ko.observableArray(["New", "Replacement"]);
+  vm.rsaSupervisor = ko.observable();
+</script>
+
+<script type="text/html" id="tmpl_rsa">
+  <div class="ui form">
+    <div class="two fields">
+      <div class="field">
+        <label>User Name:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="value: rsaUserName"
+        />
+      </div>
+      <div class="field">
+        <label>Employee Type:</label>
+        <select
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+              options: rsaEmployeeTypes, optionsCaption: 'Select...', value: rsaEmployeeType"
+        ></select>
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label>COR/Supervisor:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="value: rsaSupervisor"
+        />
+      </div>
+      <div class="field">
+        <label>Employee Type:</label>
+        <select
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+              options: rsaRequestTypes, optionsCaption: 'Select...', value: rsaRequestType"
+        ></select>
+      </div>
+    </div>
+  </div>
+</script>

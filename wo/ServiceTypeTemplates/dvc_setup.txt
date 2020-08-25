@@ -1,0 +1,130 @@
+<script>
+  /************************************************************
+   *    List Def: Building Access
+   ************************************************************/
+  vm.listDefs.push({
+    uid: "dvc_setup",
+    name: "st_dvc_setup",
+    title: "st_dvc_setup",
+    viewFields: {
+      ID: { type: "Text", koMap: "empty", required: false },
+      Title: { type: "Text", koMap: "requestID", required: false },
+      DateOfDVC: { type: "Text", koMap: "dvcDate", required: false },
+      Location: {
+        type: "Text",
+        koMap: "dvcLocation",
+        required: false,
+      },
+      Duration: { type: "Text", koMap: "dvcDuration", required: false },
+      FarEndPOC: { type: "Text", koMap: "dvcFarPOC", required: false },
+      ConnectionType: {
+        type: "Text",
+        koMap: "dvcConnectionType",
+        required: false,
+      },
+      CallType: {
+        type: "Text",
+        koMap: "dvcCallType",
+        required: false,
+      },
+      DVCDialInNum: {
+        type: "Text",
+        koMap: "dvcDialInNum",
+        required: false,
+      },
+    },
+  });
+
+  /***************************************************************
+   *    Declare Observables
+   ***************************************************************/
+  vm.dvcDate = ko.observable();
+  vm.dvcLocation = ko.observable();
+  vm.dvcDuration = ko.observable();
+  vm.dvcFarPOC = ko.observable();
+  vm.dvcConnectionType = ko.observable();
+  vm.dvcConnectionTypes = ko.observableArray(["OpenNet", "ISDN", "IP"]);
+  vm.dvcCallType = ko.observable();
+  vm.dvcCallTypes = ko.observableArray(["Incoming", "Outgoing"]);
+  vm.dvcDialInNum = ko.observable();
+
+  vm.dvcDateStr = ko.pureComputed({
+    read: function () {
+      return new Date(vm.dvcDate()).format("yyyy-MM-dd");
+    },
+    write: function (val) {
+      vm.dvcDate(new Date(val));
+    },
+  });
+</script>
+
+<script type="text/html" id="tmpl_dvc_setup">
+  <div class="ui form">
+    <div class="eight wide field">
+      <label>Date of DVC</label>
+      <input
+        class="editable-field"
+        type="datetime-local"
+        data-bind="value: dvcDateStr, disable: currentView() == 'view'"
+      />
+    </div>
+    <div class="two fields">
+      <div class="eight wide field">
+        <label>Location</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="value: dvcLocation, disable: currentView() == 'view'"
+        />
+      </div>
+      <div class="eight wide field">
+        <label>Duration</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="value: dvcDuration, disable: currentView() == 'view'"
+        />
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="eight wide field">
+        <label>Far End POC:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="value: dvcFarPOC, disable: currentView() == 'view'"
+        />
+      </div>
+      <div class="eight wide field">
+        <label>Connection Type:</label>
+        <select
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+          options: dvcConnectionTypes, optionsCaption: 'Select...',
+          value: dvcConnectionType"
+        ></select>
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="eight wide field">
+        <label>Call Type:</label>
+        <select
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+            options: dvcCallTypes, optionsCaption: 'Select...',
+            value: dvcCallType"
+        ></select>
+      </div>
+      <div class="eight wide field">
+        <label>DVC Dial-in Number:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="value: dvcDialInNum, disable: currentView() == 'view'"
+        />
+      </div>
+    </div>
+  </div>
+</script>

@@ -1,0 +1,109 @@
+<script>
+  /************************************************************
+   *    List Def: IT Software
+   ************************************************************/
+  vm.listDefs.push({
+    uid: "it_software",
+    name: "st_it_software",
+    title: "st_it_software",
+    viewFields: {
+      ID: { type: "Text", koMap: "empty" },
+      Title: { type: "Text", koMap: "requestID", required: false },
+      Name: {
+        type: "Text",
+        koMap: "itSoftwareName",
+        required: false,
+        displayName: "Software Name",
+      },
+      Quantity: {
+        type: "Text",
+        koMap: "itSoftwareQuantity",
+        required: false,
+        displayName: "Quantity",
+      },
+      POCName: {
+        type: "Text",
+        koMap: "itSoftwarePOCName",
+        required: true,
+        displayName: "POC Name",
+      },
+      Cost: {
+        type: "Text",
+        koMap: "itSoftwareCost",
+        required: true,
+        displayName: "Cost",
+      },
+      RequestType: {
+        type: "Text",
+        koMap: "itSoftwareType",
+        required: true,
+        displayName: "Request Type",
+      },
+    },
+  });
+
+  /***************************************************************
+   *    Declare Observables
+   ***************************************************************/
+  vm.itSoftwareName = ko.observable();
+  vm.itSoftwareQuantity = ko.observable();
+  vm.itSoftwarePOCName = ko.observable();
+  vm.itSoftwareCost = ko.observable();
+  vm.itSoftwareType = ko.observable();
+  vm.itSoftwareTypes = ko.observableArray(["New", "Mainenance Renewal"]);
+</script>
+
+<script type="text/html" id="tmpl_it_software">
+  <div class="ui form">
+      <div class="ui grid">
+          <div class="eight wide field">
+            <label>
+              Software Name<span class="required">*</span>:
+            </label>
+              <input
+                type="text"
+                data-bind="value: itSoftwareName, disable: currentView()=='view'"
+              />
+          </div>
+          <div class="eight wide field">
+            <label>
+              Quantity<span class="required">*</span>:
+            </label>
+              <input
+                type="text"
+                data-bind="value: itSoftwareQuantity, disable: currentView()=='view'"
+              />
+
+          </div>
+          <div class="eight wide field">
+            <label>
+              POC<span class="required">*</span>:
+            </label>
+              <input
+                type="text"
+                data-bind="value: itSoftwarePOCName, disable: currentView()=='view'"
+              />
+
+          </div>
+          <div class="eight wide field">
+            <label>
+              Cost<span class="required">*</span>:
+            </label>
+              <input
+                type="text"
+                data-bind="value: itSoftwareCost, disable: currentView()=='view'"
+              />
+          </div>
+        </div>
+        <div class="eight wide field">
+            <label>
+              Request Type<span class="required">*</span>:
+            </label>
+              <select
+                type="text"
+                data-bind="disable: currentView() == 'view',
+            options: itSoftwareTypes, optionsCaption: 'Select...', value: itSoftwareType"
+      ></select>
+          </div>
+  </div>
+</script>

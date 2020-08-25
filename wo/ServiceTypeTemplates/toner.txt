@@ -1,0 +1,47 @@
+<script>
+  /************************************************************
+   *    List Def: Toner
+   ************************************************************/
+  vm.listDefs.push({
+    uid: "toner",
+    name: "st_toner",
+    title: "st_toner",
+    viewFields: {
+      ID: { type: "Text", koMap: "empty", required: false },
+      Title: { type: "Text", koMap: "requestID", required: false },
+      TonerNum: { type: "Text", koMap: "tonerNum", required: false },
+      Quantity: { type: "Text", koMap: "tonerQty", required: false },
+    },
+  });
+
+  /***************************************************************
+   *    Declare Observables
+   ***************************************************************/
+  vm.tonerNum = ko.observable();
+  vm.tonerQty = ko.observable();
+</script>
+
+<script type="text/html" id="tmpl_toner">
+  <div class="ui form">
+    <div class="two fields">
+      <div class="eight wide field">
+        <label>Toner #:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+              value: tonerNum"
+        />
+      </div>
+      <div class="eight wide field">
+        <label>Quantity:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+              value: tonerQty"
+        />
+      </div>
+    </div>
+  </div>
+</script>

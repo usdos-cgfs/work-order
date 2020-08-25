@@ -1,0 +1,43 @@
+<script>
+  /************************************************************
+   *    List Def: Locksmith Services
+   ************************************************************/
+  vm.listDefs.push({
+    uid: "locksmith",
+    name: "st_locksmith",
+    title: "st_locksmith",
+    viewFields: {
+      ID: { type: "Text", koMap: "empty" },
+      Title: { type: "Text", koMap: "requestID", required: false },
+      Location: { type: "Text", koMap: "locksmithLocation", required: false },
+      LockType: { type: "Text", koMap: "locksmithLockType", required: false },
+    },
+  });
+
+  /***************************************************************
+   *    Declare Observables
+   ***************************************************************/
+  self.locksmithLocation = ko.observable();
+  self.locksmithLockType = ko.observable();
+</script>
+
+<script type="text/html" id="tmpl_locksmith">
+  <div class="ui form">
+    <div class="two fields">
+      <div class="eight wide field">
+        <label> Location<span class="required">*</span>: </label>
+        <input
+          type="text"
+          data-bind="value: locksmithLocation, disable: currentView()=='view'"
+        />
+      </div>
+      <div class="eight wide field">
+        <label> Lock Type<span class="required">*</span>: </label>
+        <input
+          type="text"
+          data-bind="value: locksmithLockType, disable: currentView()=='view'"
+        />
+      </div>
+    </div>
+  </div>
+</script>
