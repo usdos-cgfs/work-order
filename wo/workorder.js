@@ -84,7 +84,7 @@ function newWorkOrder() {
   vm.currentView("new");
 
   // Clear the workorder valuepairs
-  //clearValuePairs(workOrderListDef.viewFields);
+  // clearValuePairs(workOrderListDef.viewFields);
   //  Clear the selected service type valuepairs
   if (vm.selectedServiceType().ListDef) {
     clearValuePairs(vm.selectedServiceType().listDef.viewFields);
@@ -104,6 +104,7 @@ function newWorkOrder() {
   //Clear our requested fields.
   vm.requestClosedDate(null);
   vm.requestSubmittedDate(null);
+  vm.requestDescriptionHTML(null);
   vm.requestActions([]);
   vm.requestApprovals([]);
   vm.requestAttachments([]);
@@ -121,17 +122,6 @@ function viewWorkOrderItem(woID) {
   //$("#tabs").tabs({ active: tabsEnum['#order-detail'] });
   vm.currentView("view");
   vm.requestID(woID);
-  fetchAssignments();
-  fetchActions(function () {
-    console.log("actions fetched");
-  });
-  fetchApprovals(function () {
-    console.log("approvals fetched");
-  });
-  fetchAttachments();
-  fetchComments(function () {
-    console.log("comments fetched");
-  });
 
   var camlq =
     '<View Scope="RecursiveAll"><Query><Where><Eq>' +
@@ -145,6 +135,21 @@ function viewWorkOrderItem(woID) {
     console.log("workorder fetched - setting value pairs");
     vm.selectedServiceType("");
     setValuePairs(workOrderListDef.viewFields, vm.requestHeader());
+
+    /* Fetch all associated Items */
+    fetchAssignments();
+    fetchActions(function () {
+      console.log("actions fetched");
+    });
+    fetchApprovals(function () {
+      console.log("approvals fetched");
+    });
+    fetchAttachments();
+    fetchComments(function () {
+      console.log("comments fetched");
+    });
+
+    /* Fetch the associated service type items */
     if (vm.selectedServiceType().ListDef) {
       viewServiceTypeItem();
     }
@@ -321,6 +326,8 @@ function saveWorkOrder() {
           tomorrow.setUTCHours(13);
           tomorrow.setUTCMinutes(0);
           vm.requestSubmittedDate(tomorrow);
+        } else {
+          vm.requestSubmittedDate(new Date());
         }
 
         // Set the est closed date based off our submit date
@@ -499,9 +506,10 @@ function fetchAllOrders(callback) {
  * Attachments
  ************************************************************/
 function newAttachment() {
-  vm.libRefWODocs().createFolder(vm.requestID(), function () {
+  let folderPath = vm.requestorOffice().Title + "/" + vm.requestID();
+  vm.libRefWODocs().createFolderRec(folderPath, () => {
     vm.libRefWODocs().uploadNewDocument(
-      vm.requestID(),
+      folderPath,
       "Attach a New Document",
       { id: vm.requestID() },
       function () {
@@ -513,11 +521,21 @@ function newAttachment() {
 }
 
 function fetchAttachments() {
+  let folderPath = vm.requestorOffice().Title + "/" + vm.requestID();
+
   //Update the attachments from SAL and load them to the page.
-  vm.libRefWODocs().getFolderContents(vm.requestID(), function (files) {
-    console.log("attachments fetched");
-    vm.requestAttachments(files);
+  let camlq =
+    '<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name="WorkOrderID"/><Value Type="Text">' +
+    vm.requestID() +
+    "</Value></Eq></Where></Query></View>";
+  vm.libRefWODocs().getListItems(camlq, function (items) {
+    vm.requestAttachments(items);
   });
+
+  // vm.libRefWODocs().getFolderContents(folderPath, function (files) {
+  //   console.log("attachments fetched");
+  //   vm.requestAttachments(files);
+  // });
 }
 
 /************************************************************
@@ -546,22 +564,26 @@ function createAssignment() {
       ["Role", "Action Resolver"],
       ["ActionOffice", vm.assignAssignee().ID],
     ];
-    vm.listRefAssignment().createListItem(vp, (id) => {
-      console.log("Assigned: ", id);
-      SP.UI.Notify.addNotification(
-        vm.assignAssignee().Title + " assigned",
-        true
-      );
-      $("#wo-routing").accordion("open", 0);
-      fetchAssignments();
-      createAction(
-        "Assignment",
-        `The following Action Office has been assigned to this request: ${
-          vm.assignAssignee().Title
-        }`
-      );
-      vm.assignAssignee(null);
-    });
+    vm.listRefAssignment().createListItem(
+      vp,
+      (id) => {
+        console.log("Assigned: ", id);
+        SP.UI.Notify.addNotification(
+          vm.assignAssignee().Title + " assigned",
+          true
+        );
+        $("#wo-routing").accordion("open", 0);
+        fetchAssignments();
+        createAction(
+          "Assignment",
+          `The following Action Office has been assigned to this request: ${
+            vm.assignAssignee().Title
+          }`
+        );
+        vm.assignAssignee(null);
+      },
+      vm.requestorOffice().Title
+    );
   }
 }
 
@@ -711,9 +733,42 @@ function newComment() {
   vm.listRefComment().showModal(
     "CustomNewForm.aspx",
     "New Comment",
-    { woId: vm.requestID() },
+    { woId: vm.requestID(), rootFolder: vm.requestorOffice().Title + "/" },
     newCommentCallback
   );
+}
+
+function newCommentCallback(result, value) {
+  console.log("approval callback: " + result, value);
+  if (result === SP.UI.DialogResult.OK) {
+    vm.commentNew("");
+    $(".admin-action-zone").hide();
+    console.log(value);
+    fetchComments(function () {
+      SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+      // Let's branch based on whether the last approval was approve or reject.
+      console.log("comments fetched");
+    });
+  }
+}
+
+function submitComment() {
+  SP.UI.ModalDialog.showWaitScreenWithNoClose("Submitting Comment...");
+  vm.listRefComment().createListItem(
+    [
+      ["Title", vm.requestID()],
+      ["Comment", vm.commentNew()],
+    ],
+    submitCommentCallback,
+    vm.requestorOffice().Title
+  );
+}
+
+function submitCommentCallback(id) {
+  vm.commentNew("");
+  fetchComments(() => {
+    SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+  });
 }
 
 function fetchComments(callback) {
@@ -725,20 +780,6 @@ function fetchComments(callback) {
     vm.requestComments(comments);
     callback();
   });
-}
-
-function newCommentCallback(result, value) {
-  console.log("approval callback: " + result, value);
-  if (result === SP.UI.DialogResult.OK) {
-    SP.UI.ModalDialog.showWaitScreenWithNoClose("Saving Work Order...");
-    $(".admin-action-zone").hide();
-    console.log(value);
-    fetchComments(function () {
-      SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
-      // Let's branch based on whether the last approval was approve or reject.
-      console.log("comments fetched");
-    });
-  }
 }
 
 /************************************************************
@@ -816,6 +857,7 @@ function initComplete() {
   //Initialize the rest of our list references
   initServiceTypeListRefs();
   initUIComponents();
+  initTemplates();
   //Initialization complete: load the current tab.
   var href = window.location.href.toLowerCase();
   var hash = window.location.hash.replace("#", "");
@@ -874,6 +916,18 @@ function initUIComponents() {
 
   $(".ui.secondary.menu").find(".item").tab("change tab", "my-open-orders");
   //$(".ui.top.menu").find(".item").tab("change tab", "my-orders");
+}
+
+function initTemplates() {
+  vm.configServiceTypes().forEach((stype) => {
+    if (stype.TemplateName)
+      $.get(
+        `${sal.globalConfig.siteUrl}/SiteAssets/workorder/wo/ServiceTypeTemplates/${stype.TemplateName}`,
+        function (template) {
+          $("#service-type-templates").append(template);
+        }
+      );
+  });
 }
 
 $(document).ready(function () {

@@ -1025,6 +1025,8 @@ var workOrderDocDef = {
   viewFields: {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "empty" },
+    FileRef: { type: "Text", koMap: "empty" },
+    IsActive: { type: "Text", koMap: "empty" },
     WorkOrderID: { type: "Text", koMap: "empty" },
   },
 };
@@ -1092,6 +1094,7 @@ var configServiceTypeListDef = {
     st_list: { type: "Text", koMap: "empty" },
     Description: { type: "Text", koMap: "empty" },
     DescriptionRequired: { type: "Bool", koMap: "empty" },
+    DescriptionTitle: { type: "Bool", koMap: "empty" },
     AttachmentRequired: { type: "Text", koMap: "empty" },
     AttachmentDescription: { type: "Text", koMap: "empty" },
     ListDef: { type: "Text", koMap: "empty" },
@@ -1101,6 +1104,7 @@ var configServiceTypeListDef = {
     KPIThresholdYellow: { type: "Text", koMap: "empty" },
     KPIThresholdGreen: { type: "Text", koMap: "empty" },
     Icon: { type: "Text", koMap: "empty" },
+    TemplateName: { type: "Lookup", koMap: "empty" },
     UID: { type: "Text", koMap: "empty" },
   },
 };
@@ -1271,10 +1275,12 @@ function koviewmodel() {
   self.listRefConfigRequestingOffices = ko.observable();
   self.listRefConfigServiceType = ko.observable();
 
+  //hold a copy of our list defs, we'll use this for synchronization.
+  self.listDefs = ko.observableArray();
+
   /************************************************************
    * Hold current info about our lists
    ************************************************************/
-  self.woCount = ko.observable();
   self.allOrders = ko.observableArray();
   self.assignedOpenOrders = ko.observableArray();
   self.allAssignments = ko.observableArray();
@@ -1445,6 +1451,36 @@ function koviewmodel() {
   //}
 
   /************************************************************
+   * Many to One - Attachments
+   ************************************************************/
+  self.attachmentView = function (attachment) {
+    self
+      .libRefWODocs()
+      .showModal(
+        "DispForm.aspx",
+        `View ${attachment.Title}`,
+        { id: attachment.ID },
+        () => {
+          fetchAttachments;
+        }
+      );
+  };
+
+  self.attachmentRemove = function (attachment) {
+    console.log("removing attachment");
+    self
+      .libRefWODocs()
+      .updateListItem(attachment.ID, [["IsActive", 0]], () =>
+        fetchAttachments()
+      );
+  };
+
+  /************************************************************
+   * Many to One - Comments
+   ************************************************************/
+
+  self.commentNew = ko.observable();
+  /************************************************************
    * Declare our form input computed functions
    ************************************************************/
   self.canSaveForm = ko.pureComputed(function () {
@@ -1472,6 +1508,31 @@ function koviewmodel() {
 
   // Hold the selected configServiceTypes
   self.selectedServiceType = ko.observable();
+
+  self.selectedServiceTypeTemplate = function () {
+    if (vm.selectedServiceType()) {
+      return "tmpl_" + vm.selectedServiceType().UID;
+    } else {
+      return "";
+    }
+  };
+
+  self.setServiceTypeByUID = function (uid) {
+    let newServiceType = self
+      .configServiceTypes()
+      .find((stype) => stype.UID == uid);
+    if (newServiceType) {
+      self.selectedServiceType(newServiceType);
+    } else {
+      timedNotification("Error selecting service type: " + uid);
+    }
+  };
+
+  self.getServiceTypeByUID = function (uid) {
+    return self.configServiceTypes().find((stype) => stype.UID == uid);
+  };
+
+  self.selectedServiceType.subscribe((stype) => {});
 
   // return the selected service type pipeline
   self.selectedPipeline = ko.pureComputed(function () {
@@ -1612,83 +1673,6 @@ function koviewmodel() {
   });
 
   /************************************************************
-   * Building Access
-   ************************************************************/
-  self.accessTypeOpts = ko.observableArray([
-    "Normal work day",
-    "24/7",
-    "FLETC",
-    "Other",
-  ]);
-  self.accessEmployeeTypeOpts = ko.observable([
-    "CGFS Government",
-    "CGFS Contractor",
-    "Other",
-  ]);
-
-  self.accessType = ko.observable();
-  self.accessEmployeeType = ko.observable();
-  self.accessDesc = ko.observable();
-  self.accessSpecInst = ko.observable();
-
-  self.accessFullName = ko.observable();
-  self.accessBadgeNum = ko.observable();
-  self.accessExpirationDate = ko.observable();
-  self.accessLocations = ko.observable();
-  self.accessJustification = ko.observable();
-
-  self.accessExpirationDateStr = ko.pureComputed({
-    read: function () {
-      return new Date(self.accessExpirationDate()).format("yyyy-MM-dd");
-    },
-    write: function (val) {
-      self.accessExpirationDate(new Date(val + "T00:00:00"));
-    },
-  });
-
-  /************************************************************
-   * Diplomatic Passport
-   ************************************************************/
-  self.diplomaticPassportSelectedType = ko.observable();
-  self.diplomaticPassportGrade = ko.observable();
-  self.diplomaticPassportDestinationCity = ko.observable();
-  self.diplomaticPassportDestinationCountry = ko.observable();
-  self.diplomaticPassportDeparture = ko.observable();
-  self.diplomaticPassportReturn = ko.observable();
-  self.diplomaticPassportPurpose = ko.observable();
-  self.diplomaticPassportBirthLocation = ko.observable();
-  self.diplomaticPassportExpiration = ko.observable();
-
-  self.diplomaticPassportServiceTypes = ko.observableArray(["New", "Renewal"]);
-
-  self.diplomaticPassportExpirationStr = ko.pureComputed({
-    read: function () {
-      return new Date(self.diplomaticPassportExpiration()).format("yyyy-MM-dd");
-    },
-    write: function (val) {
-      self.diplomaticPassportExpiration(new Date(val + "T00:00:00"));
-    },
-  });
-
-  self.diplomaticPassportDepartureStr = ko.pureComputed({
-    read: function () {
-      return new Date(self.diplomaticPassportDeparture()).format("yyyy-MM-dd");
-    },
-    write: function (val) {
-      self.diplomaticPassportDeparture(new Date(val + "T00:00:00"));
-    },
-  });
-
-  self.diplomaticPassportReturnStr = ko.pureComputed({
-    read: function () {
-      return new Date(self.diplomaticPassportReturn()).format("yyyy-MM-dd");
-    },
-    write: function (val) {
-      self.diplomaticPassportReturn(new Date(val + "T00:00:00"));
-    },
-  });
-
-  /************************************************************
    * Locksmith Services
    ************************************************************/
   self.locksmithLocation = ko.observable();
@@ -1698,11 +1682,6 @@ function koviewmodel() {
   /************************************************************
    * IT Hardware
    ************************************************************/
-  self.itHardwareName = ko.observable();
-  self.itHardwareQuantity = ko.observable();
-  self.itHardwarePOCName = ko.observable();
-  self.itHardwareCost = ko.observable();
-  self.itHardwareDescription = ko.observable();
 
   /************************************************************
    * Network Drop

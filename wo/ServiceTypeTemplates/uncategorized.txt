@@ -1,0 +1,194 @@
+<script>
+  /************************************************************
+   *    List Def: IT Software
+   ************************************************************/
+  vm.listDefs.push({
+    uid: "it_software",
+    name: "st_it_software",
+    title: "st_it_software",
+    viewFields: {
+      ID: { type: "Text", koMap: "empty" },
+      Title: { type: "Text", koMap: "requestID", required: false },
+      Name: {
+        type: "Text",
+        koMap: "uncategorizedName",
+        required: false,
+        displayName: "Item Name",
+      },
+      Quantity: {
+        type: "Text",
+        koMap: "uncategorizedQuantity",
+        required: false,
+        displayName: "Quantity",
+      },
+      Cost: {
+        type: "Text",
+        koMap: "uncategorizedCost",
+        required: true,
+        displayName: "Cost",
+      },
+    },
+  });
+
+  /***************************************************************
+   *    Declare Observables
+   ***************************************************************/
+  vm.uncategorizedName = ko.observable();
+  vm.uncategorizedQuantity = ko.observable();
+  vm.uncategorizedCost = ko.observable();
+
+  vm.uncategorizedIsOfficeSupply = ko.observable();
+  vm.uncategorizedIsSubscription = ko.observable();
+  vm.uncategorizedIsITHardware = ko.observable();
+  vm.uncategorizedIsITSoftware = ko.observable();
+  vm.uncategorizedIsOverPrice = ko.observable();
+
+  vm.uncategorizedYesNo = ko.observableArray(["Yes", "No"]);
+</script>
+
+<script type="text/html" id="tmpl_uncategorized">
+  <div class="ui grid">
+    <div class="eight wide column">
+      <div class="ui form">
+        <div data-bind="currentView() == 'new'">
+        <div class="field" >
+          <label>Is this an Office Supply?</label>
+          <select
+            class="editable-field"
+            type="text"
+            data-bind="disable: currentView() == 'view', options: uncategorizedYesNo, optionsCaption: 'Select...', value: uncategorizedIsOfficeSupply"
+          >
+          </select>
+        </div>
+        <div
+          class="field"
+          data-bind="visible: uncategorizedIsOfficeSupply() == 'No'"
+        >
+          <label>Is this a Subscription?</label>
+          <select
+            class="editable-field"
+            type="text"
+            data-bind="disable: currentView() == 'view', options: uncategorizedYesNo, optionsCaption: 'Select...', value: uncategorizedIsSubscription"
+          >
+          </select>
+        </div>
+        <div
+          class="field"
+          data-bind="visible: uncategorizedIsSubscription() == 'No'"
+        >
+          <label>Is this IT Hardware?</label>
+          <select
+            class="editable-field"
+            type="text"
+            data-bind="disable: currentView() == 'view', options: uncategorizedYesNo, optionsCaption: 'Select...', value: uncategorizedIsITHardware"
+          >
+          </select>
+        </div>
+        <div
+          class="field"
+          data-bind="visible: uncategorizedIsITHardware() == 'No'"
+        >
+          <label>Is this IT Software?</label>
+          <select
+            class="editable-field"
+            type="text"
+            data-bind="disable: currentView() == 'view', options: uncategorizedYesNo, optionsCaption: 'Select...', value: uncategorizedIsITSoftware"
+          >
+          </select>
+        </div>
+        <div
+          class="field"
+          data-bind="visible: uncategorizedIsITSoftware() == 'No'"
+        >
+          <label>Is the cost over $3,500?</label>
+          <select
+            class="editable-field"
+            type="text"
+            data-bind="disable: currentView() == 'view', options: uncategorizedYesNo, optionsCaption: 'Select...', value: uncategorizedIsOverPrice"
+          >
+          </select>
+        </div>
+        <div
+          class="ui grid padded top"
+          data-bind="visible: uncategorizedIsOverPrice() == 'No' || currentView() != 'new'""
+        >
+          <div class="eight wide field">
+            <label> Software Name<span class="required">*</span>: </label>
+            <input
+              type="text"
+              data-bind="value: uncategorizedName, disable: currentView()=='view'"
+            />
+          </div>
+          <div class="eight wide field">
+            <label> Quantity<span class="required">*</span>: </label>
+            <input
+              type="text"
+              data-bind="value: uncategorizedQuantity, disable: currentView()=='view'"
+            />
+          </div>
+          <div class="eight wide field">
+            <label> Cost<span class="required">*</span>: </label>
+            <input
+              type="text"
+              data-bind="value: uncategorizedCost, disable: currentView()=='view'"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="eight wide column">
+      <div class="row" data-bind="visible: uncategorizedIsOfficeSupply() == 'Yes'">
+        <h3>Please click this link to change to a Office Supply request:</h3>
+        <div
+          type="button"
+          class="ui button primary"
+          onclick="vm.setServiceTypeByUID('supplies')"
+        >
+          <i
+            class="fa"
+            data-bind="class: getServiceTypeByUID('supplies').Icon"
+          ></i>
+        </div>
+      </div>
+      <div class="row" data-bind="visible: uncategorizedIsSubscription() == 'Yes'">
+        <h3>Please click this link to change to a News/Magazine Subscription request:</h3>
+        <div
+          type="button"
+          class="ui button primary"
+          onclick="vm.setServiceTypeByUID('new_subscription')"
+        >
+          <i
+            class="fa"
+            data-bind="class: getServiceTypeByUID('new_subscription').Icon"
+          ></i>
+        </div>
+      </div>
+      <div class="row" data-bind="visible: uncategorizedIsITHardware() == 'Yes'">
+        <h3>Please click this link to change to a IT Hardware request:</h3>
+        <div
+          type="button"
+          class="ui button primary"
+          onclick="vm.setServiceTypeByUID('it_hardware')"
+        >
+          <i
+            class="fa"
+            data-bind="class: getServiceTypeByUID('it_hardware').Icon"
+          ></i>
+        </div>
+      </div>
+      <div class="row" data-bind="visible: uncategorizedIsITSoftware() == 'Yes'">
+        <h3>Please click this link to change to a IT Software request:</h3>
+        <div
+          type="button"
+          class="ui button primary"
+          onclick="vm.setServiceTypeByUID('it_software')"
+        >
+          <i
+            class="fa"
+            data-bind="class: getServiceTypeByUID('it_software').Icon"
+          ></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</script>

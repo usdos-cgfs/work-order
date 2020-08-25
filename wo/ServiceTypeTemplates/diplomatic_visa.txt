@@ -1,0 +1,214 @@
+<script>
+  /************************************************************
+   *    List Def: Building Access
+   ************************************************************/
+  vm.listDefs.push({
+    uid: "diplomatic_visa",
+    name: "st_diplomatic_visa",
+    title: "st_diplomatic_visa",
+    viewFields: {
+      ID: { type: "Text", koMap: "empty", required: false },
+      Title: { type: "Text", koMap: "requestID", required: false },
+      FullName: {
+        type: "Text",
+        koMap: "diplomaticVisaFullName",
+        required: true,
+      },
+      BirthDate: {
+        type: "Text",
+        koMap: "diplomaticVisaBirthDate",
+        required: true,
+      },
+      PassportNum: {
+        type: "Text",
+        koMap: "diplomaticVisaPassNum",
+        required: true,
+      },
+      Issued: {
+        type: "Text",
+        koMap: "diplomaticPassportIssued",
+        required: false,
+      },
+      Expiration: {
+        type: "Text",
+        koMap: "diplomaticPassportExpiration",
+        required: false,
+      },
+      RequestType: {
+        type: "Text",
+        koMap: "diplomaticPassportSelectedType",
+        required: false,
+      },
+      Grade: {
+        type: "Text",
+        koMap: "diplomaticPassportGrade",
+        required: false,
+      },
+      DestinationCity: {
+        type: "Text",
+        koMap: "diplomaticPassportDestinationCity",
+        required: false,
+      },
+      DestinationCountry: {
+        type: "Text",
+        koMap: "diplomaticPassportDestinationCountry",
+        required: false,
+      },
+      Departure: {
+        type: "Text",
+        koMap: "diplomaticPassportDeparture",
+        required: false,
+      },
+      Return: {
+        type: "Text",
+        koMap: "diplomaticPassportReturn",
+        required: false,
+      },
+      Purpose: {
+        type: "Text",
+        koMap: "diplomaticPassportPurpose",
+        required: false,
+      },
+      BirthLocation: {
+        type: "Text",
+        koMap: "diplomaticPassportBirthLocation",
+        required: false,
+      },
+    },
+  });
+
+  /***************************************************************
+   *    Declare Observables
+   ***************************************************************/
+  vm.diplomaticVisaFullName = ko.observable();
+  vm.diplomaticVisaBirthDate = ko.observable();
+  vm.diplomaticVisaPassNum = ko.observable();
+
+  vm.diplomaticVisaBirthDateStr = ko.pureComputed({
+    read: function () {
+      return new Date(vm.diplomaticVisaBirthDate()).format("yyyy-MM-dd");
+    },
+    write: function (val) {
+      vm.diplomaticVisaBirthDate(new Date(val + "T00:00:00"));
+    },
+  });
+</script>
+
+<script type="text/html" id="tmpl_diplomatic_visa">
+  <div class="ui form">
+      <div class="fields">
+        <div class="eight wide field">
+          <label
+            >Full Name (as it appears on passport)<span class="required">*</span
+            >:</label
+          >
+          <input
+            class="editable-field"
+            type="text"
+            data-bind="value: diplomaticVisaFullName, disable: currentView() == 'view'"
+          />
+        </div>
+        <div class="eight wide field">
+          <label>Date of Birth<span class="required">*</span>:</label>
+          <input
+            class="editable-field"
+            type="date"
+            data-bind="value: diplomaticVisaBirthDateStr, disable: currentView() == 'view'"
+          />
+        </div>
+      </div>
+      <div class="fields">
+        <div class="eight wide field">
+          <label> State/Country of Birth<span class="required">*</span>: </label>
+          <input
+            class="editable-field"
+            type="text"
+            data-bind="value: diplomaticPassportBirthLocation, disable: currentView() == 'view'"
+          />
+        </div>
+        <div class="eight wide field">
+          <label> Grade/Rank<span class="required">*</span>: </label>
+          <input
+            class="editable-field"
+            type="text"
+            data-bind="value: diplomaticPassportGrade, disable: currentView() == 'view'"
+          />
+        </div>
+      </div>
+      <div class="eight wide field">
+        <label>Passport #<span class="required">*</span>:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="value: diplomaticVisaPassNum, disable: currentView() == 'view'"
+        />
+      </div>
+      <h4 class="ui dividing header">Destination</h4>
+      <div class="two fields">
+        <div class="eight wide field">
+          <label> Destination Country<span class="required">*</span>: </label>
+          <input
+            class="editable-field"
+            type="text"
+            data-bind="value: diplomaticPassportDestinationCountry, disable: currentView() == 'view'"
+          />
+        </div>
+        <div class="eight wide field">
+          <label> Destination City<span class="required">*</span>: </label>
+          <input
+            class="editable-field"
+            type="text"
+            data-bind="value: diplomaticPassportDestinationCity, disable: currentView() == 'view'"
+          />
+        </div>
+      </div>
+      <h4 class="ui dividing header">
+        Renewal Information
+      </h4>
+      <div class="two fields" data-bind="">
+        <div class="field">
+          <label>
+            Issued Date (of most recent Passport)<span class="required">*</span>:
+          </label>
+          <input
+            class="editable-field"
+            type="date"
+            placeholder="Passport Expiration Date"
+            data-bind="value: diplomaticPassportIssuedStr, disable: currentView() == 'view'"
+          />
+        </div>
+        <div class="field">
+          <label>
+            Expiration Date (of most recent Passport)<span class="required"
+              >*</span
+            >:
+          </label>
+          <input
+            class="editable-field"
+            type="date"
+            placeholder="Passport Expiration Date"
+            data-bind="value: diplomaticPassportExpirationStr, disable: currentView() == 'view'"
+          />
+        </div>
+      </div>
+      <h4 class="ui dividing header">Travel Dates</h4>
+      <div class="two fields">
+        <div class="field">
+          <label> Departure<span class="required">*</span>: </label>
+          <input
+            class="editable-field"
+            type="date"
+            data-bind="value: diplomaticPassportDepartureStr, disable: currentView() == 'view'"
+          />
+        </div>
+        <div class="eight wide field">
+          <label> Return<span class="required">*</span>: </label>
+          <input
+            class="editable-field"
+            type="date"
+            data-bind="value: diplomaticPassportReturnStr, disable: currentView() == 'view'"
+          />
+        </div>
+      </div>
+    </div>
+</script>

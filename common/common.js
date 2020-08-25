@@ -209,8 +209,8 @@ function loadPipelinesToSP() {
     let vp = [
       ["Title", "Assigned"],
       ["ServiceType", serviceType.ID.toString()],
-      ["Step", 1],
-      ["ActionType", "Approval"],
+      ["Step", 2],
+      ["ActionType", "Pending Resolution"],
     ];
     vm.listRefConfigPipelines().createListItem(vp, function (idx) {
       console.log("Index Created", idx);
@@ -222,28 +222,43 @@ function buildROFoldersServiceTypes() {
   // Build a folder for each Requesting Office in each of our lists
   window.alert = function () {};
   vm.configServiceTypes().forEach((stype) => {
-    console.log("Creating ", stype);
-
-    if (stype.Active) {
-      vm.configRequestingOffices().forEach((ro) => {
-        let vp = [[]];
-        stype.listRef.createListFolder(ro.Title, () =>
-          console.log("Create Folder Success: ", ro.Title)
-        );
-      });
+    if (stype.listRef) {
+      console.log("Creating ", stype.Title);
+      buildROFolders(stype.listRef);
     }
   });
+}
+
+function buildROFoldersAssocLists() {
+  buildROFolders(vm.listRefAction());
+  buildROFolders(vm.listRefApproval());
+  buildROFolders(vm.listRefAssignment());
+  buildROFolders(vm.listRefComment());
+  buildROFolders(vm.listRefWO());
+  buildROFolders(vm.libRefWODocs());
 }
 
 function buildROFolders(listRef) {
   // Build a folder for each Requesting Office in each of our lists
   window.alert = function () {};
 
+  let actionOffices = [
+    ...new Set(
+      vm.configActionOffices().map((ao) => ao.AOGroup.get_lookupValue())
+    ),
+  ];
+
   vm.configRequestingOffices().forEach((ro) => {
     let vp = [[]];
-    listRef.createListFolder(ro.Title, () =>
-      console.log("Create Folder Success: ", ro.Title)
-    );
+    listRef.createListFolder(ro.Title, (id) => {
+      console.log(`Create Folder Success:  ${ro.Title} id: ${id}`);
+      let vp = [[ro.ROGroup.get_lookupValue(), "Restricted Contribute"]];
+      vp.push(["workorder Owners", "Full Control"]);
+      vp.push(["workorder Members", "Contribute"]);
+      actionOffices.forEach((ao) => vp.push([ao, "Restricted Contribute"]));
+      listRef.setItemPermissions(id, vp);
+      console.log(`Setting Permissions: ${vp[0][0]} - ${vp[0][1]}`);
+    });
   });
 }
 
@@ -269,5 +284,30 @@ function fetchServiceTypesfromRequest() {
             val[0].Title
         )
     );
+  });
+}
+
+function syncListDefs() {
+  let cnt = 0;
+  vm.listDefs().forEach((listDef) => {
+    let strListDef = JSON.stringify(listDef);
+    let stype = vm
+      .configServiceTypes()
+      .find((stype) => stype.UID == listDef.uid);
+    if (stype.ListDef != strListDef) {
+      cnt++;
+      //Our listdefs don't match, update the sharepoint item.
+      vm.listRefConfigServiceType().updateListItem(
+        stype.ID,
+        [["ListDef", strListDef]],
+        () => {
+          console.log("updated: ", stype.Title);
+          if (!--cnt) {
+            alert("Synchronized all lists, reloading");
+            location.reload();
+          }
+        }
+      );
+    }
   });
 }

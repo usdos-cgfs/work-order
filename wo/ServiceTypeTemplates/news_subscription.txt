@@ -1,0 +1,53 @@
+<script>
+  /************************************************************
+   *    List Def: News and Subscriptions
+   ************************************************************/
+  vm.listDefs.push({
+    uid: "news_subscription",
+    name: "st_news_subscription",
+    title: "st_news_subscription",
+    viewFields: {
+      ID: { type: "Text", koMap: "empty" },
+      Title: { type: "Text", koMap: "requestID", required: false },
+      SubName: {
+        type: "RichText",
+        koMap: "newsSubName",
+        required: false,
+        displayName: "Subscription Name",
+      },
+      Quantity: {
+        type: "RichText",
+        koMap: "newsSubQuantity",
+        required: false,
+        displayName: "Quantity",
+      },
+    },
+  });
+
+  /***************************************************************
+   *    Declare Observables
+   ***************************************************************/
+  vm.newsSubName = ko.observable();
+  vm.newsSubQuantity = ko.observable();
+</script>
+
+<script type="text/html" id="tmpl_news_subscription">
+  <div class="ui form">
+    <div class="two fields">
+      <div class="eight wide field">
+        <label> Name(s) of Paper/Magazine<span class="required">*</span>: </label>
+        <textarea
+          type="text"
+          data-bind="value: newsSubName, disable: currentView()=='view'"
+        ></textarea>
+      </div>
+      <div class="eight wide field">
+        <label> Number of Subscriptions<span class="required">*</span>: </label>
+        <textarea
+          type="text"
+          data-bind="textInput: newsSubQuantity, disable: currentView()=='view'"
+        ></textarea>
+      </div>
+    </div>
+  </div>
+</script>

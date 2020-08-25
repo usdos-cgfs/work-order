@@ -1,10 +1,8 @@
-
 <link rel="stylesheet" href="../../SiteAssets/workorder/wo/workorder.css" />
 
 <script src="../../SiteAssets/workorder/vendor/jquery/jquery-3.3.1.min.js"></script>
-<script src="../../SiteAssets/workorder/common/sal.js"></script>
+<!-- <script src="../../SiteAssets/workorder/common/sal.js"></script> -->
 <!-- <script src="../../SiteAssets/common/common.js"></script> -->
 
-<script src="../../SiteAssets/workorder/wo/viewmodels.js"></script>
+<!-- <script src="../../SiteAssets/workorder/wo/viewmodels.js"></script> -->
 <script src="../../SiteAssets/workorder/wo/list_comment_form_new.js"></script>
-
