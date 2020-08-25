@@ -1074,7 +1074,7 @@
         type="button"
         class="editable-field ui primary button"
         onclick="saveWorkOrder()"
-        data-bind="enable: canSaveForm"
+        data-bind="enable: canSaveForm, visible: canSaveForm"
       >
         Save
       </button>
@@ -1083,19 +1083,19 @@
         type="button"
         class="ui basic blue button"
         onclick="editWorkOrder()"
-        data-bind="enable: canEditForm"
+        data-bind="enable: canEditForm, visible: canEditForm"
       >
         Edit
       </button>
-      <button
+      <!-- <button
         id="close-form"
         type="button"
         class="ui basic red button"
         onclick="closeWorkOrder()"
         data-bind="enable: canEditForm"
       >
-        Close
-      </button>
+        Cancel
+      </button> -->
     </div>
     <!-- /ko -->
   </div>

@@ -84,7 +84,7 @@ function newWorkOrder() {
   vm.currentView("new");
 
   // Clear the workorder valuepairs
-  //clearValuePairs(workOrderListDef.viewFields);
+  // clearValuePairs(workOrderListDef.viewFields);
   //  Clear the selected service type valuepairs
   if (vm.selectedServiceType().ListDef) {
     clearValuePairs(vm.selectedServiceType().listDef.viewFields);
@@ -104,6 +104,7 @@ function newWorkOrder() {
   //Clear our requested fields.
   vm.requestClosedDate(null);
   vm.requestSubmittedDate(null);
+  vm.requestDescriptionHTML(null);
   vm.requestActions([]);
   vm.requestApprovals([]);
   vm.requestAttachments([]);

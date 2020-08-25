@@ -209,8 +209,8 @@ function loadPipelinesToSP() {
     let vp = [
       ["Title", "Assigned"],
       ["ServiceType", serviceType.ID.toString()],
-      ["Step", 1],
-      ["ActionType", "Approval"],
+      ["Step", 2],
+      ["ActionType", "Pending Resolution"],
     ];
     vm.listRefConfigPipelines().createListItem(vp, function (idx) {
       console.log("Index Created", idx);
