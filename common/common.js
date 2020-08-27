@@ -324,3 +324,11 @@ function sortByTitle(a, b) {
   }
   return 0;
 }
+
+/* Returns the intersect of two arrays */
+function intersect(a, b) {
+  var setA = new Set(a);
+  var setB = new Set(b);
+  var intersection = new Set([...setA].filter((x) => setB.has(x)));
+  return Array.from(intersection);
+}

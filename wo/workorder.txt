@@ -30,7 +30,8 @@
 <link rel="stylesheet" href="../SiteAssets/workorder/wo/workorder.css" />
 <!-- common/RDT/app"  -->
 
-<div id="tabs" style="display: none;">
+<h1>WorkOrder System</h1>
+<div id="tabs" style="display: none">
   <div class="ui top attached tabular menu">
     <a class="item" data-tab="my-orders">My Orders</a>
     <a class="item" data-tab="order-new">New Order</a>
@@ -54,18 +55,10 @@
     <div class="ui grid">
       <div class="two wide column">
         <div class="ui secondary fluid vertical pointing menu">
-          <a class="item active" data-tab="my-open-orders">
-            Open
-          </a>
-          <a class="item" data-tab="my-closed-orders">
-            Closed
-          </a>
-          <a class="item" data-tab="my-cancelled-orders">
-            Cancelled
-          </a>
-          <a class="item" data-tab="my-stype-orders">
-            By Service Type
-          </a>
+          <a class="item active" data-tab="my-open-orders"> Open </a>
+          <a class="item" data-tab="my-closed-orders"> Closed </a>
+          <a class="item" data-tab="my-cancelled-orders"> Cancelled </a>
+          <a class="item" data-tab="my-stype-orders"> By Service Type </a>
         </div>
       </div>
       <div class="fourteen wide column">
@@ -125,9 +118,7 @@
               </tfoot>
             </table>
             <div class="ui info message">
-              <div class="header">
-                * Estimated Completion Date
-              </div>
+              <div class="header">* Estimated Completion Date</div>
               <p>
                 The estimated completion date is based on the average number of
                 business days this service type is usually closed in and is not
@@ -137,7 +128,7 @@
             <div
               id="wo-est-completion-modal"
               class="ui modal"
-              style="display: none;"
+              style="display: none"
             >
               <div class="content">
                 <h2 class="ui header">Esimated Completion Date</h2>
@@ -307,7 +298,7 @@
                     <!-- ko foreach: stypeTable.cols -->
                     <td
                       class="disposable"
-                      data-bind="text: stypeTable.viewFields[$data].displayName"
+                      data-bind="text: stypeTable.viewFields[$data].displayName ? stypeTable.viewFields[$data].displayName : $data"
                     ></td>
                     <!-- /ko -->
                   </tr>
@@ -398,40 +389,7 @@
       <!-- /ko -->
     </div>
     <!-- /ko -->
-    <!--<table id="new-wo-table">
-            <tbody>
-                <tr>
-                    <td>
-                        <a onclick="showDescription('pu10k')" title="Purchase Under 10k">
-                            <i class="fa fa-credit-card fa-5x" aria-hidden="true"></i>
-                            <p>Purchase Under 10k</p>
-                        </a>
-                    </td>
-                    <td>
-                        <a onclick="showDescription('tel')" title="Telephone">
-                            <i class="fa fa-phone fa-5x" aria-hidden="true"></i>
-                            <p>Telephone</p>
-                        </a>
-                    </td>
-
-                </tr>
-                <tr>
-                    <td>
-                        <a onclick="showDescription('presentation')" title="Presentation">
-                            <i class="fa fa-desktop fa-5x" aria-hidden="true"></i>
-                            <p>Presentation</p>
-                        </a>
-                    </td>
-                    <td>
-                        <a onclick="showDescription('rsa')" title="RSA Token">
-                            <i class="fa fa-check-double fa-5x" aria-hidden="true"></i>
-                            <p>RSA Token</p>
-                        </a>
-                    </td>
-                </tr>
-            </tbody>
-        </table>-->
-    <div id="wo-description-modal" class="ui modal" style="display: none;">
+    <div id="wo-description-modal" class="ui modal" style="display: none">
       <div
         class="header"
         data-bind="text: selectedServiceType() ? selectedServiceType().Title : 'Oops, something went wrong'"
@@ -507,9 +465,7 @@
               <div class="ui form" id="table-wo-request-info">
                 <div class="two fields">
                   <div class="field">
-                    <label>
-                      Request Status:
-                    </label>
+                    <label> Request Status: </label>
                     <input
                       class="non-editable-field"
                       type="text"
@@ -517,9 +473,7 @@
                     />
                   </div>
                   <div class="field" data-bind="visible: requestClosedDate">
-                    <label>
-                      Closed Date Date:
-                    </label>
+                    <label> Closed Date Date: </label>
                     <input
                       class="non-editable-field"
                       type="text"
@@ -529,9 +483,7 @@
                 </div>
                 <div class="two fields">
                   <div class="field">
-                    <label>
-                      Request ID:
-                    </label>
+                    <label> Request ID: </label>
                     <input
                       class="non-editable-field"
                       type="text"
@@ -554,19 +506,15 @@
                 </div>
                 <div class="two fields">
                   <div class="field">
-                    <label>
-                      Requestor Name:
-                    </label>
+                    <label> Requestor Name: </label>
                     <input
                       class="non-editable-field"
                       type="text"
                       data-bind="value: requestorName"
                     />
                   </div>
-                  <div class="field" style="display: none;">
-                    <label data-bind="if: requestorOffice">
-                      Manager:
-                    </label>
+                  <div class="field" style="display: none">
+                    <label data-bind="if: requestorOffice"> Manager: </label>
                     <input
                       class="non-editable-field"
                       type="text"
@@ -576,9 +524,7 @@
                 </div>
                 <div class="two fields">
                   <div class="field">
-                    <label>
-                      Requestor Phone:
-                    </label>
+                    <label> Requestor Phone: </label>
                     <input
                       class="editable-field"
                       type="text"
@@ -586,9 +532,7 @@
                     />
                   </div>
                   <div class="field">
-                    <label>
-                      Requestor Email:
-                    </label>
+                    <label> Requestor Email: </label>
                     <input
                       class="non-editable-field"
                       type="text"
@@ -598,9 +542,7 @@
                 </div>
                 <div class="two fields">
                   <div class="field">
-                    <label>
-                      Submitted Date:
-                    </label>
+                    <label> Submitted Date: </label>
                     <input
                       class="non-editable-field"
                       type="text"
@@ -637,7 +579,7 @@
           </div>
         </div>
         <!-- Experimental subscriber feature, we don't have time to worry about this yet -->
-        <div class="four wide column" style="display: none;">
+        <div class="four wide column" style="display: none">
           <div id="wo-requestor-info" class="ui fluid card">
             <div class="content">
               <h2 class="ui header">Request Subscribers</h2>

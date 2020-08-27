@@ -30,12 +30,323 @@
 <link rel="stylesheet" href="../SiteAssets/workorder/wo/workorder.css" />
 <!-- common/RDT/app"  -->
 
-<div id="tabs" style="display: none;">
+<div id="tabs" style="display: none">
   <div class="ui top attached tabular menu">
+    <a class="item" data-tab="my-orders">Office Orders</a>
     <a class="item" data-tab="assigned-orders">Assigned Orders</a>
-    <a class="item" data-tab="order-lookup">Lookup</a>
     <!-- ko if: selectedServiceType -->
     <a class="item" data-tab="order-detail">Detail View</a>
+    <!-- /ko -->
+  </div>
+  <div
+    id="my-orders"
+    data-tab="my-orders"
+    class="ui bottom attached tab segment"
+  >
+    <div
+      class="ui primary button"
+      data-bind="visible: page() == 'app'"
+      onclick="navSelectWorkOrder()"
+    >
+      New Workorder
+    </div>
+    <!-- ko if: allOfficeOrders().length >0 -->
+    <div class="ui grid">
+      <div class="two wide column">
+        <div class="ui secondary fluid vertical pointing menu">
+          <a class="item active" data-tab="my-open-orders"> Open </a>
+          <a class="item" data-tab="my-closed-orders"> Closed </a>
+          <a class="item" data-tab="my-cancelled-orders"> Cancelled </a>
+          <a class="item" data-tab="my-stype-orders"> By Service Type </a>
+        </div>
+      </div>
+      <div class="fourteen wide column">
+        <div
+          id="my-open-orders"
+          data-tab="my-open-orders"
+          class="ui right attached tab fluid"
+        >
+          <div data-bind="visible: officeAllOpenOrders().length == 0">
+            <h2>
+              You currently have no open orders<span
+                data-bind="visible: page() == 'app'"
+              >
+                ,
+                <a href="javascript:void(0)" onclick="navSelectWorkOrder()">
+                  create
+                </a>
+                a new one </span
+              >.
+            </h2>
+          </div>
+          <div data-bind="visible: officeAllOpenOrders().length > 0">
+            <h2>Open Orders</h2>
+            <table id="wo-open-orders" class="display data-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Service Type</th>
+                  <th>Requesting Office</th>
+                  <th>Requestor</th>
+                  <th>Submitted Date</th>
+                  <th>Est. Completion Date<span class="ui blue">*</span></th>
+                </tr>
+              </thead>
+              <tbody data-bind="foreach: officeAllOpenOrders">
+                <tr>
+                  <td
+                    class="wo-id"
+                    data-bind="click: $root.showWorkOrder, text: Title"
+                  ></td>
+                  <td data-bind="text: ServiceType.get_lookupValue()"></td>
+                  <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
+                  <td data-bind="text: RequestorName"></td>
+                  <td data-bind="text: Created.format('yyyy-MM-dd')"></td>
+                  <td data-bind="text: $root.estimateClosingDate($data)"></td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td>Order ID</td>
+                  <td>Service Type</td>
+                  <td>Requesting Office</td>
+                  <td>Requestor</td>
+                  <td>Submitted Date</td>
+                  <td>Est. Completion Date<span class="ui blue">*</span></td>
+                </tr>
+              </tfoot>
+            </table>
+            <div class="ui info message">
+              <div class="header">* Estimated Completion Date</div>
+              <p>
+                The estimated completion date is based on the average number of
+                business days this service type is usually closed in and is not
+                a guarantee of completion.
+              </p>
+            </div>
+            <div
+              id="wo-est-completion-modal"
+              class="ui modal"
+              style="display: none"
+            >
+              <div class="content">
+                <h2 class="ui header">Esimated Completion Date</h2>
+              </div>
+              <div class="content">
+                <p>How is</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          id="my-closed-orders"
+          data-tab="my-closed-orders"
+          class="ui right attached tab fluid"
+        >
+          <div data-bind="visible: officeAllClosedOrders().length == 0">
+            <h2>
+              You currently have no Closed orders<span
+                data-bind="visible: page() == 'app'"
+              >
+                ,
+                <a href="javascript:void(0)" onclick="navSelectWorkOrder()">
+                  create
+                </a>
+                a new one </span
+              >.
+            </h2>
+          </div>
+          <div data-bind="visible: officeAllClosedOrders().length > 0">
+            <h2>Closed Orders</h2>
+            <table id="wo-closed-orders" class="display data-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Service Type</th>
+                  <th>Requesting Office</th>
+                  <th>Requestor</th>
+                  <th>Submitted Date</th>
+                  <th>Closed Date</th>
+                </tr>
+              </thead>
+              <tbody data-bind="foreach: officeAllClosedOrders">
+                <tr>
+                  <td
+                    class="wo-id"
+                    data-bind="click: $root.showWorkOrder, text: Title"
+                  ></td>
+                  <td data-bind="text: ServiceType.get_lookupValue()"></td>
+                  <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
+                  <td data-bind="text: RequestorName"></td>
+                  <td data-bind="text: Created.format('yyyy-MM-dd')"></td>
+                  <td data-bind="text: ClosedDate"></td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td>Order ID</td>
+                  <td>Service Type</td>
+                  <td>Requesting Office</td>
+                  <td>Requestor</td>
+                  <td>Submitted Date</td>
+                  <td>Closed Date</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+        <div
+          id="my-cancelled-orders"
+          data-tab="my-cancelled-orders"
+          class="ui right attached tab fluid"
+        >
+          <div data-bind="visible: officeAllCancelledOrders().length == 0">
+            <h2>
+              You currently have no Cancelled orders<span
+                data-bind="visible: page() == 'app'"
+              >
+                ,
+                <a href="javascript:void(0)" onclick="navSelectWorkOrder()">
+                  create
+                </a>
+                a new one </span
+              >.
+            </h2>
+          </div>
+          <div data-bind="visible: officeAllCancelledOrders().length > 0">
+            <h2>Cancelled Orders</h2>
+            <table id="wo-cancelled-orders" class="display data-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Service Type</th>
+                  <th>Requesting Office</th>
+                  <th>Requestor</th>
+                  <th>Submitted Date</th>
+                  <th>Closed Date</th>
+                </tr>
+              </thead>
+              <tbody data-bind="foreach: officeAllCancelledOrders">
+                <tr>
+                  <td
+                    class="wo-id"
+                    data-bind="click: $root.showWorkOrder, text: Title"
+                  ></td>
+                  <td data-bind="text: ServiceType.get_lookupValue()"></td>
+                  <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
+                  <td data-bind="text: RequestorName"></td>
+                  <td data-bind="text: Created.format('yyyy-MM-dd')"></td>
+                  <td data-bind="text: ClosedDate.format('yyyy-MM-dd')"></td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td>Order ID</td>
+                  <td>Service Type</td>
+                  <td>Requesting Office</td>
+                  <td>Requestor</td>
+                  <td>Submitted Date</td>
+                  <td>Closed Date</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+        <div
+          id="my-stype-orders"
+          data-tab="my-stype-orders"
+          class="ui right attached tab fluid"
+        >
+          <!-- ko if: configServiceTypes -->
+          <h2>Lookup orders by service type:</h2>
+          <div class="ui form">
+            <div class="">
+              <div class="field">
+                <label>Service Type:</label>
+                <select
+                  class="ui select"
+                  type="select"
+                  data-bind="value: lookupServiceType,
+                                           options: configServiceTypes(),
+                                           optionsText: function(stype) {return stype.Title ? stype.Title : 'unknown'},
+                                           optionsCaption: 'Select...'"
+                ></select>
+              </div>
+            </div>
+          </div>
+          <div
+            id="lookup-tables-container"
+            data-bind="foreach: {data: lookupTables, as:'stypeTable'}"
+          >
+            <div
+              class="ui fluid container"
+              data-bind="visible: stypeTable.stype.UID == $root.lookupServiceType().UID"
+            >
+              <h3 data-bind="text: stypeTable.stype.Title"></h3>
+              <table
+                class="display data-table"
+                data-bind="attr: {id: stypeTable.id}"
+              >
+                <thead>
+                  <tr>
+                    <td>Order ID</td>
+                    <td>Requesting Office</td>
+                    <td>Requestor</td>
+                    <td>Request Status</td>
+                    <td>Description</td>
+                    <!-- ko foreach: stypeTable.cols -->
+                    <td
+                      class="disposable"
+                      data-bind="text: stypeTable.viewFields[$data].displayName ? stypeTable.viewFields[$data].displayName : $data"
+                    ></td>
+                    <!-- /ko -->
+                  </tr>
+                </thead>
+                <tbody
+                  data-bind="foreach: {data: stypeTable.requests, as: 'order'}"
+                >
+                  <tr>
+                    <td
+                      data-bind="click: $root.showWorkOrder, text: Title"
+                    ></td>
+                    <td
+                      data-bind="text: order.RequestorOffice.get_lookupValue()"
+                    ></td>
+                    <td data-bind="text: order.RequestorName"></td>
+                    <td data-bind="text: order.RequestStatus"></td>
+                    <td data-bind="text: $(RequestDescription).text()"></td>
+                    <!-- ko if: stypeTable.cols.length -->
+                    <!-- ko foreach: { data: stypeTable.cols, as: 'col' } -->
+                    <td
+                      class="disposable"
+                      data-bind="text: $root.lookupParseText(col, stypeTable.viewFields, order.ServiceItem[col])"
+                    ></td>
+                    <!-- /ko -->
+                    <!-- /ko -->
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td>Order ID</td>
+                    <td>Requesting Office</td>
+                    <td>Requestor</td>
+                    <td>Request Status</td>
+                    <td>Description</td>
+                    <!-- ko foreach: stypeTable.cols -->
+                    <td
+                      class="disposable"
+                      data-bind="text: stypeTable.viewFields[$data].displayName"
+                    ></td>
+                    <!-- /ko -->
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+          <!-- /ko -->
+        </div>
+      </div>
+    </div>
     <!-- /ko -->
   </div>
   <div
@@ -82,92 +393,6 @@
         </tfoot>
       </table>
     </div>
-  </div>
-  <div
-    id="order-lookup"
-    data-tab="order-lookup"
-    class="ui bottom attached tab segment"
-  >
-    <!-- ko if: configServiceTypes -->
-    <h2>Lookup orders by service type:</h2>
-    <div class="ui form">
-      <div class="">
-        <div class="field">
-          <label>Service Type:</label>
-          <select
-            class="ui select"
-            type="select"
-            data-bind="value: lookupServiceType,
-                                         options: configServiceTypes(),
-                                         optionsText: function(stype) {return stype.Title ? stype.Title : 'unknown'},
-                                         optionsCaption: 'Select...'"
-          ></select>
-        </div>
-      </div>
-    </div>
-    <div
-      id="lookup-tables-container"
-      data-bind="foreach: {data: lookupTables, as:'stypeTable'}"
-    >
-      <div
-        class="ui fluid container"
-        data-bind="visible: stypeTable.stype.UID == $root.lookupServiceType().UID"
-      >
-        <h3 data-bind="text: stypeTable.stype.Title"></h3>
-        <table class="display data-table" data-bind="attr: {id: stypeTable.id}">
-          <thead>
-            <tr>
-              <td>Order ID</td>
-              <td>Requesting Office</td>
-              <td>Requestor</td>
-              <td>Request Status</td>
-              <td>Description</td>
-              <!-- ko foreach: stypeTable.cols -->
-              <td
-                class="disposable"
-                data-bind="text: stypeTable.viewFields[$data].displayName"
-              ></td>
-              <!-- /ko -->
-            </tr>
-          </thead>
-          <tbody data-bind="foreach: {data: stypeTable.requests, as: 'order'}">
-            <tr>
-              <td data-bind="click: $root.showWorkOrder, text: Title"></td>
-              <td
-                data-bind="text: order.RequestorOffice.get_lookupValue()"
-              ></td>
-              <td data-bind="text: order.RequestorName"></td>
-              <td data-bind="text: order.RequestStatus"></td>
-              <td data-bind="text: $(RequestDescription).text()"></td>
-              <!-- ko if: stypeTable.cols.length -->
-              <!-- ko foreach: { data: stypeTable.cols, as: 'col' } -->
-              <td
-                class="disposable"
-                data-bind="text: $root.lookupParseText(col, stypeTable.viewFields, order.ServiceItem[col])"
-              ></td>
-              <!-- /ko -->
-              <!-- /ko -->
-            </tr>
-          </tbody>
-          <tfoot>
-            <tr>
-              <td>Order ID</td>
-              <td>Requesting Office</td>
-              <td>Requestor</td>
-              <td>Request Status</td>
-              <td>Description</td>
-              <!-- ko foreach: stypeTable.cols -->
-              <td
-                class="disposable"
-                data-bind="text: stypeTable.viewFields[$data].displayName"
-              ></td>
-              <!-- /ko -->
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-    </div>
-    <!-- /ko -->
   </div>
   <div
     id="order-detail"
@@ -333,9 +558,7 @@
               <div class="ui form" id="table-wo-request-info">
                 <div class="two fields">
                   <div class="field">
-                    <label>
-                      Request Status:
-                    </label>
+                    <label> Request Status: </label>
                     <input
                       class="non-editable-field"
                       type="text"
@@ -343,9 +566,7 @@
                     />
                   </div>
                   <div class="field" data-bind="visible: requestClosedDate">
-                    <label>
-                      Closed Date Date:
-                    </label>
+                    <label> Closed Date Date: </label>
                     <input
                       class="non-editable-field"
                       type="text"
@@ -355,9 +576,7 @@
                 </div>
                 <div class="two fields">
                   <div class="field">
-                    <label>
-                      Request ID:
-                    </label>
+                    <label> Request ID: </label>
                     <input
                       class="non-editable-field"
                       type="text"
@@ -380,19 +599,15 @@
                 </div>
                 <div class="two fields">
                   <div class="field">
-                    <label>
-                      Requestor Name:
-                    </label>
+                    <label> Requestor Name: </label>
                     <input
                       class="non-editable-field"
                       type="text"
                       data-bind="value: requestorName"
                     />
                   </div>
-                  <div class="field" style="display: none;">
-                    <label data-bind="if: requestorOffice">
-                      Manager:
-                    </label>
+                  <div class="field" style="display: none">
+                    <label data-bind="if: requestorOffice"> Manager: </label>
                     <input
                       class="non-editable-field"
                       type="text"
@@ -402,9 +617,7 @@
                 </div>
                 <div class="two fields">
                   <div class="field">
-                    <label>
-                      Requestor Phone:
-                    </label>
+                    <label> Requestor Phone: </label>
                     <input
                       class="editable-field"
                       type="text"
@@ -412,9 +625,7 @@
                     />
                   </div>
                   <div class="field">
-                    <label>
-                      Requestor Email:
-                    </label>
+                    <label> Requestor Email: </label>
                     <input
                       class="non-editable-field"
                       type="text"
@@ -424,9 +635,7 @@
                 </div>
                 <div class="two fields">
                   <div class="field">
-                    <label>
-                      Submitted Date:
-                    </label>
+                    <label> Submitted Date: </label>
                     <input
                       class="non-editable-field"
                       type="text"
@@ -463,7 +672,7 @@
           </div>
         </div>
         <!-- Experimental subscriber feature, we don't have time to worry about this yet -->
-        <div class="four wide column" style="display: none;">
+        <div class="four wide column" style="display: none">
           <div id="wo-requestor-info" class="ui fluid card">
             <div class="content">
               <h2 class="ui header">Request Subscribers</h2>
@@ -799,4 +1008,4 @@
 <script src="../SiteAssets/workorder/common/common.js"></script>
 
 <script src="../SiteAssets/workorder/wo/viewmodels.js"></script>
-<script src="../SiteAssets/workorder/wo/page_admin.js"></script>
+<script src="../SiteAssets/workorder/wo/workorder.js"></script>

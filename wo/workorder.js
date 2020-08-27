@@ -842,7 +842,6 @@ function initApp() {
 
   // Initialize ViewModel
   vm = new koviewmodel();
-  ko.applyBindings(vm);
 
   // Setup models for each of the config lists we may connect to
   initStaticListRefs();
@@ -861,48 +860,52 @@ function initComplete() {
   initServiceTypeListRefs();
   initUIComponents();
   initTemplates();
-  //Initialization complete: load the current tab.
+
+  //Parse Page Params
+  var path = window.location.pathname;
+  vm.page(path.split("/").pop());
+
+  //URL Params
   var href = window.location.href.toLowerCase();
   var hash = window.location.hash.replace("#", "");
 
   const queryString = window.location.search;
-
   const urlParams = new URLSearchParams(queryString);
 
-  //vm.tab(urlParams.get('page_type'))
+  let tab = urlParams.get("tab");
+  let id = urlParams.get("reqid");
+  let stypeId = urlParams.get("stype");
+  let stype = null;
 
-  // check that we are on the app page
-  if (
-    href.indexOf("app.aspx") !== -1 ||
-    href.indexOf("workorder.aspx") !== -1
-  ) {
-    vm.page("app");
-    fetchAllOrders(function () {
-      let tab = urlParams.get("tab");
-      let id = urlParams.get("reqid");
-      let stypeId = urlParams.get("stype");
-      let stype = null;
-      if (stypeId) {
-        stype = vm
-          .configServiceTypes()
-          .find((serviceType) => serviceType.UID == stypeId);
-      }
+  //Both admins and users need all orders available to them.
+  fetchAllOrders(function () {
+    if (id) {
+      viewWorkOrderItem(id);
+    }
+    //If we're on a separate tab, switch back to the tab from the url.
+    vm.tab(tab);
 
-      if (id) {
-        // Viewing workorder now
-        console.log("Viewing the workorder: ", id);
-        viewWorkOrderItem(id);
-      } else if (tab) {
-        vm.tab(tab);
-        //vm.lookupOrderUpdate(stype);
-        //$('.ui.menu').find('.item').tab('change tab', 'open-orders');
-      } else {
-        vm.tab("my-orders");
-      }
-      fetchAllAssignments();
-      SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
-    });
-  }
+    // check that we are on the app page
+    switch (vm.page()) {
+      case "app.aspx":
+        if (!tab) {
+          vm.tab("my-orders");
+        }
+        break;
+
+      case "admin.aspx":
+        fetchAllAssignments();
+        if (!tab) {
+          vm.tab("assigned-orders");
+        }
+        break;
+
+      default:
+    }
+
+    ko.applyBindings(vm);
+    SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+  });
   $("#tabs").show();
 }
 
