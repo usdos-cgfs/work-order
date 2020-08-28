@@ -45,6 +45,7 @@ var workOrderListDef = {
   viewFields: {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "requestID" },
+    ActionOffices: { type: "Text", koMap: "requestActionOfficeIds" },
     EstClosedDate: { type: "Date", koMap: "requestEstClosed" },
     ManagingDirector: { type: "Person", koMap: "requestorManager" },
     RequestDescription: { type: "Text", koMap: "requestDescriptionHTML" },
@@ -156,6 +157,16 @@ var configActionOfficesListDef = {
     CanAssign: { type: "Bool", koMap: "empty" },
     SysAdmin: { type: "Bool", koMap: "empty" },
     UserAddress: { type: "Person", koMap: "empty" },
+  },
+};
+
+var configActionOfficeIDsListDef = {
+  name: "ConfigActionOfficeIDs",
+  title: "ConfigActionOfficeIDs",
+  viewFields: {
+    ID: { type: "Text", koMap: "empty" },
+    Title: { type: "Text", koMap: "empty" },
+    AOGroup: { type: "Person", koMap: "empty" },
   },
 };
 
@@ -272,25 +283,26 @@ function koviewmodel() {
   self.requestCurUserAssign = ko.pureComputed(function () {
     if (self.requestStage() && self.requestStage().Title != "Closed") {
       // does the current user have CanAssign to any offices?
-      let uao = self.userActionOfficeOwnership().map((uao) => uao.Office);
+      let uao = self
+        .userActionOfficeOwnership()
+        .map((uao) => uao.Office)
+        .map((ao) => ao.get_lookupValue());
 
       // Get the office assigned to this stage,
       let assignedOffice = self
         .configActionOffices()
         .find((ao) => ao.ID == self.requestStage().Assignee.get_lookupId());
 
-      return uao.includes(assignedOffice.Office);
+      return uao.includes(assignedOffice.Office.get_lookupValue());
     }
   });
 
   self.assignCurUserAssignees = ko.pureComputed(function () {
     //Who can the current user assign to?
-    let uao = self
-      .userActionOfficeMembership()
-      .filter((uao) => {
-        return uao.CanAssign;
-      })
-      .map((uao) => uao.Office);
+    let uao = self.userActionOfficeOwnership().filter((uao) => {
+      return uao.CanAssign;
+    });
+    //.map((uao) => uao.Office);
 
     if (!uao) {
       // This person isn't an action office, how did we get here?
@@ -299,8 +311,10 @@ function koviewmodel() {
       // User is sysadmin, return all action offices
       return self.configActionOffices();
     } else {
-      return self.configActionOffices().filter((ao) => {
-        return uao.includes(ao.Office);
+      return self.configActionOffices().filter((aos) => {
+        return uao
+          .map((userAO) => userAO.Office.get_lookupValue())
+          .includes(aos.Office.get_lookupValue());
       });
     }
   });
@@ -315,7 +329,7 @@ function koviewmodel() {
 
       timedNotification(
         assignment.ActionOffice.get_lookupValue() + " Removed",
-        2 * 1000
+        2000
       );
       fetchAssignments();
     });
@@ -329,14 +343,16 @@ function koviewmodel() {
   self.requestCurUserAdvance = ko.pureComputed(function () {
     if (self.requestStage() && self.requestStage().Title != "Closed") {
       // which offices is the current user a member of?
-      let uao = self.userActionOfficeMembership().map((uao) => uao.Office);
+      let uao = self
+        .userActionOfficeMembership()
+        .map((uao) => uao.Office.get_lookupValue());
 
       // Get the office assigned to this stage,
       let assignedOffice = self
         .configActionOffices()
         .find((ao) => ao.ID == self.requestStage().Assignee.get_lookupId());
 
-      return uao.includes(assignedOffice.Office);
+      return uao.includes(assignedOffice.Office.get_lookupValue());
     }
   });
 
@@ -382,6 +398,7 @@ function koviewmodel() {
 
   // Configuration Lists
   self.listRefConfigActionOffices = ko.observable();
+  self.listRefConfigActionOfficeIDs = ko.observable();
   self.listRefConfigHolidays = ko.observable();
   self.listRefConfigPipelines = ko.observable();
   self.listRefConfigRequestingOffices = ko.observable();
@@ -651,6 +668,7 @@ function koviewmodel() {
    ************************************************************/
 
   self.configActionOffices = ko.observable();
+  self.configActionOfficeIDs = ko.observable();
   self.configHolidays = ko.observable();
   self.configPipelines = ko.observable();
   self.configRequestingOffices = ko.observable();
@@ -709,7 +727,7 @@ function koviewmodel() {
   };
 
   self.loadedListItemLists.subscribe(function (val) {
-    if (val == 5) {
+    if (val == 6) {
       initComplete();
     }
   });
@@ -717,8 +735,8 @@ function koviewmodel() {
   /************************************************************
    * Observables for work order header
    ************************************************************/
+  self.requestLoaded = ko.observable(new Date());
   self.requestID = ko.observable(); // This is the key that will map everything together.
-
   self.requestHeader = ko.observable(); // This is the raw JSON object returned by the work order query.
   self.serviceTypeHeader = ko.observable(); // This is the raw JSON object object returned by the service type query.
   self.requestSubject = ko.observable();
@@ -762,6 +780,29 @@ function koviewmodel() {
   self.requestorEmail = ko.observable();
   self.requestorManager = ko.observable();
 
+  self.requestActionOffices = ko.observableArray(new Array());
+
+  self.requestActionOfficeIds = ko.pureComputed({
+    read: function () {
+      let offices = self.configActionOffices();
+      return self
+        .requestActionOffices()
+        .map((ao) => ao.ID)
+        .join(";#");
+    },
+    write: function (val) {
+      if (val) {
+        console.log("Action Office IDs: ", val[0].get_lookupValue());
+        self.requestActionOffices(
+          val.map((ao) => {
+            return { ID: ao.get_lookupId(), Title: ao.get_lookupValue() };
+          })
+        );
+      } else {
+        self.requestActionOffices(new Array());
+      }
+    },
+  });
   // JSON Object for the requesting office
   self.requestorOffice = ko.observable();
   // Gets and sets the ID for above
@@ -822,28 +863,6 @@ function koviewmodel() {
     // When the requesting office changes, so changes the manager
     self.requestorManager(managingDirectors[self.requestorOffice()]);
   });
-
-  /************************************************************
-   * Locksmith Services
-   ************************************************************/
-  self.locksmithLocation = ko.observable();
-  self.locksmithLockType = ko.observable();
-  self.locksmithJustification = ko.observable();
-
-  /************************************************************
-   * IT Hardware
-   ************************************************************/
-
-  /************************************************************
-   * Network Drop
-   ************************************************************/
-  self.networkDropDescription = ko.observable();
-
-  /************************************************************
-   * Newspaper Subscriptions
-   ************************************************************/
-  self.newsSubName = ko.observable();
-  self.newsSubQuantity = ko.observable();
 
   /************************************************************
    * Office Furniture

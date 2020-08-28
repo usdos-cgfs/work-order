@@ -19,6 +19,7 @@ function initStaticListRefs() {
 
   /* Configuration lists */
   vm.listRefConfigActionOffices(new SPList(configActionOfficesListDef));
+  vm.listRefConfigActionOfficeIDs(new SPList(configActionOfficeIDsListDef));
   vm.listRefConfigHolidays(new SPList(configHolidaysListDef));
   vm.listRefConfigPipelines(new SPList(configPipelinesListDef));
   vm.listRefConfigRequestingOffices(new SPList(configRequestingOfficesListDef));
@@ -152,6 +153,8 @@ function viewWorkOrderItem(woID) {
     /* Fetch the associated service type items */
     if (vm.selectedServiceType().ListDef) {
       viewServiceTypeItem();
+    } else {
+      vm.requestLoaded(new Date());
     }
     buildPipelineElement();
     $(".editable-field").prop("disabled", true);
@@ -166,13 +169,18 @@ function viewServiceTypeItem() {
     vm.requestID() +
     "</Value></Eq></Where></Query></View>";
   vm.selectedServiceType().listRef.getListItems(serviceTypeCaml, (items) => {
-    let res = items[0];
-    vm.serviceTypeHeader(res);
-    console.log("service type fetched -- setting valuepairs", items);
-    setValuePairs(
-      vm.selectedServiceType().listDef.viewFields,
-      vm.serviceTypeHeader()
-    );
+    if (items[0]) {
+      let res = items[0];
+      vm.requestLoaded(new Date());
+      vm.serviceTypeHeader(res);
+      console.log("service type fetched -- setting valuepairs", items);
+      setValuePairs(
+        vm.selectedServiceType().listDef.viewFields,
+        vm.serviceTypeHeader()
+      );
+    } else {
+      timedNotification("Warning: couldn't find Service Type Info");
+    }
   });
 }
 
@@ -454,6 +462,11 @@ function fetchConfigListData(callback) {
   /* Retrieve all data from our config lists */
   vm.listRefConfigActionOffices().getListItems("<Query></Query>", (items) => {
     vm.configActionOffices(items);
+    vm.incLoadedListItems();
+  });
+
+  vm.listRefConfigActionOfficeIDs().getListItems("<Query></Query>", (items) => {
+    vm.configActionOfficeIDs(items);
     vm.incLoadedListItems();
   });
 
@@ -858,7 +871,6 @@ function initApp() {
 function initComplete() {
   //Initialize the rest of our list references
   initServiceTypeListRefs();
-  initUIComponents();
   initTemplates();
 
   //Parse Page Params
@@ -904,6 +916,7 @@ function initComplete() {
     }
 
     ko.applyBindings(vm);
+    initUIComponents();
     SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
   });
   $("#tabs").show();
