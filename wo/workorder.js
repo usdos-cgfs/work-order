@@ -159,6 +159,7 @@ function viewWorkOrderItem(woID) {
     buildPipelineElement();
     $(".editable-field").prop("disabled", true);
     vm.tab("order-detail");
+    initUIComponents();
   });
 }
 
@@ -557,6 +558,17 @@ function fetchAttachments() {
 /************************************************************
  * Assignments
  ************************************************************/
+function newOfficeAssignment() {
+  // Takes a new action office and adds it to the request assigned offices
+  vm.requestActionOffices.push(vm.assignOfficeAssignee());
+
+  vm.listRefWO().updateListItem(
+    vm.requestHeader().ID,
+    [["ActionOffices", vm.requestActionOfficeIds()]],
+    () => vm.assignOfficeAssignee(null)
+  );
+}
+
 function newAssignment(role) {
   // Open the new assignments forms
   vm.listRefAssignment().showModal(
@@ -609,6 +621,13 @@ function fetchAssignments() {
     vm.requestID() +
     "</Value></Eq></Where></Query></View>";
   vm.listRefAssignment().getListItems(camlq, function (assignments) {
+    // Let's connect our Action offices here.
+    assignments.forEach(
+      (assignment) =>
+        (assignment.actionOffice = vm
+          .configActionOffices()
+          .find((ao) => ao.ID == assignment.ActionOffice.get_lookupId()))
+    );
     vm.requestAssignees(assignments);
   });
 }

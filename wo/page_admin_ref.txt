@@ -511,47 +511,87 @@
         </h2>
       </div>
       <div id="wo-routing-assignment" class="content">
-        <div>
-          <div data-bind="visible: requestAssignees().length == 0">
-            <p>This request has not been assigned yet, check back later.</p>
+        <div class="ui grid">
+          <div class="row">
+            <div class="twelve wide column">
+              <h3>Users Assigned</h3>
+              <div data-bind="visible: requestAssignees().length == 0">
+                <p>This request has not been assigned yet, check back later.</p>
+              </div>
+              <table
+                id="wo-assignees"
+                class="ui celled very basic table"
+                data-bind="visible: requestAssignees().length > 0"
+              >
+                <thead>
+                  <tr>
+                    <th>Assignee</th>
+                    <th>Office</th>
+                    <th>Role</th>
+                    <th>Assignment Date</th>
+                    <th>Status</th>
+                    <th data-bind="if: requestCurUserAssign">Actions</th>
+                  </tr>
+                </thead>
+                <tbody data-bind="foreach: requestAssignees">
+                  <tr>
+                    <td>
+                      <p data-bind="text: ActionOffice.get_lookupValue()"></p>
+                    </td>
+                    <td
+                      data-bind="text: actionOffice.Office.get_lookupValue()"
+                    ></td>
+                    <td>
+                      <p data-bind="text: Role"></p>
+                    </td>
+                    <td>
+                      <p data-bind="text: Created.toLocaleString()"></p>
+                    </td>
+                    <td>
+                      <p>In Progress</p>
+                    </td>
+                    <td data-bind="if: $root.requestCurUserAssign">
+                      <i
+                        class="fas fa-user-times pointer"
+                        data-bind="click: $root.assignRemove"
+                      ></i>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="four wide column" data-bind="if: userIsSysAdmin">
+              <h3>Offices Assigned</h3>
+              <div class="ui compact menu">
+                <select
+                  class="ui search dropdown"
+                  data-bind=" value: assignOfficeAssignee,
+                  options: configActionOfficeIDs, 
+                  optionsText: (AO) => {return AO.Title}, 
+                  optionsCaption: 'Select...'"
+                ></select>
+                <button
+                  type="button"
+                  class="ui primary right attached button"
+                  onclick="newOfficeAssignment()"
+                  data-bind="enable: assignOfficeAssignee"
+                >
+                  Assign
+                </button>
+              </div>
+              <table>
+                <tbody data-bind="foreach: requestActionOffices">
+                  <tr>
+                    <td data-bind="text: Title"></td>
+                    <td
+                      class="fa fa-trash pointer"
+                      data-bind="click: $root.assignOfficeRemove"
+                    ></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
-          <table
-            id="wo-assignees"
-            class="ui celled very basic table"
-            data-bind="visible: requestAssignees().length > 0"
-          >
-            <thead>
-              <tr>
-                <th>Assignee</th>
-                <th>Role</th>
-                <th>Assignment Date</th>
-                <th>Status</th>
-                <th data-bind="if: requestCurUserAssign">Actions</th>
-              </tr>
-            </thead>
-            <tbody data-bind="foreach: requestAssignees">
-              <tr>
-                <td>
-                  <p data-bind="text: ActionOffice.get_lookupValue()"></p>
-                </td>
-                <td>
-                  <p data-bind="text: Role"></p>
-                </td>
-                <td>
-                  <p data-bind="text: Created.toLocaleString()"></p>
-                </td>
-                <td>
-                  <p>In Progress</p>
-                </td>
-                <td data-bind="if: $root.requestCurUserAssign">
-                  <i
-                    class="fas fa-user-times pointer"
-                    data-bind="click: $root.assignRemove"
-                  ></i>
-                </td>
-              </tr>
-            </tbody>
-          </table>
         </div>
       </div>
     </div>

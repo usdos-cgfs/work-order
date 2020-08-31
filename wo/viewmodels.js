@@ -267,6 +267,10 @@ function koviewmodel() {
     });
   });
 
+  self.userIsSysAdmin = ko.pureComputed(() => {
+    return self.userActionOfficeMembership().find((uao) => uao.SysAdmin);
+  });
+
   // Can the current user take action on the record?
   self.requestCurUserAction = ko.pureComputed(function () {
     return true;
@@ -335,7 +339,15 @@ function koviewmodel() {
     });
   };
 
+  self.assignOfficeRemove = function (assignment) {
+    self.requestActionOffices(
+      self.requestActionOffices().filter((ao) => ao.ID != assignment.ID)
+    );
+  };
+
   self.assignAssignee = ko.observable();
+
+  self.assignOfficeAssignee = ko.observable();
 
   /************************************************************
    * ADMIN: Advance
@@ -701,7 +713,9 @@ function koviewmodel() {
     return self.configServiceTypes().find((stype) => stype.UID == uid);
   };
 
-  self.selectedServiceType.subscribe((stype) => {});
+  self.selectedServiceType.subscribe((stype) => {
+    self.requestShowDescription(false);
+  });
 
   // return the selected service type pipeline
   self.selectedPipeline = ko.pureComputed(function () {
@@ -744,6 +758,8 @@ function koviewmodel() {
   self.requestDescriptionHTML = ko.observable();
   self.requestEstClosed = ko.observable();
 
+  self.requestShowDescription = ko.observable(false);
+
   // self.requestDescription = ko.pureComputed({
   //   read: function () {
   //     if (self.currentView() != "view") {
@@ -785,10 +801,13 @@ function koviewmodel() {
   self.requestActionOfficeIds = ko.pureComputed({
     read: function () {
       let offices = self.configActionOffices();
-      return self
-        .requestActionOffices()
-        .map((ao) => ao.ID)
-        .join(";#");
+      let vps = new Array();
+      self.requestActionOffices().forEach((ao) => {
+        vps.push(ao.ID);
+        vps.push(ao.Title);
+      });
+
+      return vps.join(";#");
     },
     write: function (val) {
       if (val) {
