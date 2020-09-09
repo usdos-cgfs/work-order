@@ -97,7 +97,15 @@ function newWorkOrder() {
   //vm.requestID('209Z');
   //fetchAttachments();
   vm.requestorName(sal.globalConfig.currentUser.get_title());
-  vm.requestorTelephone("703-875-7070");
+  if (sal.globalConfig.currentUserProfile) {
+    vm.requestorTelephone(
+      sal.globalConfig.currentUserProfile.UserProfileProperties.results.find(
+        (prop) => prop.Key == "WorkPhone"
+      ).Value
+    );
+  } else {
+    vm.requestorTelephone("");
+  }
   vm.requestorEmail(sal.globalConfig.currentUser.get_email());
   vm.requestStageNum(0);
   vm.requestStatus("Draft");

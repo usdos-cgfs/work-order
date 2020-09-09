@@ -34,8 +34,8 @@
     ondemand="false" localizable="false" loadafterui="true" />
 <SharePoint:ScriptLink ID="ScriptLink2" name="SP.UserProfiles.js" runat="server"
     ondemand="false" localizable="false" loadafterui="true" /> -->
-    
-<script type="text/javascript" src="/_layouts/15/SP.UserProfiles.js"></script>
+
+<!-- <script type="text/javascript" src="/_layouts/15/SP.UserProfiles.js"></script> -->
 
 <h1>WorkOrder System</h1>
 <div id="tabs" style="display: none">

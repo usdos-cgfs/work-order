@@ -63,38 +63,30 @@ function initSal() {
 }
 
 function getUserProperties() {
-  // Replace the placeholder value with the target user's credentials.
-  //var targetUser = 'cgfs\\\\backlunpf';
-  var targetUser = sal.globalConfig.currentUser.get_loginName();
-  //var clientContext = new SP.ClientContext.get_current();
+  var requestHeaders = {
+    Accept: "application/json;odata=verbose",
+    "X-RequestDigest": jQuery("#__REQUESTDIGEST").val(),
+  };
 
-  // Get the current client context and PeopleManager instance.
-  var clientContext = new SP.ClientContext.get_current();
-  var peopleManager = new SP.UserProfiles.PeopleManager(clientContext);
-
-  // Get user properties for the target user.
-  // To get the PersonProperties object for the current user, use the
-  // getMyProperties method.
-  //personProperties = peopleManager.getPropertiesFor(targetUser);
-  let personProperties = new SP.UserProfiles.PeopleManager(
-    clientContext
-  ).getMyProperties();
-
-  function onResolvePersonPropertiesSucceeded() {
-    sal.globalConfig.currentUserPersonProps = this.personProperties;
-  }
-
-  function onResolvePersonPropertiesFailed(sender, args) {
-    console.error("get user request failed: ", args.get_message());
-  }
-
-  let data = { personProperties };
-  // Load the PersonProperties object and send the request.
-  clientContext.load(personProperties);
-  clientContext.executeQueryAsync(
-    Function.createDelegate(data, onResolvePersonPropertiesSucceeded),
-    Function.createDelegate(data, onResolvePersonPropertiesFailed)
-  );
+  jQuery.ajax({
+    url:
+      _spPageContextInfo.webAbsoluteUrl +
+      "/_api/SP.UserProfiles.PeopleManager/GetMyProperties",
+    type: "GET",
+    contentType: "application/json;odata=verbose",
+    headers: requestHeaders,
+    success: function (data) {
+      sal.globalConfig.currentUserProfile = data.d;
+      vm.requestorTelephone(
+        data.d.UserProfileProperties.results.find(
+          (prop) => prop.Key == "WorkPhone"
+        ).Value
+      );
+    },
+    error: function (jqxr, errorCode, errorThrown) {
+      console.error(jqxr.responseText);
+    },
+  });
 }
 
 function m_fnLoadSiteGroups(itemColl) {
