@@ -43,6 +43,15 @@ function initSal() {
   sal.globalConfig.currentContext.executeQueryAsync(
     function () {
       sal.globalConfig.currentUser = user;
+      // SP.SOD.executeOrDelayUntilScriptLoaded(
+      //   getUserProperties,
+      //   "SP.UserProfiles.js"
+      // );
+      SP.SOD.executeFunc(
+        "SP.UserProfiles.js",
+        "SP.UserProfiles",
+        getUserProperties
+      );
       sal.globalConfig.siteGroups = m_fnLoadSiteGroups(siteGroupCollection);
       //alert("User is: " + user.get_title()); //there is also id, email, so this is pretty useful.
     },
@@ -52,6 +61,42 @@ function initSal() {
   );
   // console.log()
 }
+
+function getUserProperties() {
+  // Replace the placeholder value with the target user's credentials.
+  //var targetUser = 'cgfs\\\\backlunpf';
+  var targetUser = sal.globalConfig.currentUser.get_loginName();
+  //var clientContext = new SP.ClientContext.get_current();
+
+  // Get the current client context and PeopleManager instance.
+  var clientContext = new SP.ClientContext.get_current();
+  var peopleManager = new SP.UserProfiles.PeopleManager(clientContext);
+
+  // Get user properties for the target user.
+  // To get the PersonProperties object for the current user, use the
+  // getMyProperties method.
+  //personProperties = peopleManager.getPropertiesFor(targetUser);
+  let personProperties = new SP.UserProfiles.PeopleManager(
+    clientContext
+  ).getMyProperties();
+
+  function onResolvePersonPropertiesSucceeded() {
+    sal.globalConfig.currentUserPersonProps = this.personProperties;
+  }
+
+  function onResolvePersonPropertiesFailed(sender, args) {
+    console.error("get user request failed: ", args.get_message());
+  }
+
+  let data = { personProperties };
+  // Load the PersonProperties object and send the request.
+  clientContext.load(personProperties);
+  clientContext.executeQueryAsync(
+    Function.createDelegate(data, onResolvePersonPropertiesSucceeded),
+    Function.createDelegate(data, onResolvePersonPropertiesFailed)
+  );
+}
+
 function m_fnLoadSiteGroups(itemColl) {
   let m_arrSiteGroups = new Array();
 

@@ -39,6 +39,7 @@
         required: false,
       },
     },
+    
   });
 
   vm.accessTypeOpts = ko.observableArray([

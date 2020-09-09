@@ -30,6 +30,13 @@
 <link rel="stylesheet" href="../SiteAssets/workorder/wo/workorder.css" />
 <!-- common/RDT/app"  -->
 
+<!-- <SharePoint:ScriptLink ID="ScriptLink1" name="SP.js" runat="server"
+    ondemand="false" localizable="false" loadafterui="true" />
+<SharePoint:ScriptLink ID="ScriptLink2" name="SP.UserProfiles.js" runat="server"
+    ondemand="false" localizable="false" loadafterui="true" /> -->
+    
+<script type="text/javascript" src="/_layouts/15/SP.UserProfiles.js"></script>
+
 <h1>WorkOrder System</h1>
 <div id="tabs" style="display: none">
   <div class="ui top attached tabular menu">
