@@ -810,7 +810,7 @@ function koviewmodel() {
       return vps.join(";#");
     },
     write: function (val) {
-      if (val) {
+      if (val.length > 0) {
         console.log("Action Office IDs: ", val[0].get_lookupValue());
         self.requestActionOffices(
           val.map((ao) => {

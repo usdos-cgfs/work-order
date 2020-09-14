@@ -355,6 +355,9 @@ function saveWorkOrder() {
           )
         );
 
+        //Set the action offices
+        vm.requestActionOfficeIds(vm.selectedServiceType().ActionOfficeID);
+
         vm.requestStageNum(1);
         vm.requestStatus("Open");
         var valuePairs = getValuePairs(workOrderListDef.viewFields);

@@ -881,7 +881,7 @@
       >
         Save
       </button>
-      <button
+      <!-- <button
         id="edit-form"
         type="button"
         class="ui basic blue button"
@@ -889,7 +889,7 @@
         data-bind="enable: canEditForm, visible: canEditForm"
       >
         Edit
-      </button>
+      </button> -->
       <!-- <button
         id="close-form"
         type="button"
