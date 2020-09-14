@@ -380,14 +380,6 @@ function saveWorkOrder() {
               } else {
                 onSaveNewWorkOrderMaster();
               }
-
-              createAction(
-                "Created",
-                `The request was submitted with an effective submission date of ${vm
-                  .requestSubmittedDate()
-                  .toDateString()}`,
-                true
-              );
             }
           },
           vm.requestorOffice().Title
@@ -403,6 +395,36 @@ function saveWorkOrder() {
 function onSaveNewWorkOrderMaster(id) {
   console.log("callback this: ", this);
   console.log("callback val: ", id);
+
+  // Create our New Work Order Email
+  let to = vm
+    .requestActionOffices()
+    .map((ao) => vm.configActionOfficeIDs().find((aoid) => aoid.ID == ao.ID))
+    .map((aoids) => aoids.AOGroup);
+
+  let subject = `Work Order -New- ${
+    vm.selectedServiceType().Title
+  } - ${vm.requestID()}`;
+
+  let body =
+    `Greetings Colleagues,<br><br> A new service request has been opened requiring your attention:<br>` +
+    `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
+      vm.selectedServiceType().Title
+    }<br><br>` +
+    `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
+    `${vm.requestLinkAdmin()}`;
+
+  createEmail(to, [], [], subject, body);
+
+  // Create our Action
+  createAction(
+    "Created",
+    `The request was submitted with an effective submission date of ${vm
+      .requestSubmittedDate()
+      .toDateString()}`,
+    true
+  );
+
   viewWorkOrderItem(vm.requestID());
   SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
@@ -611,8 +633,27 @@ function createAssignment() {
           vm.assignAssignee().Title + " assigned",
           true
         );
+
         $("#wo-routing").accordion("open", 0);
         fetchAssignments();
+        // Build our email
+        let to = [vm.assignAssignee().UserAddress];
+
+        let subject = `Work Order -${vm.requestStage().Title}- ${
+          vm.selectedServiceType().Title
+        } - ${vm.requestID()}`;
+
+        let body =
+          `Greetings Colleagues,<br><br> You have been assigned to the following workorder request by your action office assignor:<br>` +
+          `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
+            vm.selectedServiceType().Title
+          }<br><br>` +
+          `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
+          `${vm.requestLinkAdmin()}`;
+
+        createEmail(to, [], [], subject, body);
+
+        // Create Action
         createAction(
           "Assignment",
           `The following Action Office has been assigned to this request: ${
@@ -883,6 +924,30 @@ function pipelineForward() {
     SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
     console.log("pipeline moved to next stage.");
     buildPipelineElement();
+
+    // Build our email
+    let to = [
+      vm
+        .configActionOffices()
+        .find((aoid) => aoid.ID == vm.requestStage().Assignee.get_lookupId())
+        .UserAddress,
+    ];
+
+    let subject = `Work Order -${vm.requestStage().Title}- ${
+      vm.selectedServiceType().Title
+    } - ${vm.requestID()}`;
+
+    let body =
+      `Greetings Colleagues,<br><br> The following service request has changed, requiring your attention:<br>` +
+      `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
+        vm.selectedServiceType().Title
+      }<br><br>` +
+      `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
+      `${vm.requestLinkAdmin()}`;
+
+    createEmail(to, [], [], subject, body);
+
+    // Create the action
     createAction(
       vm.requestStage().Title == "Closed" ? "Closed" : "Progressed",
       `${sal.globalConfig.currentUser.get_title()} has moved the request to stage ${

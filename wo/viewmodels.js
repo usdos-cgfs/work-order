@@ -747,6 +747,22 @@ function koviewmodel() {
   });
 
   /************************************************************
+   * Selected Work Order
+   ************************************************************/
+  self.requestLink = ko.pureComputed(() => {
+    return (
+      _spPageContextInfo.webAbsoluteUrl +
+      `/Pages/app.aspx?tab=order-detail&reqid=${self.requestID()}`
+    );
+  });
+
+  self.requestLinkAdmin = ko.pureComputed(() => {
+    return (
+      _spPageContextInfo.webAbsoluteUrl +
+      `/Pages/admin.aspx?tab=order-detail&reqid=${self.requestID()}`
+    );
+  });
+  /************************************************************
    * Observables for work order header
    ************************************************************/
   self.requestLoaded = ko.observable(new Date());
