@@ -829,6 +829,43 @@ function fetchComments(callback) {
 }
 
 /************************************************************
+ * Email
+ ************************************************************/
+
+function createEmail(to, cc, bcc, subject, body) {
+  let toArr = createEmailAddressee(to);
+  let ccArr = createEmailAddressee(cc);
+  let bccArr = createEmailAddressee(bcc);
+
+  let vp = [
+    ["To", toArr],
+    ["CC", ccArr],
+    ["BCC", bccArr],
+    ["Title", subject],
+    ["Body", body],
+  ];
+  vm.listRefWOEmails().createListItem(
+    vp,
+    () => newEmailCallback(SP.UI.DialogResult.OK, null),
+    vm.requestorOffice().Title
+  );
+}
+
+function createEmailAddressee(arr) {
+  let vps = new Array();
+
+  arr.forEach((ao) => {
+    vps.push(ao.get_lookupId());
+    vps.push(ao.get_lookupValue());
+  });
+
+  return vps.join(";#");
+}
+function newEmailCallback(result, value) {
+  console.log("Email created successfully");
+}
+
+/************************************************************
  * Pipeline
  ************************************************************/
 
