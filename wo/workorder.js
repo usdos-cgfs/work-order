@@ -19,6 +19,7 @@ function initStaticListRefs() {
 
   /* Configuration lists */
   vm.listRefConfigActionOffices(new SPList(configActionOfficesListDef));
+  vm.listRefConfigActionOfficeIDs(new SPList(configActionOfficeIDsListDef));
   vm.listRefConfigHolidays(new SPList(configHolidaysListDef));
   vm.listRefConfigPipelines(new SPList(configPipelinesListDef));
   vm.listRefConfigRequestingOffices(new SPList(configRequestingOfficesListDef));
@@ -96,7 +97,15 @@ function newWorkOrder() {
   //vm.requestID('209Z');
   //fetchAttachments();
   vm.requestorName(sal.globalConfig.currentUser.get_title());
-  vm.requestorTelephone("703-875-7070");
+  if (sal.globalConfig.currentUserProfile) {
+    vm.requestorTelephone(
+      sal.globalConfig.currentUserProfile.UserProfileProperties.results.find(
+        (prop) => prop.Key == "WorkPhone"
+      ).Value
+    );
+  } else {
+    vm.requestorTelephone("");
+  }
   vm.requestorEmail(sal.globalConfig.currentUser.get_email());
   vm.requestStageNum(0);
   vm.requestStatus("Draft");
@@ -152,10 +161,13 @@ function viewWorkOrderItem(woID) {
     /* Fetch the associated service type items */
     if (vm.selectedServiceType().ListDef) {
       viewServiceTypeItem();
+    } else {
+      vm.requestLoaded(new Date());
     }
     buildPipelineElement();
     $(".editable-field").prop("disabled", true);
     vm.tab("order-detail");
+    initUIComponents();
   });
 }
 
@@ -166,13 +178,18 @@ function viewServiceTypeItem() {
     vm.requestID() +
     "</Value></Eq></Where></Query></View>";
   vm.selectedServiceType().listRef.getListItems(serviceTypeCaml, (items) => {
-    let res = items[0];
-    vm.serviceTypeHeader(res);
-    console.log("service type fetched -- setting valuepairs", items);
-    setValuePairs(
-      vm.selectedServiceType().listDef.viewFields,
-      vm.serviceTypeHeader()
-    );
+    if (items[0]) {
+      let res = items[0];
+      vm.requestLoaded(new Date());
+      vm.serviceTypeHeader(res);
+      console.log("service type fetched -- setting valuepairs", items);
+      setValuePairs(
+        vm.selectedServiceType().listDef.viewFields,
+        vm.serviceTypeHeader()
+      );
+    } else {
+      timedNotification("Warning: couldn't find Service Type Info");
+    }
   });
 }
 
@@ -338,6 +355,9 @@ function saveWorkOrder() {
           )
         );
 
+        //Set the action offices
+        vm.requestActionOfficeIds(vm.selectedServiceType().ActionOfficeID);
+
         vm.requestStageNum(1);
         vm.requestStatus("Open");
         var valuePairs = getValuePairs(workOrderListDef.viewFields);
@@ -348,28 +368,23 @@ function saveWorkOrder() {
           valuePairs,
           function (id) {
             console.log("saved", id);
+            //Once we've sucessfully saved the master document
+            if (id) {
+              if (typeValuePairs) {
+                // Save the workorder specific info here:
+                vm.selectedServiceType().listRef.createListItem(
+                  typeValuePairs,
+                  onSaveNewWorkOrderMaster,
+                  vm.requestorOffice().Title
+                );
+              } else {
+                onSaveNewWorkOrderMaster();
+              }
+            }
           },
           vm.requestorOffice().Title
         );
 
-        if (typeValuePairs) {
-          // Save the workorder specific info here:
-          vm.selectedServiceType().listRef.createListItem(
-            typeValuePairs,
-            onSaveNewWorkOrderMaster,
-            vm.requestorOffice().Title
-          );
-        } else {
-          onSaveNewWorkOrderMaster();
-        }
-
-        createAction(
-          "Created",
-          `The request was submitted with an effective submission date of ${vm
-            .requestSubmittedDate()
-            .toDateString()}`,
-          true
-        );
         break;
     }
   } else {
@@ -380,6 +395,36 @@ function saveWorkOrder() {
 function onSaveNewWorkOrderMaster(id) {
   console.log("callback this: ", this);
   console.log("callback val: ", id);
+
+  // Create our New Work Order Email
+  let to = vm
+    .requestActionOffices()
+    .map((ao) => vm.configActionOfficeIDs().find((aoid) => aoid.ID == ao.ID))
+    .map((aoids) => aoids.AOGroup);
+
+  let subject = `Work Order -New- ${
+    vm.selectedServiceType().Title
+  } - ${vm.requestID()}`;
+
+  let body =
+    `Greetings Colleagues,<br><br> A new service request has been opened requiring your attention:<br>` +
+    `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
+      vm.selectedServiceType().Title
+    }<br><br>` +
+    `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
+    `${vm.requestLinkAdmin()}`;
+
+  createEmail(to, [], [], subject, body);
+
+  // Create our Action
+  createAction(
+    "Created",
+    `The request was submitted with an effective submission date of ${vm
+      .requestSubmittedDate()
+      .toDateString()}`,
+    true
+  );
+
   viewWorkOrderItem(vm.requestID());
   SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
@@ -451,6 +496,11 @@ function fetchConfigListData(callback) {
   /* Retrieve all data from our config lists */
   vm.listRefConfigActionOffices().getListItems("<Query></Query>", (items) => {
     vm.configActionOffices(items);
+    vm.incLoadedListItems();
+  });
+
+  vm.listRefConfigActionOfficeIDs().getListItems("<Query></Query>", (items) => {
+    vm.configActionOfficeIDs(items);
     vm.incLoadedListItems();
   });
 
@@ -541,6 +591,17 @@ function fetchAttachments() {
 /************************************************************
  * Assignments
  ************************************************************/
+function newOfficeAssignment() {
+  // Takes a new action office and adds it to the request assigned offices
+  vm.requestActionOffices.push(vm.assignOfficeAssignee());
+
+  vm.listRefWO().updateListItem(
+    vm.requestHeader().ID,
+    [["ActionOffices", vm.requestActionOfficeIds()]],
+    () => vm.assignOfficeAssignee(null)
+  );
+}
+
 function newAssignment(role) {
   // Open the new assignments forms
   vm.listRefAssignment().showModal(
@@ -572,8 +633,27 @@ function createAssignment() {
           vm.assignAssignee().Title + " assigned",
           true
         );
+
         $("#wo-routing").accordion("open", 0);
         fetchAssignments();
+        // Build our email
+        let to = [vm.assignAssignee().UserAddress];
+
+        let subject = `Work Order -${vm.requestStage().Title}- ${
+          vm.selectedServiceType().Title
+        } - ${vm.requestID()}`;
+
+        let body =
+          `Greetings Colleagues,<br><br> You have been assigned to the following workorder request by your action office assignor:<br>` +
+          `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
+            vm.selectedServiceType().Title
+          }<br><br>` +
+          `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
+          `${vm.requestLinkAdmin()}`;
+
+        createEmail(to, [], [], subject, body);
+
+        // Create Action
         createAction(
           "Assignment",
           `The following Action Office has been assigned to this request: ${
@@ -593,6 +673,13 @@ function fetchAssignments() {
     vm.requestID() +
     "</Value></Eq></Where></Query></View>";
   vm.listRefAssignment().getListItems(camlq, function (assignments) {
+    // Let's connect our Action offices here.
+    assignments.forEach(
+      (assignment) =>
+        (assignment.actionOffice = vm
+          .configActionOffices()
+          .find((ao) => ao.ID == assignment.ActionOffice.get_lookupId()))
+    );
     vm.requestAssignees(assignments);
   });
 }
@@ -783,6 +870,43 @@ function fetchComments(callback) {
 }
 
 /************************************************************
+ * Email
+ ************************************************************/
+
+function createEmail(to, cc, bcc, subject, body) {
+  let toArr = createEmailAddressee(to);
+  let ccArr = createEmailAddressee(cc);
+  let bccArr = createEmailAddressee(bcc);
+
+  let vp = [
+    ["To", toArr],
+    ["CC", ccArr],
+    ["BCC", bccArr],
+    ["Title", subject],
+    ["Body", body],
+  ];
+  vm.listRefWOEmails().createListItem(
+    vp,
+    () => newEmailCallback(SP.UI.DialogResult.OK, null),
+    vm.requestorOffice().Title
+  );
+}
+
+function createEmailAddressee(arr) {
+  let vps = new Array();
+
+  arr.forEach((ao) => {
+    vps.push(ao.get_lookupId());
+    vps.push(ao.get_lookupValue());
+  });
+
+  return vps.join(";#");
+}
+function newEmailCallback(result, value) {
+  console.log("Email created successfully");
+}
+
+/************************************************************
  * Pipeline
  ************************************************************/
 
@@ -800,6 +924,30 @@ function pipelineForward() {
     SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
     console.log("pipeline moved to next stage.");
     buildPipelineElement();
+
+    // Build our email
+    let to = [
+      vm
+        .configActionOffices()
+        .find((aoid) => aoid.ID == vm.requestStage().Assignee.get_lookupId())
+        .UserAddress,
+    ];
+
+    let subject = `Work Order -${vm.requestStage().Title}- ${
+      vm.selectedServiceType().Title
+    } - ${vm.requestID()}`;
+
+    let body =
+      `Greetings Colleagues,<br><br> The following service request has changed, requiring your attention:<br>` +
+      `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
+        vm.selectedServiceType().Title
+      }<br><br>` +
+      `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
+      `${vm.requestLinkAdmin()}`;
+
+    createEmail(to, [], [], subject, body);
+
+    // Create the action
     createAction(
       vm.requestStage().Title == "Closed" ? "Closed" : "Progressed",
       `${sal.globalConfig.currentUser.get_title()} has moved the request to stage ${
@@ -839,7 +987,6 @@ function initApp() {
 
   // Initialize ViewModel
   vm = new koviewmodel();
-  ko.applyBindings(vm);
 
   // Setup models for each of the config lists we may connect to
   initStaticListRefs();
@@ -856,50 +1003,54 @@ function initApp() {
 function initComplete() {
   //Initialize the rest of our list references
   initServiceTypeListRefs();
-  initUIComponents();
   initTemplates();
-  //Initialization complete: load the current tab.
+
+  //Parse Page Params
+  var path = window.location.pathname;
+  vm.page(path.split("/").pop());
+
+  //URL Params
   var href = window.location.href.toLowerCase();
   var hash = window.location.hash.replace("#", "");
 
   const queryString = window.location.search;
-
   const urlParams = new URLSearchParams(queryString);
 
-  //vm.tab(urlParams.get('page_type'))
+  let tab = urlParams.get("tab");
+  let id = urlParams.get("reqid");
+  let stypeId = urlParams.get("stype");
+  let stype = null;
 
-  // check that we are on the app page
-  if (
-    href.indexOf("app.aspx") !== -1 ||
-    href.indexOf("workorder.aspx") !== -1
-  ) {
-    vm.page("app");
-    fetchAllOrders(function () {
-      let tab = urlParams.get("tab");
-      let id = urlParams.get("reqid");
-      let stypeId = urlParams.get("stype");
-      let stype = null;
-      if (stypeId) {
-        stype = vm
-          .configServiceTypes()
-          .find((serviceType) => serviceType.UID == stypeId);
-      }
+  //Both admins and users need all orders available to them.
+  fetchAllOrders(function () {
+    if (id) {
+      viewWorkOrderItem(id);
+    }
+    //If we're on a separate tab, switch back to the tab from the url.
+    vm.tab(tab);
 
-      if (id) {
-        // Viewing workorder now
-        console.log("Viewing the workorder: ", id);
-        viewWorkOrderItem(id);
-      } else if (tab) {
-        vm.tab(tab);
-        //vm.lookupOrderUpdate(stype);
-        //$('.ui.menu').find('.item').tab('change tab', 'open-orders');
-      } else {
-        vm.tab("my-orders");
-      }
-      fetchAllAssignments();
-      SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
-    });
-  }
+    // check that we are on the app page
+    switch (vm.page()) {
+      case "app.aspx":
+        if (!tab) {
+          vm.tab("my-orders");
+        }
+        break;
+
+      case "admin.aspx":
+        fetchAllAssignments();
+        if (!tab) {
+          vm.tab("assigned-orders");
+        }
+        break;
+
+      default:
+    }
+
+    ko.applyBindings(vm);
+    initUIComponents();
+    SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+  });
   $("#tabs").show();
 }
 

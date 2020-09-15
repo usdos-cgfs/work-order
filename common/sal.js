@@ -43,6 +43,15 @@ function initSal() {
   sal.globalConfig.currentContext.executeQueryAsync(
     function () {
       sal.globalConfig.currentUser = user;
+      // SP.SOD.executeOrDelayUntilScriptLoaded(
+      //   getUserProperties,
+      //   "SP.UserProfiles.js"
+      // );
+      SP.SOD.executeFunc(
+        "SP.UserProfiles.js",
+        "SP.UserProfiles",
+        getUserProperties
+      );
       sal.globalConfig.siteGroups = m_fnLoadSiteGroups(siteGroupCollection);
       //alert("User is: " + user.get_title()); //there is also id, email, so this is pretty useful.
     },
@@ -52,6 +61,34 @@ function initSal() {
   );
   // console.log()
 }
+
+function getUserProperties() {
+  var requestHeaders = {
+    Accept: "application/json;odata=verbose",
+    "X-RequestDigest": jQuery("#__REQUESTDIGEST").val(),
+  };
+
+  jQuery.ajax({
+    url:
+      _spPageContextInfo.webAbsoluteUrl +
+      "/_api/SP.UserProfiles.PeopleManager/GetMyProperties",
+    type: "GET",
+    contentType: "application/json;odata=verbose",
+    headers: requestHeaders,
+    success: function (data) {
+      sal.globalConfig.currentUserProfile = data.d;
+      vm.requestorTelephone(
+        data.d.UserProfileProperties.results.find(
+          (prop) => prop.Key == "WorkPhone"
+        ).Value
+      );
+    },
+    error: function (jqxr, errorCode, errorThrown) {
+      console.error(jqxr.responseText);
+    },
+  });
+}
+
 function m_fnLoadSiteGroups(itemColl) {
   let m_arrSiteGroups = new Array();
 

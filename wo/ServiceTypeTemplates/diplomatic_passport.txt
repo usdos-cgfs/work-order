@@ -30,12 +30,12 @@
         required: false,
       },
       Departure: {
-        type: "Text",
+        type: "DateTime",
         koMap: "diplomaticPassportDeparture",
         required: false,
       },
       Return: {
-        type: "Text",
+        type: "DateTime",
         koMap: "diplomaticPassportReturn",
         required: false,
       },
@@ -50,7 +50,7 @@
         required: false,
       },
       Expiration: {
-        type: "Text",
+        type: "DateTime",
         koMap: "diplomaticPassportExpiration",
         required: false,
       },

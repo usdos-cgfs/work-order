@@ -43,6 +43,10 @@
   vm.uncategorizedIsITSoftware = ko.observable();
   vm.uncategorizedIsOverPrice = ko.observable();
 
+  vm.uncategorizedIsOverPrice.subscribe((isOverPrice) =>
+    vm.requestShowDescription(isOverPrice == "Yes" ? false : true)
+  );
+
   vm.uncategorizedYesNo = ko.observableArray(["Yes", "No"]);
 </script>
 
@@ -50,7 +54,7 @@
   <div class="ui grid">
     <div class="eight wide column">
       <div class="ui form">
-        <div data-bind="currentView() == 'new'">
+        <!-- <div data-bind="currentView() == 'new'"> -->
         <div class="field" >
           <label>Is this an Office Supply?</label>
           <select
@@ -113,7 +117,7 @@
           data-bind="visible: uncategorizedIsOverPrice() == 'No' || currentView() != 'new'""
         >
           <div class="eight wide field">
-            <label> Software Name<span class="required">*</span>: </label>
+            <label>Item Name<span class="required">*</span>: </label>
             <input
               type="text"
               data-bind="value: uncategorizedName, disable: currentView()=='view'"
@@ -143,7 +147,7 @@
           type="button"
           class="ui button primary"
           onclick="vm.setServiceTypeByUID('supplies')"
-        >
+        >Office Supplies
           <i
             class="fa"
             data-bind="class: getServiceTypeByUID('supplies').Icon"
@@ -156,10 +160,10 @@
           type="button"
           class="ui button primary"
           onclick="vm.setServiceTypeByUID('new_subscription')"
-        >
+        >Subscriptions
           <i
             class="fa"
-            data-bind="class: getServiceTypeByUID('new_subscription').Icon"
+            data-bind="class: getServiceTypeByUID('news_subscription').Icon"
           ></i>
         </div>
       </div>
@@ -169,7 +173,7 @@
           type="button"
           class="ui button primary"
           onclick="vm.setServiceTypeByUID('it_hardware')"
-        >
+        >IT Hardware
           <i
             class="fa"
             data-bind="class: getServiceTypeByUID('it_hardware').Icon"
@@ -182,10 +186,23 @@
           type="button"
           class="ui button primary"
           onclick="vm.setServiceTypeByUID('it_software')"
-        >
+        >IT Software
           <i
             class="fa"
             data-bind="class: getServiceTypeByUID('it_software').Icon"
+          ></i>
+        </div>
+      </div>
+      <div class="row" data-bind="visible: uncategorizedIsITSoftware() == 'Yes'">
+        <h3>Please click this link to change to a Requisition request:</h3>
+        <div
+          type="button"
+          class="ui button primary"
+          onclick="vm.setServiceTypeByUID('requisition')"
+        >Requisition
+          <i
+            class="fa"
+            data-bind="class: getServiceTypeByUID('requisition').Icon"
           ></i>
         </div>
       </div>

@@ -2,895 +2,6 @@
 /************************************************************
  * Generic Viewmodels
  ************************************************************/
-woViews = {
-  access: {
-    name: "Building Access",
-    spid: 2,
-    description:
-      '<div class="ui placeholder"><div class="paragraph"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div></div></div>',
-    icon: "fa-check-double",
-    daysToClose: 3,
-    id: "#wo-access",
-    hasAttachments: true,
-    attachmentDesc: "<p>Please Add building access request attachments.</p>",
-    pipeline: {
-      0: {
-        type: "Editing",
-        displayName: "New Work Order",
-        progress: 0,
-      },
-      1: {
-        type: "Approval",
-        displayName: "Manager/Supervisor Approval",
-        isActionable: false,
-        progress: 30,
-      },
-      2: {
-        type: "Approval",
-        displayName: "DED Approval",
-        isActionable: false,
-        progress: 30,
-      },
-      3: {
-        type: "Action",
-        displayName: "CGFS Admin Services",
-        isActionable: false,
-        progress: 60,
-      },
-      10: {
-        type: "Closed",
-        displayName: "Completed",
-        progress: 0,
-      },
-    },
-    listDef: {
-      name: "st_access",
-      title: "st_access",
-      viewFields: {
-        ID: { type: "Text", koMap: "empty", required: false },
-        Title: { type: "Text", koMap: "requestID", required: false },
-        AccessType: { type: "Text", koMap: "accessType", required: false },
-        EmployeeType: {
-          type: "Text",
-          koMap: "accessEmployeeType",
-          required: false,
-        },
-        FullName: { type: "Text", koMap: "accessFullName", required: false },
-        BadgeNum: { type: "Text", koMap: "accessBadgeNum", required: false },
-        ExpirationDate: {
-          type: "Text",
-          koMap: "accessExpirationDate",
-          required: false,
-        },
-        Locations: { type: "Text", koMap: "accessLocations", required: false },
-        Justification: {
-          type: "Text",
-          koMap: "accessJustification",
-          required: false,
-        },
-        Description: { type: "Text", koMap: "accessDesc" },
-        SpecialInstructions: {
-          type: "Text",
-          koMap: "accessSpecInst",
-          required: false,
-        },
-      },
-    },
-  },
-  diplomatic_passport: {
-    name: "Diplomatic Passport",
-    spid: 4,
-    description:
-      "<div><p>Complete this form to obtain a new diplomatic passport or renew an existing one</p></div>",
-    icon: "fa-passport",
-    daysToClose: 5,
-    id: "#wo-diplomatic-passport",
-    hasAttachments: true,
-    attachmentDesc:
-      '<p>Please attach a completed and signed copy of the appropriate form for this service type:</p><ul><li>New: <a target="blank" href="https://mydata.service-now.com/sys_attachment.do?sys_id=d5fc826adb769300c4c7708c96193c">DS-11</a></li><li>Renewal: <a target="blank">DS-82</a></li></ul><p>OR provide to CGFS/EX/ADMIN by fax (703-875-5547), email (<a target="blank" href="mailto:rmadmin@state.gov">rmadmin@state.gov</a>), or hand delivered.</p>',
-    hasStages: true,
-    pipeline: {
-      0: {
-        type: "Editing",
-        displayName: "New Work Order",
-        progress: 0,
-      },
-      1: {
-        type: "Approval",
-        displayName: "Managing Director Approval",
-        progress: 20,
-      },
-      2: {
-        type: "Approval",
-        displayName: "DED Approval",
-        adjudicator: "washdc\\backlundpf",
-        progress: 40,
-      },
-      3: {
-        type: "Action",
-        displayName: "Card Holder Purchasing",
-        progress: 90,
-      },
-      10: {
-        type: "Closed",
-        displayName: "Completed",
-        progress: 100,
-      },
-    },
-    listDef: {
-      name: "st_diplomatic_passport",
-      title: "st_diplomatic_passport",
-      viewFields: {
-        ID: { type: "Text", koMap: "empty", required: false },
-        Title: { type: "Text", koMap: "requestID", required: false },
-        RequestType: {
-          type: "Text",
-          koMap: "diplomaticPassportSelectedType",
-          required: false,
-        },
-        Grade: {
-          type: "Text",
-          koMap: "diplomaticPassportGrade",
-          required: false,
-        },
-        DestinationCity: {
-          type: "Text",
-          koMap: "diplomaticPassportDestinationCity",
-          required: false,
-        },
-        DestinationCountry: {
-          type: "Text",
-          koMap: "diplomaticPassportDestinationCountry",
-          required: false,
-        },
-        Departure: {
-          type: "Text",
-          koMap: "diplomaticPassportDeparture",
-          required: false,
-        },
-        Return: {
-          type: "Text",
-          koMap: "diplomaticPassportReturn",
-          required: false,
-        },
-        Purpose: {
-          type: "Text",
-          koMap: "diplomaticPassportPurpose",
-          required: false,
-        },
-        BirthLocation: {
-          type: "Text",
-          koMap: "diplomaticPassportBirthLocation",
-          required: false,
-        },
-        Expiration: {
-          type: "Text",
-          koMap: "diplomaticPassportExpiration",
-          required: false,
-        },
-      },
-    },
-  },
-  it_hardware: {
-    name: "IT Hardware",
-    spid: 8,
-    description:
-      "<div><p>Complete this request to obtain new IT hardware</p></div>",
-    icon: "fa-laptop",
-    daysToClose: 5,
-    id: "#wo-it-hardware",
-    hasAttachments: true,
-    attachmentDesc: "<p>Please attach a quote for your purchase request:</p>",
-    hasStages: true,
-    pipeline: {
-      0: {
-        type: "Editing",
-        displayName: "New Work Order",
-        progress: 0,
-      },
-      1: {
-        type: "Approval",
-        displayName: "Managing Director Approval",
-        progress: 20,
-      },
-      2: {
-        type: "Approval",
-        displayName: "DED Approval",
-        adjudicator: "washdc\\backlundpf",
-        progress: 40,
-      },
-      3: {
-        type: "Action",
-        displayName: "Card Holder Purchasing",
-        progress: 90,
-      },
-      10: {
-        type: "Closed",
-        displayName: "Completed",
-        progress: 100,
-      },
-    },
-    listDef: {
-      name: "st_IT_hardware",
-      title: "st_IT_hardware",
-      viewFields: {
-        ID: {
-          type: "Text",
-          koMap: "empty",
-        },
-        Title: {
-          type: "Text",
-          koMap: "requestID",
-          required: false,
-        },
-        Name: {
-          type: "Text",
-          koMap: "itHardwareName",
-          required: false,
-          displayName: "Hardware Name",
-        },
-        Quantity: {
-          type: "Text",
-          koMap: "itHardwareQuantity",
-          required: false,
-          displayName: "Quantity",
-        },
-        POCName: {
-          type: "Text",
-          koMap: "itHardwarePOCName",
-          required: true,
-          displayName: "POC Name",
-        },
-        Cost: {
-          type: "Text",
-          koMap: "itHardwareCost",
-          required: true,
-          displayName: "Cost",
-        },
-      },
-    },
-  },
-  locksmith: {
-    name: "Locksmith Services",
-    spid: 9,
-    description:
-      "<div><p>Complete this request to order locksmith services.</p></div>",
-    icon: "fa-key",
-    daysToClose: 5,
-    id: "#wo-locksmith-passport",
-    hasAttachments: true,
-    attachmentDesc: "<p>Attachments:</p>",
-    hasStages: true,
-    pipeline: {
-      0: {
-        type: "Editing",
-        displayName: "New Work Order",
-        progress: 0,
-      },
-      1: {
-        type: "Approval",
-        displayName: "Managing Director Approval",
-        progress: 20,
-      },
-      2: {
-        type: "Approval",
-        displayName: "DED Approval",
-        adjudicator: "washdc\\backlundpf",
-        progress: 40,
-      },
-      3: {
-        type: "Action",
-        displayName: "Card Holder Purchasing",
-        progress: 90,
-      },
-      10: {
-        type: "Closed",
-        displayName: "Completed",
-        progress: 100,
-      },
-    },
-    listDef: {
-      name: "st_locksmith",
-      title: "st_locksmith",
-      viewFields: {
-        ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "requestID", required: false },
-        Location: { type: "Text", koMap: "locksmithLocation", required: false },
-        LockType: { type: "Text", koMap: "locksmithLockType", required: false },
-        Justification: {
-          type: "Text",
-          koMap: "locksmithJustification",
-          required: false,
-        },
-      },
-    },
-  },
-  network_drop: {
-    name: "Network Drops",
-    spid: 12,
-    description:
-      "<div><p>Complete this request for a new network drop.</p></div>",
-    icon: "fa-ethernet",
-    daysToClose: 5,
-    id: "#wo-network-drop",
-    hasAttachments: true,
-    attachmentDesc: "<p>Attachments:</p>",
-    hasStages: true,
-    pipeline: {
-      0: {
-        type: "Editing",
-        displayName: "New Work Order",
-        progress: 0,
-      },
-      1: {
-        type: "Approval",
-        displayName: "Managing Director Approval",
-        progress: 20,
-      },
-      10: {
-        type: "Closed",
-        displayName: "Completed",
-        progress: 100,
-      },
-    },
-    listDef: {
-      name: "st_network_drop",
-      title: "st_network_drop",
-      viewFields: {
-        ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "requestID", required: false },
-        Description: {
-          type: "Text",
-          koMap: "networkDropDescription",
-          required: false,
-        },
-      },
-    },
-  },
-  news_subscription: {
-    name: "Newspapers and Subscriptions",
-    spid: 13,
-    description:
-      "<div><p>Complete this request for a new newpaper subscriptions.</p></div>",
-    icon: "fa-newspaper",
-    daysToClose: 5,
-    id: "#wo-news-subscription",
-    hasAttachments: true,
-    attachmentDesc:
-      "<p>A proper quote contains:</p><ul><li>Vendor Name</li><li>Item Name (including Item Number)</li><li>Quantity</li><li>Cost</li></ul>",
-    hasStages: true,
-    pipeline: {
-      0: {
-        type: "Editing",
-        displayName: "New Work Order",
-        progress: 0,
-      },
-      1: {
-        type: "Approval",
-        displayName: "Managing Director Approval",
-        progress: 20,
-      },
-      10: {
-        type: "Closed",
-        displayName: "Completed",
-        progress: 100,
-      },
-    },
-    listDef: {
-      name: "st_news_subscription",
-      title: "st_news_subscription",
-      viewFields: {
-        ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "requestID", required: false },
-        SubName: { type: "Text", koMap: "newsSubName", required: false },
-        Quantity: { type: "Text", koMap: "newsSubQuantity", required: false },
-      },
-    },
-  },
-  office_furniture: {
-    name: "Office Furniture",
-    spid: 15,
-    description:
-      "<div><p>Complete this request for Office Furniture requests.</p></div>",
-    icon: "fa-chair",
-    daysToClose: 5,
-    id: "#wo-office-furniture",
-    hasAttachments: true,
-    attachmentDesc:
-      "<p>A proper quote contains:</p><ul><li>Vendor Name</li><li>Item Name (including Item Number)</li><li>Quantity</li><li>Cost</li></ul>",
-    hasStages: true,
-    pipeline: {
-      0: {
-        type: "Editing",
-        displayName: "New Work Order",
-        progress: 0,
-      },
-      1: {
-        type: "Approval",
-        displayName: "Managing Director Approval",
-        progress: 20,
-      },
-      10: {
-        type: "Closed",
-        displayName: "Completed",
-        progress: 100,
-      },
-    },
-    listDef: {
-      name: "st_office_furniture",
-      title: "st_office_furniture",
-      viewFields: {
-        ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "requestID", required: false },
-        Description: {
-          type: "Text",
-          koMap: "officeFurnitureDesc",
-          required: false,
-        },
-      },
-    },
-  },
-  pu10k: {
-    name: "Purchase Under 10k",
-    description:
-      "<div><p>Purchases Under 10k require the following:</p><ul><li>Quote</li><li>Description</li></ul></div>",
-    //icon: '<i class="fa fa-credit-card fa-5x" aria-hidden="true"></i>',
-    icon: "fa-credit-card",
-    daysToClose: 5,
-    id: "#wo-pu10k",
-    hasAttachments: true,
-    attachmentDesc: "<p>Please attach the quote for your purchase request.</p>",
-    hasStages: true,
-    pipeline: {
-      0: {
-        type: "Editing",
-        displayName: "New Work Order",
-        progress: 0,
-      },
-      1: {
-        type: "Approval",
-        displayName: "Managing Director Approval",
-        progress: 20,
-      },
-      2: {
-        type: "Approval",
-        displayName: "DED Approval",
-        adjudicator: "washdc\\backlundpf",
-        progress: 40,
-      },
-      3: {
-        type: "Action",
-        displayName: "Card Holder Purchasing",
-        progress: 90,
-      },
-      10: {
-        type: "Closed",
-        displayName: "Completed",
-        progress: 100,
-      },
-    },
-    listDef: {
-      name: "st_pu10k",
-      title: "st_pu10k",
-      viewFields: {
-        ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "requestID", required: false },
-        Description: {
-          type: "Text",
-          koMap: "pu10kDescription",
-          required: false,
-        },
-        CostEst: { type: "Text", koMap: "pu10kCostEst", required: false },
-        CurrentStage: { type: "Text", koMap: "pu10kStage", required: false },
-      },
-    },
-  },
-  tel: {
-    name: "Telephone",
-    spid: 19,
-    description:
-      '<div class="ui placeholder"><div class="paragraph"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div></div></div>',
-    icon: "fa-phone",
-    daysToClose: 2,
-    id: "#wo-tel",
-    hasAttachments: true,
-    attachmentDesc:
-      "<p>Attach Approvals - This work order can not be submitted until approved email is uploaded.</p>",
-    hasStages: true,
-    pipeline: {
-      0: {
-        type: "Editing",
-        displayName: "New Work Order",
-        progress: 0,
-      },
-      1: {
-        type: "Approval",
-        displayName: "Manager/Supervisor Approval",
-        isActionable: false,
-        progress: 30,
-      },
-      2: {
-        type: "Action",
-        displayName: "CGFS Admin Services",
-        isActionable: false,
-        progress: 60,
-      },
-      10: {
-        type: "Closed",
-        displayName: "Completed",
-        progress: 0,
-      },
-    },
-    listDef: {
-      name: "st_telephone",
-      title: "st_telephone",
-      viewFields: {
-        ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "requestID", required: false },
-        PhoneNum: { type: "Text", koMap: "telPhoneNum", required: false },
-        Location: { type: "Text", koMap: "telLocation", required: false },
-        RequestType: {
-          type: "Text",
-          koMap: "telSelectedType",
-          required: false,
-        },
-        To: { type: "Text", koMap: "telTo", required: false },
-        From: { type: "Text", koMap: "telFrom", required: false },
-        Description: { type: "Text", koMap: "telDesc", required: false },
-      },
-    },
-  },
-  presentation: {
-    name: "Presentation",
-    spid: 16,
-    description:
-      '<div class="ui placeholder"><div class="paragraph"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div></div></div>',
-    icon: "fa-desktop",
-    daysToClose: 1,
-    id: "#wo-presentation",
-    hasAttachments: false,
-    pipeline: {
-      0: {
-        type: "Editing",
-        displayName: "New Work Order",
-        progress: 0,
-      },
-      1: {
-        type: "Approval",
-        displayName: "Manager/Supervisor Approval",
-        isActionable: false,
-        progress: 30,
-      },
-      2: {
-        type: "Action",
-        displayName: "CGFS Admin Services",
-        isActionable: false,
-        progress: 60,
-      },
-      10: {
-        type: "Closed",
-        displayName: "Completed",
-        progress: 0,
-      },
-    },
-    listDef: {
-      name: "st_presentation",
-      title: "st_presentation",
-      viewFields: {
-        ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "empty" },
-      },
-    },
-  },
-  property: {
-    name: "Property/Asset Management",
-    description:
-      '<div class="ui placeholder"><div class="paragraph"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div></div></div>',
-    icon: "fa-warehouse",
-    daysToClose: 5,
-    id: "#wo-property",
-    hasAttachments: true,
-    attachmentDesc: "<p>Please attach the Recieving Report.</p>",
-    hasStages: true,
-    pipeline: {
-      0: {
-        type: "Editing",
-        displayName: "New Work Order",
-        progress: 0,
-      },
-      1: {
-        type: "Approval",
-        displayName: "Managing Director Approval",
-        progress: 20,
-      },
-      2: {
-        type: "Approval",
-        displayName: "DED Approval",
-        adjudicator: "washdc\\backlundpf",
-        progress: 40,
-      },
-      3: {
-        type: "Action",
-        displayName: "CGFS Admin Services",
-        isActionable: false,
-        progress: 60,
-      },
-      10: {
-        type: "Closed",
-        displayName: "Completed",
-        progress: 100,
-      },
-    },
-    listDef: {
-      name: "st_property",
-      title: "st_property",
-      viewFields: {
-        ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "requestID", required: false },
-        PropertyTransfer: {
-          type: "Bool",
-          koMap: "propertyTransfer",
-          required: false,
-        },
-        ExcessProperty: {
-          type: "Bool",
-          koMap: "propertyExcess",
-          required: false,
-        },
-        RecievingReport: {
-          type: "Text",
-          koMap: "propertyRecievingReport",
-          required: false,
-        },
-        SerialNumber: {
-          type: "Text",
-          koMap: "propertySerialNumber",
-          required: false,
-        },
-        PropertyLocation: {
-          type: "Text",
-          koMap: "propertyLocation",
-          required: false,
-        },
-      },
-    },
-  },
-  facilities: {
-    name: "Facilities/Building Services",
-    spid: 3,
-    description:
-      '<div class="ui placeholder"><div class="paragraph"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div></div></div>',
-    icon: "fa-tools",
-    daysToClose: 5,
-    id: "#wo-facilities",
-    hasAttachments: true,
-    attachmentDesc: "<p>Please add Facilities/Building attachments.</p>",
-    hasStages: true,
-    pipeline: {
-      0: {
-        type: "Editing",
-        displayName: "New Work Order",
-        progress: 0,
-      },
-      1: {
-        type: "Approval",
-        displayName: "Managing Director Approval",
-        progress: 20,
-      },
-      2: {
-        type: "Approval",
-        displayName: "DED Approval",
-        adjudicator: "washdc\\backlundpf",
-        progress: 40,
-      },
-      3: {
-        type: "Action",
-        displayName: "CGFS Admin Services",
-        isActionable: false,
-        progress: 60,
-      },
-      10: {
-        type: "Closed",
-        displayName: "Completed",
-        progress: 100,
-      },
-    },
-    listDef: {
-      name: "st_facilities",
-      title: "st_facilities",
-      viewFields: {
-        ID: { type: "Text", koMap: "empty", required: false },
-        Title: { type: "Text", koMap: "requestID", required: false },
-        Services: { type: "Text", koMap: "facilitiesService", required: false },
-        Description: { type: "Text", koMap: "facilitiesDesc", required: false },
-        Location: { type: "Text", koMap: "facilitiesLoc", required: false },
-        SpecialAccomodation: {
-          type: "Bool",
-          koMap: "facilitiesSpecAcc",
-          required: false,
-        },
-        SpecialInstructions: {
-          type: "Text",
-          koMap: "facilitiesSpecInst",
-          required: false,
-        },
-      },
-    },
-  },
-  print: {
-    name: "GPO Print Request",
-    description:
-      '<div class="ui placeholder"><div class="paragraph"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div></div></div>',
-    icon: "fa-print",
-    daysToClose: 5,
-    id: "#wo-print",
-    hasAttachments: true,
-    attachmentDesc: "<p>Please add print request attachments.</p>",
-    hasStages: true,
-    pipeline: {
-      0: {
-        type: "Editing",
-        displayName: "New Work Order",
-        progress: 0,
-      },
-      1: {
-        type: "Approval",
-        displayName: "Managing Director Approval",
-        progress: 20,
-      },
-      2: {
-        type: "Approval",
-        displayName: "DED Approval",
-        adjudicator: "washdc\\backlundpf",
-        progress: 40,
-      },
-      3: {
-        type: "Action",
-        displayName: "CGFS Admin Services",
-        isActionable: false,
-        progress: 60,
-      },
-      10: {
-        type: "Closed",
-        displayName: "Completed",
-        progress: 100,
-      },
-    },
-    listDef: {
-      name: "st_print",
-      title: "st_print",
-      viewFields: {
-        ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "requestID", required: false },
-        DateNeeded: {
-          type: "DateTime",
-          koMap: "printDateNeeded",
-          required: false,
-        },
-        Quantity: { type: "Text", koMap: "printQuantity", required: false },
-        Description: { type: "Text", koMap: "printDesc", required: false },
-        SpecialInstructions: {
-          type: "Text",
-          koMap: "printSpecialInst",
-          required: false,
-        },
-      },
-    },
-  },
-  supplies: {
-    name: "Office Supplies",
-    spid: 15,
-    description:
-      '<div class="ui placeholder"><div class="paragraph"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div></div></div>',
-    icon: "fa-paperclip",
-    daysToClose: 5,
-    id: "#wo-supplies",
-    hasAttachments: true,
-    attachmentDesc: "<p>Add any attachments for printing.</p>",
-    hasStages: true,
-    pipeline: {
-      0: {
-        type: "Editing",
-        displayName: "New Work Order",
-        progress: 0,
-      },
-      1: {
-        type: "Approval",
-        displayName: "Managing Director Approval",
-        progress: 20,
-      },
-      2: {
-        type: "Approval",
-        displayName: "DED Approval",
-        adjudicator: "washdc\\backlundpf",
-        progress: 40,
-      },
-      3: {
-        type: "Action",
-        displayName: "CGFS Admin Services",
-        isActionable: false,
-        progress: 60,
-      },
-      10: {
-        type: "Closed",
-        displayName: "Completed",
-        progress: 100,
-      },
-    },
-    listDef: {
-      name: "st_supplies",
-      title: "st_supplies",
-      viewFields: {
-        ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "requestID", required: false },
-        DateNeeded: {
-          type: "DateTime",
-          koMap: "suppliesDateNeeded",
-          required: false,
-        },
-        Name: { type: "Text", koMap: "suppliesName", required: false },
-        SpecialInstructions: {
-          type: "Text",
-          koMap: "suppliesSpecialInst",
-          required: false,
-        },
-      },
-    },
-  },
-  requisition: {
-    name: "Requisition",
-    spid: 18,
-    description:
-      "<div><p>Complete this request for Office Furniture requests.</p></div>",
-    icon: "fa-redo",
-    daysToClose: 5,
-    id: "#wo-office-furniture",
-    hasAttachments: true,
-    attachmentDesc:
-      "<p>A proper quote contains:</p><ul><li>Vendor Name</li><li>Item Name (including Item Number)</li><li>Quantity</li><li>Cost</li></ul>",
-    hasStages: true,
-    pipeline: {
-      0: {
-        type: "Editing",
-        displayName: "New Work Order",
-        progress: 0,
-      },
-      1: {
-        type: "Approval",
-        displayName: "Managing Director Approval",
-        progress: 20,
-      },
-      10: {
-        type: "Closed",
-        displayName: "Completed",
-        progress: 100,
-      },
-    },
-    listDef: {
-      name: "st_requisition",
-      title: "st_requisition",
-      viewFields: {
-        ID: { type: "Text", koMap: "empty" },
-        Title: { type: "Text", koMap: "requestID", required: false },
-        RequisitionType: {
-          type: "Text",
-          koMap: "requisitionType",
-          required: false,
-        },
-        Quantity: {
-          type: "Text",
-          koMap: "requisitionQuantity",
-          required: false,
-        },
-        Comments: {
-          type: "Text",
-          koMap: "requisitionComments",
-          required: false,
-        },
-      },
-    },
-  },
-};
 
 /*
 sampleServiceType = {
@@ -923,7 +34,7 @@ var managingDirectors = {
   "CGFS/GSO": "Bowers, Susan",
 };
 
-var offices = ["CGFS/EX", "CGFS/F", "CGFS/GC", "CGFS/S/CST", "CGFS/GSO"];
+//var offices = ["CGFS/EX", "CGFS/F", "CGFS/GC", "CGFS/S/CST", "CGFS/GSO"];
 
 /************************************************************
  * Set Static SharePoint definitions here for use with SAL
@@ -934,6 +45,7 @@ var workOrderListDef = {
   viewFields: {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "requestID" },
+    ActionOffices: { type: "Text", koMap: "requestActionOfficeIds" },
     EstClosedDate: { type: "Date", koMap: "requestEstClosed" },
     ManagingDirector: { type: "Person", koMap: "requestorManager" },
     RequestDescription: { type: "Text", koMap: "requestDescriptionHTML" },
@@ -1048,6 +160,16 @@ var configActionOfficesListDef = {
   },
 };
 
+var configActionOfficeIDsListDef = {
+  name: "ConfigActionOfficeIDs",
+  title: "ConfigActionOfficeIDs",
+  viewFields: {
+    ID: { type: "Text", koMap: "empty" },
+    Title: { type: "Text", koMap: "empty" },
+    AOGroup: { type: "Person", koMap: "empty" },
+  },
+};
+
 var configHolidaysListDef = {
   name: "ConfigHolidays",
   title: "ConfigHolidays",
@@ -1091,6 +213,7 @@ var configServiceTypeListDef = {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "empty" },
     Active: { type: "Text", koMap: "empty" },
+    ActionOfficeID: { type: "Lookup", koMap: "empty" },
     st_list: { type: "Text", koMap: "empty" },
     Description: { type: "Text", koMap: "empty" },
     DescriptionRequired: { type: "Bool", koMap: "empty" },
@@ -1117,8 +240,8 @@ function koviewmodel() {
 
   self.empty = ko.observable();
 
-  self.serviceTypeAbbreviations = ko.observableArray(Object.keys(woViews));
-  self.serviceTypeViews = ko.observable(woViews);
+  //self.serviceTypeAbbreviations = ko.observableArray(Object.keys(woViews));
+  //self.serviceTypeViews = ko.observable(woViews);
 
   self.userGroupMembership = ko.observable();
 
@@ -1144,6 +267,10 @@ function koviewmodel() {
     });
   });
 
+  self.userIsSysAdmin = ko.pureComputed(() => {
+    return self.userActionOfficeMembership().find((uao) => uao.SysAdmin);
+  });
+
   // Can the current user take action on the record?
   self.requestCurUserAction = ko.pureComputed(function () {
     return true;
@@ -1160,25 +287,26 @@ function koviewmodel() {
   self.requestCurUserAssign = ko.pureComputed(function () {
     if (self.requestStage() && self.requestStage().Title != "Closed") {
       // does the current user have CanAssign to any offices?
-      let uao = self.userActionOfficeOwnership().map((uao) => uao.Office);
+      let uao = self
+        .userActionOfficeOwnership()
+        .map((uao) => uao.Office)
+        .map((ao) => ao.get_lookupValue());
 
       // Get the office assigned to this stage,
       let assignedOffice = self
         .configActionOffices()
         .find((ao) => ao.ID == self.requestStage().Assignee.get_lookupId());
 
-      return uao.includes(assignedOffice.Office);
+      return uao.includes(assignedOffice.Office.get_lookupValue());
     }
   });
 
   self.assignCurUserAssignees = ko.pureComputed(function () {
     //Who can the current user assign to?
-    let uao = self
-      .userActionOfficeMembership()
-      .filter((uao) => {
-        return uao.CanAssign;
-      })
-      .map((uao) => uao.Office);
+    let uao = self.userActionOfficeOwnership().filter((uao) => {
+      return uao.CanAssign;
+    });
+    //.map((uao) => uao.Office);
 
     if (!uao) {
       // This person isn't an action office, how did we get here?
@@ -1187,8 +315,10 @@ function koviewmodel() {
       // User is sysadmin, return all action offices
       return self.configActionOffices();
     } else {
-      return self.configActionOffices().filter((ao) => {
-        return uao.includes(ao.Office);
+      return self.configActionOffices().filter((aos) => {
+        return uao
+          .map((userAO) => userAO.Office.get_lookupValue())
+          .includes(aos.Office.get_lookupValue());
       });
     }
   });
@@ -1203,13 +333,21 @@ function koviewmodel() {
 
       timedNotification(
         assignment.ActionOffice.get_lookupValue() + " Removed",
-        2 * 1000
+        2000
       );
       fetchAssignments();
     });
   };
 
+  self.assignOfficeRemove = function (assignment) {
+    self.requestActionOffices(
+      self.requestActionOffices().filter((ao) => ao.ID != assignment.ID)
+    );
+  };
+
   self.assignAssignee = ko.observable();
+
+  self.assignOfficeAssignee = ko.observable();
 
   /************************************************************
    * ADMIN: Advance
@@ -1217,14 +355,16 @@ function koviewmodel() {
   self.requestCurUserAdvance = ko.pureComputed(function () {
     if (self.requestStage() && self.requestStage().Title != "Closed") {
       // which offices is the current user a member of?
-      let uao = self.userActionOfficeMembership().map((uao) => uao.Office);
+      let uao = self
+        .userActionOfficeMembership()
+        .map((uao) => uao.Office.get_lookupValue());
 
       // Get the office assigned to this stage,
       let assignedOffice = self
         .configActionOffices()
         .find((ao) => ao.ID == self.requestStage().Assignee.get_lookupId());
 
-      return uao.includes(assignedOffice.Office);
+      return uao.includes(assignedOffice.Office.get_lookupValue());
     }
   });
 
@@ -1270,6 +410,7 @@ function koviewmodel() {
 
   // Configuration Lists
   self.listRefConfigActionOffices = ko.observable();
+  self.listRefConfigActionOfficeIDs = ko.observable();
   self.listRefConfigHolidays = ko.observable();
   self.listRefConfigPipelines = ko.observable();
   self.listRefConfigRequestingOffices = ko.observable();
@@ -1282,6 +423,7 @@ function koviewmodel() {
    * Hold current info about our lists
    ************************************************************/
   self.allOrders = ko.observableArray();
+  self.allOfficeOrders = ko.observableArray();
   self.assignedOpenOrders = ko.observableArray();
   self.allAssignments = ko.observableArray();
   self.lookupOrders = ko.observableArray();
@@ -1289,6 +431,27 @@ function koviewmodel() {
   /************************************************************
    * My Orders Tab
    ************************************************************/
+
+  self.allOrders.subscribe(() => {
+    let offices = self
+      .userActionOfficeMembership()
+      .map((ao) => ao.Office.get_lookupValue());
+
+    let officeRequestTypes = self.configServiceTypes().filter((stype) => {
+      return intersect(
+        offices,
+        stype.ActionOfficeID.map((office) => office.get_lookupValue())
+      ).length;
+    });
+
+    let officeOrders = self.allOrders().filter((order) => {
+      return officeRequestTypes
+        .map((rtype) => rtype.Title)
+        .includes(order.ServiceType.get_lookupValue());
+    });
+
+    self.allOfficeOrders(officeOrders);
+  });
 
   self.allOpenOrders = ko.pureComputed(() =>
     self.allOrders().filter((req) => req.RequestStatus == "Open")
@@ -1300,6 +463,20 @@ function koviewmodel() {
 
   self.allCancelledOrders = ko.pureComputed(() =>
     self.allOrders().filter((req) => req.RequestStatus == "Cancelled")
+  );
+
+  // For the admin dash, we'll need to limit these to the current
+  // users office + in addition too, as well as which they're assigned.
+  self.officeAllOpenOrders = ko.pureComputed(() =>
+    self.allOfficeOrders().filter((req) => req.RequestStatus == "Open")
+  );
+
+  self.officeAllClosedOrders = ko.pureComputed(() =>
+    self.allOfficeOrders().filter((req) => req.RequestStatus == "Closed")
+  );
+
+  self.officeAllCancelledOrders = ko.pureComputed(() =>
+    self.allOfficeOrders().filter((req) => req.RequestStatus == "Cancelled")
   );
 
   /************************************************************
@@ -1351,7 +528,7 @@ function koviewmodel() {
     ) {
       self.lookupTableCol([]);
 
-      let newServiceTable = {};
+      let newServiceTable = new Object();
       newServiceTable.id = stype.UID + "-lookup-table";
       newServiceTable.stype = stype;
 
@@ -1423,6 +600,9 @@ function koviewmodel() {
     switch (viewFields[col].type) {
       case "RichText":
         return $(val).text();
+        break;
+      case "DateTime":
+        return new Date(val).toLocaleDateString();
         break;
       default:
         return val;
@@ -1500,6 +680,7 @@ function koviewmodel() {
    ************************************************************/
 
   self.configActionOffices = ko.observable();
+  self.configActionOfficeIDs = ko.observable();
   self.configHolidays = ko.observable();
   self.configPipelines = ko.observable();
   self.configRequestingOffices = ko.observable();
@@ -1532,7 +713,9 @@ function koviewmodel() {
     return self.configServiceTypes().find((stype) => stype.UID == uid);
   };
 
-  self.selectedServiceType.subscribe((stype) => {});
+  self.selectedServiceType.subscribe((stype) => {
+    self.requestShowDescription(false);
+  });
 
   // return the selected service type pipeline
   self.selectedPipeline = ko.pureComputed(function () {
@@ -1558,22 +741,40 @@ function koviewmodel() {
   };
 
   self.loadedListItemLists.subscribe(function (val) {
-    if (val == 5) {
+    if (val == 6) {
       initComplete();
     }
   });
 
   /************************************************************
+   * Selected Work Order
+   ************************************************************/
+  self.requestLink = ko.pureComputed(() => {
+    return (
+      _spPageContextInfo.webAbsoluteUrl +
+      `/Pages/app.aspx?tab=order-detail&reqid=${self.requestID()}`
+    );
+  });
+
+  self.requestLinkAdmin = ko.pureComputed(() => {
+    return (
+      _spPageContextInfo.webAbsoluteUrl +
+      `/Pages/admin.aspx?tab=order-detail&reqid=${self.requestID()}`
+    );
+  });
+  /************************************************************
    * Observables for work order header
    ************************************************************/
+  self.requestLoaded = ko.observable(new Date());
   self.requestID = ko.observable(); // This is the key that will map everything together.
-
   self.requestHeader = ko.observable(); // This is the raw JSON object returned by the work order query.
   self.serviceTypeHeader = ko.observable(); // This is the raw JSON object object returned by the service type query.
   self.requestSubject = ko.observable();
   // The general description for this request. Some service types only have this
   self.requestDescriptionHTML = ko.observable();
   self.requestEstClosed = ko.observable();
+
+  self.requestShowDescription = ko.observable(false);
 
   // self.requestDescription = ko.pureComputed({
   //   read: function () {
@@ -1611,6 +812,32 @@ function koviewmodel() {
   self.requestorEmail = ko.observable();
   self.requestorManager = ko.observable();
 
+  self.requestActionOffices = ko.observableArray(new Array());
+
+  self.requestActionOfficeIds = ko.pureComputed({
+    read: function () {
+      let offices = self.configActionOffices();
+      let vps = new Array();
+      self.requestActionOffices().forEach((ao) => {
+        vps.push(ao.ID);
+        vps.push(ao.Title);
+      });
+
+      return vps.join(";#");
+    },
+    write: function (val) {
+      if (val.length > 0) {
+        console.log("Action Office IDs: ", val[0].get_lookupValue());
+        self.requestActionOffices(
+          val.map((ao) => {
+            return { ID: ao.get_lookupId(), Title: ao.get_lookupValue() };
+          })
+        );
+      } else {
+        self.requestActionOffices(new Array());
+      }
+    },
+  });
   // JSON Object for the requesting office
   self.requestorOffice = ko.observable();
   // Gets and sets the ID for above
@@ -1671,28 +898,6 @@ function koviewmodel() {
     // When the requesting office changes, so changes the manager
     self.requestorManager(managingDirectors[self.requestorOffice()]);
   });
-
-  /************************************************************
-   * Locksmith Services
-   ************************************************************/
-  self.locksmithLocation = ko.observable();
-  self.locksmithLockType = ko.observable();
-  self.locksmithJustification = ko.observable();
-
-  /************************************************************
-   * IT Hardware
-   ************************************************************/
-
-  /************************************************************
-   * Network Drop
-   ************************************************************/
-  self.networkDropDescription = ko.observable();
-
-  /************************************************************
-   * Newspaper Subscriptions
-   ************************************************************/
-  self.newsSubName = ko.observable();
-  self.newsSubQuantity = ko.observable();
 
   /************************************************************
    * Office Furniture

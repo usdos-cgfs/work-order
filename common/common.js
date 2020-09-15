@@ -185,7 +185,9 @@ function isBusinessDay(date) {
 function timedNotification(message, timeout = 2000) {
   let notifyId = SP.UI.Notify.addNotification(message, true);
 
-  window.setTimeout(() => SP.UI.Notify.removeNotification(notifyId), timeout);
+  window.setTimeout(() => {
+    SP.UI.Notify.removeNotification(notifyId);
+  }, timeout);
 }
 
 function loadListDefsToSP() {
@@ -310,4 +312,25 @@ function syncListDefs() {
       );
     }
   });
+}
+
+function sortByTitle(a, b) {
+  var titleA = a.Title.toUpperCase();
+  var titleB = b.Title.toUpperCase();
+
+  if (titleA < titleB) {
+    return -1;
+  }
+  if (titleB < titleA) {
+    return 1;
+  }
+  return 0;
+}
+
+/* Returns the intersect of two arrays */
+function intersect(a, b) {
+  var setA = new Set(a);
+  var setB = new Set(b);
+  var intersection = new Set([...setA].filter((x) => setB.has(x)));
+  return Array.from(intersection);
 }
