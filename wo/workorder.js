@@ -873,7 +873,7 @@ function fetchComments(callback) {
  * Email
  ************************************************************/
 
-function createEmail(to, cc, bcc, subject, body) {
+function createEmail(to, cc, bcc, subject, body, sendDate = null) {
   let toArr = createEmailAddressee(to);
   let ccArr = createEmailAddressee(cc);
   let bccArr = createEmailAddressee(bcc);
@@ -884,7 +884,13 @@ function createEmail(to, cc, bcc, subject, body) {
     ["BCC", bccArr],
     ["Title", subject],
     ["Body", body],
+    ["Request", vm.requestHeader().ID],
   ];
+
+  if (sendDate) {
+    vp.push(["DateToSend", sendDate]);
+  }
+
   vm.listRefWOEmails().createListItem(
     vp,
     () => newEmailCallback(SP.UI.DialogResult.OK, null),

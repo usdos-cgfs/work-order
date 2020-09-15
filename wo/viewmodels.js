@@ -128,6 +128,8 @@ var workOrderEmailsListDef = {
     Body: { type: "Text", koMap: "empty" },
     Sent: { type: "Bool", koMap: "empty" },
     DateSent: { type: "Date", koMap: "empty" },
+    DateToSend: { type: "Date", koMap: "empty" },
+    Request: { type: "Lookup", koMap: "empty" },
   },
 };
 
@@ -223,7 +225,7 @@ var configServiceTypeListDef = {
     ListDef: { type: "Text", koMap: "empty" },
     ElementID: { type: "Text", koMap: "empty" },
     DaysToCloseBusiness: { type: "Text", koMap: "empty" },
-    DaysToCloseDisp: { type: "Text", koMap: "empty" },
+    ReminderDays: { type: "Text", koMap: "empty" },
     KPIThresholdYellow: { type: "Text", koMap: "empty" },
     KPIThresholdGreen: { type: "Text", koMap: "empty" },
     Icon: { type: "Text", koMap: "empty" },

@@ -334,3 +334,9 @@ function intersect(a, b) {
   var intersection = new Set([...setA].filter((x) => setB.has(x)));
   return Array.from(intersection);
 }
+
+function stripHtml(html) {
+  var tmp = document.createElement("DIV");
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || "";
+}
