@@ -53,7 +53,7 @@
   >
     <div
       class="ui primary button"
-      data-bind="visible: page() == 'app'"
+      data-bind="visible: page() == 'app.aspx'"
       onclick="navSelectWorkOrder()"
     >
       New Workorder

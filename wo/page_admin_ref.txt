@@ -43,12 +43,15 @@
     data-tab="my-orders"
     class="ui bottom attached tab segment"
   >
-    <div
-      class="ui primary button"
-      data-bind="visible: page() == 'app'"
-      onclick="navSelectWorkOrder()"
-    >
-      New Workorder
+    <div class="container">
+      <div class="  " data-bind="visible: userIsSysAdmin()">
+        <input
+          type="checkbox"
+          id="admin-show-all-bool"
+          data-bind="checked: adminAllOrdersBool"
+        />
+        <label for="admin-show-all-bool">SYSADMIN: Show All Open Orders</label>
+      </div>
     </div>
     <!-- ko if: allOfficeOrders().length >0 -->
     <div class="ui grid">

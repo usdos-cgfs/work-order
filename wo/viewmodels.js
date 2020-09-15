@@ -268,7 +268,9 @@ function koviewmodel() {
   });
 
   self.userIsSysAdmin = ko.pureComputed(() => {
-    return self.userActionOfficeMembership().find((uao) => uao.SysAdmin);
+    return self.userActionOfficeMembership().find((uao) => uao.SysAdmin)
+      ? true
+      : false;
   });
 
   // Can the current user take action on the record?
@@ -422,9 +424,12 @@ function koviewmodel() {
   /************************************************************
    * Hold current info about our lists
    ************************************************************/
+  self.adminAllOrdersBool = ko.observable(false);
+
   self.allOrders = ko.observableArray();
-  self.allOfficeOrders = ko.observableArray();
+  //self.allOfficeOrders = ko.observableArray();
   self.assignedOpenOrders = ko.observableArray();
+
   self.allAssignments = ko.observableArray();
   self.lookupOrders = ko.observableArray();
 
@@ -432,10 +437,13 @@ function koviewmodel() {
    * My Orders Tab
    ************************************************************/
 
-  self.allOrders.subscribe(() => {
+  self.allOfficeOrders = ko.pureComputed(() => {
     let offices = self
       .userActionOfficeMembership()
       .map((ao) => ao.Office.get_lookupValue());
+    // Get the types of orders we're responsible for based on the ConfigServiceType
+    /*
+
 
     let officeRequestTypes = self.configServiceTypes().filter((stype) => {
       return intersect(
@@ -449,8 +457,19 @@ function koviewmodel() {
         .map((rtype) => rtype.Title)
         .includes(order.ServiceType.get_lookupValue());
     });
+    */
+    /* Get our orders based on the actionoffices field */
+    if (!self.adminAllOrdersBool()) {
+      let officeOrders = self.allOrders().filter((order) => {
+        return order.ActionOffices.find((ao) =>
+          offices.includes(ao.get_lookupValue())
+        );
+      });
 
-    self.allOfficeOrders(officeOrders);
+      return officeOrders;
+    } else {
+      return self.allOrders();
+    }
   });
 
   self.allOpenOrders = ko.pureComputed(() =>
