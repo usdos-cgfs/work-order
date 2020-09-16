@@ -45,10 +45,11 @@ var workOrderListDef = {
   viewFields: {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "requestID" },
-    ActionOffices: { type: "Text", koMap: "requestActionOfficeIds" },
     EstClosedDate: { type: "Date", koMap: "requestEstClosed" },
     ManagingDirector: { type: "Person", koMap: "requestorManager" },
+    RequestAssignments: { type: "Text", koMap: "requestAssignmentIds" },
     RequestDescription: { type: "Text", koMap: "requestDescriptionHTML" },
+    RequestOrgs: { type: "Lookup", koMap: "requestOrgIds" },
     RequestorEmail: { type: "Text", koMap: "requestorEmail" },
     RequestorName: { type: "Text", koMap: "requestorName" },
     RequestorOffice: { type: "Person", koMap: "requestorOfficeLookupId" },
@@ -157,18 +158,19 @@ var configActionOfficesListDef = {
     Office: { type: "Text", koMap: "empty" },
     AOGroup: { type: "Person", koMap: "empty" },
     CanAssign: { type: "Bool", koMap: "empty" },
+    RequestOrg: { type: "Lookup", koMap: "empty" },
     SysAdmin: { type: "Bool", koMap: "empty" },
     UserAddress: { type: "Person", koMap: "empty" },
   },
 };
 
-var configActionOfficeIDsListDef = {
-  name: "ConfigActionOfficeIDs",
-  title: "ConfigActionOfficeIDs",
+var configRequestOrgsListDef = {
+  name: "ConfigRequestOrgs",
+  title: "ConfigRequestOrgs",
   viewFields: {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "empty" },
-    AOGroup: { type: "Person", koMap: "empty" },
+    UserGroup: { type: "Person", koMap: "empty" },
   },
 };
 
@@ -216,12 +218,12 @@ var configServiceTypeListDef = {
     Title: { type: "Text", koMap: "empty" },
     Active: { type: "Text", koMap: "empty" },
     ActionOfficeID: { type: "Lookup", koMap: "empty" },
-    st_list: { type: "Text", koMap: "empty" },
+    ActionOffices: { type: "Lookup", koMap: "empty" },
+    AttachmentRequired: { type: "Text", koMap: "empty" },
+    AttachmentDescription: { type: "Text", koMap: "empty" },
     Description: { type: "Text", koMap: "empty" },
     DescriptionRequired: { type: "Bool", koMap: "empty" },
     DescriptionTitle: { type: "Bool", koMap: "empty" },
-    AttachmentRequired: { type: "Text", koMap: "empty" },
-    AttachmentDescription: { type: "Text", koMap: "empty" },
     ListDef: { type: "Text", koMap: "empty" },
     ElementID: { type: "Text", koMap: "empty" },
     DaysToCloseBusiness: { type: "Text", koMap: "empty" },
@@ -229,6 +231,8 @@ var configServiceTypeListDef = {
     KPIThresholdYellow: { type: "Text", koMap: "empty" },
     KPIThresholdGreen: { type: "Text", koMap: "empty" },
     Icon: { type: "Text", koMap: "empty" },
+    RequestOrgs: { type: "Lookup", koMap: "empty" },
+    st_list: { type: "Text", koMap: "empty" },
     TemplateName: { type: "Lookup", koMap: "empty" },
     UID: { type: "Text", koMap: "empty" },
   },
@@ -344,9 +348,7 @@ function koviewmodel() {
   };
 
   self.assignOfficeRemove = function (assignment) {
-    self.requestActionOffices(
-      self.requestActionOffices().filter((ao) => ao.ID != assignment.ID)
-    );
+    self.requestOrgs(self.requestOrgs().filter((ao) => ao.ID != assignment.ID));
   };
 
   self.assignAssignee = ko.observable();
@@ -414,10 +416,10 @@ function koviewmodel() {
 
   // Configuration Lists
   self.listRefConfigActionOffices = ko.observable();
-  self.listRefConfigActionOfficeIDs = ko.observable();
   self.listRefConfigHolidays = ko.observable();
   self.listRefConfigPipelines = ko.observable();
   self.listRefConfigRequestingOffices = ko.observable();
+  self.listRefConfigRequestOrgs = ko.observable();
   self.listRefConfigServiceType = ko.observable();
 
   //hold a copy of our list defs, we'll use this for synchronization.
@@ -444,26 +446,10 @@ function koviewmodel() {
       .userActionOfficeMembership()
       .map((ao) => ao.Office.get_lookupValue());
     // Get the types of orders we're responsible for based on the ConfigServiceType
-    /*
 
-
-    let officeRequestTypes = self.configServiceTypes().filter((stype) => {
-      return intersect(
-        offices,
-        stype.ActionOfficeID.map((office) => office.get_lookupValue())
-      ).length;
-    });
-
-    let officeOrders = self.allOrders().filter((order) => {
-      return officeRequestTypes
-        .map((rtype) => rtype.Title)
-        .includes(order.ServiceType.get_lookupValue());
-    });
-    */
-    /* Get our orders based on the actionoffices field */
     if (!self.adminAllOrdersBool()) {
       let officeOrders = self.allOrders().filter((order) => {
-        return order.ActionOffices.find((ao) =>
+        return order.RequestOrgs.find((ao) =>
           offices.includes(ao.get_lookupValue())
         );
       });
@@ -527,6 +513,8 @@ function koviewmodel() {
     var closeDate = businessDaysFromDate(request.Created, daysOffset);
     return closeDate.format("yyyy-MM-dd");
   };
+
+  self.tableRequestAssignments = ko.observableArray();
 
   /************************************************************
    * Lookup Tab
@@ -701,10 +689,11 @@ function koviewmodel() {
    ************************************************************/
 
   self.configActionOffices = ko.observable();
-  self.configActionOfficeIDs = ko.observable();
+  //self.configRequestOrgs = ko.observable();
   self.configHolidays = ko.observable();
   self.configPipelines = ko.observable();
   self.configRequestingOffices = ko.observable();
+  self.configRequestOrgs = ko.observable();
   // We'll update this to hold listRef objects
   self.configServiceTypes = ko.observable();
 
@@ -833,13 +822,13 @@ function koviewmodel() {
   self.requestorEmail = ko.observable();
   self.requestorManager = ko.observable();
 
-  self.requestActionOffices = ko.observableArray(new Array());
+  self.requestOrgs = ko.observableArray(new Array());
 
-  self.requestActionOfficeIds = ko.pureComputed({
+  self.requestOrgIds = ko.pureComputed({
     read: function () {
       let offices = self.configActionOffices();
       let vps = new Array();
-      self.requestActionOffices().forEach((ao) => {
+      self.requestOrgs().forEach((ao) => {
         vps.push(ao.ID);
         vps.push(ao.Title);
       });
@@ -849,16 +838,44 @@ function koviewmodel() {
     write: function (val) {
       if (val.length > 0) {
         console.log("Action Office IDs: ", val[0].get_lookupValue());
-        self.requestActionOffices(
+        self.requestOrgs(
           val.map((ao) => {
             return { ID: ao.get_lookupId(), Title: ao.get_lookupValue() };
           })
         );
       } else {
-        self.requestActionOffices(new Array());
+        self.requestOrgs(new Array());
       }
     },
   });
+
+  self.requestAssignments = ko.observableArray(new Array());
+
+  self.requestAssignmentIds = ko.pureComputed({
+    read: function () {
+      let aoffices = self.configActionOffices();
+      let vps = new Array();
+      self.requestAssignments().forEach((ao) => {
+        vps.push(ao.ID);
+        vps.push(ao.Title);
+      });
+
+      return vps.join(";#");
+    },
+    write: function (val) {
+      if (val.length > 0) {
+        console.log("Action Office IDs: ", val[0].get_lookupValue());
+        self.requestAssignments(
+          val.map((ao) => {
+            return { ID: ao.get_lookupId(), Title: ao.get_lookupValue() };
+          })
+        );
+      } else {
+        self.requestAssignments(new Array());
+      }
+    },
+  });
+
   // JSON Object for the requesting office
   self.requestorOffice = ko.observable();
   // Gets and sets the ID for above
@@ -919,139 +936,6 @@ function koviewmodel() {
     // When the requesting office changes, so changes the manager
     self.requestorManager(managingDirectors[self.requestorOffice()]);
   });
-
-  /************************************************************
-   * Office Furniture
-   ************************************************************/
-  self.officeFurnitureDesc = ko.observable();
-
-  /************************************************************
-   * Purchase Under 10k
-   ************************************************************/
-  self.pu10kDescription = ko.observable();
-  self.pu10kCostEst = ko.observable();
-  self.pu10kStage = ko.observable();
-
-  self.pu10kShowAdmin = ko.pureComputed(function () {
-    return (
-      self.currentView() != "new" &&
-      self.pu10kStage() == "Submitted to Managing Director"
-    );
-  });
-
-  /************************************************************
-   * Telephone
-   ************************************************************/
-  self.telPhoneNum = ko.observable();
-  self.telLocation = ko.observable();
-
-  self.telServiceTypes = ko.observableArray([
-    "Installation",
-    "Move",
-    "Issues",
-    "Password Reset",
-  ]);
-
-  self.telSelectedType = ko.observable("Installation");
-  self.telTo = ko.observable();
-  self.telFrom = ko.observable();
-
-  self.telDesc = ko.observable();
-
-  /************************************************************
-   * Presentation
-   ************************************************************/
-  self.presentationServiceTypes = ko.observableArray([
-    "DVC",
-    "Conference Room",
-    "Presentation",
-  ]);
-
-  self.presentationSelectedType = ko.observable();
-
-  self.presentationCallTypes = ko.observableArray(["Incoming", "Outgoing"]);
-  self.presentationCallType = ko.observable();
-
-  self.presentationDialOuts = ko.observableArray([
-    "202-555-1992",
-    "202-555-1993",
-    "202-555-1123",
-    "202-555-1155",
-  ]);
-  self.presentationDialOut = ko.observable();
-
-  self.presentationConnectionTypes = ko.observableArray(["Open", "DSN", "IP"]);
-  self.presentationConnectionType = ko.observable();
-
-  /************************************************************
-   * Property
-   ************************************************************/
-  self.propertyTransfer = ko.observable();
-  self.propertyExcess = ko.observable();
-  self.propertyRecievingReport = ko.observable();
-  self.propertySerialNumber = ko.observable();
-  self.propertyLocation = ko.observable();
-
-  /************************************************************
-   * Facilities/Building Services
-   ************************************************************/
-  self.facilitiesServiceOpts = ko.observableArray([
-    "Labor Services/Moving",
-    "Facilities Maintenance",
-    "Office Furniture",
-    "Office Space",
-    "Workstation Reconfiguration",
-  ]); // Choice
-
-  self.facilitiesService = ko.observable(); // Choice
-  self.facilitiesDesc = ko.observable(); // Multiline
-  self.facilitiesLoc = ko.observable(); // Multiline
-  self.facilitiesSpecAcc = ko.observable(); // Bool
-  self.facilitiesSpecInst = ko.observable(); // Multiline
-
-  /************************************************************
-   * GPO Print Request
-   ************************************************************/
-  self.printDateNeededStr = ko.pureComputed({
-    read: function () {
-      return new Date(self.printDateNeeded()).format("yyyy-MM-dd");
-    },
-    write: function (val) {
-      self.printDateNeeded(new Date(val + "T00:00:00"));
-    },
-  });
-  self.printDateNeeded = ko.observable(new Date());
-  self.printQuantity = ko.observable();
-  self.printDesc = ko.observable();
-  self.printSpecialInst = ko.observable();
-
-  /************************************************************
-   * Office Supplies
-   ************************************************************/
-  self.suppliesDateNeededStr = ko.pureComputed({
-    read: function () {
-      return new Date(self.suppliesDateNeeded()).format("yyyy-MM-dd");
-    },
-    write: function (val) {
-      self.suppliesDateNeeded(new Date(val + "T00:00:00"));
-    },
-  });
-  self.suppliesDateNeeded = ko.observable(new Date());
-  self.suppliesName = ko.observable();
-  self.suppliesSpecialInst = ko.observable();
-
-  /************************************************************
-   * Requisitions
-   ************************************************************/
-  self.requisitionTypes = ko.observableArray([
-    "Requisition",
-    "De-Obligation",
-    "Re-Alignment",
-  ]); // Choice
-
-  self.requisitionType = ko.observable(); // Choice
-  self.requisitionQuantity = ko.observable(); // Multiline
-  self.requisitionComments = ko.observable(); // Multiline
 }
 /* Binding handlers */
 // ko.bindingHandlers.nicedit = {

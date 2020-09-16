@@ -358,7 +358,7 @@ function SPList(listDef) {
     }
 
     function onCreateListItemFailed(sender, args) {
-      timedNotification(
+      alert(
         "Failed to create new item :" +
           args.get_message() +
           "\n" +
@@ -401,7 +401,7 @@ function SPList(listDef) {
         var oListItem = listItemEnumerator.get_current();
         //console.log(oListItem);
         var listObj = {};
-        console.log("keys", keys);
+        //console.log("keys", keys);
         $.each(keys, function (idx, item) {
           var getItem = oListItem.get_item(item);
           //console.log("getting: " + item + " " + getItem);

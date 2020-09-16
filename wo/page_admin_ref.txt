@@ -83,6 +83,13 @@
             </h2>
           </div>
           <div data-bind="visible: officeAllOpenOrders().length > 0">
+            <div class="ui list-action-office popup">
+              <ul
+                data-bind="foreach: {data: tableRequestAssignments, as: 'Assignment'}"
+              >
+                <li data-bind="text: Assignment.actionOffice.Title"></li>
+              </ul>
+            </div>
             <h2>Open Orders</h2>
             <table id="wo-open-orders" class="display data-table">
               <thead>
@@ -91,6 +98,7 @@
                   <th>Service Type</th>
                   <th>Requesting Office</th>
                   <th>Requestor</th>
+                  <th>Assignees</th>
                   <th>Submitted Date</th>
                   <th>Est. Completion Date<span class="ui blue">*</span></th>
                 </tr>
@@ -104,6 +112,16 @@
                   <td data-bind="text: ServiceType.get_lookupValue()"></td>
                   <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
                   <td data-bind="text: RequestorName"></td>
+                  <td>
+                    <a
+                      class="view-action-office"
+                      href="javascript:void(0)"
+                      data-bind="click: fetchRequestAssignments.bind($data, $data.Title)"
+                      >View
+                      <span data-bind="text: RequestAssignments.length"></span>
+                      Assignees</a
+                    >
+                  </td>
                   <td data-bind="text: Created.format('yyyy-MM-dd')"></td>
                   <td data-bind="text: $root.estimateClosingDate($data)"></td>
                 </tr>
@@ -114,6 +132,7 @@
                   <td>Service Type</td>
                   <td>Requesting Office</td>
                   <td>Requestor</td>
+                  <th>Assignees</th>
                   <td>Submitted Date</td>
                   <td>Est. Completion Date<span class="ui blue">*</span></td>
                 </tr>
@@ -126,18 +145,6 @@
                 business days this service type is usually closed in and is not
                 a guarantee of completion.
               </p>
-            </div>
-            <div
-              id="wo-est-completion-modal"
-              class="ui modal"
-              style="display: none"
-            >
-              <div class="content">
-                <h2 class="ui header">Esimated Completion Date</h2>
-              </div>
-              <div class="content">
-                <p>How is</p>
-              </div>
             </div>
           </div>
         </div>
@@ -569,7 +576,7 @@
                 <select
                   class="ui search dropdown"
                   data-bind=" value: assignOfficeAssignee,
-                  options: configActionOfficeIDs, 
+                  options: configRequestOrgs, 
                   optionsText: (AO) => {return AO.Title}, 
                   optionsCaption: 'Select...'"
                 ></select>
@@ -583,7 +590,7 @@
                 </button>
               </div>
               <table>
-                <tbody data-bind="foreach: requestActionOffices">
+                <tbody data-bind="foreach: requestOrgs">
                   <tr>
                     <td data-bind="text: Title"></td>
                     <td

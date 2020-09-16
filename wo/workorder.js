@@ -19,10 +19,11 @@ function initStaticListRefs() {
 
   /* Configuration lists */
   vm.listRefConfigActionOffices(new SPList(configActionOfficesListDef));
-  vm.listRefConfigActionOfficeIDs(new SPList(configActionOfficeIDsListDef));
+  //vm.listRefconfigRequestOrgs(new SPList(configRequestOrgsListDef));
   vm.listRefConfigHolidays(new SPList(configHolidaysListDef));
   vm.listRefConfigPipelines(new SPList(configPipelinesListDef));
   vm.listRefConfigRequestingOffices(new SPList(configRequestingOfficesListDef));
+  vm.listRefConfigRequestOrgs(new SPList(configRequestOrgsListDef));
   vm.listRefConfigServiceType(new SPList(configServiceTypeListDef));
 }
 
@@ -356,8 +357,8 @@ function saveWorkOrder() {
           )
         );
 
-        //Set the action offices
-        vm.requestActionOfficeIds(vm.selectedServiceType().ActionOfficeID);
+        //Set the request orgs
+        vm.requestOrgIds(vm.selectedServiceType().RequestOrgs);
 
         vm.requestStageNum(1);
         vm.requestStatus("Open");
@@ -399,9 +400,9 @@ function onSaveNewWorkOrderMaster(id) {
 
   // Create our New Work Order Email
   let to = vm
-    .requestActionOffices()
-    .map((ao) => vm.configActionOfficeIDs().find((aoid) => aoid.ID == ao.ID))
-    .map((aoids) => aoids.AOGroup);
+    .requestOrgs()
+    .map((ao) => vm.configRequestOrgs().find((aoid) => aoid.ID == ao.ID))
+    .map((aoids) => aoids.UserGroup);
 
   let subject = `Work Order -New- ${
     vm.selectedServiceType().Title
@@ -443,9 +444,9 @@ function createReminderEmails(id) {
   if (vm.selectedServiceType().ReminderDays) {
     // If we have reminders create our New Work Order Email
     let to = vm
-      .requestActionOffices()
-      .map((ao) => vm.configActionOfficeIDs().find((aoid) => aoid.ID == ao.ID))
-      .map((aoids) => aoids.AOGroup);
+      .requestOrgs()
+      .map((ao) => vm.configRequestOrgs().find((aoid) => aoid.ID == ao.ID))
+      .map((aoids) => aoids.UserGroup);
 
     let days = vm.selectedServiceType().ReminderDays.split(",");
 
@@ -541,8 +542,8 @@ function fetchConfigListData(callback) {
     vm.incLoadedListItems();
   });
 
-  vm.listRefConfigActionOfficeIDs().getListItems("<Query></Query>", (items) => {
-    vm.configActionOfficeIDs(items);
+  vm.listRefConfigRequestOrgs().getListItems("<Query></Query>", (items) => {
+    vm.configRequestOrgs(items);
     vm.incLoadedListItems();
   });
 
@@ -635,16 +636,16 @@ function fetchAttachments() {
  ************************************************************/
 function newOfficeAssignment() {
   // Takes a new action office and adds it to the request assigned offices
-  vm.requestActionOffices.push(vm.assignOfficeAssignee());
+  vm.requestOrgs.push(vm.assignOfficeAssignee());
 
   vm.listRefWO().updateListItem(
     vm.requestHeader().ID,
-    [["ActionOffices", vm.requestActionOfficeIds()]],
+    [["ActionOffices", vm.requestOrgIds()]],
     () => vm.assignOfficeAssignee(null)
   );
 }
 
-function newAssignment(role) {
+function newAssignmentForm(role) {
   // Open the new assignments forms
   vm.listRefAssignment().showModal(
     "CustomNewForm.aspx",
@@ -677,7 +678,11 @@ function createAssignment() {
         );
 
         $("#wo-routing").accordion("open", 0);
-        fetchAssignments();
+        fetchAssignments((assignments) => {
+          let rvp = [["RequestAssignments", vm.requestAssignmentIds()]];
+          vm.listRefWO().updateListItem(vm.requestHeader().ID, rvp, () => {});
+        });
+        //Update the request with a new assignment:
         // Build our email
         let to = [vm.assignAssignee().UserAddress];
 
@@ -709,7 +714,7 @@ function createAssignment() {
   }
 }
 
-function fetchAssignments() {
+function fetchAssignments(callback = null) {
   var camlq =
     '<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' +
     vm.requestID() +
@@ -723,6 +728,28 @@ function fetchAssignments() {
           .find((ao) => ao.ID == assignment.ActionOffice.get_lookupId()))
     );
     vm.requestAssignees(assignments);
+    vm.requestAssignments(assignments);
+    if (callback) {
+      callback(assignments);
+    }
+  });
+}
+
+function fetchRequestAssignments(id) {
+  console.log("Title", this.Title);
+  var camlq =
+    '<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' +
+    id +
+    "</Value></Eq></Where></Query></View>";
+  vm.listRefAssignment().getListItems(camlq, function (assignments) {
+    // Let's connect our Action offices here.
+    assignments.forEach(
+      (assignment) =>
+        (assignment.actionOffice = vm
+          .configActionOffices()
+          .find((ao) => ao.ID == assignment.ActionOffice.get_lookupId()))
+    );
+    vm.tableRequestAssignments(assignments);
   });
 }
 
@@ -1114,6 +1141,10 @@ function initUIComponents() {
   $(".ui.checkbox").checkbox();
   $(".ui.accordion").accordion();
   $(".ui.popup").popup();
+  $(".view-action-office").popup({
+    popup: ".ui.list-action-office.popup",
+    on: "click",
+  });
   $(".menu .item").tab();
   $(".top.menu .item").tab({
     onVisible: function () {
