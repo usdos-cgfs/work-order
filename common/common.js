@@ -97,10 +97,14 @@ function makeDataTable(id) {
 function businessDaysFromDate(date, businessDays) {
   var counter = 0,
     tmp = new Date(date);
-  while (businessDays >= 0) {
-    tmp.setTime(date.getTime() + counter * 86400000);
+  let dayCnt = Math.abs(businessDays);
+
+  let sign = Math.sign(businessDays);
+
+  while (dayCnt >= 0) {
+    tmp.setTime(date.getTime() + sign * counter * 86400000);
     if (isBusinessDay(tmp) && !isConfigHoliday(tmp)) {
-      --businessDays;
+      --dayCnt;
     }
     ++counter;
   }

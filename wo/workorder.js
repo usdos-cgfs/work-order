@@ -111,6 +111,7 @@ function newWorkOrder() {
   vm.requestStatus("Draft");
 
   //Clear our requested fields.
+  vm.requestHeader(new Object());
   vm.requestClosedDate(null);
   vm.requestSubmittedDate(null);
   vm.requestDescriptionHTML(null);
@@ -374,11 +375,11 @@ function saveWorkOrder() {
                 // Save the workorder specific info here:
                 vm.selectedServiceType().listRef.createListItem(
                   typeValuePairs,
-                  onSaveNewWorkOrderMaster,
+                  () => onSaveNewWorkOrderMaster(id),
                   vm.requestorOffice().Title
                 );
               } else {
-                onSaveNewWorkOrderMaster();
+                onSaveNewWorkOrderMaster(id);
               }
             }
           },
@@ -416,6 +417,9 @@ function onSaveNewWorkOrderMaster(id) {
 
   createEmail(to, [], [], subject, body);
 
+  // Offload our reminder emails to a separate function
+  createReminderEmails(id);
+
   // Create our Action
   createAction(
     "Created",
@@ -435,6 +439,44 @@ function onSaveEditWorkOrderCallback(val) {
   SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
 
+function createReminderEmails(id) {
+  if (vm.selectedServiceType().ReminderDays) {
+    // If we have reminders create our New Work Order Email
+    let to = vm
+      .requestActionOffices()
+      .map((ao) => vm.configActionOfficeIDs().find((aoid) => aoid.ID == ao.ID))
+      .map((aoids) => aoids.AOGroup);
+
+    let days = vm.selectedServiceType().ReminderDays.split(",");
+
+    days.forEach((day) => {
+      let intDay = parseInt(day);
+
+      let sendDate = businessDaysFromDate(vm.requestEstClosed(), intDay);
+      if (sendDate > new Date()) {
+        let reminder = intDay > 0 ? intDay + " Day " : "";
+
+        let subject = `Work Order -${reminder}Reminder- ${
+          vm.selectedServiceType().Title
+        } - ${vm.requestID()}`;
+
+        let body =
+          `Greetings Colleagues,<br><br> This is a ${reminder}reminder for the following` +
+          ` service request requiring your attention:<br>` +
+          `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
+            vm.selectedServiceType().Title
+          }<br><br>` +
+          `This request has an estimated completion date of: ${vm
+            .requestEstClosed()
+            .toDateString()}<br><br>` +
+          `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
+          `${vm.requestLinkAdmin()}`;
+
+        createEmail(to, [], [], subject, body, sendDate, id);
+      }
+    });
+  }
+}
 /************************************************************
  * ValuePair Binding Getters and Setters
  ************************************************************/
@@ -873,7 +915,15 @@ function fetchComments(callback) {
  * Email
  ************************************************************/
 
-function createEmail(to, cc, bcc, subject, body, sendDate = null) {
+function createEmail(
+  to,
+  cc,
+  bcc,
+  subject,
+  body,
+  sendDate = null,
+  id = vm.requestHeader().ID
+) {
   let toArr = createEmailAddressee(to);
   let ccArr = createEmailAddressee(cc);
   let bccArr = createEmailAddressee(bcc);
@@ -884,7 +934,7 @@ function createEmail(to, cc, bcc, subject, body, sendDate = null) {
     ["BCC", bccArr],
     ["Title", subject],
     ["Body", body],
-    ["Request", vm.requestHeader().ID],
+    ["Request", id],
   ];
 
   if (sendDate) {
