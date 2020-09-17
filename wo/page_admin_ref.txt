@@ -83,11 +83,21 @@
             </h2>
           </div>
           <div data-bind="visible: officeAllOpenOrders().length > 0">
-            <div class="ui list-action-office popup">
+            <div
+              class="ui list-action-office yellow message"
+              data-bind="visible: tableRequestTitle"
+            >
+              <div class="header">
+                Assignments for Request
+                <span data-bind="text: tableRequestTitle"></span>
+              </div>
               <ul
                 data-bind="foreach: {data: tableRequestAssignments, as: 'Assignment'}"
               >
-                <li data-bind="text: Assignment.actionOffice.Title"></li>
+                <li>
+                  <span data-bind="text: Assignment.actionOffice.Title"></span>
+                  - <span data-bind="text: Assignment.Role"></span>
+                </li>
               </ul>
             </div>
             <h2>Open Orders</h2>
@@ -116,11 +126,16 @@
                     <a
                       class="view-action-office"
                       href="javascript:void(0)"
-                      data-bind="click: fetchRequestAssignments.bind($data, $data.Title)"
+                      data-bind="click: updateTableRequest.bind($data, $data.Title)"
                       >View
-                      <span data-bind="text: RequestAssignments.length"></span>
+                      <span
+                        data-bind="text: requestAssignmentMap.length"
+                      ></span>
                       Assignees</a
                     >
+                    <ul data-bind="foreach: requestAssignmentMap">
+                      <li data-bind="text: actionOffice.Title"></li>
+                    </ul>
                   </td>
                   <td data-bind="text: Created.format('yyyy-MM-dd')"></td>
                   <td data-bind="text: $root.estimateClosingDate($data)"></td>
@@ -132,7 +147,7 @@
                   <td>Service Type</td>
                   <td>Requesting Office</td>
                   <td>Requestor</td>
-                  <th>Assignees</th>
+                  <th></th>
                   <td>Submitted Date</td>
                   <td>Est. Completion Date<span class="ui blue">*</span></td>
                 </tr>
@@ -277,7 +292,7 @@
                   class="ui select"
                   type="select"
                   data-bind="value: lookupServiceType,
-                                           options: configServiceTypes(),
+                                           options: lookupServiceTypeOptions(),
                                            optionsText: function(stype) {return stype.Title ? stype.Title : 'unknown'},
                                            optionsCaption: 'Select...'"
                 ></select>
@@ -525,13 +540,13 @@
           <div class="row">
             <div class="twelve wide column">
               <h3>Users Assigned</h3>
-              <div data-bind="visible: requestAssignees().length == 0">
+              <div data-bind="visible: requestAssignments().length == 0">
                 <p>This request has not been assigned yet, check back later.</p>
               </div>
               <table
                 id="wo-assignees"
                 class="ui celled very basic table"
-                data-bind="visible: requestAssignees().length > 0"
+                data-bind="visible: requestAssignments().length > 0"
               >
                 <thead>
                   <tr>
@@ -543,7 +558,7 @@
                     <th data-bind="if: requestCurUserAssign">Actions</th>
                   </tr>
                 </thead>
-                <tbody data-bind="foreach: requestAssignees">
+                <tbody data-bind="foreach: requestAssignments">
                   <tr>
                     <td>
                       <p data-bind="text: ActionOffice.get_lookupValue()"></p>
@@ -745,7 +760,7 @@
                 </p>
               </div>
               <ul
-                data-bind="foreach: requestAssignees().filter(function (assignee) {return assignee.Role == 'Subscriber'})"
+                data-bind="foreach: requestAssignments().filter(function (assignee) {return assignee.Role == 'Subscriber'})"
               >
                 <li data-bind="text: Assignee.get_lookupValue()"></li>
               </ul>

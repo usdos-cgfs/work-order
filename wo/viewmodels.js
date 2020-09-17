@@ -47,7 +47,7 @@ var workOrderListDef = {
     Title: { type: "Text", koMap: "requestID" },
     EstClosedDate: { type: "Date", koMap: "requestEstClosed" },
     ManagingDirector: { type: "Person", koMap: "requestorManager" },
-    RequestAssignments: { type: "Text", koMap: "requestAssignmentIds" },
+    //RequestAssignments: { type: "Text", koMap: "requestAssignmentIds" },
     RequestDescription: { type: "Text", koMap: "requestDescriptionHTML" },
     RequestOrgs: { type: "Lookup", koMap: "requestOrgIds" },
     RequestorEmail: { type: "Text", koMap: "requestorEmail" },
@@ -343,7 +343,7 @@ function koviewmodel() {
         assignment.ActionOffice.get_lookupValue() + " Removed",
         2000
       );
-      fetchAssignments();
+      fetchRequestAssignments();
     });
   };
 
@@ -435,6 +435,8 @@ function koviewmodel() {
   self.assignedOpenOrders = ko.observableArray();
 
   self.allAssignments = ko.observableArray();
+  self.allAOAssignments = ko.observableArray();
+
   self.lookupOrders = ko.observableArray();
 
   /************************************************************
@@ -514,6 +516,7 @@ function koviewmodel() {
     return closeDate.format("yyyy-MM-dd");
   };
 
+  self.tableRequestTitle = ko.observable();
   self.tableRequestAssignments = ko.observableArray();
 
   /************************************************************
@@ -521,6 +524,18 @@ function koviewmodel() {
    ************************************************************/
   self.lookupServiceType = ko.observable();
   self.lookupInactiveBool = ko.observable(false);
+
+  self.lookupServiceTypeOptions = ko.pureComputed(() => {
+    // return only the options that are available
+    let unique = [
+      ...new Set(
+        self.allOrders().map((order) => order.ServiceType.get_lookupValue())
+      ),
+    ];
+    return self
+      .configServiceTypes()
+      .filter((stype) => unique.includes(stype.Title));
+  });
 
   self.lookupTables = ko.observableArray();
 
@@ -751,8 +766,8 @@ function koviewmodel() {
   };
 
   self.loadedListItemLists.subscribe(function (val) {
-    if (val == 6) {
-      initComplete();
+    if (val == 8) {
+      initServiceTypes();
     }
   });
 
@@ -865,11 +880,6 @@ function koviewmodel() {
     write: function (val) {
       if (val.length > 0) {
         console.log("Action Office IDs: ", val[0].get_lookupValue());
-        self.requestAssignments(
-          val.map((ao) => {
-            return { ID: ao.get_lookupId(), Title: ao.get_lookupValue() };
-          })
-        );
       } else {
         self.requestAssignments(new Array());
       }

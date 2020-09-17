@@ -71,24 +71,26 @@ function makeDataTable(id) {
           //this.api().columns([0, 2, 5]).every( function () {
           // colum filtering from https://datatables.net/examples/api/multi_filter_select.html
           var column = this;
-          //var columnValues = [];
-          //var columnTitle = $(column.header()).html();
-          // $(column.header()).append("<br>");
-          var select = $('<select><option value=""></option></select>')
-            .appendTo($(column.footer()).empty())
-            //.appendTo($(column.header()))
-            .on("change", function () {
-              var val = $.fn.dataTable.util.escapeRegex($(this).val());
+          if (!["Assignees"].includes($(column.header()).html())) {
+            //var columnValues = [];
+            //var columnTitle = $(column.header()).html();
+            // $(column.header()).append("<br>");
+            var select = $('<select><option value=""></option></select>')
+              .appendTo($(column.footer()).empty())
+              //.appendTo($(column.header()))
+              .on("change", function () {
+                var val = $.fn.dataTable.util.escapeRegex($(this).val());
 
-              column.search(val ? "^" + val + "$" : "", true, false).draw();
-            });
-          column
-            .data()
-            .unique()
-            .sort()
-            .each(function (d, j) {
-              select.append('<option value="' + d + '">' + d + "</option>");
-            });
+                column.search(val ? "^" + val + "$" : "", true, false).draw();
+              });
+            column
+              .data()
+              .unique()
+              .sort()
+              .each(function (d, j) {
+                select.append('<option value="' + d + '">' + d + "</option>");
+              });
+          }
         });
     },
   });

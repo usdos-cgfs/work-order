@@ -119,7 +119,8 @@ function newWorkOrder() {
   vm.requestActions([]);
   vm.requestApprovals([]);
   vm.requestAttachments([]);
-  vm.requestAssignees([]);
+  //vm.requestAssignees([]);
+  vm.requestAssignments([]);
   vm.requestComments([]);
 
   buildPipelineElement();
@@ -134,43 +135,35 @@ function viewWorkOrderItem(woID) {
   vm.currentView("view");
   vm.requestID(woID);
 
-  var camlq =
-    '<View Scope="RecursiveAll"><Query><Where><Eq>' +
-    '<FieldRef Name="Title"/><Value Type="Text">' +
-    vm.requestID() +
-    "</Value>" +
-    "</Eq></Where></Query></View>";
+  vm.requestHeader(vm.allOrders().find((order) => order.Title == woID));
+  console.log("workorder fetched - setting value pairs");
+  vm.selectedServiceType("");
+  setValuePairs(workOrderListDef.viewFields, vm.requestHeader());
 
-  vm.listRefWO().getListItems(camlq, function (items) {
-    vm.requestHeader(items[0]);
-    console.log("workorder fetched - setting value pairs");
-    vm.selectedServiceType("");
-    setValuePairs(workOrderListDef.viewFields, vm.requestHeader());
-
-    /* Fetch all associated Items */
-    fetchAssignments();
-    fetchActions(function () {
-      console.log("actions fetched");
-    });
-    fetchApprovals(function () {
-      console.log("approvals fetched");
-    });
-    fetchAttachments();
-    fetchComments(function () {
-      console.log("comments fetched");
-    });
-
-    /* Fetch the associated service type items */
-    if (vm.selectedServiceType().ListDef) {
-      viewServiceTypeItem();
-    } else {
-      vm.requestLoaded(new Date());
-    }
-    buildPipelineElement();
-    $(".editable-field").prop("disabled", true);
-    vm.tab("order-detail");
-    initUIComponents();
+  vm.requestAssignments(vm.requestHeader().requestAssignmentMap);
+  /* Fetch all associated Items */
+  //fetchRequestAssignments();
+  fetchActions(function () {
+    console.log("actions fetched");
   });
+  fetchApprovals(function () {
+    console.log("approvals fetched");
+  });
+  fetchAttachments();
+  fetchComments(function () {
+    console.log("comments fetched");
+  });
+
+  /* Fetch the associated service type items */
+  if (vm.selectedServiceType().ListDef) {
+    viewServiceTypeItem();
+  } else {
+    vm.requestLoaded(new Date());
+  }
+  buildPipelineElement();
+  $(".editable-field").prop("disabled", true);
+  vm.tab("order-detail");
+  //initUIComponents();
 }
 
 function viewServiceTypeItem() {
@@ -530,6 +523,18 @@ function clearValuePairs(listDef) {
     vm[obj.koMap]("");
   });
 }
+/************************************************************
+ * Fetch Static List Data
+ ************************************************************/
+function fetchStaticListData(callback) {
+  // Fetch anything we need to present our app
+  fetchAllOrders((orders) => {
+    vm.incLoadedListItems();
+    fetchAllAssignments((assignments) => {
+      vm.incLoadedListItems();
+    });
+  });
+}
 
 /************************************************************
  * Fetch Config Lists
@@ -537,6 +542,7 @@ function clearValuePairs(listDef) {
 
 function fetchConfigListData(callback) {
   /* Retrieve all data from our config lists */
+  /* Once cnt loaded list items hit's 5, initComplete() */
   vm.listRefConfigActionOffices().getListItems("<Query></Query>", (items) => {
     vm.configActionOffices(items);
     vm.incLoadedListItems();
@@ -564,7 +570,7 @@ function fetchConfigListData(callback) {
       vm.incLoadedListItems();
     }
   );
-  /* We'll won't filter our inactive service types just in case there are some open */
+  /* We won't filter our inactive service types just in case there are some open */
   vm.listRefConfigServiceType().getListItems("<Query></Query>", (items) => {
     vm.configServiceTypes(items);
     vm.incLoadedListItems();
@@ -575,24 +581,18 @@ function fetchConfigListData(callback) {
  * Work Orders
  ************************************************************/
 function fetchAllOrders(callback) {
-  vm.listRefWO().getListItems(
-    '<View Scope="RecursiveAll"><Query><Where>' +
-      "<Eq>" +
-      '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
-      "</Eq></Where></Query></View>",
-    (items) => {
-      console.log("loading open orders", items);
-      vm.allOrders(items);
-      if (items.length > 0) {
-        makeDataTable("#wo-open-orders");
-        makeDataTable("#wo-closed-orders");
-        makeDataTable("#wo-cancelled-orders");
-      }
-      if (callback) {
-        callback();
-      }
+  var camlq =
+    '<View Scope="RecursiveAll"><Query><Where><Eq>' +
+    '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
+    "</Eq></Where></Query></View>";
+
+  vm.listRefWO().getListItems(camlq, (items) => {
+    console.log("loading open orders", items);
+    vm.allOrders(items);
+    if (callback) {
+      callback(items);
     }
-  );
+  });
 }
 
 /************************************************************
@@ -655,7 +655,7 @@ function newAssignmentForm(role) {
       //console.log('approval args', args)
       // TODO: If this pushes the process forward, handle that here.
       //approvalUpdateProgress()
-      fetchAssignments();
+      fetchRequestAssignments();
     }
   );
 }
@@ -678,8 +678,8 @@ function createAssignment() {
         );
 
         $("#wo-routing").accordion("open", 0);
-        fetchAssignments((assignments) => {
-          let rvp = [["RequestAssignments", vm.requestAssignmentIds()]];
+        fetchRequestAssignments(vm.requestID(), (assignments) => {
+          //let rvp = [["RequestAssignments", vm.requestAssignmentIds()]];
           vm.listRefWO().updateListItem(vm.requestHeader().ID, rvp, () => {});
         });
         //Update the request with a new assignment:
@@ -714,46 +714,79 @@ function createAssignment() {
   }
 }
 
-function fetchAssignments(callback = null) {
+function fetchAllAssignments(callback) {
   var camlq =
-    '<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' +
-    vm.requestID() +
-    "</Value></Eq></Where></Query></View>";
-  vm.listRefAssignment().getListItems(camlq, function (assignments) {
-    // Let's connect our Action offices here.
-    assignments.forEach(
+    '<View Scope="RecursiveAll"><Query><Where><Eq>' +
+    '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
+    "</Eq></Where></Query></View>";
+  let start = new Date();
+  vm.listRefAssignment().getListItems(camlq, (assignments) => {
+    vm.allAssignments(assignments);
+
+    assignments.map(
       (assignment) =>
         (assignment.actionOffice = vm
           .configActionOffices()
           .find((ao) => ao.ID == assignment.ActionOffice.get_lookupId()))
     );
-    vm.requestAssignees(assignments);
-    vm.requestAssignments(assignments);
+
+    // Map our assignments to our orders
+    vm.allOrders().map((order) => {
+      order.requestAssignmentMap = assignments.filter(
+        (assignment) => assignment.Title == order.Title
+      );
+    });
+
+    let end = new Date();
+    console.log(`assignments mapped in ${end - start} ms`);
     if (callback) {
       callback(assignments);
     }
   });
 }
 
-function fetchRequestAssignments(id) {
-  console.log("Title", this.Title);
+function fetchRequestAssignments(title = null, callback = null) {
+  let queryTitle = title ? title : vm.requestID();
+
   var camlq =
     '<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' +
-    id +
+    queryTitle +
     "</Value></Eq></Where></Query></View>";
+
   vm.listRefAssignment().getListItems(camlq, function (assignments) {
     // Let's connect our Action offices here.
-    assignments.forEach(
+    assignments.map(
       (assignment) =>
         (assignment.actionOffice = vm
           .configActionOffices()
           .find((ao) => ao.ID == assignment.ActionOffice.get_lookupId()))
     );
-    vm.tableRequestAssignments(assignments);
+
+    //vm.requestAssignees(assignments);
+    vm.requestAssignments(assignments);
+
+    vm
+      .allOrders()
+      .find(
+        (order) => order.Title == queryTitle
+      ).requestAssignmentMap = assignments;
+
+    vm.allOrders.valueHasMutated();
+    if (callback) {
+      callback(assignments);
+    }
   });
 }
 
-function fetchAllAssignments() {
+function updateTableRequest(id) {
+  let title = this.Title;
+  vm.tableRequestTitle(title);
+  fetchRequestAssignments(id, (assigments) =>
+    vm.tableRequestAssignments(assigments)
+  );
+}
+
+function fetchMyAOAssignments() {
   var camlq =
     '<View Scope="RecursiveAll"><Query><Where><In>' +
     '<FieldRef Name="ActionOffice" LookupId="TRUE"/><Values>' +
@@ -767,7 +800,7 @@ function fetchAllAssignments() {
 
   vm.listRefAssignment().getListItems(camlq, function (assignments) {
     console.log(assignments);
-    vm.allAssignments(assignments);
+    vm.allAOAssignments(assignments);
     var idarr = [];
     $(vm.allAssignments()).each(function () {
       idarr.push(this.Title);
@@ -1043,25 +1076,10 @@ function pipelineForward() {
 /************************************************************
  * Initialize app
  ************************************************************/
-
+/* initApp -> fetchXListData -> initServiceTypes -> initTemplates -> initComplete */
 function initApp() {
   SP.UI.ModalDialog.showWaitScreenWithNoClose("Initializing", "Please Wait...");
-  //textpu10kDescription = new nicEditor({fullPanel : true}).panelInstance('textpu10kDescription')
   $(".non-editable-field").prop("disabled", true);
-  //$("#tabs").tabs();
-  // $("#wo-progress-bar").progressbar({
-  //   value: 0,
-  // });
-  // //$('.ui.sticky').sticky();
-  // $(".ui.checkbox").checkbox();
-  // $(".ui.accordion").accordion();
-  // $(".ui.popup").popup();
-  // $(".menu .item").tab();
-  // $(".top.menu .item").tab({
-  //   onVisible: function () {
-  //     vm.tab(this.id);
-  //   },
-  // });
 
   console.log("initialized listeners");
 
@@ -1073,21 +1091,46 @@ function initApp() {
 
   // Setup models for each of the config lists we may connect to
   initStaticListRefs();
-  // initPageListeners();
+
+  // Fetch our static lists and configuration lists
+  fetchStaticListData();
   fetchConfigListData();
 
   // Get our current user groups and store them
   getCurrentUserGroups((groups) => vm.userGroupMembership(groups));
-  //if (hash != '') {
-  //    viewWorkOrder(hash);
-  //}
 }
 
-function initComplete() {
+function initServiceTypes() {
   //Initialize the rest of our list references
   initServiceTypeListRefs();
   initTemplates();
+}
 
+function initTemplates() {
+  let templates = vm
+    .configServiceTypes()
+    .map((stype) => stype.TemplateName)
+    .filter((templ) => templ);
+
+  let cnt = templates.length;
+  let loaded = 0;
+
+  templates.forEach((template) => {
+    $.get(
+      `${sal.globalConfig.siteUrl}/SiteAssets/workorder/wo/ServiceTypeTemplates/${template}`,
+      function (html) {
+        $("#service-type-templates").append(html);
+        loaded++;
+        if (loaded == cnt) {
+          // We've loaded all templates
+          initComplete();
+        }
+      }
+    );
+  });
+}
+
+function initComplete() {
   //Parse Page Params
   var path = window.location.pathname;
   vm.page(path.split("/").pop());
@@ -1105,14 +1148,14 @@ function initComplete() {
   let stype = null;
 
   //Both admins and users need all orders available to them.
-  fetchAllOrders(function () {
-    if (id) {
-      viewWorkOrderItem(id);
-    }
-    //If we're on a separate tab, switch back to the tab from the url.
-    vm.tab(tab);
 
-    // check that we are on the app page
+  if (id) {
+    viewWorkOrderItem(id);
+  }
+  //If we're on a separate tab, switch back to the tab from the url.
+
+  // if no tab is present, switch based on page
+  if (!tab) {
     switch (vm.page()) {
       case "app.aspx":
         if (!tab) {
@@ -1121,7 +1164,7 @@ function initComplete() {
         break;
 
       case "admin.aspx":
-        fetchAllAssignments();
+        //fetchMyAOAssignments();
         if (!tab) {
           vm.tab("assigned-orders");
         }
@@ -1129,43 +1172,35 @@ function initComplete() {
 
       default:
     }
+  } else {
+    vm.tab(tab);
+  }
 
-    ko.applyBindings(vm);
-    initUIComponents();
-    SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
-  });
-  $("#tabs").show();
+  ko.applyBindings(vm);
+  initUIComponents();
+  SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
 
 function initUIComponents() {
+  makeDataTable("#wo-open-orders");
+  makeDataTable("#wo-closed-orders");
+  makeDataTable("#wo-cancelled-orders");
+
   $(".ui.checkbox").checkbox();
   $(".ui.accordion").accordion();
-  $(".ui.popup").popup();
-  $(".view-action-office").popup({
-    popup: ".ui.list-action-office.popup",
-    on: "click",
-  });
+  // $(".view-action-office").popup({
+  //   popup: ".ui.list-action-office.popup",
+  //   on: "click",
+  // });
   $(".menu .item").tab();
   $(".top.menu .item").tab({
     onVisible: function () {
       vm.tab(this.id);
     },
   });
-
+  $("#tabs").show();
   $(".ui.secondary.menu").find(".item").tab("change tab", "my-open-orders");
   //$(".ui.top.menu").find(".item").tab("change tab", "my-orders");
-}
-
-function initTemplates() {
-  vm.configServiceTypes().forEach((stype) => {
-    if (stype.TemplateName)
-      $.get(
-        `${sal.globalConfig.siteUrl}/SiteAssets/workorder/wo/ServiceTypeTemplates/${stype.TemplateName}`,
-        function (template) {
-          $("#service-type-templates").append(template);
-        }
-      );
-  });
 }
 
 $(document).ready(function () {

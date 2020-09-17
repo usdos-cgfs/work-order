@@ -275,7 +275,7 @@
                   class="ui select"
                   type="select"
                   data-bind="value: lookupServiceType,
-                                             options: configServiceTypes(),
+                                             options: lookupServiceTypeOptions(),
                                              optionsText: function(stype) {return stype.Title ? stype.Title : 'unknown'},
                                              optionsCaption: 'Select...'"
                 ></select>
@@ -609,7 +609,7 @@
                 </p>
               </div>
               <ul
-                data-bind="foreach: requestAssignees().filter(function (assignee) {return assignee.Role == 'Subscriber'})"
+                data-bind="foreach: requestAssignments().filter(function (assignee) {return assignee.Role == 'Subscriber'})"
               >
                 <li data-bind="text: Assignee.get_lookupValue()"></li>
               </ul>
