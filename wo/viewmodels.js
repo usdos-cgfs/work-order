@@ -293,7 +293,7 @@ function koviewmodel() {
    * ADMIN: Assignment
    ************************************************************/
   self.requestCurUserAssign = ko.pureComputed(function () {
-    if (self.requestStage() && self.requestStage().Title != "Closed") {
+    if (self.requestStage() && self.requestStatus() != "Closed") {
       // does the current user have CanAssign to any offices?
       let uao = self
         .userActionOfficeOwnership()

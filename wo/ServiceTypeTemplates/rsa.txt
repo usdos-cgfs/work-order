@@ -44,7 +44,7 @@
         <input
           class="editable-field"
           type="text"
-          data-bind="value: rsaUserName"
+          data-bind="value: rsaUserName, disable: currentView() == 'view'"
         />
       </div>
       <div class="field">
@@ -63,7 +63,7 @@
         <input
           class="editable-field"
           type="text"
-          data-bind="value: rsaSupervisor"
+          data-bind="value: rsaSupervisor, disable: currentView() == 'view'"
         />
       </div>
       <div class="field">

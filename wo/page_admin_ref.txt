@@ -444,8 +444,9 @@
                 <div id="wo-progress-pipeline"></div>
                 <p>
                   <span
+                    style="cursor: pointer"
                     class="fas fa-sync"
-                    onclick="viewWorkOrderItem(vm.requestID())"
+                    onclick="refreshWorkOrderItem(vm.requestID())"
                   ></span>
                   Loaded:
                   <span
@@ -454,6 +455,7 @@
                 </p>
               </div>
             </div>
+            <!-- ko if: requestCurUserAssign || requestCurUserAdvance -->
             <div
               class="row"
               data-bind="if: requestCurUserAssign || requestCurUserAdvance"
@@ -510,6 +512,7 @@
                 </button>
               </div>
             </div>
+            <!-- /ko -->
           </div>
         </div>
       </div>

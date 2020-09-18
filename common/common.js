@@ -71,7 +71,9 @@ function makeDataTable(id) {
           //this.api().columns([0, 2, 5]).every( function () {
           // colum filtering from https://datatables.net/examples/api/multi_filter_select.html
           var column = this;
-          if (!["Assignees"].includes($(column.header()).html())) {
+          if (
+            !["Assignees", "Description"].includes($(column.header()).html())
+          ) {
             //var columnValues = [];
             //var columnTitle = $(column.header()).html();
             // $(column.header()).append("<br>");

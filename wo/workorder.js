@@ -58,7 +58,7 @@ function closeWorkOrder() {
   vm.listRefWO().updateListItem(vm.requestHeader().ID, vp, function () {
     alert("record closed");
   });
-  viewWorkOrderItem(vm.requestID());
+  refreshWorkOrderItem(vm.requestID());
 }
 
 function showDescription(woType) {
@@ -126,6 +126,30 @@ function newWorkOrder() {
   buildPipelineElement();
 }
 
+function refreshWorkOrderItem(woID) {
+  SP.UI.ModalDialog.showWaitScreenWithNoClose("Refreshing Work Order...");
+  let camlq =
+    '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
+    '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
+    "</Eq><Eq>" +
+    '<FieldRef Name="Title"/><Value Type="Text">' +
+    woID +
+    "</Value>" +
+    "</Eq></And></Where></Query><RowLimit>1</RowLimit></View>";
+
+  vm.listRefWO().getListItems(camlq, (items) => {
+    console.log("loading open orders", items);
+    if (items[0]) {
+      if (vm.allOrders().find((order) => order.Title == woID)) {
+        vm.allOrders().map((order) => (order.Title == woID ? items[0] : order));
+      } else {
+        vm.allOrders.push(items[0]);
+      }
+      viewWorkOrderItem(woID);
+    }
+  });
+}
+
 function viewWorkOrderItem(woID) {
   // Set the tab to detail view
   //$('.ui.menu').find('.item').tab('change tab', 'order-detail');
@@ -159,6 +183,7 @@ function viewWorkOrderItem(woID) {
     viewServiceTypeItem();
   } else {
     vm.requestLoaded(new Date());
+    SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
   }
   buildPipelineElement();
   $(".editable-field").prop("disabled", true);
@@ -185,6 +210,8 @@ function viewServiceTypeItem() {
     } else {
       timedNotification("Warning: couldn't find Service Type Info");
     }
+
+    SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
   });
 }
 
@@ -423,13 +450,13 @@ function onSaveNewWorkOrderMaster(id) {
     true
   );
 
-  viewWorkOrderItem(vm.requestID());
+  refreshWorkOrderItem(vm.requestID());
   SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
 
 function onSaveEditWorkOrderCallback(val) {
   console.log("callback val: ", val);
-  viewWorkOrderItem(vm.requestID());
+  refreshWorkOrderItem(vm.requestID());
   SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
 
@@ -1042,6 +1069,7 @@ function pipelineForward() {
     buildPipelineElement();
 
     // Build our email
+    // TODO: Need to check if we've closed the reqeust!
     let to = [
       vm
         .configActionOffices()
@@ -1147,8 +1175,6 @@ function initComplete() {
   let stypeId = urlParams.get("stype");
   let stype = null;
 
-  //Both admins and users need all orders available to them.
-
   if (id) {
     viewWorkOrderItem(id);
   }
@@ -1177,6 +1203,8 @@ function initComplete() {
   }
 
   ko.applyBindings(vm);
+  $("#tabs").show();
+
   initUIComponents();
   SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
@@ -1198,7 +1226,6 @@ function initUIComponents() {
       vm.tab(this.id);
     },
   });
-  $("#tabs").show();
   $(".ui.secondary.menu").find(".item").tab("change tab", "my-open-orders");
   //$(".ui.top.menu").find(".item").tab("change tab", "my-orders");
 }
