@@ -910,7 +910,7 @@
                 type="button"
                 class="ui primary button"
                 onclick="newAttachment()"
-                data-bind="disable: requestStatus() == 'Closed'"
+                data-bind="enable: requestIsActive"
               >
                 New Attachment
               </button>
@@ -1026,7 +1026,7 @@
       </div>
     </div>
     <br />
-    <div data-bind="visible: requestStatus() != 'Closed'">
+    <div data-bind="visible: requestIsActive">
       <button
         type="button"
         class="editable-field ui primary button"

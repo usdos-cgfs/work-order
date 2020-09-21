@@ -469,11 +469,17 @@ function SPList(listDef) {
       this.callback();
     }
 
+    function onUpdateListItemFailed(sender, args) {
+      console.error(`Update Failed - List: ${self.config.def.name}`);
+      console.error(`ValuePairs`, valuePairs);
+      console.error(sender, args);
+    }
+
     self.config.currentContext.load(oListItem);
     data = { oListItem, callback };
     self.config.currentContext.executeQueryAsync(
       Function.createDelegate(data, onUpdateListItemsSucceeded),
-      Function.createDelegate(data, onQueryFailed)
+      Function.createDelegate(data, onUpdateListItemFailed)
     );
   };
 

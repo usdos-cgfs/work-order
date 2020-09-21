@@ -46,6 +46,7 @@ var workOrderListDef = {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "requestID" },
     EstClosedDate: { type: "Date", koMap: "requestEstClosed" },
+    IsActive: { type: "Bool", koMap: "requestIsActive" },
     ManagingDirector: { type: "Person", koMap: "requestorManager" },
     //RequestAssignments: { type: "Text", koMap: "requestAssignmentIds" },
     RequestDescription: { type: "Text", koMap: "requestDescriptionHTML" },
@@ -291,7 +292,7 @@ function koviewmodel() {
    * ADMIN: Assignment
    ************************************************************/
   self.requestCurUserAssign = ko.pureComputed(function () {
-    if (self.requestStage() && self.requestStatus() != "Closed") {
+    if (self.requestStage() && self.requestStage().Title != "Closed") {
       // does the current user have CanAssign to any offices?
       let uao = self
         .userActionOfficeOwnership()
@@ -815,6 +816,7 @@ function koviewmodel() {
   //   },
   // });
 
+  self.requestIsActive = ko.observable(); // Bool
   self.requestStatus = ko.observable(); // Open, Closed, etc
   self.requestStageNum = ko.observable(0); // 0, 1, 2 etc, used for our view pipelines.
 

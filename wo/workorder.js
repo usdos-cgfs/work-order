@@ -89,6 +89,7 @@ function newWorkOrder() {
   }
   vm.requestorEmail(sal.globalConfig.currentUser.get_email());
   vm.requestStageNum(0);
+  vm.requestIsActive(true);
   vm.requestStatus("Draft");
 
   //Clear our requested fields.
@@ -149,6 +150,7 @@ function viewWorkOrderItem(woID) {
   //fetchRequestAssignments();
   fetchActions(function () {
     console.log("actions fetched");
+    $(".ui.accordion").accordion();
   });
   fetchApprovals(function () {
     console.log("approvals fetched");
@@ -1092,6 +1094,7 @@ function pipelineForward() {
 }
 
 function cancelWorkOrder() {
+  SP.UI.ModalDialog.showWaitScreenWithNoClose("Cancelling Request...");
   closeWorkOrder("Cancelled");
 }
 
@@ -1100,6 +1103,7 @@ function closeWorkOrder(reason = "Closed") {
     ["RequestStatus", reason],
     ["RequestStage", "10"],
     ["ClosedDate", new Date()],
+    ["IsActive", false],
   ];
   vm.listRefWO().updateListItem(vm.requestHeader().ID, vp, function () {
     alert("Record succesfully closed");
@@ -1126,8 +1130,9 @@ function closeWorkOrder(reason = "Closed") {
     // Create the action
     createAction(
       reason,
-      `${sal.globalConfig.currentUser.get_title()} has moved ${reason}ed the request`
+      `${sal.globalConfig.currentUser.get_title()} has moved ${reason} the request`
     );
+    SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
     refreshWorkOrderItem(vm.requestID());
   });
 }
