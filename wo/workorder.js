@@ -49,18 +49,6 @@ function navSelectWorkOrder() {
   //$('#tabs').tabs({ active: tabsEnum['#order-new'] })
 }
 
-function closeWorkOrder() {
-  var vp = [
-    ["RequestStatus", "Closed"],
-    ["RequestStage", "10"],
-    ["ClosedDate", new Date()],
-  ];
-  vm.listRefWO().updateListItem(vm.requestHeader().ID, vp, function () {
-    alert("record closed");
-  });
-  refreshWorkOrderItem(vm.requestID());
-}
-
 function showDescription(woType) {
   vm.selectedServiceType(woType);
   $("#wo-description-modal").modal("show");
@@ -73,14 +61,7 @@ function dismissDescription() {
 function newWorkOrder() {
   dismissDescription();
   // Chained, requires vm.selectedServiceType to already be selected.
-  //console.log(woViews[woType].id);
-  // Open the detail tab view
-  //$('.ui.menu').find('.item').tab('change tab', 'order-detail');
   vm.tab("order-detail");
-
-  //$.tab('change tab', 'order-detail');
-
-  //$("#tabs").tabs({ active: tabsEnum['#order-detail'] });
 
   //set the select for which view we're on.
   vm.currentView("new");
@@ -88,15 +69,14 @@ function newWorkOrder() {
   // Clear the workorder valuepairs
   // clearValuePairs(workOrderListDef.viewFields);
   //  Clear the selected service type valuepairs
-  if (vm.selectedServiceType().ListDef) {
-    clearValuePairs(vm.selectedServiceType().listDef.viewFields);
-  }
+  // if (vm.selectedServiceType().ListDef) {
+  //   clearValuePairs(vm.selectedServiceType().listDef.viewFields);
+  // }
 
   // Set our VM fields
   vm.requestID(new Date().getTime());
   updateUrlParam("reqid", vm.requestID());
-  //vm.requestID('209Z');
-  //fetchAttachments();
+
   vm.requestorName(sal.globalConfig.currentUser.get_title());
   if (sal.globalConfig.currentUserProfile) {
     vm.requestorTelephone(
@@ -547,7 +527,9 @@ function setValuePairs(listDef, jObject) {
 
 function clearValuePairs(listDef) {
   $.each(listDef, function (field, obj) {
-    vm[obj.koMap]("");
+    if (obj.koMap != "requestID") {
+      vm[obj.koMap]("");
+    }
   });
 }
 /************************************************************
@@ -667,7 +649,7 @@ function newOfficeAssignment() {
 
   vm.listRefWO().updateListItem(
     vm.requestHeader().ID,
-    [["ActionOffices", vm.requestOrgIds()]],
+    [["RequestOrgs", vm.requestOrgIds()]],
     () => vm.assignOfficeAssignee(null)
   );
 }
@@ -707,7 +689,7 @@ function createAssignment() {
         $("#wo-routing").accordion("open", 0);
         fetchRequestAssignments(vm.requestID(), (assignments) => {
           //let rvp = [["RequestAssignments", vm.requestAssignmentIds()]];
-          vm.listRefWO().updateListItem(vm.requestHeader().ID, rvp, () => {});
+          //vm.listRefWO().updateListItem(vm.requestHeader().ID, rvp, () => {});
         });
         //Update the request with a new assignment:
         // Build our email
@@ -1054,50 +1036,99 @@ function newEmailCallback(result, value) {
  ************************************************************/
 
 function pipelineForward() {
+  let valuePairs = new Array();
+
   /* Increment the current request stage num */
   var t = parseInt(vm.requestStageNum()) + 1;
-  vm.requestStageNum(t);
-  var valuepairs = [["RequestStage", vm.requestStageNum()]];
+  if (t > vm.selectedPipeline().length) {
+    // vm.requestStatus("Closed");
+    // valuePairs.push(["RequestStatus", "Closed"]);
+    closeWorkOrder();
+  } else {
+    vm.requestStageNum(t);
+    valuePairs.push(["RequestStage", vm.requestStageNum()]);
 
-  if (vm.requestStage().Title == "Closed") {
-    valuepairs.push(["RequestStatus", "Closed"]);
+    vm.listRefWO().updateListItem(
+      vm.requestHeader().ID,
+      valuePairs,
+      function () {
+        SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+        console.log("pipeline moved to next stage.");
+        buildPipelineElement();
+
+        // Build our email
+        let to = [
+          vm
+            .configActionOffices()
+            .find(
+              (aoid) => aoid.ID == vm.requestStage().Assignee.get_lookupId()
+            ).UserAddress,
+        ];
+
+        let subject = `Work Order -${vm.requestStage().Title}- ${
+          vm.selectedServiceType().Title
+        } - ${vm.requestID()}`;
+
+        let body =
+          `Greetings Colleagues,<br><br> The following service request has changed, requiring your attention:<br>` +
+          `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
+            vm.selectedServiceType().Title
+          }<br><br>` +
+          `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
+          `${vm.requestLinkAdmin()}`;
+
+        createEmail(to, [], [], subject, body);
+
+        // Create the action
+        createAction(
+          vm.requestStage().Title == "Closed" ? "Closed" : "Progressed",
+          `${sal.globalConfig.currentUser.get_title()} has moved the request to stage ${
+            vm.requestStage().Step
+          }: ${vm.requestStage().Title}`
+        );
+      }
+    );
   }
+}
 
-  vm.listRefWO().updateListItem(vm.requestHeader().ID, valuepairs, function () {
-    SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
-    console.log("pipeline moved to next stage.");
-    buildPipelineElement();
+function cancelWorkOrder() {
+  closeWorkOrder("Cancelled");
+}
 
-    // Build our email
-    // TODO: Need to check if we've closed the reqeust!
-    let to = [
-      vm
-        .configActionOffices()
-        .find((aoid) => aoid.ID == vm.requestStage().Assignee.get_lookupId())
-        .UserAddress,
-    ];
+function closeWorkOrder(reason = "Closed") {
+  var vp = [
+    ["RequestStatus", reason],
+    ["RequestStage", "10"],
+    ["ClosedDate", new Date()],
+  ];
+  vm.listRefWO().updateListItem(vm.requestHeader().ID, vp, function () {
+    alert("Record succesfully closed");
 
-    let subject = `Work Order -${vm.requestStage().Title}- ${
+    let to = vm
+      .requestOrgs()
+      .map((ao) => vm.configRequestOrgs().find((aoid) => aoid.ID == ao.ID))
+      .map((aoids) => aoids.UserGroup);
+
+    let subject = `Work Order -${reason}- ${
       vm.selectedServiceType().Title
     } - ${vm.requestID()}`;
 
     let body =
-      `Greetings Colleagues,<br><br> The following service request has changed, requiring your attention:<br>` +
+      `Greetings Colleagues,<br><br> The following service request has been ${reason.toLocaleLowerCase()}:<br>` +
       `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
         vm.selectedServiceType().Title
       }<br><br>` +
-      `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
+      `To view an archive of the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
       `${vm.requestLinkAdmin()}`;
 
     createEmail(to, [], [], subject, body);
 
     // Create the action
     createAction(
-      vm.requestStage().Title == "Closed" ? "Closed" : "Progressed",
-      `${sal.globalConfig.currentUser.get_title()} has moved the request to stage ${
-        vm.requestStage().Step
-      }: ${vm.requestStage().Title}`
+      reason,
+      `${sal.globalConfig.currentUser.get_title()} has moved ${reason}ed the request`
     );
+    refreshWorkOrderItem(vm.requestID());
   });
 }
 

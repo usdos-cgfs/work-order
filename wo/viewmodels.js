@@ -155,7 +155,6 @@ var configActionOfficesListDef = {
   viewFields: {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "empty" },
-    Office: { type: "Text", koMap: "empty" },
     AOGroup: { type: "Person", koMap: "empty" },
     CanAssign: { type: "Bool", koMap: "empty" },
     RequestOrg: { type: "Lookup", koMap: "empty" },
@@ -217,7 +216,6 @@ var configServiceTypeListDef = {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "empty" },
     Active: { type: "Text", koMap: "empty" },
-    ActionOfficeID: { type: "Lookup", koMap: "empty" },
     ActionOffices: { type: "Lookup", koMap: "empty" },
     AttachmentRequired: { type: "Text", koMap: "empty" },
     AttachmentDescription: { type: "Text", koMap: "empty" },
@@ -297,15 +295,14 @@ function koviewmodel() {
       // does the current user have CanAssign to any offices?
       let uao = self
         .userActionOfficeOwnership()
-        .map((uao) => uao.Office)
-        .map((ao) => ao.get_lookupValue());
+        .map((uao) => uao.RequestOrg.get_lookupValue());
 
       // Get the office assigned to this stage,
       let assignedOffice = self
         .configActionOffices()
         .find((ao) => ao.ID == self.requestStage().Assignee.get_lookupId());
 
-      return uao.includes(assignedOffice.Office.get_lookupValue());
+      return uao.includes(assignedOffice.RequestOrg.get_lookupValue());
     }
   });
 
@@ -314,7 +311,6 @@ function koviewmodel() {
     let uao = self.userActionOfficeOwnership().filter((uao) => {
       return uao.CanAssign;
     });
-    //.map((uao) => uao.Office);
 
     if (!uao) {
       // This person isn't an action office, how did we get here?
@@ -325,8 +321,8 @@ function koviewmodel() {
     } else {
       return self.configActionOffices().filter((aos) => {
         return uao
-          .map((userAO) => userAO.Office.get_lookupValue())
-          .includes(aos.Office.get_lookupValue());
+          .map((userAO) => userAO.RequestOrg.get_lookupValue())
+          .includes(aos.RequestOrg.get_lookupValue());
       });
     }
   });
@@ -363,14 +359,14 @@ function koviewmodel() {
       // which offices is the current user a member of?
       let uao = self
         .userActionOfficeMembership()
-        .map((uao) => uao.Office.get_lookupValue());
+        .map((uao) => uao.RequestOrg.get_lookupValue());
 
       // Get the office assigned to this stage,
       let assignedOffice = self
         .configActionOffices()
         .find((ao) => ao.ID == self.requestStage().Assignee.get_lookupId());
 
-      return uao.includes(assignedOffice.Office.get_lookupValue());
+      return uao.includes(assignedOffice.RequestOrg.get_lookupValue());
     }
   });
 
@@ -446,7 +442,7 @@ function koviewmodel() {
   self.allOfficeOrders = ko.pureComputed(() => {
     let offices = self
       .userActionOfficeMembership()
-      .map((ao) => ao.Office.get_lookupValue());
+      .map((ao) => ao.RequestOrg.get_lookupValue());
     // Get the types of orders we're responsible for based on the ConfigServiceType
 
     if (!self.adminAllOrdersBool()) {
@@ -740,6 +736,9 @@ function koviewmodel() {
 
   self.selectedServiceType.subscribe((stype) => {
     self.requestShowDescription(false);
+    if (stype.ListDef) {
+      clearValuePairs(stype.listDef.viewFields);
+    }
   });
 
   // return the selected service type pipeline

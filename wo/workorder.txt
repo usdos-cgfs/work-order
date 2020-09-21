@@ -52,7 +52,7 @@
     class="ui bottom attached tab segment"
   >
     <div
-      class="ui primary button"
+      class="ui primary button segment"
       data-bind="visible: page() == 'app.aspx'"
       onclick="navSelectWorkOrder()"
     >
@@ -187,7 +187,7 @@
                   <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
                   <td data-bind="text: RequestorName"></td>
                   <td data-bind="text: Created.format('yyyy-MM-dd')"></td>
-                  <td data-bind="text: ClosedDate.format('yyyy-MM-dd')"></td>
+                  <td data-bind="text: ClosedDate ? ClosedDate.format('yyyy-MM-dd') : 'error'"></td>
                 </tr>
               </tbody>
               <tfoot>
@@ -739,11 +739,11 @@
                       </td>
                       <td>
                         <i
-                          class="fas fa-search"
+                          class="fas fa-search pointer"
                           data-bind="click: $root.attachmentView"
                         ></i>
                         <i
-                          class="fas fa-trash"
+                          class="fas fa-trash pointer"
                           data-bind="click: $root.attachmentRemove"
                         ></i>
                       </td>

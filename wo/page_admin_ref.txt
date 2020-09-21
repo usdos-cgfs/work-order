@@ -567,7 +567,7 @@
                       <p data-bind="text: ActionOffice.get_lookupValue()"></p>
                     </td>
                     <td
-                      data-bind="text: actionOffice.Office.get_lookupValue()"
+                      data-bind="text: actionOffice.RequestOrg.get_lookupValue()"
                     ></td>
                     <td>
                       <p data-bind="text: Role"></p>
@@ -893,11 +893,11 @@
                     </td>
                     <td>
                       <i
-                        class="fas fa-search"
+                        class="fas fa-search pointer"
                         data-bind="click: $root.attachmentView"
                       ></i>
                       <i
-                        class="fas fa-trash"
+                        class="fas fa-trash pointer"
                         data-bind="click: $root.attachmentRemove"
                       ></i>
                     </td>
@@ -1048,7 +1048,7 @@
         id="close-form"
         type="button"
         class="ui basic red button"
-        onclick="closeWorkOrder()"
+        onclick="cancelWorkOrder()"
         data-bind="enable: canEditForm"
       >
         Cancel

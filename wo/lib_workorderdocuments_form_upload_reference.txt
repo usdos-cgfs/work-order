@@ -4,5 +4,4 @@
 <script src="../../SiteAssets/workorder/common/sal.js"></script>
 <script src="../../SiteAssets/workorder/common/common.js"></script>
 
-<script src="../../SiteAssets/workorder/wo/viewmodels.js"></script>
 <script src="../../SiteAssets/workorder/wo/lib_workorderdocuments_form_upload.js"></script>

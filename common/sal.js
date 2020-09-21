@@ -403,11 +403,18 @@ function SPList(listDef) {
         var listObj = {};
         //console.log("keys", keys);
         $.each(keys, function (idx, item) {
-          var getItem = oListItem.get_item(item);
-          //console.log("getting: " + item + " " + getItem);
-          //console.log(getItem)
-          //console.log(item + ' item: ', getItem)
-          listObj[item] = getItem;
+          try {
+            var getItem = oListItem.get_item(item);
+            //console.log("getting: " + item + " " + getItem);
+            //console.log(getItem)
+            //console.log(item + ' item: ', getItem)
+            listObj[item] = getItem;
+          } catch (err) {
+            console.error(
+              `Unable to retrieve ${item} from ${self.config.def.name}: `,
+              err
+            );
+          }
         });
         //listObj.fileUrl = oListItem.get_item("FileRef");
         listObj.oListItem = oListItem;
