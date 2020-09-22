@@ -118,20 +118,30 @@ function refreshWorkOrderItem(woID) {
     "</Value>" +
     "</Eq></And></Where></Query><RowLimit>1</RowLimit></View>";
 
+  let reqCamlq =
+    '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
+    '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
+    "</Eq><Eq>" +
+    '<FieldRef Name="Title"/><Value Type="Text">' +
+    woID +
+    "</Value>" +
+    "</Eq></And></Where></Query><RowLimit>1</RowLimit></View>";
+
   vm.listRefWO().getListItems(camlq, (items) => {
     console.log("loading open orders", items);
     if (items[0]) {
-      if (vm.allOrders().find((order) => order.Title == woID)) {
-        vm.allOrders(
-          vm
-            .allOrders()
-            .map((order) => (order.Title == woID ? items[0] : order))
-        );
-        vm.allOrders.valueHasMutated();
-      } else {
-        vm.allOrders.push(items[0]);
-      }
-      fetchRequestAssignments(woID, () => viewWorkOrderItem(woID));
+      let req = items[0];
+      vm.listRefAssignment().getListItems(reqCamlq, (assignments) => {
+        req.requestAssignmentMap = assignments;
+        if (vm.allOrders().find((order) => order.Title == woID)) {
+          vm.allOrders(
+            vm.allOrders().map((order) => (order.Title == woID ? req : order))
+          );
+        } else {
+          vm.allOrders.push(req);
+        }
+        viewWorkOrderItem(woID);
+      });
     }
   });
 }

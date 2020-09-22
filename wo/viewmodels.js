@@ -100,7 +100,10 @@ var assignmentListDef = {
     Title: { type: "Text", koMap: "empty" },
     Assignee: { type: "Person", koMap: "empty" },
     ActionOffice: { type: "Lookup", koMap: "empty" },
+    Comment: { type: "Text", koMap: "empty" },
+    IsActive: { type: "Bool", koMap: "empty" },
     Role: { type: "Text", koMap: "empty" },
+    Status: { type: "Text", koMap: "empty" },
     Author: { type: "Text", koMap: "empty" },
     Created: { type: "Text", koMap: "empty" },
   },
@@ -278,6 +281,10 @@ function koviewmodel() {
       : false;
   });
 
+  self.assignmentCurUserActions = ko.pureComputed(() => {
+    return self.request;
+  });
+
   // Can the current user take action on the record?
   self.requestCurUserAction = ko.pureComputed(function () {
     return true;
@@ -328,18 +335,35 @@ function koviewmodel() {
     }
   });
 
-  self.assignRemove = function (assignment) {
+  self.assignmentCurUserCanApprove = function (assignment) {
+    return true;
+  };
+
+  self.assignmentApprove = function (assignment) {
+    // Update this assignment with our approval
+    let vp = [
+      ["IsActive", 0],
+      ["CompletionDate", new Date()],
+      ["Status", "Approved"],
+    ];
+
+    self.listRefAssignment().updateListItem(assignment.ID, vp, () => {
+      timedNotification(assignment.actionOffice.Title + " Approved", 2000);
+      fetchRequestAssignments();
+    });
+  };
+
+  self.assignmentCurUserCanRemove = function (assignment) {
+    return self
+      .assignCurUserAssignees()
+      .map((assignee) => assignee.ID)
+      .includes(assignment.actionOffice.ID);
+  };
+
+  self.assignmentRemove = function (assignment) {
     console.log("deleting assignee", assignment);
     self.listRefAssignment().deleteListItem(assignment.ID, () => {
-      // SP.UI.Notify.addNotification(
-      //   assignment.ActionOffice.get_lookupValue() + " Removed",
-      //   true
-      // );
-
-      timedNotification(
-        assignment.ActionOffice.get_lookupValue() + " Removed",
-        2000
-      );
+      timedNotification(assignment.actionOffice.Title + " Removed", 2000);
       fetchRequestAssignments();
     });
   };

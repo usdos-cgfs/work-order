@@ -558,7 +558,7 @@
                     <th>Role</th>
                     <th>Assignment Date</th>
                     <th>Status</th>
-                    <th data-bind="if: requestCurUserAssign">Actions</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody data-bind="foreach: requestAssignments">
@@ -578,11 +578,19 @@
                     <td>
                       <p>In Progress</p>
                     </td>
-                    <td data-bind="if: $root.requestCurUserAssign">
+                    <td>
+                      <!-- ko if:  $root.assignmentCurUserCanApprove($data) -->
+                      <i
+                        class="fas fa-check pointer"
+                        data-bind="click: $root.assignmentApprove.bind($data)"
+                      ></i>
+                      <!-- /ko -->
+                      <!-- ko if:  $root.assignmentCurUserCanRemove($data) -->
                       <i
                         class="fas fa-user-times pointer"
-                        data-bind="click: $root.assignRemove"
+                        data-bind="click: $root.assignmentRemove.bind($data)"
                       ></i>
+                      <!-- /ko -->
                     </td>
                   </tr>
                 </tbody>
