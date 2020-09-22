@@ -43,12 +43,15 @@
     data-tab="my-orders"
     class="ui bottom attached tab segment"
   >
-    <div
-      class="ui primary button"
-      data-bind="visible: page() == 'app'"
-      onclick="navSelectWorkOrder()"
-    >
-      New Workorder
+    <div class="container">
+      <div class="  " data-bind="visible: userIsSysAdmin()">
+        <input
+          type="checkbox"
+          id="admin-show-all-bool"
+          data-bind="checked: adminAllOrdersBool"
+        />
+        <label for="admin-show-all-bool">SYSADMIN: Show All Open Orders</label>
+      </div>
     </div>
     <!-- ko if: allOfficeOrders().length >0 -->
     <div class="ui grid">
@@ -80,6 +83,23 @@
             </h2>
           </div>
           <div data-bind="visible: officeAllOpenOrders().length > 0">
+            <div
+              class="ui list-action-office yellow message"
+              data-bind="visible: tableRequestTitle"
+            >
+              <div class="header">
+                Assignments for Request
+                <span data-bind="text: tableRequestTitle"></span>
+              </div>
+              <ul
+                data-bind="foreach: {data: tableRequestAssignments, as: 'Assignment'}"
+              >
+                <li>
+                  <span data-bind="text: Assignment.actionOffice.Title"></span>
+                  - <span data-bind="text: Assignment.Role"></span>
+                </li>
+              </ul>
+            </div>
             <h2>Open Orders</h2>
             <table id="wo-open-orders" class="display data-table">
               <thead>
@@ -88,6 +108,7 @@
                   <th>Service Type</th>
                   <th>Requesting Office</th>
                   <th>Requestor</th>
+                  <th>Assignees</th>
                   <th>Submitted Date</th>
                   <th>Est. Completion Date<span class="ui blue">*</span></th>
                 </tr>
@@ -101,6 +122,21 @@
                   <td data-bind="text: ServiceType.get_lookupValue()"></td>
                   <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
                   <td data-bind="text: RequestorName"></td>
+                  <td>
+                    <a
+                      class="view-action-office"
+                      href="javascript:void(0)"
+                      data-bind="click: updateTableRequest.bind($data, $data.Title)"
+                      >View
+                      <span
+                        data-bind="text: requestAssignmentMap.length"
+                      ></span>
+                      Assignees</a
+                    >
+                    <ul data-bind="foreach: requestAssignmentMap">
+                      <li data-bind="text: actionOffice.Title"></li>
+                    </ul>
+                  </td>
                   <td data-bind="text: Created.format('yyyy-MM-dd')"></td>
                   <td data-bind="text: $root.estimateClosingDate($data)"></td>
                 </tr>
@@ -111,6 +147,7 @@
                   <td>Service Type</td>
                   <td>Requesting Office</td>
                   <td>Requestor</td>
+                  <th></th>
                   <td>Submitted Date</td>
                   <td>Est. Completion Date<span class="ui blue">*</span></td>
                 </tr>
@@ -123,18 +160,6 @@
                 business days this service type is usually closed in and is not
                 a guarantee of completion.
               </p>
-            </div>
-            <div
-              id="wo-est-completion-modal"
-              class="ui modal"
-              style="display: none"
-            >
-              <div class="content">
-                <h2 class="ui header">Esimated Completion Date</h2>
-              </div>
-              <div class="content">
-                <p>How is</p>
-              </div>
             </div>
           </div>
         </div>
@@ -267,7 +292,7 @@
                   class="ui select"
                   type="select"
                   data-bind="value: lookupServiceType,
-                                           options: configServiceTypes(),
+                                           options: lookupServiceTypeOptions(),
                                            optionsText: function(stype) {return stype.Title ? stype.Title : 'unknown'},
                                            optionsCaption: 'Select...'"
                 ></select>
@@ -419,8 +444,9 @@
                 <div id="wo-progress-pipeline"></div>
                 <p>
                   <span
+                    style="cursor: pointer"
                     class="fas fa-sync"
-                    onclick="viewWorkOrderItem(vm.requestID())"
+                    onclick="refreshWorkOrderItem(vm.requestID())"
                   ></span>
                   Loaded:
                   <span
@@ -429,6 +455,7 @@
                 </p>
               </div>
             </div>
+            <!-- ko if: requestCurUserAssign || requestCurUserAdvance -->
             <div
               class="row"
               data-bind="if: requestCurUserAssign || requestCurUserAdvance"
@@ -485,6 +512,7 @@
                 </button>
               </div>
             </div>
+            <!-- /ko -->
           </div>
         </div>
       </div>
@@ -515,13 +543,13 @@
           <div class="row">
             <div class="twelve wide column">
               <h3>Users Assigned</h3>
-              <div data-bind="visible: requestAssignees().length == 0">
+              <div data-bind="visible: requestAssignments().length == 0">
                 <p>This request has not been assigned yet, check back later.</p>
               </div>
               <table
                 id="wo-assignees"
                 class="ui celled very basic table"
-                data-bind="visible: requestAssignees().length > 0"
+                data-bind="visible: requestAssignments().length > 0"
               >
                 <thead>
                   <tr>
@@ -533,13 +561,13 @@
                     <th data-bind="if: requestCurUserAssign">Actions</th>
                   </tr>
                 </thead>
-                <tbody data-bind="foreach: requestAssignees">
+                <tbody data-bind="foreach: requestAssignments">
                   <tr>
                     <td>
                       <p data-bind="text: ActionOffice.get_lookupValue()"></p>
                     </td>
                     <td
-                      data-bind="text: actionOffice.Office.get_lookupValue()"
+                      data-bind="text: actionOffice.RequestOrg.get_lookupValue()"
                     ></td>
                     <td>
                       <p data-bind="text: Role"></p>
@@ -566,7 +594,7 @@
                 <select
                   class="ui search dropdown"
                   data-bind=" value: assignOfficeAssignee,
-                  options: configActionOfficeIDs, 
+                  options: configRequestOrgs, 
                   optionsText: (AO) => {return AO.Title}, 
                   optionsCaption: 'Select...'"
                 ></select>
@@ -580,7 +608,7 @@
                 </button>
               </div>
               <table>
-                <tbody data-bind="foreach: requestActionOffices">
+                <tbody data-bind="foreach: requestOrgs">
                   <tr>
                     <td data-bind="text: Title"></td>
                     <td
@@ -735,7 +763,7 @@
                 </p>
               </div>
               <ul
-                data-bind="foreach: requestAssignees().filter(function (assignee) {return assignee.Role == 'Subscriber'})"
+                data-bind="foreach: requestAssignments().filter(function (assignee) {return assignee.Role == 'Subscriber'})"
               >
                 <li data-bind="text: Assignee.get_lookupValue()"></li>
               </ul>
@@ -865,11 +893,11 @@
                     </td>
                     <td>
                       <i
-                        class="fas fa-search"
+                        class="fas fa-search pointer"
                         data-bind="click: $root.attachmentView"
                       ></i>
                       <i
-                        class="fas fa-trash"
+                        class="fas fa-trash pointer"
                         data-bind="click: $root.attachmentRemove"
                       ></i>
                     </td>
@@ -882,7 +910,7 @@
                 type="button"
                 class="ui primary button"
                 onclick="newAttachment()"
-                data-bind="disable: requestStatus() == 'Closed'"
+                data-bind="enable: requestIsActive"
               >
                 New Attachment
               </button>
@@ -998,7 +1026,7 @@
       </div>
     </div>
     <br />
-    <div data-bind="visible: requestStatus() != 'Closed'">
+    <div data-bind="visible: requestIsActive">
       <button
         type="button"
         class="editable-field ui primary button"
@@ -1020,7 +1048,7 @@
         id="close-form"
         type="button"
         class="ui basic red button"
-        onclick="closeWorkOrder()"
+        onclick="cancelWorkOrder()"
         data-bind="enable: canEditForm"
       >
         Cancel

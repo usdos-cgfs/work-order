@@ -358,7 +358,7 @@ function SPList(listDef) {
     }
 
     function onCreateListItemFailed(sender, args) {
-      timedNotification(
+      alert(
         "Failed to create new item :" +
           args.get_message() +
           "\n" +
@@ -401,13 +401,20 @@ function SPList(listDef) {
         var oListItem = listItemEnumerator.get_current();
         //console.log(oListItem);
         var listObj = {};
-        console.log("keys", keys);
+        //console.log("keys", keys);
         $.each(keys, function (idx, item) {
-          var getItem = oListItem.get_item(item);
-          //console.log("getting: " + item + " " + getItem);
-          //console.log(getItem)
-          //console.log(item + ' item: ', getItem)
-          listObj[item] = getItem;
+          try {
+            var getItem = oListItem.get_item(item);
+            //console.log("getting: " + item + " " + getItem);
+            //console.log(getItem)
+            //console.log(item + ' item: ', getItem)
+            listObj[item] = getItem;
+          } catch (err) {
+            console.error(
+              `Unable to retrieve ${item} from ${self.config.def.name}: `,
+              err
+            );
+          }
         });
         //listObj.fileUrl = oListItem.get_item("FileRef");
         listObj.oListItem = oListItem;
@@ -462,11 +469,17 @@ function SPList(listDef) {
       this.callback();
     }
 
+    function onUpdateListItemFailed(sender, args) {
+      console.error(`Update Failed - List: ${self.config.def.name}`);
+      console.error(`ValuePairs`, valuePairs);
+      console.error(sender, args);
+    }
+
     self.config.currentContext.load(oListItem);
     data = { oListItem, callback };
     self.config.currentContext.executeQueryAsync(
       Function.createDelegate(data, onUpdateListItemsSucceeded),
-      Function.createDelegate(data, onQueryFailed)
+      Function.createDelegate(data, onUpdateListItemFailed)
     );
   };
 

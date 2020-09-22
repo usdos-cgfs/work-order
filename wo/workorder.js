@@ -19,10 +19,11 @@ function initStaticListRefs() {
 
   /* Configuration lists */
   vm.listRefConfigActionOffices(new SPList(configActionOfficesListDef));
-  vm.listRefConfigActionOfficeIDs(new SPList(configActionOfficeIDsListDef));
+  //vm.listRefconfigRequestOrgs(new SPList(configRequestOrgsListDef));
   vm.listRefConfigHolidays(new SPList(configHolidaysListDef));
   vm.listRefConfigPipelines(new SPList(configPipelinesListDef));
   vm.listRefConfigRequestingOffices(new SPList(configRequestingOfficesListDef));
+  vm.listRefConfigRequestOrgs(new SPList(configRequestOrgsListDef));
   vm.listRefConfigServiceType(new SPList(configServiceTypeListDef));
 }
 
@@ -48,18 +49,6 @@ function navSelectWorkOrder() {
   //$('#tabs').tabs({ active: tabsEnum['#order-new'] })
 }
 
-function closeWorkOrder() {
-  var vp = [
-    ["RequestStatus", "Closed"],
-    ["RequestStage", "10"],
-    ["ClosedDate", new Date()],
-  ];
-  vm.listRefWO().updateListItem(vm.requestHeader().ID, vp, function () {
-    alert("record closed");
-  });
-  viewWorkOrderItem(vm.requestID());
-}
-
 function showDescription(woType) {
   vm.selectedServiceType(woType);
   $("#wo-description-modal").modal("show");
@@ -72,14 +61,7 @@ function dismissDescription() {
 function newWorkOrder() {
   dismissDescription();
   // Chained, requires vm.selectedServiceType to already be selected.
-  //console.log(woViews[woType].id);
-  // Open the detail tab view
-  //$('.ui.menu').find('.item').tab('change tab', 'order-detail');
   vm.tab("order-detail");
-
-  //$.tab('change tab', 'order-detail');
-
-  //$("#tabs").tabs({ active: tabsEnum['#order-detail'] });
 
   //set the select for which view we're on.
   vm.currentView("new");
@@ -87,15 +69,14 @@ function newWorkOrder() {
   // Clear the workorder valuepairs
   // clearValuePairs(workOrderListDef.viewFields);
   //  Clear the selected service type valuepairs
-  if (vm.selectedServiceType().ListDef) {
-    clearValuePairs(vm.selectedServiceType().listDef.viewFields);
-  }
+  // if (vm.selectedServiceType().ListDef) {
+  //   clearValuePairs(vm.selectedServiceType().listDef.viewFields);
+  // }
 
   // Set our VM fields
   vm.requestID(new Date().getTime());
   updateUrlParam("reqid", vm.requestID());
-  //vm.requestID('209Z');
-  //fetchAttachments();
+
   vm.requestorName(sal.globalConfig.currentUser.get_title());
   if (sal.globalConfig.currentUserProfile) {
     vm.requestorTelephone(
@@ -108,19 +89,51 @@ function newWorkOrder() {
   }
   vm.requestorEmail(sal.globalConfig.currentUser.get_email());
   vm.requestStageNum(0);
+  vm.requestIsActive(1);
   vm.requestStatus("Draft");
 
   //Clear our requested fields.
+  vm.requestHeader(new Object());
   vm.requestClosedDate(null);
   vm.requestSubmittedDate(null);
   vm.requestDescriptionHTML(null);
   vm.requestActions([]);
   vm.requestApprovals([]);
   vm.requestAttachments([]);
-  vm.requestAssignees([]);
+  //vm.requestAssignees([]);
+  vm.requestAssignments([]);
   vm.requestComments([]);
 
   buildPipelineElement();
+}
+
+function refreshWorkOrderItem(woID) {
+  SP.UI.ModalDialog.showWaitScreenWithNoClose("Refreshing Work Order...");
+  let camlq =
+    '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
+    '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
+    "</Eq><Eq>" +
+    '<FieldRef Name="Title"/><Value Type="Text">' +
+    woID +
+    "</Value>" +
+    "</Eq></And></Where></Query><RowLimit>1</RowLimit></View>";
+
+  vm.listRefWO().getListItems(camlq, (items) => {
+    console.log("loading open orders", items);
+    if (items[0]) {
+      if (vm.allOrders().find((order) => order.Title == woID)) {
+        vm.allOrders(
+          vm
+            .allOrders()
+            .map((order) => (order.Title == woID ? items[0] : order))
+        );
+        vm.allOrders.valueHasMutated();
+      } else {
+        vm.allOrders.push(items[0]);
+      }
+      fetchRequestAssignments(woID, () => viewWorkOrderItem(woID));
+    }
+  });
 }
 
 function viewWorkOrderItem(woID) {
@@ -132,43 +145,37 @@ function viewWorkOrderItem(woID) {
   vm.currentView("view");
   vm.requestID(woID);
 
-  var camlq =
-    '<View Scope="RecursiveAll"><Query><Where><Eq>' +
-    '<FieldRef Name="Title"/><Value Type="Text">' +
-    vm.requestID() +
-    "</Value>" +
-    "</Eq></Where></Query></View>";
+  vm.requestHeader(vm.allOrders().find((order) => order.Title == woID));
+  console.log("workorder fetched - setting value pairs");
+  vm.selectedServiceType("");
+  setValuePairs(workOrderListDef.viewFields, vm.requestHeader());
 
-  vm.listRefWO().getListItems(camlq, function (items) {
-    vm.requestHeader(items[0]);
-    console.log("workorder fetched - setting value pairs");
-    vm.selectedServiceType("");
-    setValuePairs(workOrderListDef.viewFields, vm.requestHeader());
-
-    /* Fetch all associated Items */
-    fetchAssignments();
-    fetchActions(function () {
-      console.log("actions fetched");
-    });
-    fetchApprovals(function () {
-      console.log("approvals fetched");
-    });
-    fetchAttachments();
-    fetchComments(function () {
-      console.log("comments fetched");
-    });
-
-    /* Fetch the associated service type items */
-    if (vm.selectedServiceType().ListDef) {
-      viewServiceTypeItem();
-    } else {
-      vm.requestLoaded(new Date());
-    }
-    buildPipelineElement();
-    $(".editable-field").prop("disabled", true);
-    vm.tab("order-detail");
-    initUIComponents();
+  vm.requestAssignments(vm.requestHeader().requestAssignmentMap);
+  /* Fetch all associated Items */
+  //fetchRequestAssignments();
+  fetchActions(function () {
+    console.log("actions fetched");
+    $(".ui.accordion").accordion();
   });
+  fetchApprovals(function () {
+    console.log("approvals fetched");
+  });
+  fetchAttachments();
+  fetchComments(function () {
+    console.log("comments fetched");
+  });
+
+  /* Fetch the associated service type items */
+  if (vm.selectedServiceType().ListDef) {
+    viewServiceTypeItem();
+  } else {
+    vm.requestLoaded(new Date());
+    SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+  }
+  buildPipelineElement();
+  $(".editable-field").prop("disabled", true);
+  vm.tab("order-detail");
+  //initUIComponents();
 }
 
 function viewServiceTypeItem() {
@@ -190,6 +197,8 @@ function viewServiceTypeItem() {
     } else {
       timedNotification("Warning: couldn't find Service Type Info");
     }
+
+    SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
   });
 }
 
@@ -355,8 +364,8 @@ function saveWorkOrder() {
           )
         );
 
-        //Set the action offices
-        vm.requestActionOfficeIds(vm.selectedServiceType().ActionOfficeID);
+        //Set the request orgs
+        vm.requestOrgIds(vm.selectedServiceType().RequestOrgs);
 
         vm.requestStageNum(1);
         vm.requestStatus("Open");
@@ -374,11 +383,11 @@ function saveWorkOrder() {
                 // Save the workorder specific info here:
                 vm.selectedServiceType().listRef.createListItem(
                   typeValuePairs,
-                  onSaveNewWorkOrderMaster,
+                  () => onSaveNewWorkOrderMaster(id),
                   vm.requestorOffice().Title
                 );
               } else {
-                onSaveNewWorkOrderMaster();
+                onSaveNewWorkOrderMaster(id);
               }
             }
           },
@@ -398,9 +407,9 @@ function onSaveNewWorkOrderMaster(id) {
 
   // Create our New Work Order Email
   let to = vm
-    .requestActionOffices()
-    .map((ao) => vm.configActionOfficeIDs().find((aoid) => aoid.ID == ao.ID))
-    .map((aoids) => aoids.AOGroup);
+    .requestOrgs()
+    .map((ao) => vm.configRequestOrgs().find((aoid) => aoid.ID == ao.ID))
+    .map((aoids) => aoids.UserGroup);
 
   let subject = `Work Order -New- ${
     vm.selectedServiceType().Title
@@ -416,6 +425,9 @@ function onSaveNewWorkOrderMaster(id) {
 
   createEmail(to, [], [], subject, body);
 
+  // Offload our reminder emails to a separate function
+  createReminderEmails(id);
+
   // Create our Action
   createAction(
     "Created",
@@ -425,16 +437,54 @@ function onSaveNewWorkOrderMaster(id) {
     true
   );
 
-  viewWorkOrderItem(vm.requestID());
+  refreshWorkOrderItem(vm.requestID());
   SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
 
 function onSaveEditWorkOrderCallback(val) {
   console.log("callback val: ", val);
-  viewWorkOrderItem(vm.requestID());
+  refreshWorkOrderItem(vm.requestID());
   SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
 
+function createReminderEmails(id) {
+  if (vm.selectedServiceType().ReminderDays) {
+    // If we have reminders create our New Work Order Email
+    let to = vm
+      .requestOrgs()
+      .map((ao) => vm.configRequestOrgs().find((aoid) => aoid.ID == ao.ID))
+      .map((aoids) => aoids.UserGroup);
+
+    let days = vm.selectedServiceType().ReminderDays.split(",");
+
+    days.forEach((day) => {
+      let intDay = parseInt(day);
+
+      let sendDate = businessDaysFromDate(vm.requestEstClosed(), intDay);
+      if (sendDate > new Date()) {
+        let reminder = intDay > 0 ? intDay + " Day " : "";
+
+        let subject = `Work Order -${reminder}Reminder- ${
+          vm.selectedServiceType().Title
+        } - ${vm.requestID()}`;
+
+        let body =
+          `Greetings Colleagues,<br><br> This is a ${reminder}reminder for the following` +
+          ` service request requiring your attention:<br>` +
+          `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
+            vm.selectedServiceType().Title
+          }<br><br>` +
+          `This request has an estimated completion date of: ${vm
+            .requestEstClosed()
+            .toDateString()}<br><br>` +
+          `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
+          `${vm.requestLinkAdmin()}`;
+
+        createEmail(to, [], [], subject, body, sendDate, id);
+      }
+    });
+  }
+}
 /************************************************************
  * ValuePair Binding Getters and Setters
  ************************************************************/
@@ -484,7 +534,21 @@ function setValuePairs(listDef, jObject) {
 
 function clearValuePairs(listDef) {
   $.each(listDef, function (field, obj) {
-    vm[obj.koMap]("");
+    if (obj.koMap != "requestID") {
+      vm[obj.koMap]("");
+    }
+  });
+}
+/************************************************************
+ * Fetch Static List Data
+ ************************************************************/
+function fetchStaticListData(callback) {
+  // Fetch anything we need to present our app
+  fetchAllOrders((orders) => {
+    vm.incLoadedListItems();
+    fetchAllAssignments((assignments) => {
+      vm.incLoadedListItems();
+    });
   });
 }
 
@@ -494,13 +558,14 @@ function clearValuePairs(listDef) {
 
 function fetchConfigListData(callback) {
   /* Retrieve all data from our config lists */
+  /* Once cnt loaded list items hit's 5, initComplete() */
   vm.listRefConfigActionOffices().getListItems("<Query></Query>", (items) => {
     vm.configActionOffices(items);
     vm.incLoadedListItems();
   });
 
-  vm.listRefConfigActionOfficeIDs().getListItems("<Query></Query>", (items) => {
-    vm.configActionOfficeIDs(items);
+  vm.listRefConfigRequestOrgs().getListItems("<Query></Query>", (items) => {
+    vm.configRequestOrgs(items);
     vm.incLoadedListItems();
   });
 
@@ -521,7 +586,7 @@ function fetchConfigListData(callback) {
       vm.incLoadedListItems();
     }
   );
-  /* We'll won't filter our inactive service types just in case there are some open */
+  /* We won't filter our inactive service types just in case there are some open */
   vm.listRefConfigServiceType().getListItems("<Query></Query>", (items) => {
     vm.configServiceTypes(items);
     vm.incLoadedListItems();
@@ -532,24 +597,18 @@ function fetchConfigListData(callback) {
  * Work Orders
  ************************************************************/
 function fetchAllOrders(callback) {
-  vm.listRefWO().getListItems(
-    '<View Scope="RecursiveAll"><Query><Where>' +
-      "<Eq>" +
-      '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
-      "</Eq></Where></Query></View>",
-    (items) => {
-      console.log("loading open orders", items);
-      vm.allOrders(items);
-      if (items.length > 0) {
-        makeDataTable("#wo-open-orders");
-        makeDataTable("#wo-closed-orders");
-        makeDataTable("#wo-cancelled-orders");
-      }
-      if (callback) {
-        callback();
-      }
+  var camlq =
+    '<View Scope="RecursiveAll"><Query><Where><Eq>' +
+    '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
+    "</Eq></Where></Query></View>";
+
+  vm.listRefWO().getListItems(camlq, (items) => {
+    console.log("loading open orders", items);
+    vm.allOrders(items);
+    if (callback) {
+      callback(items);
     }
-  );
+  });
 }
 
 /************************************************************
@@ -593,16 +652,16 @@ function fetchAttachments() {
  ************************************************************/
 function newOfficeAssignment() {
   // Takes a new action office and adds it to the request assigned offices
-  vm.requestActionOffices.push(vm.assignOfficeAssignee());
+  vm.requestOrgs.push(vm.assignOfficeAssignee());
 
   vm.listRefWO().updateListItem(
     vm.requestHeader().ID,
-    [["ActionOffices", vm.requestActionOfficeIds()]],
+    [["RequestOrgs", vm.requestOrgIds()]],
     () => vm.assignOfficeAssignee(null)
   );
 }
 
-function newAssignment(role) {
+function newAssignmentForm(role) {
   // Open the new assignments forms
   vm.listRefAssignment().showModal(
     "CustomNewForm.aspx",
@@ -612,7 +671,7 @@ function newAssignment(role) {
       //console.log('approval args', args)
       // TODO: If this pushes the process forward, handle that here.
       //approvalUpdateProgress()
-      fetchAssignments();
+      fetchRequestAssignments();
     }
   );
 }
@@ -635,7 +694,11 @@ function createAssignment() {
         );
 
         $("#wo-routing").accordion("open", 0);
-        fetchAssignments();
+        fetchRequestAssignments(vm.requestID(), (assignments) => {
+          //let rvp = [["RequestAssignments", vm.requestAssignmentIds()]];
+          //vm.listRefWO().updateListItem(vm.requestHeader().ID, rvp, () => {});
+        });
+        //Update the request with a new assignment:
         // Build our email
         let to = [vm.assignAssignee().UserAddress];
 
@@ -667,24 +730,79 @@ function createAssignment() {
   }
 }
 
-function fetchAssignments() {
+function fetchAllAssignments(callback) {
   var camlq =
-    '<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' +
-    vm.requestID() +
-    "</Value></Eq></Where></Query></View>";
-  vm.listRefAssignment().getListItems(camlq, function (assignments) {
-    // Let's connect our Action offices here.
-    assignments.forEach(
+    '<View Scope="RecursiveAll"><Query><Where><Eq>' +
+    '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
+    "</Eq></Where></Query></View>";
+  let start = new Date();
+  vm.listRefAssignment().getListItems(camlq, (assignments) => {
+    vm.allAssignments(assignments);
+
+    assignments.map(
       (assignment) =>
         (assignment.actionOffice = vm
           .configActionOffices()
           .find((ao) => ao.ID == assignment.ActionOffice.get_lookupId()))
     );
-    vm.requestAssignees(assignments);
+
+    // Map our assignments to our orders
+    vm.allOrders().map((order) => {
+      order.requestAssignmentMap = assignments.filter(
+        (assignment) => assignment.Title == order.Title
+      );
+    });
+
+    let end = new Date();
+    console.log(`assignments mapped in ${end - start} ms`);
+    if (callback) {
+      callback(assignments);
+    }
   });
 }
 
-function fetchAllAssignments() {
+function fetchRequestAssignments(title = null, callback = null) {
+  let queryTitle = title ? title : vm.requestID();
+
+  var camlq =
+    '<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' +
+    queryTitle +
+    "</Value></Eq></Where></Query></View>";
+
+  vm.listRefAssignment().getListItems(camlq, function (assignments) {
+    // Let's connect our Action offices here.
+    assignments.map(
+      (assignment) =>
+        (assignment.actionOffice = vm
+          .configActionOffices()
+          .find((ao) => ao.ID == assignment.ActionOffice.get_lookupId()))
+    );
+
+    //vm.requestAssignees(assignments);
+    vm.requestAssignments(assignments);
+
+    vm
+      .allOrders()
+      .find(
+        (order) => order.Title == queryTitle
+      ).requestAssignmentMap = assignments;
+
+    vm.allOrders.valueHasMutated();
+    if (callback) {
+      callback(assignments);
+    }
+  });
+}
+
+function updateTableRequest(id) {
+  let title = this.Title;
+  vm.tableRequestTitle(title);
+  fetchRequestAssignments(id, (assigments) =>
+    vm.tableRequestAssignments(assigments)
+  );
+}
+
+function fetchMyAOAssignments() {
   var camlq =
     '<View Scope="RecursiveAll"><Query><Where><In>' +
     '<FieldRef Name="ActionOffice" LookupId="TRUE"/><Values>' +
@@ -698,7 +816,7 @@ function fetchAllAssignments() {
 
   vm.listRefAssignment().getListItems(camlq, function (assignments) {
     console.log(assignments);
-    vm.allAssignments(assignments);
+    vm.allAOAssignments(assignments);
     var idarr = [];
     $(vm.allAssignments()).each(function () {
       idarr.push(this.Title);
@@ -873,7 +991,15 @@ function fetchComments(callback) {
  * Email
  ************************************************************/
 
-function createEmail(to, cc, bcc, subject, body) {
+function createEmail(
+  to,
+  cc,
+  bcc,
+  subject,
+  body,
+  sendDate = null,
+  id = vm.requestHeader().ID
+) {
   let toArr = createEmailAddressee(to);
   let ccArr = createEmailAddressee(cc);
   let bccArr = createEmailAddressee(bcc);
@@ -884,7 +1010,13 @@ function createEmail(to, cc, bcc, subject, body) {
     ["BCC", bccArr],
     ["Title", subject],
     ["Body", body],
+    ["Request", id],
   ];
+
+  if (sendDate) {
+    vp.push(["DateToSend", sendDate]);
+  }
+
   vm.listRefWOEmails().createListItem(
     vp,
     () => newEmailCallback(SP.UI.DialogResult.OK, null),
@@ -911,74 +1043,112 @@ function newEmailCallback(result, value) {
  ************************************************************/
 
 function pipelineForward() {
+  let valuePairs = new Array();
+
   /* Increment the current request stage num */
   var t = parseInt(vm.requestStageNum()) + 1;
-  vm.requestStageNum(t);
-  var valuepairs = [["RequestStage", vm.requestStageNum()]];
+  if (t > vm.selectedPipeline().length) {
+    // vm.requestStatus("Closed");
+    // valuePairs.push(["RequestStatus", "Closed"]);
+    closeWorkOrder();
+  } else {
+    vm.requestStageNum(t);
+    valuePairs.push(["RequestStage", vm.requestStageNum()]);
 
-  if (vm.requestStage().Title == "Closed") {
-    valuepairs.push(["RequestStatus", "Closed"]);
+    vm.listRefWO().updateListItem(
+      vm.requestHeader().ID,
+      valuePairs,
+      function () {
+        SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+        console.log("pipeline moved to next stage.");
+        buildPipelineElement();
+
+        // Build our email
+        let to = [
+          vm
+            .configActionOffices()
+            .find(
+              (aoid) => aoid.ID == vm.requestStage().Assignee.get_lookupId()
+            ).UserAddress,
+        ];
+
+        let subject = `Work Order -${vm.requestStage().Title}- ${
+          vm.selectedServiceType().Title
+        } - ${vm.requestID()}`;
+
+        let body =
+          `Greetings Colleagues,<br><br> The following service request has changed, requiring your attention:<br>` +
+          `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
+            vm.selectedServiceType().Title
+          }<br><br>` +
+          `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
+          `${vm.requestLinkAdmin()}`;
+
+        createEmail(to, [], [], subject, body);
+
+        // Create the action
+        createAction(
+          vm.requestStage().Title == "Closed" ? "Closed" : "Progressed",
+          `${sal.globalConfig.currentUser.get_title()} has moved the request to stage ${
+            vm.requestStage().Step
+          }: ${vm.requestStage().Title}`
+        );
+      }
+    );
   }
+}
 
-  vm.listRefWO().updateListItem(vm.requestHeader().ID, valuepairs, function () {
-    SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
-    console.log("pipeline moved to next stage.");
-    buildPipelineElement();
+function cancelWorkOrder() {
+  SP.UI.ModalDialog.showWaitScreenWithNoClose("Cancelling Request...");
+  closeWorkOrder("Cancelled");
+}
 
-    // Build our email
-    let to = [
-      vm
-        .configActionOffices()
-        .find((aoid) => aoid.ID == vm.requestStage().Assignee.get_lookupId())
-        .UserAddress,
-    ];
+function closeWorkOrder(reason = "Closed") {
+  var vp = [
+    ["RequestStatus", reason],
+    ["RequestStage", "10"],
+    ["ClosedDate", new Date()],
+    ["IsActive", false],
+  ];
+  vm.listRefWO().updateListItem(vm.requestHeader().ID, vp, function () {
+    alert("Record succesfully closed");
 
-    let subject = `Work Order -${vm.requestStage().Title}- ${
+    let to = vm
+      .requestOrgs()
+      .map((ao) => vm.configRequestOrgs().find((aoid) => aoid.ID == ao.ID))
+      .map((aoids) => aoids.UserGroup);
+
+    let subject = `Work Order -${reason}- ${
       vm.selectedServiceType().Title
     } - ${vm.requestID()}`;
 
     let body =
-      `Greetings Colleagues,<br><br> The following service request has changed, requiring your attention:<br>` +
+      `Greetings Colleagues,<br><br> The following service request has been ${reason.toLocaleLowerCase()}:<br>` +
       `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
         vm.selectedServiceType().Title
       }<br><br>` +
-      `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
+      `To view an archive of the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
       `${vm.requestLinkAdmin()}`;
 
     createEmail(to, [], [], subject, body);
 
     // Create the action
     createAction(
-      vm.requestStage().Title == "Closed" ? "Closed" : "Progressed",
-      `${sal.globalConfig.currentUser.get_title()} has moved the request to stage ${
-        vm.requestStage().Step
-      }: ${vm.requestStage().Title}`
+      reason,
+      `${sal.globalConfig.currentUser.get_title()} has moved ${reason} the request`
     );
+    SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+    refreshWorkOrderItem(vm.requestID());
   });
 }
 
 /************************************************************
  * Initialize app
  ************************************************************/
-
+/* initApp -> fetchXListData -> initServiceTypes -> initTemplates -> initComplete */
 function initApp() {
   SP.UI.ModalDialog.showWaitScreenWithNoClose("Initializing", "Please Wait...");
-  //textpu10kDescription = new nicEditor({fullPanel : true}).panelInstance('textpu10kDescription')
   $(".non-editable-field").prop("disabled", true);
-  //$("#tabs").tabs();
-  // $("#wo-progress-bar").progressbar({
-  //   value: 0,
-  // });
-  // //$('.ui.sticky').sticky();
-  // $(".ui.checkbox").checkbox();
-  // $(".ui.accordion").accordion();
-  // $(".ui.popup").popup();
-  // $(".menu .item").tab();
-  // $(".top.menu .item").tab({
-  //   onVisible: function () {
-  //     vm.tab(this.id);
-  //   },
-  // });
 
   console.log("initialized listeners");
 
@@ -990,21 +1160,46 @@ function initApp() {
 
   // Setup models for each of the config lists we may connect to
   initStaticListRefs();
-  // initPageListeners();
+
+  // Fetch our static lists and configuration lists
+  fetchStaticListData();
   fetchConfigListData();
 
   // Get our current user groups and store them
   getCurrentUserGroups((groups) => vm.userGroupMembership(groups));
-  //if (hash != '') {
-  //    viewWorkOrder(hash);
-  //}
 }
 
-function initComplete() {
+function initServiceTypes() {
   //Initialize the rest of our list references
   initServiceTypeListRefs();
   initTemplates();
+}
 
+function initTemplates() {
+  let templates = vm
+    .configServiceTypes()
+    .map((stype) => stype.TemplateName)
+    .filter((templ) => templ);
+
+  let cnt = templates.length;
+  let loaded = 0;
+
+  templates.forEach((template) => {
+    $.get(
+      `${sal.globalConfig.siteUrl}/SiteAssets/workorder/wo/ServiceTypeTemplates/${template}`,
+      function (html) {
+        $("#service-type-templates").append(html);
+        loaded++;
+        if (loaded == cnt) {
+          // We've loaded all templates
+          initComplete();
+        }
+      }
+    );
+  });
+}
+
+function initComplete() {
   //Parse Page Params
   var path = window.location.pathname;
   vm.page(path.split("/").pop());
@@ -1021,15 +1216,13 @@ function initComplete() {
   let stypeId = urlParams.get("stype");
   let stype = null;
 
-  //Both admins and users need all orders available to them.
-  fetchAllOrders(function () {
-    if (id) {
-      viewWorkOrderItem(id);
-    }
-    //If we're on a separate tab, switch back to the tab from the url.
-    vm.tab(tab);
+  if (id) {
+    viewWorkOrderItem(id);
+  }
+  //If we're on a separate tab, switch back to the tab from the url.
 
-    // check that we are on the app page
+  // if no tab is present, switch based on page
+  if (!tab) {
     switch (vm.page()) {
       case "app.aspx":
         if (!tab) {
@@ -1038,7 +1231,7 @@ function initComplete() {
         break;
 
       case "admin.aspx":
-        fetchAllAssignments();
+        //fetchMyAOAssignments();
         if (!tab) {
           vm.tab("assigned-orders");
         }
@@ -1046,39 +1239,36 @@ function initComplete() {
 
       default:
     }
+  } else {
+    vm.tab(tab);
+  }
 
-    ko.applyBindings(vm);
-    initUIComponents();
-    SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
-  });
+  ko.applyBindings(vm);
   $("#tabs").show();
+
+  initUIComponents();
+  SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
 
 function initUIComponents() {
+  makeDataTable("#wo-open-orders");
+  makeDataTable("#wo-closed-orders");
+  makeDataTable("#wo-cancelled-orders");
+
   $(".ui.checkbox").checkbox();
   $(".ui.accordion").accordion();
-  $(".ui.popup").popup();
+  // $(".view-action-office").popup({
+  //   popup: ".ui.list-action-office.popup",
+  //   on: "click",
+  // });
   $(".menu .item").tab();
   $(".top.menu .item").tab({
     onVisible: function () {
       vm.tab(this.id);
     },
   });
-
   $(".ui.secondary.menu").find(".item").tab("change tab", "my-open-orders");
   //$(".ui.top.menu").find(".item").tab("change tab", "my-orders");
-}
-
-function initTemplates() {
-  vm.configServiceTypes().forEach((stype) => {
-    if (stype.TemplateName)
-      $.get(
-        `${sal.globalConfig.siteUrl}/SiteAssets/workorder/wo/ServiceTypeTemplates/${stype.TemplateName}`,
-        function (template) {
-          $("#service-type-templates").append(template);
-        }
-      );
-  });
 }
 
 $(document).ready(function () {

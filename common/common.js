@@ -71,24 +71,28 @@ function makeDataTable(id) {
           //this.api().columns([0, 2, 5]).every( function () {
           // colum filtering from https://datatables.net/examples/api/multi_filter_select.html
           var column = this;
-          //var columnValues = [];
-          //var columnTitle = $(column.header()).html();
-          // $(column.header()).append("<br>");
-          var select = $('<select><option value=""></option></select>')
-            .appendTo($(column.footer()).empty())
-            //.appendTo($(column.header()))
-            .on("change", function () {
-              var val = $.fn.dataTable.util.escapeRegex($(this).val());
+          if (
+            !["Assignees", "Description"].includes($(column.header()).html())
+          ) {
+            //var columnValues = [];
+            //var columnTitle = $(column.header()).html();
+            // $(column.header()).append("<br>");
+            var select = $('<select><option value=""></option></select>')
+              .appendTo($(column.footer()).empty())
+              //.appendTo($(column.header()))
+              .on("change", function () {
+                var val = $.fn.dataTable.util.escapeRegex($(this).val());
 
-              column.search(val ? "^" + val + "$" : "", true, false).draw();
-            });
-          column
-            .data()
-            .unique()
-            .sort()
-            .each(function (d, j) {
-              select.append('<option value="' + d + '">' + d + "</option>");
-            });
+                column.search(val ? "^" + val + "$" : "", true, false).draw();
+              });
+            column
+              .data()
+              .unique()
+              .sort()
+              .each(function (d, j) {
+                select.append('<option value="' + d + '">' + d + "</option>");
+              });
+          }
         });
     },
   });
@@ -97,10 +101,14 @@ function makeDataTable(id) {
 function businessDaysFromDate(date, businessDays) {
   var counter = 0,
     tmp = new Date(date);
-  while (businessDays >= 0) {
-    tmp.setTime(date.getTime() + counter * 86400000);
+  let dayCnt = Math.abs(businessDays);
+
+  let sign = Math.sign(businessDays);
+
+  while (dayCnt >= 0) {
+    tmp.setTime(date.getTime() + sign * counter * 86400000);
     if (isBusinessDay(tmp) && !isConfigHoliday(tmp)) {
-      --businessDays;
+      --dayCnt;
     }
     ++counter;
   }
@@ -333,4 +341,10 @@ function intersect(a, b) {
   var setB = new Set(b);
   var intersection = new Set([...setA].filter((x) => setB.has(x)));
   return Array.from(intersection);
+}
+
+function stripHtml(html) {
+  var tmp = document.createElement("DIV");
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || "";
 }
