@@ -89,7 +89,7 @@ function newWorkOrder() {
   }
   vm.requestorEmail(sal.globalConfig.currentUser.get_email());
   vm.requestStageNum(0);
-  vm.requestIsActive(true);
+  vm.requestIsActive(1);
   vm.requestStatus("Draft");
 
   //Clear our requested fields.
@@ -122,11 +122,16 @@ function refreshWorkOrderItem(woID) {
     console.log("loading open orders", items);
     if (items[0]) {
       if (vm.allOrders().find((order) => order.Title == woID)) {
-        vm.allOrders().map((order) => (order.Title == woID ? items[0] : order));
+        vm.allOrders(
+          vm
+            .allOrders()
+            .map((order) => (order.Title == woID ? items[0] : order))
+        );
+        vm.allOrders.valueHasMutated();
       } else {
         vm.allOrders.push(items[0]);
       }
-      viewWorkOrderItem(woID);
+      fetchRequestAssignments(woID, () => viewWorkOrderItem(woID));
     }
   });
 }
