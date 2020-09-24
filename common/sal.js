@@ -225,15 +225,22 @@ function getCurrentUserGroups(callback) {
 function SPList(listDef) {
   /*
       Expecting a list definition object in the following format:
-        {
-            name: 'GFMS Systems List',
-            title: 'GFMS Systems List',
-            viewFields: [
-                'Title', 'Program', 'Index', 'System', 'Level', 'System Manager',
-            ],
-            childLists: [{name: 'Agreements Dashboard', key: {source: 'Title', target: 'System'}}],
-            childLibraries: [{lib: this.libraries.subLib0, key: {source: 'Title', target: 'System'}}]
-        }
+        var assignmentListDef = {
+        name: "Assignment",
+        title: "Assignment",
+        viewFields: {
+          ID: { type: "Text"},
+          Title: { type: "Text"},
+          Assignee: { type: "Person"},
+          ActionOffice: { type: "Lookup"},
+          Comment: { type: "Text"},
+          IsActive: { type: "Bool"},
+          Role: { type: "Text"},
+          Status: { type: "Text"},
+          Author: { type: "Text"},
+          Created: { type: "Text"},
+        },
+      };
     */
 
   /*****************************************************************

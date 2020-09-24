@@ -100,6 +100,7 @@ var assignmentListDef = {
     Title: { type: "Text", koMap: "empty" },
     Assignee: { type: "Person", koMap: "empty" },
     ActionOffice: { type: "Lookup", koMap: "empty" },
+    CanDelegate: { type: "Bool" },
     Comment: { type: "Text", koMap: "empty" },
     IsActive: { type: "Bool", koMap: "empty" },
     Role: { type: "Text", koMap: "empty" },
