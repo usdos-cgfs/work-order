@@ -527,6 +527,24 @@
     </div>
     <div class="ui hidden divider"></div>
     <!-- ko if: showRouting -->
+    <div class="ui modal" id="assignment-reject-modal" style="display: none">
+      <div class="header">Reject Reason</div>
+      <div class="content">
+        <div class="field">
+          <textarea data-bind="value: assignmentRejectComment"></textarea>
+        </div>
+      </div>
+      <div class="actions">
+        <div class="ui black deny button">Cancel</div>
+        <div
+          class="ui positive right labeled icon button"
+          data-bind="click: assignmentRejectSubmit"
+        >
+          Reject
+          <i class="checkmark icon"></i>
+        </div>
+      </div>
+    </div>
     <div
       id="wo-routing"
       class="ui styled fluid accordion"
@@ -576,17 +594,24 @@
                       <p data-bind="text: Created.toLocaleString()"></p>
                     </td>
                     <td>
-                      <p>In Progress</p>
+                      <p data-bind="text: Status"></p>
                     </td>
                     <td>
                       <!-- ko if:  $root.assignmentCurUserCanApprove($data) -->
                       <i
+                        title="Approve"
                         class="fas fa-check pointer"
                         data-bind="click: $root.assignmentApprove.bind($data)"
+                      ></i>
+                      <i
+                        title="Reject"
+                        class="fas fa-times-circle pointer"
+                        data-bind="click: $root.assignmentReject.bind($data)"
                       ></i>
                       <!-- /ko -->
                       <!-- ko if:  $root.assignmentCurUserCanRemove($data) -->
                       <i
+                        title="Remove"
                         class="fas fa-user-times pointer"
                         data-bind="click: $root.assignmentRemove.bind($data)"
                       ></i>
@@ -596,7 +621,8 @@
                 </tbody>
               </table>
             </div>
-            <div class="four wide column" data-bind="if: userIsSysAdmin">
+            <!-- ko if: userIsSysAdmin -->
+            <div class="four wide column">
               <h3>Offices Assigned</h3>
               <div class="ui compact menu">
                 <select
@@ -627,6 +653,7 @@
                 </tbody>
               </table>
             </div>
+            <!-- /ko -->
           </div>
         </div>
       </div>

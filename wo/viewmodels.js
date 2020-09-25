@@ -293,7 +293,7 @@ function koviewmodel() {
 
   // Can the current user approve the record?
   self.requestCurUserApprove = ko.pureComputed(function () {
-    return false;
+    return true;
   });
 
   /************************************************************
@@ -337,7 +337,19 @@ function koviewmodel() {
   });
 
   self.assignmentCurUserCanApprove = function (assignment) {
-    return true;
+    let isStatus = assignment.Status == "In Progress";
+    let isType = assignment.Role == "Approver";
+
+    if (isType && isStatus) {
+      // This is the most intensive check, so let's only perform if the easy
+      // ones are true
+      return vm
+        .userActionOfficeMembership()
+        .map((ao) => ao.ID)
+        .includes(assignment.actionOffice.ID);
+    } else {
+      return false;
+    }
   };
 
   self.assignmentApprove = function (assignment) {
@@ -350,8 +362,43 @@ function koviewmodel() {
 
     self.listRefAssignment().updateListItem(assignment.ID, vp, () => {
       timedNotification(assignment.actionOffice.Title + " Approved", 2000);
+      // Create a new action
+      createAction("Approved", `The request has been approved.`);
       fetchRequestAssignments();
     });
+  };
+
+  self.assignmentRejectComment = ko.observable();
+  self.assignmentRejectAssignment = ko.observable();
+  self.assignmentReject = function (assignment) {
+    self.assignmentRejectAssignment(assignment);
+    $("#assignment-reject-modal").modal("show");
+  };
+
+  self.assignmentRejectSubmit = function () {
+    // Update this assignment with our approval
+    let vp = [
+      ["IsActive", 0],
+      ["CompletionDate", new Date()],
+      ["Status", "Rejected"],
+      ["Comment", self.assignmentRejectComment()],
+    ];
+
+    self
+      .listRefAssignment()
+      .updateListItem(self.assignmentRejectAssignment().ID, vp, () => {
+        timedNotification(
+          self.assignmentRejectAssignment().actionOffice.Title + " Approved",
+          2000
+        );
+        // Create a new action
+        createAction(
+          "Rejected",
+          `The request has been rejected with the following comment:\n` +
+            `${self.assignmentRejectComment()}`
+        );
+        fetchRequestAssignments();
+      });
   };
 
   self.assignmentCurUserCanRemove = function (assignment) {
