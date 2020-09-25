@@ -1,0 +1,4 @@
+<h1 id="approval-message">Approving Record</h1>
+<script src="../SiteAssets/workorder/vendor/jquery/jquery-3.3.1.min.js"></script>
+<script src="../SiteAssets/workorder/common/sal.js"></script>
+<script src="../SiteAssets/workorder/wo/page_approval.js"></script>
