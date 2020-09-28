@@ -1235,6 +1235,7 @@ function initComplete() {
   if (!tab) {
     switch (vm.page()) {
       case "app.aspx":
+        vm.userRole("user");
         if (!tab) {
           vm.tab("my-orders");
         }
@@ -1242,8 +1243,9 @@ function initComplete() {
 
       case "admin.aspx":
         //fetchMyAOAssignments();
+        vm.userRole("admin");
         if (!tab) {
-          vm.tab("assigned-orders");
+          vm.tab("my-orders");
         }
         break;
 

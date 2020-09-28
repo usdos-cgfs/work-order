@@ -25,15 +25,6 @@ sampleServiceType = {
 };
 */
 
-var managingDirectors = {
-  Select: "",
-  "CGFS/EX": "Backlund, Peter",
-  "CGFS/F": "Lugo, Joan",
-  "CGFS/GC": "Self, Amy",
-  "CGFS/S/CST": "Sizemore, Richard",
-  "CGFS/GSO": "Bowers, Susan",
-};
-
 //var offices = ["CGFS/EX", "CGFS/F", "CGFS/GC", "CGFS/S/CST", "CGFS/GSO"];
 
 /************************************************************
@@ -984,13 +975,17 @@ function koviewmodel() {
   });
 
   self.requestorOfficeUserOpt = ko.pureComputed(function () {
-    let groupIds = self.userGroupMembership().map((ug) => ug.ID);
-    let activeFilteredRO = self
-      .configRequestingOffices()
-      .filter((ro) => ro.Active) //Check if we're active
-      .filter((ro) => groupIds.includes(ro.ROGroup.get_lookupId()));
+    if (self.userRole() == "admin") {
+      return self.configRequestingOffices();
+    } else {
+      let groupIds = self.userGroupMembership().map((ug) => ug.ID);
+      let activeFilteredRO = self
+        .configRequestingOffices()
+        .filter((ro) => ro.Active) //Check if we're active
+        .filter((ro) => groupIds.includes(ro.ROGroup.get_lookupId()));
 
-    return activeFilteredRO;
+      return activeFilteredRO;
+    }
   });
 
   self.requestSubmittedDate = ko.observable();
@@ -1013,11 +1008,6 @@ function koviewmodel() {
           .find((stype) => stype.ID == value.get_lookupId())
       );
     },
-  });
-
-  self.requestorOffice.subscribe(function () {
-    // When the requesting office changes, so changes the manager
-    self.requestorManager(managingDirectors[self.requestorOffice()]);
   });
 }
 /* Binding handlers */
