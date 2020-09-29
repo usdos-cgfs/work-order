@@ -30,6 +30,42 @@
 <link rel="stylesheet" href="../SiteAssets/workorder/wo/workorder.css" />
 <!-- common/RDT/app"  -->
 
+<table id="test-assignment-table" class="display">
+  <thead>
+    <tr>
+      <th>Order ID</th>
+      <th>Service Type</th>
+      <th>Requesting Office</th>
+      <th>Requestor</th>
+      <th>Assignees</th>
+      <th>Submitted Date</th>
+    </tr>
+  </thead>
+  <tbody data-bind="foreach: officeAllOpenOrders">
+    <tr>
+      <td data-bind="click: $root.showWorkOrder, text: Title"></td>
+      <td data-bind="text: ServiceType.get_lookupValue()"></td>
+      <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
+      <td data-bind="text: RequestorName"></td>
+      <td>
+        <ul data-bind="foreach: $root.readRequestAssignments($data)">
+          <li data-bind="text: actionOffice.Title"></li>
+        </ul>
+      </td>
+      <td data-bind="text: Created.format('yyyy-MM-dd')"></td>
+    </tr>
+  </tbody>
+  <tfoot>
+    <tr>
+      <th>Order ID</th>
+      <th>Service Type</th>
+      <th>Requesting Office</th>
+      <th>Requestor</th>
+      <th>Assignees</th>
+      <th>Submitted Date</th>
+    </tr>
+  </tfoot>
+</table>
 <div id="tabs" style="display: none">
   <div class="ui top attached tabular menu">
     <a class="item" data-tab="my-orders">Office Orders</a>

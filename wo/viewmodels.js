@@ -350,7 +350,7 @@ function koviewmodel() {
     }
   };
 
-  self.assignmentApprove = function (assignment) {
+  self.assignmentApprove = function (assignment, advance = false) {
     // Update this assignment with our approval
     let vp = [
       ["IsActive", 0],
@@ -362,6 +362,7 @@ function koviewmodel() {
       timedNotification(assignment.actionOffice.Title + " Approved", 2000);
       // Create a new action
       createAction("Approved", `The request has been approved.`);
+
       fetchRequestAssignments();
     });
   };
@@ -505,6 +506,28 @@ function koviewmodel() {
   self.allAOAssignments = ko.observableArray();
 
   self.lookupOrders = ko.observableArray();
+
+  self.allRequestAssignmentsMap = ko.pureComputed({
+    read: () => {
+      let orders = new Object();
+      self.allOrders().forEach((order) => {
+        orders[order.Title] = self
+          .allAssignments()
+          .filter((assignment) => assignment.Title == order.Title);
+      });
+      return orders;
+    },
+  });
+
+  self.readRequestAssignments = function (req) {
+    return self.allRequestAssignmentsMap()[req.Title];
+  };
+
+  self.requestAssignmentsMap = (req) => {
+    return self
+      .allAssignments()
+      .find((assignment) => assignment.Title == req.Title);
+  };
 
   /************************************************************
    * My Orders Tab
