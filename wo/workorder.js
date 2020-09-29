@@ -843,6 +843,15 @@ function fetchMyAOAssignments() {
 /************************************************************
  * Approvals
  ************************************************************/
+function approveRequest() {
+  // Find the assignment that needs approving and approve!
+  vm.requestAssignments().forEach((assignment) => {
+    if (vm.assignmentCurUserCanApprove(assignment)) {
+      vm.assignmentApprove(assignment);
+    }
+  });
+}
+
 function newApproval() {
   vm.listRefApproval().showModal(
     "NewForm.aspx",

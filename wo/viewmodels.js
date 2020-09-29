@@ -282,11 +282,6 @@ function koviewmodel() {
     return true;
   });
 
-  // Can the current user approve the record?
-  self.requestCurUserApprove = ko.pureComputed(function () {
-    return true;
-  });
-
   /************************************************************
    * ADMIN: Assignment
    ************************************************************/
@@ -327,6 +322,18 @@ function koviewmodel() {
     }
   });
 
+  // Request Level: Can the current user approve the record?
+  self.requestCurUserApprove = ko.pureComputed(() => {
+    let flag = false;
+    self.requestAssignments().forEach((assignment) => {
+      if (self.assignmentCurUserCanApprove(assignment)) {
+        flag = true;
+      }
+    });
+    return flag;
+  });
+
+  // Assignment Level: Can the current user approve this assignment
   self.assignmentCurUserCanApprove = function (assignment) {
     let isStatus = assignment.Status == "In Progress";
     let isType = assignment.Role == "Approver";

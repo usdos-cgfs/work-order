@@ -495,7 +495,7 @@
                   type="button"
                   class="ui fluid green button"
                   data-bind="visible: requestCurUserApprove()"
-                  onclick="newApproval()"
+                  onclick="approveRequest()"
                 >
                   Approve/Reject
                 </button>

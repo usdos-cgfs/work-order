@@ -418,7 +418,7 @@ function SPList(listDef) {
             listObj[item] = getItem;
           } catch (err) {
             console.error(
-              `Unable to retrieve ${item} from ${self.config.def.name}: `,
+              `Unable to retrieve ${item} from ${self.def.name}. Does this column exist?\n\n`,
               err
             );
           }
