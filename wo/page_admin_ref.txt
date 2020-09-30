@@ -29,43 +29,7 @@
 
 <link rel="stylesheet" href="../SiteAssets/workorder/wo/workorder.css" />
 <!-- common/RDT/app"  -->
-
-<table id="test-assignment-table" class="display">
-  <thead>
-    <tr>
-      <th>Order ID</th>
-      <th>Service Type</th>
-      <th>Requesting Office</th>
-      <th>Requestor</th>
-      <th>Assignees</th>
-      <th>Submitted Date</th>
-    </tr>
-  </thead>
-  <tbody data-bind="foreach: officeAllOpenOrders">
-    <tr>
-      <td data-bind="click: $root.showWorkOrder, text: Title"></td>
-      <td data-bind="text: ServiceType.get_lookupValue()"></td>
-      <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
-      <td data-bind="text: RequestorName"></td>
-      <td>
-        <ul data-bind="foreach: $root.readRequestAssignments($data)">
-          <li data-bind="text: actionOffice.Title"></li>
-        </ul>
-      </td>
-      <td data-bind="text: Created.format('yyyy-MM-dd')"></td>
-    </tr>
-  </tbody>
-  <tfoot>
-    <tr>
-      <th>Order ID</th>
-      <th>Service Type</th>
-      <th>Requesting Office</th>
-      <th>Requestor</th>
-      <th>Assignees</th>
-      <th>Submitted Date</th>
-    </tr>
-  </tfoot>
-</table>
+<h1>WorkOrder System: Action Offices</h1>
 <div id="tabs" style="display: none">
   <div class="ui top attached tabular menu">
     <a class="item" data-tab="my-orders">Office Orders</a>
@@ -137,6 +101,12 @@
               </ul>
             </div>
             <h2>Open Orders</h2>
+            <input
+              type="checkbox"
+              id="toggleShowAssignments"
+              data-bind="checked: showRequestAssignments"
+            />
+            <label for="toggleShowAssignments">Show Assignees</label>
             <table id="wo-open-orders" class="display data-table">
               <thead>
                 <tr>
@@ -159,19 +129,13 @@
                   <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
                   <td data-bind="text: RequestorName"></td>
                   <td>
-                    <a
-                      class="view-action-office"
-                      href="javascript:void(0)"
-                      data-bind="click: updateTableRequest.bind($data, $data.Title)"
-                      >View
-                      <span
-                        data-bind="text: requestAssignmentMap.length"
-                      ></span>
-                      Assignees</a
+                    <!-- ko if: vm.showRequestAssignments() -->
+                    <ul
+                      data-bind="foreach: $root.readRequestAssignments($data)"
                     >
-                    <ul data-bind="foreach: requestAssignmentMap">
                       <li data-bind="text: actionOffice.Title"></li>
                     </ul>
+                    <!-- /ko -->
                   </td>
                   <td data-bind="text: Created.format('yyyy-MM-dd')"></td>
                   <td data-bind="text: $root.estimateClosingDate($data)"></td>
@@ -597,13 +561,15 @@
           <div class="row">
             <div class="twelve wide column">
               <h3>Users Assigned</h3>
-              <div data-bind="visible: requestAssignments().length == 0">
+              <div
+                data-bind="visible: vm.readRequestAssignments()().length == 0"
+              >
                 <p>This request has not been assigned yet, check back later.</p>
               </div>
               <table
                 id="wo-assignees"
                 class="ui celled very basic table"
-                data-bind="visible: requestAssignments().length > 0"
+                data-bind="visible: vm.readRequestAssignments()().length > 0"
               >
                 <thead>
                   <tr>
@@ -615,7 +581,7 @@
                     <th>Actions</th>
                   </tr>
                 </thead>
-                <tbody data-bind="foreach: requestAssignments">
+                <tbody data-bind="foreach: vm.readRequestAssignments()()">
                   <tr>
                     <td>
                       <p data-bind="text: ActionOffice.get_lookupValue()"></p>

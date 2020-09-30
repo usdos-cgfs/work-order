@@ -322,6 +322,38 @@ function koviewmodel() {
     }
   });
 
+  // Assignment Level: Action Item
+  self.assignmentCurUserCanAct = function (assignment) {
+    let isStatus = assignment.Status == "In Progress";
+    let isType = assignment.Role == "Action Resolver";
+    if (isType && isStatus) {
+      // This is the most intensive check, so let's only perform if the easy
+      // ones are true
+      return vm
+        .userActionOfficeMembership()
+        .map((ao) => ao.ID)
+        .includes(assignment.actionOffice.ID);
+    } else {
+      return false;
+    }
+  };
+  self.assignmentComplete = function (assignment, advance = false) {
+    // Update this assignment with our approval
+    let vp = [
+      ["IsActive", 0],
+      ["CompletionDate", new Date()],
+      ["Status", "Completed"],
+    ];
+
+    self.listRefAssignment().updateListItem(assignment.ID, vp, () => {
+      timedNotification(assignment.actionOffice.Title + " Completed", 2000);
+      // Create a new action
+      createAction("Completed", `The assignment has been completed.`);
+
+      fetchRequestAssignments();
+    });
+  };
+
   // Request Level: Can the current user approve the record?
   self.requestCurUserApprove = ko.pureComputed(() => {
     let flag = false;
@@ -411,6 +443,11 @@ function koviewmodel() {
     console.log("deleting assignee", assignment);
     self.listRefAssignment().deleteListItem(assignment.ID, () => {
       timedNotification(assignment.actionOffice.Title + " Removed", 2000);
+      self.allAssignments(
+        self
+          .allAssignments()
+          .filter((allAssignment) => allAssignment.ID != assignment.ID)
+      );
       fetchRequestAssignments();
     });
   };
@@ -519,19 +556,19 @@ function koviewmodel() {
     },
   });
 
-  self.readRequestAssignments = function (req) {
-    return self.allRequestAssignmentsMap()[req.Title];
-  };
-
-  self.requestAssignmentsMap = (req) => {
-    return self
-      .allAssignments()
-      .find((assignment) => assignment.Title == req.Title);
-  };
-
   /************************************************************
    * My Orders Tab
    ************************************************************/
+
+  self.showRequestAssignments = ko.observable(true);
+
+  self.readRequestAssignments = function (req) {
+    return ko.computed(() =>
+      req
+        ? self.allRequestAssignmentsMap()[req.Title]
+        : self.allRequestAssignmentsMap()[self.requestID()]
+    );
+  };
 
   self.allOfficeOrders = ko.pureComputed(() => {
     let offices = self

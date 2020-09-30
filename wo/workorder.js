@@ -131,17 +131,14 @@ function refreshWorkOrderItem(woID) {
     console.log("loading open orders", items);
     if (items[0]) {
       let req = items[0];
-      vm.listRefAssignment().getListItems(reqCamlq, (assignments) => {
-        req.requestAssignmentMap = assignments;
-        if (vm.allOrders().find((order) => order.Title == woID)) {
-          vm.allOrders(
-            vm.allOrders().map((order) => (order.Title == woID ? req : order))
-          );
-        } else {
-          vm.allOrders.push(req);
-        }
-        viewWorkOrderItem(woID);
-      });
+      if (vm.allOrders().find((order) => order.Title == woID)) {
+        vm.allOrders(
+          vm.allOrders().map((order) => (order.Title == woID ? req : order))
+        );
+      } else {
+        vm.allOrders.push(req);
+      }
+      fetchRequestAssignments(woID, () => viewWorkOrderItem(woID));
     }
   });
 }
@@ -160,7 +157,7 @@ function viewWorkOrderItem(woID) {
   vm.selectedServiceType("");
   setValuePairs(workOrderListDef.viewFields, vm.requestHeader());
 
-  vm.requestAssignments(vm.requestHeader().requestAssignmentMap);
+  vm.requestAssignments(vm.allRequestAssignmentsMap()[woID]);
   /* Fetch all associated Items */
   //fetchRequestAssignments();
   fetchActions(function () {
@@ -747,21 +744,13 @@ function fetchAllAssignments(callback) {
     "</Eq></Where></Query></View>";
   let start = new Date();
   vm.listRefAssignment().getListItems(camlq, (assignments) => {
-    vm.allAssignments(assignments);
-
     assignments.map(
       (assignment) =>
         (assignment.actionOffice = vm
           .configActionOffices()
           .find((ao) => ao.ID == assignment.ActionOffice.get_lookupId()))
     );
-
-    // Map our assignments to our orders
-    vm.allOrders().map((order) => {
-      order.requestAssignmentMap = assignments.filter(
-        (assignment) => assignment.Title == order.Title
-      );
-    });
+    vm.allAssignments(assignments);
 
     let end = new Date();
     console.log(`assignments mapped in ${end - start} ms`);
@@ -788,16 +777,31 @@ function fetchRequestAssignments(title = null, callback = null) {
           .find((ao) => ao.ID == assignment.ActionOffice.get_lookupId()))
     );
 
-    //vm.requestAssignees(assignments);
+    assignments.forEach((assignment) => {
+      if (
+        vm
+          .allAssignments()
+          .find((allAssignment) => allAssignment.ID == assignment.ID)
+      ) {
+        // If this is already in our assignment list, update it
+        vm.allAssignments().map((allAssignment) =>
+          allAssignment.ID == assignment.ID ? assignment : allAssignment
+        );
+      } else {
+        // Push the new assignment to the list
+        vm.allAssignments.push(assignment);
+      }
+    });
+
     vm.requestAssignments(assignments);
 
-    vm
-      .allOrders()
-      .find(
-        (order) => order.Title == queryTitle
-      ).requestAssignmentMap = assignments;
+    // vm
+    //   .allOrders()
+    //   .find(
+    //     (order) => order.Title == queryTitle
+    //   ).requestAssignmentMap = assignments;
 
-    vm.allOrders.valueHasMutated();
+    vm.allAssignments.valueHasMutated();
     if (callback) {
       callback(assignments);
     }
