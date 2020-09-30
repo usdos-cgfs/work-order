@@ -599,6 +599,13 @@
                       <p data-bind="text: Status"></p>
                     </td>
                     <td>
+                      <!-- ko if: $root.assignmentCurUserCanComplete($data) -->
+                      <i
+                        title="Complete"
+                        class="fas fa-check pointer"
+                        data-bind="click: $root.assignmentComplete.bind($data)"
+                      ></i>
+                      <!-- /ko -->
                       <!-- ko if:  $root.assignmentCurUserCanApprove($data) -->
                       <i
                         title="Approve"

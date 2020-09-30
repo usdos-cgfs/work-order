@@ -323,7 +323,7 @@ function koviewmodel() {
   });
 
   // Assignment Level: Action Item
-  self.assignmentCurUserCanAct = function (assignment) {
+  self.assignmentCurUserCanComplete = function (assignment) {
     let isStatus = assignment.Status == "In Progress";
     let isType = assignment.Role == "Action Resolver";
     if (isType && isStatus) {
