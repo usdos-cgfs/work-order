@@ -189,7 +189,8 @@ var configPipelinesListDef = {
     ServiceType: { type: "Text", koMap: "empty" },
     Step: { type: "Text", koMap: "empty" },
     ActionType: { type: "Text", koMap: "empty" },
-    Assignee: { type: "Text", koMap: "empty" },
+    ActionOffice: { type: "Lookup", koMap: "empty" },
+    RequestOrg: { type: "Lookup", koMap: "empty" },
   },
 };
 
@@ -292,12 +293,10 @@ function koviewmodel() {
         .userActionOfficeOwnership()
         .map((uao) => uao.RequestOrg.get_lookupValue());
 
-      // Get the office assigned to this stage,
-      let assignedOffice = self
-        .configActionOffices()
-        .find((ao) => ao.ID == self.requestStage().Assignee.get_lookupId());
-
-      return uao.includes(assignedOffice.RequestOrg.get_lookupValue());
+      // Check if this has been assigned to an entire office.
+      return uao.includes(
+        self.requestStageOrg() ? self.requestStageOrg().Title : null
+      );
     }
   });
 
@@ -471,11 +470,9 @@ function koviewmodel() {
         .map((uao) => uao.RequestOrg.get_lookupValue());
 
       // Get the office assigned to this stage,
-      let assignedOffice = self
-        .configActionOffices()
-        .find((ao) => ao.ID == self.requestStage().Assignee.get_lookupId());
-
-      return uao.includes(assignedOffice.RequestOrg.get_lookupValue());
+      return uao.includes(
+        self.requestStageOrg() ? self.requestStageOrg().Title : null
+      );
     }
   });
 
@@ -1001,6 +998,44 @@ function koviewmodel() {
       return stage ? stage : { Step: self.requestStageNum(), Title: "Closed" };
     } else {
       return "";
+    }
+  });
+
+  self.requestStageOrg = ko.pureComputed(() => {
+    if (!self.requestStage() || !self.requestIsActive()) {
+      return null;
+    } else if (self.requestStage().RequestOrg) {
+      return self
+        .configRequestOrgs()
+        .find((ro) => ro.ID == self.requestStage().RequestOrg.get_lookupId());
+    } else if (self.requestStageOffice()) {
+      return self
+        .configRequestOrgs()
+        .find(
+          (ro) => ro.ID == self.requestStageOffice().RequestOrg.get_lookupId()
+        );
+    } else {
+      return null;
+    }
+  });
+
+  self.requestStageOffice = ko.pureComputed(() => {
+    if (self.requestStage() && self.requestStage().ActionOffice) {
+      return self
+        .configActionOffices()
+        .find((ao) => ao.ID == self.requestStage().ActionOffice.get_lookupId());
+    } else {
+      return null;
+    }
+  });
+
+  self.requestStageOfficeOrg = ko.pureComputed(() => {
+    if (self.requestStageOffice()) {
+      return self
+        .configRequestOrgs()
+        .find(
+          (ro) => ro.ID == self.requestStageOffice().RequestOrg.get_lookupId()
+        );
     }
   });
 

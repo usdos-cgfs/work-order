@@ -683,12 +683,12 @@ function newAssignmentForm(role) {
   );
 }
 
-function createAssignment() {
+function createAssignment(role = "Action Resolver") {
   // Create a new assignment based off our set observables
   if (vm.assignAssignee()) {
     let vp = [
       ["Title", vm.requestID()],
-      ["Role", "Action Resolver"],
+      ["Role", role],
       ["ActionOffice", vm.assignAssignee().ID],
     ];
     vm.listRefAssignment().createListItem(
@@ -1064,7 +1064,12 @@ function newEmailCallback(result, value) {
 /************************************************************
  * Pipeline
  ************************************************************/
-
+/**
+ * Documentation - pipelineForward
+ * Progress the current request pipeline forward, increment
+ * stage number, handle closing, and handle assignments from
+ * new ConfigPipeline stage.
+ */
 function pipelineForward() {
   let valuePairs = new Array();
 
@@ -1085,40 +1090,64 @@ function pipelineForward() {
         SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
         console.log("pipeline moved to next stage.");
         buildPipelineElement();
-
-        // Build our email
-        let to = [
-          vm
-            .configActionOffices()
-            .find(
-              (aoid) => aoid.ID == vm.requestStage().Assignee.get_lookupId()
-            ).UserAddress,
-        ];
-
-        let subject = `Work Order -${vm.requestStage().Title}- ${
-          vm.selectedServiceType().Title
-        } - ${vm.requestID()}`;
-
-        let body =
-          `Greetings Colleagues,<br><br> The following service request has changed, requiring your attention:<br>` +
-          `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
-            vm.selectedServiceType().Title
-          }<br><br>` +
-          `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
-          `${vm.requestLinkAdmin()}`;
-
-        createEmail(to, [], [], subject, body);
-
-        // Create the action
-        createAction(
-          vm.requestStage().Title == "Closed" ? "Closed" : "Progressed",
-          `${sal.globalConfig.currentUser.get_title()} has moved the request to stage ${
-            vm.requestStage().Step
-          }: ${vm.requestStage().Title}`
-        );
+        pipelineNotifications();
+        pipelineAssignments();
       }
     );
   }
+}
+
+function pipelineAssignments() {
+  if (vm.requestIsActive() && vm.requestStage()) {
+    switch (vm.requestStage().ActionType) {
+      case "Pending Approval":
+        // The assigned approver needs to check off
+        vm.assignAssignee(vm.requestStageOffice());
+        createAssignment("Approver");
+        break;
+      case "Pending Action":
+        vm.assignAssignee(vm.requestStageOffice());
+        createAssignment("Action Resolver");
+        break;
+      case "Pending Resolution":
+      case "Pending Assignment":
+      default:
+        break;
+    }
+  }
+}
+
+function pipelineNotifications() {
+  let to = [
+    vm.requestStageOffice() ? vm.requestStageOffice().UserAddress : null,
+  ];
+
+  let cc = new Array();
+  if (vm.requestStageOrg()) {
+    cc.push(vm.requestStageOrg().UserGroup);
+  }
+
+  let subject = `Work Order -${vm.requestStage().Title}- ${
+    vm.selectedServiceType().Title
+  } - ${vm.requestID()}`;
+
+  let body =
+    `Greetings Colleagues,<br><br> The following service request has changed, requiring your attention:<br>` +
+    `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
+      vm.selectedServiceType().Title
+    }<br><br>` +
+    `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
+    `${vm.requestLinkAdmin()}`;
+
+  createEmail(to, cc, [], subject, body);
+
+  // Create the action
+  createAction(
+    vm.requestStage().Title == "Closed" ? "Closed" : "Progressed",
+    `${sal.globalConfig.currentUser.get_title()} has moved the request to stage ${
+      vm.requestStage().Step
+    }: ${vm.requestStage().Title}`
+  );
 }
 
 function cancelWorkOrder() {

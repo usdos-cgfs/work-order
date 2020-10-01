@@ -500,7 +500,7 @@
                   data-bind="visible: requestCurUserApprove()"
                   onclick="approveRequest()"
                 >
-                  Approve/Reject
+                  Approve All
                 </button>
               </div>
               <div class="four wide column"></div>
@@ -582,6 +582,7 @@
                     <th>Assignment Date</th>
                     <th>Status</th>
                     <th>Actions</th>
+                    <th>Admin Actions</th>
                   </tr>
                 </thead>
                 <tbody data-bind="foreach: vm.readRequestAssignments()()">
@@ -621,6 +622,8 @@
                         data-bind="click: $root.assignmentReject.bind($data)"
                       ></i>
                       <!-- /ko -->
+                    </td>
+                    <td>
                       <!-- ko if:  $root.assignmentCurUserCanRemove($data) -->
                       <i
                         title="Remove"
