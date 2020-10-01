@@ -840,7 +840,7 @@ function fetchMyAOAssignments() {
     });
     var vanilla = $.makeArray(filtered);
     vm.assignedOpenOrders(vanilla);
-    makeDataTable("#wo-assigned-orders");
+    //makeDataTable("#wo-assigned-orders");
   });
 }
 
@@ -1277,6 +1277,7 @@ function initComplete() {
 
 function initUIComponents() {
   makeDataTable("#wo-open-orders");
+  makeDataTable("#wo-assigned-orders");
   makeDataTable("#wo-closed-orders");
   makeDataTable("#wo-cancelled-orders");
 

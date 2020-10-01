@@ -254,7 +254,7 @@ function buildROFolders(listRef) {
 
   let actionOffices = [
     ...new Set(
-      vm.configActionOffices().map((ao) => ao.AOGroup.get_lookupValue())
+      vm.configRequestOrgs().map((ro) => ro.UserGroup.get_lookupValue())
     ),
   ];
 

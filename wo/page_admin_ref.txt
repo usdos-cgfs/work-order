@@ -393,6 +393,7 @@
             <td>Requesting Office</td>
             <td>Requestor</td>
             <td>Request Status</td>
+            <td>Assignment Status</td>
           </tr>
         </thead>
         <tbody data-bind="foreach: assignedOpenOrders">
@@ -405,6 +406,7 @@
             <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
             <td data-bind="text: RequestorName"></td>
             <td data-bind="text: RequestStatus"></td>
+            <td data-bind="html: $root.assignmentStatus(Title)()"></td>
           </tr>
         </tbody>
         <tfoot>
@@ -414,6 +416,7 @@
             <td>Requesting Office</td>
             <td>Requestor</td>
             <td>Request Status</td>
+            <td>Assignment Status</td>
           </tr>
         </tfoot>
       </table>

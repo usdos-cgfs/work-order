@@ -151,7 +151,7 @@ var configActionOfficesListDef = {
   viewFields: {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "empty" },
-    AOGroup: { type: "Person", koMap: "empty" },
+    //AOGroup: { type: "Person", koMap: "empty" },
     CanAssign: { type: "Bool", koMap: "empty" },
     RequestOrg: { type: "Lookup", koMap: "empty" },
     SysAdmin: { type: "Bool", koMap: "empty" },
@@ -537,7 +537,6 @@ function koviewmodel() {
 
   self.allOrders = ko.observableArray();
   //self.allOfficeOrders = ko.observableArray();
-  self.assignedOpenOrders = ko.observableArray();
 
   self.allAssignments = ko.observableArray();
   self.allAOAssignments = ko.observableArray();
@@ -760,6 +759,49 @@ function koviewmodel() {
     }
   };
 
+  /************************************************************
+   * Assigned Orders Tab
+   ************************************************************/
+  self.myAssignments = ko.pureComputed(() => {
+    let myAOIDs = self.userActionOfficeMembership().map((ao) => ao.ID);
+    return self
+      .allAssignments()
+      .filter((asg) => myAOIDs.includes(asg.actionOffice.ID));
+  });
+
+  self.assignedOpenOrders = ko.pureComputed(() => {
+    let myAssignedIds = [
+      ...new Set(self.myAssignments().map((asg) => asg.Title)),
+    ];
+
+    return self
+      .allOpenOrders()
+      .filter((order) => myAssignedIds.includes(order.Title));
+  });
+
+  self.assignmentStatus = function (asgTitle) {
+    return ko.computed(() => {
+      let asgs = self.myAssignments().filter((masg) => masg.Title == asgTitle);
+      if (asgs.length > 1) {
+        let statuses = new Array();
+        statuses.push("<ul>");
+        let states = [...new Set(asgs.map((asg) => asg.Status))];
+        states.forEach((status) =>
+          statuses.push(
+            "<li>" +
+              status +
+              ": " +
+              asgs.filter((asg) => asg.Status == status).length +
+              "</li>"
+          )
+        );
+        statuses.push("</ul>");
+        return statuses.join("");
+      } else {
+        return asgs[0].Status;
+      }
+    });
+  };
   /************************************************************
    * Hold generic Work Order vars
    ************************************************************/
