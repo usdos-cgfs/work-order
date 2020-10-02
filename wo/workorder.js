@@ -700,10 +700,7 @@ function createAssignment(role = "Action Resolver") {
       vp,
       (id) => {
         console.log("Assigned: ", id);
-        SP.UI.Notify.addNotification(
-          vm.assignAssignee().Title + " assigned",
-          true
-        );
+        timedNotification(vm.assignAssignee().Title + " assigned");
 
         $("#wo-routing").accordion("open", 0);
         fetchRequestAssignments(vm.requestID(), (assignments) => {
@@ -1198,7 +1195,7 @@ function closeWorkOrder(reason = "Closed") {
     // Create the action
     createAction(
       reason,
-      `${sal.globalConfig.currentUser.get_title()} has moved ${reason} the request`
+      `${sal.globalConfig.currentUser.get_title()} has ${reason} the request`
     );
     SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
     refreshWorkOrderItem(vm.requestID());
