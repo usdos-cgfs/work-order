@@ -27,17 +27,20 @@ function initStaticListRefs() {
   vm.listRefConfigServiceType(new SPList(configServiceTypeListDef));
 }
 
-function initServiceTypeListRefs() {
-  // These need to be defined separately after initialization
-  // since they depend on data loaded from the static list refs
-  // mutate the current service types arr
+function initServiceTypeListRefDefs() {
+  // These should be set as soon as templates are loaded.
 
   vm.configServiceTypes().forEach((serviceType) => {
-    if (serviceType.ListDef != null && serviceType.ListDef) {
-      let servID = serviceType.ID;
-      console.log("Creating List Ref for: ", servID);
-      serviceType.listRef = new SPList(JSON.parse(serviceType.ListDef));
-      serviceType.listDef = JSON.parse(serviceType.ListDef);
+    if (serviceType.TemplateName) {
+      let listDef = vm
+        .listDefs()
+        .find((listDef) => listDef.uid == serviceType.UID);
+
+      if (listDef) {
+        serviceType.listDef = listDef;
+
+        serviceType.listRef = new SPList(listDef);
+      }
     }
   });
 }
@@ -65,13 +68,6 @@ function newWorkOrder() {
 
   //set the select for which view we're on.
   vm.currentView("new");
-
-  // Clear the workorder valuepairs
-  // clearValuePairs(workOrderListDef.viewFields);
-  //  Clear the selected service type valuepairs
-  // if (vm.selectedServiceType().ListDef) {
-  //   clearValuePairs(vm.selectedServiceType().listDef.viewFields);
-  // }
 
   // Set our VM fields
   vm.requestID(new Date().getTime());
@@ -178,7 +174,7 @@ function viewWorkOrderItem(woID) {
   });
 
   /* Fetch the associated service type items */
-  if (vm.selectedServiceType().ListDef) {
+  if (vm.selectedServiceType().listDef) {
     viewServiceTypeItem();
   } else {
     vm.requestLoaded(new Date());
@@ -313,9 +309,9 @@ function saveWorkOrder() {
   // Need to get the value of the trix editor.
   vm.requestDescriptionHTML($("#trix-request-description").html());
 
-  if (vm.selectedServiceType().ListDef) {
+  if (vm.selectedServiceType().listDef) {
     var typeValuePairs = getValuePairs(
-      JSON.parse(vm.selectedServiceType().ListDef).viewFields
+      vm.selectedServiceType().listDef.viewFields
     );
   }
 
@@ -332,12 +328,12 @@ function saveWorkOrder() {
           requestValuePairs,
           () => {
             console.log("Workorder header saved");
-            if (!vm.selectedServiceType().ListDef) {
+            if (!vm.selectedServiceType().listDef) {
               onSaveEditWorkOrderCallback();
             }
           }
         );
-        if (vm.selectedServiceType().ListDef) {
+        if (vm.selectedServiceType().listDef) {
           // If we are saving to any other list.
           var typeValuePairs = getValuePairs(
             vm.selectedServiceType().listDef.viewFields
@@ -1231,7 +1227,6 @@ function initApp() {
 
 function initServiceTypes() {
   //Initialize the rest of our list references
-  initServiceTypeListRefs();
   initTemplates();
 }
 
@@ -1260,6 +1255,8 @@ function initTemplates() {
 }
 
 function initComplete() {
+  initServiceTypeListRefDefs();
+
   //Parse Page Params
   var path = window.location.pathname;
   vm.page(path.split("/").pop());

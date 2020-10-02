@@ -34,7 +34,7 @@ function koviewmodel() {
   self.prettifyJson = ko.pureComputed({
     read: function () {
       return JSON.stringify(
-        JSON.parse(self.selectedServiceType().ListDef),
+        JSON.parse(self.selectedServiceType().listDef),
         undefined,
         4
       );

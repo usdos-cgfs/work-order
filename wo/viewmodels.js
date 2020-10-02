@@ -219,8 +219,6 @@ var configServiceTypeListDef = {
     Description: { type: "Text", koMap: "empty" },
     DescriptionRequired: { type: "Bool", koMap: "empty" },
     DescriptionTitle: { type: "Bool", koMap: "empty" },
-    ListDef: { type: "Text", koMap: "empty" },
-    ElementID: { type: "Text", koMap: "empty" },
     DaysToCloseBusiness: { type: "Text", koMap: "empty" },
     ReminderDays: { type: "Text", koMap: "empty" },
     KPIThresholdYellow: { type: "Text", koMap: "empty" },
@@ -744,7 +742,7 @@ function koviewmodel() {
   });
 
   self.lookupServiceTypeListDef = ko.pureComputed(() => {
-    return JSON.parse(self.lookupServiceType().ListDef);
+    return self.lookupServiceType().listDef;
   });
 
   self.lookupParseText = function (col, viewFields, val) {
@@ -911,7 +909,7 @@ function koviewmodel() {
 
   self.selectedServiceType.subscribe((stype) => {
     self.requestShowDescription(false);
-    if (stype.ListDef) {
+    if (stype.listDef) {
       clearValuePairs(stype.listDef.viewFields);
     }
   });
