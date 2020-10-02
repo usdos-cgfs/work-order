@@ -258,7 +258,9 @@ function koviewmodel() {
       .configActionOffices()
       .filter(
         (ao) =>
-          ao.UserAddress.get_lookupId() == sal.globalConfig.currentUser.get_id()
+          ao.UserAddress.get_lookupId() ==
+            sal.globalConfig.currentUser.get_id() ||
+          self.userGroupMembership().includes(ao.UserAddress.get_lookupValue())
       );
   });
 

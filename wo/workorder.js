@@ -107,7 +107,7 @@ function newWorkOrder() {
   buildPipelineElement();
 }
 
-function refreshWorkOrderItem(woID) {
+function refreshWorkOrderItem(woID, callback = null) {
   SP.UI.ModalDialog.showWaitScreenWithNoClose("Refreshing Work Order...");
   let camlq =
     '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
@@ -138,7 +138,12 @@ function refreshWorkOrderItem(woID) {
       } else {
         vm.allOrders.push(req);
       }
-      fetchRequestAssignments(woID, () => viewWorkOrderItem(woID));
+      fetchRequestAssignments(woID, () => {
+        viewWorkOrderItem(woID);
+        if (callback) {
+          callback();
+        }
+      });
     }
   });
 }
@@ -374,7 +379,7 @@ function saveWorkOrder() {
         //Set the request orgs
         vm.requestOrgIds(vm.selectedServiceType().RequestOrgs);
 
-        vm.requestStageNum(1);
+        //vm.requestStageNum(0);
         vm.requestStatus("Open");
         var valuePairs = getValuePairs(workOrderListDef.viewFields);
 
@@ -443,8 +448,8 @@ function onSaveNewWorkOrderMaster(id) {
       .toDateString()}`,
     true
   );
-
-  refreshWorkOrderItem(vm.requestID());
+  //pipelineForward();
+  refreshWorkOrderItem(vm.requestID(), () => pipelineForward());
   SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
 
@@ -784,8 +789,12 @@ function fetchRequestAssignments(title = null, callback = null) {
           .find((allAssignment) => allAssignment.ID == assignment.ID)
       ) {
         // If this is already in our assignment list, update it
-        vm.allAssignments().map((allAssignment) =>
-          allAssignment.ID == assignment.ID ? assignment : allAssignment
+        vm.allAssignments(
+          vm
+            .allAssignments()
+            .map((allAssignment) =>
+              allAssignment.ID == assignment.ID ? assignment : allAssignment
+            )
         );
       } else {
         // Push the new assignment to the list
@@ -982,14 +991,16 @@ function newCommentCallback(result, value) {
 
 function submitComment() {
   SP.UI.ModalDialog.showWaitScreenWithNoClose("Submitting Comment...");
-  vm.listRefComment().createListItem(
-    [
-      ["Title", vm.requestID()],
-      ["Comment", vm.commentNew()],
-    ],
-    submitCommentCallback,
-    vm.requestorOffice().Title
-  );
+  if (vm.commentNew()) {
+    vm.listRefComment().createListItem(
+      [
+        ["Title", vm.requestID()],
+        ["Comment", vm.commentNew()],
+      ],
+      submitCommentCallback,
+      vm.requestorOffice().Title
+    );
+  }
 }
 
 function submitCommentCallback(id) {
@@ -1087,11 +1098,11 @@ function pipelineForward() {
       vm.requestHeader().ID,
       valuePairs,
       function () {
-        SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
         console.log("pipeline moved to next stage.");
         buildPipelineElement();
         pipelineNotifications();
         pipelineAssignments();
+        SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
       }
     );
   }
