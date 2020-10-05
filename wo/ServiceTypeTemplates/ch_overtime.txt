@@ -9,34 +9,37 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      AccessType: { type: "Text", koMap: "accessType", required: false },
-      EmployeeType: {
-        type: "Text",
-        koMap: "accessEmployeeType",
-        required: false,
+      FullName: { type: "Text", koMap: "overtimeFullName", required: true },
+      ManagerDept: {
+        type: "Person",
+        koMap: "overtimeManagerDept",
+        required: true,
       },
-      FullName: { type: "Text", koMap: "accessFullName", required: false },
-      BadgeNum: { type: "Text", koMap: "accessBadgeNum", required: false },
-      ExpirationDate: {
-        type: "Text",
-        koMap: "accessExpirationDate",
-        required: false,
+      ManagerTask: {
+        type: "Person",
+        koMap: "overtimeManagerTask",
+        required: true,
       },
-      Locations: {
+      Department: { type: "Text", koMap: "overtimeDepartment", required: true },
+      RequisitionOrder: {
         type: "Text",
-        koMap: "accessLocations",
-        required: false,
+        koMap: "overtimeRequisitionOrder",
+        required: true,
       },
-      Justification: {
+      ContractorType: {
         type: "Text",
-        koMap: "accessJustification",
-        required: false,
+        koMap: "overtimeContractorType",
+        required: true,
       },
-      Description: { type: "Text", koMap: "accessDesc" },
-      SpecialInstructions: {
+      Dates: {
         type: "Text",
-        koMap: "accessSpecInst",
-        required: false,
+        koMap: "overtimeDates",
+        required: true,
+      },
+      Hours: {
+        type: "Number",
+        koMap: "overtimeHours",
+        required: true,
       },
     },
   });
@@ -44,8 +47,99 @@
   /***************************************************************
    *    Declare Observables
    ***************************************************************/
+  vm.overtimeFullName = ko.observable();
+  vm.overtimeManagerDept = ko.observable();
+  vm.overtimeManagerTask = ko.observable();
+  vm.overtimeDepartment = ko.observable();
+  vm.overtimeRequisitionOrder = ko.observable();
+  vm.overtimeContractorType = ko.observable();
+  vm.overtimeContractorTypeOpts = ko.observableArray(["SCA", "Non-SCA"]);
+  vm.overtimeDates = ko.observable();
+  vm.overtimeHours = ko.observable();
 </script>
 
 <script type="text/html" id="tmpl_ch_overtime">
-  <div class="ui form"></div>
+  <div class="ui form">
+    <div class="two fields">
+      <div class="field">
+        <label>Contractor Name:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disabled:
+              currentView() == 'view', value: overtimeFullName"
+        />
+      </div>
+      <div class="field">
+        <label>Department Manager:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+              value: overtimeManagerDept"
+        />
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label>Task Manager:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disabled:
+              currentView() == 'view', value: overtimeManagerTask"
+        />
+      </div>
+      <div class="field">
+        <label>Department:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+              value: overtimeDepartment"
+        />
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label>Requisition Number/Task Order:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disabled:
+              currentView() == 'view', value: overtimeRequisitionOrder"
+        />
+      </div>
+      <div class="field">
+        <label>Contractor Type:</label>
+        <select
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+              value: overtimeContractorType, options: overtimeContractorTypeOpts,
+              optionsCaption: 'Select...'"
+        ></select>
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label>Overtime Dates:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disabled:
+              currentView() == 'view', value: overtimeDates"
+        />
+      </div>
+      <div class="field">
+        <label>Overtime Hours:</label>
+        <input
+          class="editable-field"
+          type="Number"
+          data-bind="disable: currentView() == 'view',
+              value: overtimeHours"
+        />
+      </div>
+    </div>
+  </div>
 </script>
