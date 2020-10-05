@@ -19,61 +19,73 @@
   /***************************************************************
    *    Declare Observables
    ***************************************************************/
-  vm.presentationDate = ko.observable();
 
-  vm.presentationLocation = ko.observable();
-  vm.presentationDuration = ko.observable();
-  vm.presentationPOC = ko.observable();
+  vm.conferenceAV = ko.observable();
+  vm.conferenceDuration = ko.observable();
 
-  vm.presentationDateStr = ko.pureComputed({
+  vm.conferenceRoom = ko.observable();
+  vm.conferenceRoomOpts = ko.observableArray([
+    "Bldg. F Auditorium (Side A & B)",
+    "Bldg. F Auditorium (Side A Only)",
+    "Bldg. F Auditorium (Side B Only)",
+    "Bldg. F Dining Rooms",
+    "Bldg. C VTC Room (C128)",
+    "Bldg. C Auditorium (C161)",
+  ]);
+
+  vm.conferenceDate = ko.observable();
+  vm.conferenceDateStr = ko.pureComputed({
     read: function () {
-      return new Date(vm.presentationDate()).format("yyyy-MM-dd");
+      return new Date(vm.conferenceDate()).format("yyyy-MM-dd");
     },
     write: function (val) {
-      vm.presentationDate(new Date(val));
+      vm.conferenceDate(new Date(val));
     },
   });
 </script>
 
-<script type="text/html" id="tmpl_presentation">
+<script type="text/html" id="tmpl_ch_conference">
   <div class="ui form">
-    <div class="eight wide field">
-      <label>Presentation Date and Time:</label>
-      <input
-        class="editable-field"
-        type="datetime-local"
-        data-bind="disabled:
-      currentView() == 'view', value: presentationDateStr"
-      />
-    </div>
     <div class="two fields">
-      <div class="eight wide field">
-        <label>Location:</label>
+      <div class="field">
+        <label>Presentation Date and Time:</label>
         <input
           class="editable-field"
-          type="text"
-          data-bind="disable: currentView() == 'view',
-              value: presentationLocation"
+          type="datetime-local"
+          data-bind="disabled:
+      currentView() == 'view', value: conferenceDateStr"
         />
       </div>
-      <div class="eight wide field">
+      <div class="field">
         <label>Duration:</label>
         <input
           class="editable-field"
           type="text"
           data-bind="disable: currentView() == 'view',
-                value: presentationDuration"
+                value: conferenceDuration"
         />
       </div>
     </div>
-    <div class="eight wide field">
-      <label>POC</label>
-      <input
-        class="editable-field"
-        type="text"
-        data-bind="disable: currentView() == 'view',
-            value: presentationPOC"
-      />
+    <div class="two fields">
+      <div class="eight wide field">
+        <label>Conference Room:</label>
+        <select
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+              value: conferenceRoom,
+              options: conferenceRoomOpts, optionsCaption: 'Select...',"
+        ></select>
+      </div>
+      <div class="eight wide field">
+        <label>A/V Needs:</label>
+        <input
+          class="editable-field"
+          type="checkbox"
+          data-bind="disable: currentView() == 'view',
+                checked: conferenceAV"
+        />
+      </div>
     </div>
   </div>
 </script>

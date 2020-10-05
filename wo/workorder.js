@@ -1113,6 +1113,7 @@ function pipelineAssignments() {
         vm.assignAssignee(vm.requestStageOffice());
         createAssignment("Action Resolver");
         break;
+      case "Notification":
       case "Pending Resolution":
       case "Pending Assignment":
       default:

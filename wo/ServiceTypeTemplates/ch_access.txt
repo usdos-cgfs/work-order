@@ -3,9 +3,9 @@
    * Building Access
    ************************************************************/
   vm.listDefs.push({
-    uid: "access",
-    name: "st_access",
-    title: "st_access",
+    uid: "ch_access",
+    name: "st_ch_access",
+    title: "st_ch_access",
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
@@ -17,25 +17,9 @@
       },
       FullName: { type: "Text", koMap: "accessFullName", required: false },
       BadgeNum: { type: "Text", koMap: "accessBadgeNum", required: false },
-      ExpirationDate: {
-        type: "DateTime",
-        koMap: "accessExpirationDate",
-        required: false,
-      },
       Locations: {
         type: "Text",
         koMap: "accessLocations",
-        required: false,
-      },
-      Justification: {
-        type: "Text",
-        koMap: "accessJustification",
-        required: false,
-      },
-      Description: { type: "Text", koMap: "accessDesc" },
-      SpecialInstructions: {
-        type: "Text",
-        koMap: "accessSpecInst",
         required: false,
       },
     },
@@ -55,23 +39,10 @@
 
   vm.accessType = ko.observable();
   vm.accessEmployeeType = ko.observable();
-  vm.accessDesc = ko.observable();
-  vm.accessSpecInst = ko.observable();
 
   vm.accessFullName = ko.observable();
   vm.accessBadgeNum = ko.observable();
-  vm.accessExpirationDate = ko.observable();
   vm.accessLocations = ko.observable();
-  vm.accessJustification = ko.observable();
-
-  vm.accessExpirationDateStr = ko.pureComputed({
-    read: function () {
-      return new Date(vm.accessExpirationDate()).format("yyyy-MM-dd");
-    },
-    write: function (val) {
-      vm.accessExpirationDate(new Date(val + "T00:00:00"));
-    },
-  });
 </script>
 
 <script type="text/html" id="tmpl_ch_access">
@@ -94,19 +65,28 @@
     </div>
     <div class="two fields">
       <div class="field">
-        <label> Expiration Date<span class="required">*</span>: </label>
-        <input
-          type="date"
-          data-bind="value: accessExpirationDateStr, disable: currentView()=='view'"
-        />
+        <label>Access Type<span class="required">*</span>: </label>
+        <select
+          data-bind="value: accessType, options: accessTypeOpts, 
+          optionsCaption: 'Select...',
+          disable: currentView()=='view'"
+        ></select>
       </div>
       <div class="field">
-        <label> Locations<span class="required">*</span>: </label>
-        <input
-          type="text"
-          data-bind="value: accessLocations, disable: currentView()=='view'"
-        />
+        <label>Employee Type<span class="required">*</span>: </label>
+        <select
+          data-bind="value: accessEmployeeType, options: accessEmployeeTypeOpts, 
+          optionsCaption: 'Select...',
+          disable: currentView()=='view'"
+        ></select>
       </div>
+    </div>
+    <div class="field">
+      <label> Locations<span class="required">*</span>: </label>
+      <input
+        type="text"
+        data-bind="value: accessLocations, disable: currentView()=='view'"
+      />
     </div>
   </div>
 </script>

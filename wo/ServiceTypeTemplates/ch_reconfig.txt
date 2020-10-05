@@ -3,9 +3,9 @@
    *    List Def:
    ************************************************************/
   vm.listDefs.push({
-    uid: "access",
-    name: "st_access",
-    title: "st_access",
+    uid: "ch_reconfig",
+    name: "st_ch_reconfig",
+    title: "st_ch_reconfig",
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
@@ -46,8 +46,6 @@
    ***************************************************************/
 </script>
 
-<script type="text/html" id="tmpl_">
-  <div class="ui form">
-
-  </div>
+<script type="text/html" id="tmpl_ch_reconfig">
+  <div class="ui form"></div>
 </script>
