@@ -1,0 +1,112 @@
+<script>
+  /************************************************************
+   * Building Access
+   ************************************************************/
+  vm.listDefs.push({
+    uid: "access",
+    name: "st_access",
+    title: "st_access",
+    viewFields: {
+      ID: { type: "Text", koMap: "empty", required: false },
+      Title: { type: "Text", koMap: "requestID", required: false },
+      AccessType: { type: "Text", koMap: "accessType", required: false },
+      EmployeeType: {
+        type: "Text",
+        koMap: "accessEmployeeType",
+        required: false,
+      },
+      FullName: { type: "Text", koMap: "accessFullName", required: false },
+      BadgeNum: { type: "Text", koMap: "accessBadgeNum", required: false },
+      ExpirationDate: {
+        type: "DateTime",
+        koMap: "accessExpirationDate",
+        required: false,
+      },
+      Locations: {
+        type: "Text",
+        koMap: "accessLocations",
+        required: false,
+      },
+      Justification: {
+        type: "Text",
+        koMap: "accessJustification",
+        required: false,
+      },
+      Description: { type: "Text", koMap: "accessDesc" },
+      SpecialInstructions: {
+        type: "Text",
+        koMap: "accessSpecInst",
+        required: false,
+      },
+    },
+  });
+
+  vm.accessTypeOpts = ko.observableArray([
+    "Normal work day",
+    "24/7",
+    "FLETC",
+    "Other",
+  ]);
+  vm.accessEmployeeTypeOpts = ko.observable([
+    "CGFS Government",
+    "CGFS Contractor",
+    "Other",
+  ]);
+
+  vm.accessType = ko.observable();
+  vm.accessEmployeeType = ko.observable();
+  vm.accessDesc = ko.observable();
+  vm.accessSpecInst = ko.observable();
+
+  vm.accessFullName = ko.observable();
+  vm.accessBadgeNum = ko.observable();
+  vm.accessExpirationDate = ko.observable();
+  vm.accessLocations = ko.observable();
+  vm.accessJustification = ko.observable();
+
+  vm.accessExpirationDateStr = ko.pureComputed({
+    read: function () {
+      return new Date(vm.accessExpirationDate()).format("yyyy-MM-dd");
+    },
+    write: function (val) {
+      vm.accessExpirationDate(new Date(val + "T00:00:00"));
+    },
+  });
+</script>
+
+<script type="text/html" id="tmpl_ch_access">
+  <div class="ui form">
+    <div class="two fields">
+      <div class="field">
+        <label> Full Name<span class="required">*</span>: </label>
+        <input
+          type="text"
+          data-bind="value: accessFullName, disable: currentView()=='view'"
+        />
+      </div>
+      <div class="field">
+        <label> Badge Num<span class="required">*</span>: </label>
+        <input
+          type="text"
+          data-bind="value: accessBadgeNum, disable: currentView()=='view'"
+        />
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label> Expiration Date<span class="required">*</span>: </label>
+        <input
+          type="date"
+          data-bind="value: accessExpirationDateStr, disable: currentView()=='view'"
+        />
+      </div>
+      <div class="field">
+        <label> Locations<span class="required">*</span>: </label>
+        <input
+          type="text"
+          data-bind="value: accessLocations, disable: currentView()=='view'"
+        />
+      </div>
+    </div>
+  </div>
+</script>
