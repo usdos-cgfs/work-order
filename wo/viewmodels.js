@@ -25,15 +25,6 @@ sampleServiceType = {
 };
 */
 
-var managingDirectors = {
-  Select: "",
-  "CGFS/EX": "Backlund, Peter",
-  "CGFS/F": "Lugo, Joan",
-  "CGFS/GC": "Self, Amy",
-  "CGFS/S/CST": "Sizemore, Richard",
-  "CGFS/GSO": "Bowers, Susan",
-};
-
 //var offices = ["CGFS/EX", "CGFS/F", "CGFS/GC", "CGFS/S/CST", "CGFS/GSO"];
 
 /************************************************************
@@ -100,7 +91,11 @@ var assignmentListDef = {
     Title: { type: "Text", koMap: "empty" },
     Assignee: { type: "Person", koMap: "empty" },
     ActionOffice: { type: "Lookup", koMap: "empty" },
+    CanDelegate: { type: "Bool" },
+    Comment: { type: "Text", koMap: "empty" },
+    IsActive: { type: "Bool", koMap: "empty" },
     Role: { type: "Text", koMap: "empty" },
+    Status: { type: "Text", koMap: "empty" },
     Author: { type: "Text", koMap: "empty" },
     Created: { type: "Text", koMap: "empty" },
   },
@@ -156,7 +151,7 @@ var configActionOfficesListDef = {
   viewFields: {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "empty" },
-    AOGroup: { type: "Person", koMap: "empty" },
+    //AOGroup: { type: "Person", koMap: "empty" },
     CanAssign: { type: "Bool", koMap: "empty" },
     RequestOrg: { type: "Lookup", koMap: "empty" },
     SysAdmin: { type: "Bool", koMap: "empty" },
@@ -194,7 +189,8 @@ var configPipelinesListDef = {
     ServiceType: { type: "Text", koMap: "empty" },
     Step: { type: "Text", koMap: "empty" },
     ActionType: { type: "Text", koMap: "empty" },
-    Assignee: { type: "Text", koMap: "empty" },
+    ActionOffice: { type: "Lookup", koMap: "empty" },
+    RequestOrg: { type: "Lookup", koMap: "empty" },
   },
 };
 
@@ -223,8 +219,6 @@ var configServiceTypeListDef = {
     Description: { type: "Text", koMap: "empty" },
     DescriptionRequired: { type: "Bool", koMap: "empty" },
     DescriptionTitle: { type: "Bool", koMap: "empty" },
-    ListDef: { type: "Text", koMap: "empty" },
-    ElementID: { type: "Text", koMap: "empty" },
     DaysToCloseBusiness: { type: "Text", koMap: "empty" },
     ReminderDays: { type: "Text", koMap: "empty" },
     KPIThresholdYellow: { type: "Text", koMap: "empty" },
@@ -258,12 +252,17 @@ function koviewmodel() {
 
   self.userActionOfficeMembership = ko.pureComputed(() => {
     // Return the configActionOffice offices this user is a part of
-    return self
-      .configActionOffices()
-      .filter(
-        (ao) =>
-          ao.UserAddress.get_lookupId() == sal.globalConfig.currentUser.get_id()
-      );
+    return self.configActionOffices().filter((ao) => {
+      let isAO =
+        ao.UserAddress.get_lookupId() == sal.globalConfig.currentUser.get_id();
+
+      let isGroup = self
+        .userGroupMembership()
+        .map((group) => group.Title)
+        .includes(ao.UserAddress.get_lookupValue());
+
+      return isAO || isGroup;
+    });
   });
 
   self.userActionOfficeOwnership = ko.pureComputed(() => {
@@ -278,14 +277,13 @@ function koviewmodel() {
       : false;
   });
 
+  self.assignmentCurUserActions = ko.pureComputed(() => {
+    return self.request;
+  });
+
   // Can the current user take action on the record?
   self.requestCurUserAction = ko.pureComputed(function () {
     return true;
-  });
-
-  // Can the current user approve the record?
-  self.requestCurUserApprove = ko.pureComputed(function () {
-    return false;
   });
 
   /************************************************************
@@ -298,12 +296,10 @@ function koviewmodel() {
         .userActionOfficeOwnership()
         .map((uao) => uao.RequestOrg.get_lookupValue());
 
-      // Get the office assigned to this stage,
-      let assignedOffice = self
-        .configActionOffices()
-        .find((ao) => ao.ID == self.requestStage().Assignee.get_lookupId());
-
-      return uao.includes(assignedOffice.RequestOrg.get_lookupValue());
+      // Check if this has been assigned to an entire office.
+      return uao.includes(
+        self.requestStageOrg() ? self.requestStageOrg().Title : null
+      );
     }
   });
 
@@ -328,17 +324,131 @@ function koviewmodel() {
     }
   });
 
-  self.assignRemove = function (assignment) {
+  // Assignment Level: Action Item
+  self.assignmentCurUserCanComplete = function (assignment) {
+    let isStatus = assignment.Status == "In Progress";
+    let isType = assignment.Role == "Action Resolver";
+    if (isType && isStatus) {
+      // This is the most intensive check, so let's only perform if the easy
+      // ones are true
+      return vm
+        .userActionOfficeMembership()
+        .map((ao) => ao.ID)
+        .includes(assignment.actionOffice.ID);
+    } else {
+      return false;
+    }
+  };
+  self.assignmentComplete = function (assignment, advance = false) {
+    // Update this assignment with our approval
+    let vp = [
+      ["IsActive", 0],
+      ["CompletionDate", new Date()],
+      ["Status", "Completed"],
+    ];
+
+    self.listRefAssignment().updateListItem(assignment.ID, vp, () => {
+      timedNotification(assignment.actionOffice.Title + " Completed", 2000);
+      // Create a new action
+      createAction("Completed", `The assignment has been completed.`);
+
+      fetchRequestAssignments();
+    });
+  };
+
+  // Request Level: Can the current user approve the record?
+  self.requestCurUserApprove = ko.pureComputed(() => {
+    let flag = false;
+    self.requestAssignments().forEach((assignment) => {
+      if (self.assignmentCurUserCanApprove(assignment)) {
+        flag = true;
+      }
+    });
+    return flag;
+  });
+
+  // Assignment Level: Can the current user approve this assignment
+  self.assignmentCurUserCanApprove = function (assignment) {
+    let isStatus = assignment.Status == "In Progress";
+    let isType = assignment.Role == "Approver";
+
+    if (isType && isStatus) {
+      // This is the most intensive check, so let's only perform if the easy
+      // ones are true
+      return vm
+        .userActionOfficeMembership()
+        .map((ao) => ao.ID)
+        .includes(assignment.actionOffice.ID);
+    } else {
+      return false;
+    }
+  };
+
+  self.assignmentApprove = function (assignment, advance = false) {
+    // Update this assignment with our approval
+    let vp = [
+      ["IsActive", 0],
+      ["CompletionDate", new Date()],
+      ["Status", "Approved"],
+    ];
+
+    self.listRefAssignment().updateListItem(assignment.ID, vp, () => {
+      timedNotification(assignment.actionOffice.Title + " Approved", 2000);
+      // Create a new action
+      createAction("Approved", `The request has been approved.`);
+
+      fetchRequestAssignments();
+    });
+  };
+
+  self.assignmentRejectComment = ko.observable();
+  self.assignmentRejectAssignment = ko.observable();
+  self.assignmentReject = function (assignment) {
+    self.assignmentRejectAssignment(assignment);
+    $("#assignment-reject-modal").modal("show");
+  };
+
+  self.assignmentRejectSubmit = function () {
+    // Update this assignment with our approval
+    let vp = [
+      ["IsActive", 0],
+      ["CompletionDate", new Date()],
+      ["Status", "Rejected"],
+      ["Comment", self.assignmentRejectComment()],
+    ];
+
+    self
+      .listRefAssignment()
+      .updateListItem(self.assignmentRejectAssignment().ID, vp, () => {
+        timedNotification(
+          self.assignmentRejectAssignment().actionOffice.Title + " Approved",
+          2000
+        );
+        // Create a new action
+        createAction(
+          "Rejected",
+          `The request has been rejected with the following comment:\n` +
+            `${self.assignmentRejectComment()}`
+        );
+        fetchRequestAssignments();
+      });
+  };
+
+  self.assignmentCurUserCanRemove = function (assignment) {
+    return self
+      .assignCurUserAssignees()
+      .map((assignee) => assignee.ID)
+      .includes(assignment.actionOffice.ID);
+  };
+
+  self.assignmentRemove = function (assignment) {
     console.log("deleting assignee", assignment);
     self.listRefAssignment().deleteListItem(assignment.ID, () => {
-      // SP.UI.Notify.addNotification(
-      //   assignment.ActionOffice.get_lookupValue() + " Removed",
-      //   true
-      // );
-
-      timedNotification(
-        assignment.ActionOffice.get_lookupValue() + " Removed",
-        2000
+      timedNotification(assignment.actionOffice.Title + " Removed", 2000);
+      self.allAssignments(
+        self
+          .allAssignments()
+          .filter((allAssignment) => allAssignment.ID != assignment.ID)
       );
       fetchRequestAssignments();
     });
@@ -362,12 +472,10 @@ function koviewmodel() {
         .userActionOfficeMembership()
         .map((uao) => uao.RequestOrg.get_lookupValue());
 
-      // Get the office assigned to this stage,
-      let assignedOffice = self
-        .configActionOffices()
-        .find((ao) => ao.ID == self.requestStage().Assignee.get_lookupId());
-
-      return uao.includes(assignedOffice.RequestOrg.get_lookupValue());
+      // Check if we are part of the action office assigned to this request,
+      return uao.includes(
+        self.requestStageOrg() ? self.requestStageOrg().Title : null
+      );
     }
   });
 
@@ -429,16 +537,37 @@ function koviewmodel() {
 
   self.allOrders = ko.observableArray();
   //self.allOfficeOrders = ko.observableArray();
-  self.assignedOpenOrders = ko.observableArray();
 
   self.allAssignments = ko.observableArray();
   self.allAOAssignments = ko.observableArray();
 
   self.lookupOrders = ko.observableArray();
 
+  self.allRequestAssignmentsMap = ko.pureComputed({
+    read: () => {
+      let orders = new Object();
+      self.allOrders().forEach((order) => {
+        orders[order.Title] = self
+          .allAssignments()
+          .filter((assignment) => assignment.Title == order.Title);
+      });
+      return orders;
+    },
+  });
+
   /************************************************************
    * My Orders Tab
    ************************************************************/
+
+  self.showRequestAssignments = ko.observable(true);
+
+  self.readRequestAssignments = function (req) {
+    return ko.computed(() =>
+      req
+        ? self.allRequestAssignmentsMap()[req.Title]
+        : self.allRequestAssignmentsMap()[self.requestID()]
+    );
+  };
 
   self.allOfficeOrders = ko.pureComputed(() => {
     let offices = self
@@ -613,7 +742,7 @@ function koviewmodel() {
   });
 
   self.lookupServiceTypeListDef = ko.pureComputed(() => {
-    return JSON.parse(self.lookupServiceType().ListDef);
+    return self.lookupServiceType().listDef;
   });
 
   self.lookupParseText = function (col, viewFields, val) {
@@ -630,6 +759,49 @@ function koviewmodel() {
     }
   };
 
+  /************************************************************
+   * Assigned Orders Tab
+   ************************************************************/
+  self.myAssignments = ko.pureComputed(() => {
+    let myAOIDs = self.userActionOfficeMembership().map((ao) => ao.ID);
+    return self
+      .allAssignments()
+      .filter((asg) => myAOIDs.includes(asg.actionOffice.ID));
+  });
+
+  self.assignedOpenOrders = ko.pureComputed(() => {
+    let myAssignedIds = [
+      ...new Set(self.myAssignments().map((asg) => asg.Title)),
+    ];
+
+    return self
+      .allOpenOrders()
+      .filter((order) => myAssignedIds.includes(order.Title));
+  });
+
+  self.assignmentStatus = function (asgTitle) {
+    return ko.computed(() => {
+      let asgs = self.myAssignments().filter((masg) => masg.Title == asgTitle);
+      if (asgs.length > 1) {
+        let statuses = new Array();
+        statuses.push("<ul>");
+        let states = [...new Set(asgs.map((asg) => asg.Status))];
+        states.forEach((status) =>
+          statuses.push(
+            "<li>" +
+              status +
+              ": " +
+              asgs.filter((asg) => asg.Status == status).length +
+              "</li>"
+          )
+        );
+        statuses.push("</ul>");
+        return statuses.join("");
+      } else {
+        return asgs[0].Status;
+      }
+    });
+  };
   /************************************************************
    * Hold generic Work Order vars
    ************************************************************/
@@ -737,7 +909,7 @@ function koviewmodel() {
 
   self.selectedServiceType.subscribe((stype) => {
     self.requestShowDescription(false);
-    if (stype.ListDef) {
+    if (stype.listDef) {
       clearValuePairs(stype.listDef.viewFields);
     }
   });
@@ -832,6 +1004,44 @@ function koviewmodel() {
     }
   });
 
+  self.requestStageOrg = ko.pureComputed(() => {
+    if (!self.requestStage() || !self.requestIsActive()) {
+      return null;
+    } else if (self.requestStage().RequestOrg) {
+      return self
+        .configRequestOrgs()
+        .find((ro) => ro.ID == self.requestStage().RequestOrg.get_lookupId());
+    } else if (self.requestStageOffice()) {
+      return self
+        .configRequestOrgs()
+        .find(
+          (ro) => ro.ID == self.requestStageOffice().RequestOrg.get_lookupId()
+        );
+    } else {
+      return null;
+    }
+  });
+
+  self.requestStageOffice = ko.pureComputed(() => {
+    if (self.requestStage() && self.requestStage().ActionOffice) {
+      return self
+        .configActionOffices()
+        .find((ao) => ao.ID == self.requestStage().ActionOffice.get_lookupId());
+    } else {
+      return null;
+    }
+  });
+
+  self.requestStageOfficeOrg = ko.pureComputed(() => {
+    if (self.requestStageOffice()) {
+      return self
+        .configRequestOrgs()
+        .find(
+          (ro) => ro.ID == self.requestStageOffice().RequestOrg.get_lookupId()
+        );
+    }
+  });
+
   // Requestor/Header Info
   self.requestorName = ko.observable();
   self.requestorTelephone = ko.observable();
@@ -912,13 +1122,17 @@ function koviewmodel() {
   });
 
   self.requestorOfficeUserOpt = ko.pureComputed(function () {
-    let groupIds = self.userGroupMembership().map((ug) => ug.ID);
-    let activeFilteredRO = self
-      .configRequestingOffices()
-      .filter((ro) => ro.Active) //Check if we're active
-      .filter((ro) => groupIds.includes(ro.ROGroup.get_lookupId()));
+    if (self.userRole() == "admin") {
+      return self.configRequestingOffices();
+    } else {
+      let groupIds = self.userGroupMembership().map((ug) => ug.ID);
+      let activeFilteredRO = self
+        .configRequestingOffices()
+        .filter((ro) => ro.Active) //Check if we're active
+        .filter((ro) => groupIds.includes(ro.ROGroup.get_lookupId()));
 
-    return activeFilteredRO;
+      return activeFilteredRO;
+    }
   });
 
   self.requestSubmittedDate = ko.observable();
@@ -941,11 +1155,6 @@ function koviewmodel() {
           .find((stype) => stype.ID == value.get_lookupId())
       );
     },
-  });
-
-  self.requestorOffice.subscribe(function () {
-    // When the requesting office changes, so changes the manager
-    self.requestorManager(managingDirectors[self.requestorOffice()]);
   });
 }
 /* Binding handlers */

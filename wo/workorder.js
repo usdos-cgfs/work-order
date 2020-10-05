@@ -27,17 +27,20 @@ function initStaticListRefs() {
   vm.listRefConfigServiceType(new SPList(configServiceTypeListDef));
 }
 
-function initServiceTypeListRefs() {
-  // These need to be defined separately after initialization
-  // since they depend on data loaded from the static list refs
-  // mutate the current service types arr
+function initServiceTypeListRefDefs() {
+  // These should be set as soon as templates are loaded.
 
   vm.configServiceTypes().forEach((serviceType) => {
-    if (serviceType.ListDef != null && serviceType.ListDef) {
-      let servID = serviceType.ID;
-      console.log("Creating List Ref for: ", servID);
-      serviceType.listRef = new SPList(JSON.parse(serviceType.ListDef));
-      serviceType.listDef = JSON.parse(serviceType.ListDef);
+    if (serviceType.TemplateName) {
+      let listDef = vm
+        .listDefs()
+        .find((listDef) => listDef.uid == serviceType.UID);
+
+      if (listDef) {
+        serviceType.listDef = listDef;
+
+        serviceType.listRef = new SPList(listDef);
+      }
     }
   });
 }
@@ -65,13 +68,6 @@ function newWorkOrder() {
 
   //set the select for which view we're on.
   vm.currentView("new");
-
-  // Clear the workorder valuepairs
-  // clearValuePairs(workOrderListDef.viewFields);
-  //  Clear the selected service type valuepairs
-  // if (vm.selectedServiceType().ListDef) {
-  //   clearValuePairs(vm.selectedServiceType().listDef.viewFields);
-  // }
 
   // Set our VM fields
   vm.requestID(new Date().getTime());
@@ -107,9 +103,18 @@ function newWorkOrder() {
   buildPipelineElement();
 }
 
-function refreshWorkOrderItem(woID) {
+function refreshWorkOrderItem(woID, callback = null) {
   SP.UI.ModalDialog.showWaitScreenWithNoClose("Refreshing Work Order...");
   let camlq =
+    '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
+    '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
+    "</Eq><Eq>" +
+    '<FieldRef Name="Title"/><Value Type="Text">' +
+    woID +
+    "</Value>" +
+    "</Eq></And></Where></Query><RowLimit>1</RowLimit></View>";
+
+  let reqCamlq =
     '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
     '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
     "</Eq><Eq>" +
@@ -121,17 +126,20 @@ function refreshWorkOrderItem(woID) {
   vm.listRefWO().getListItems(camlq, (items) => {
     console.log("loading open orders", items);
     if (items[0]) {
+      let req = items[0];
       if (vm.allOrders().find((order) => order.Title == woID)) {
         vm.allOrders(
-          vm
-            .allOrders()
-            .map((order) => (order.Title == woID ? items[0] : order))
+          vm.allOrders().map((order) => (order.Title == woID ? req : order))
         );
-        vm.allOrders.valueHasMutated();
       } else {
-        vm.allOrders.push(items[0]);
+        vm.allOrders.push(req);
       }
-      fetchRequestAssignments(woID, () => viewWorkOrderItem(woID));
+      fetchRequestAssignments(woID, () => {
+        viewWorkOrderItem(woID);
+        if (callback) {
+          callback();
+        }
+      });
     }
   });
 }
@@ -150,7 +158,7 @@ function viewWorkOrderItem(woID) {
   vm.selectedServiceType("");
   setValuePairs(workOrderListDef.viewFields, vm.requestHeader());
 
-  vm.requestAssignments(vm.requestHeader().requestAssignmentMap);
+  vm.requestAssignments(vm.allRequestAssignmentsMap()[woID]);
   /* Fetch all associated Items */
   //fetchRequestAssignments();
   fetchActions(function () {
@@ -166,7 +174,7 @@ function viewWorkOrderItem(woID) {
   });
 
   /* Fetch the associated service type items */
-  if (vm.selectedServiceType().ListDef) {
+  if (vm.selectedServiceType().listDef) {
     viewServiceTypeItem();
   } else {
     vm.requestLoaded(new Date());
@@ -301,9 +309,9 @@ function saveWorkOrder() {
   // Need to get the value of the trix editor.
   vm.requestDescriptionHTML($("#trix-request-description").html());
 
-  if (vm.selectedServiceType().ListDef) {
+  if (vm.selectedServiceType().listDef) {
     var typeValuePairs = getValuePairs(
-      JSON.parse(vm.selectedServiceType().ListDef).viewFields
+      vm.selectedServiceType().listDef.viewFields
     );
   }
 
@@ -320,12 +328,12 @@ function saveWorkOrder() {
           requestValuePairs,
           () => {
             console.log("Workorder header saved");
-            if (!vm.selectedServiceType().ListDef) {
+            if (!vm.selectedServiceType().listDef) {
               onSaveEditWorkOrderCallback();
             }
           }
         );
-        if (vm.selectedServiceType().ListDef) {
+        if (vm.selectedServiceType().listDef) {
           // If we are saving to any other list.
           var typeValuePairs = getValuePairs(
             vm.selectedServiceType().listDef.viewFields
@@ -367,7 +375,7 @@ function saveWorkOrder() {
         //Set the request orgs
         vm.requestOrgIds(vm.selectedServiceType().RequestOrgs);
 
-        vm.requestStageNum(1);
+        //vm.requestStageNum(0);
         vm.requestStatus("Open");
         var valuePairs = getValuePairs(workOrderListDef.viewFields);
 
@@ -436,8 +444,8 @@ function onSaveNewWorkOrderMaster(id) {
       .toDateString()}`,
     true
   );
-
-  refreshWorkOrderItem(vm.requestID());
+  //pipelineForward();
+  refreshWorkOrderItem(vm.requestID(), () => pipelineForward());
   SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
 
@@ -676,22 +684,19 @@ function newAssignmentForm(role) {
   );
 }
 
-function createAssignment() {
+function createAssignment(role = "Action Resolver") {
   // Create a new assignment based off our set observables
   if (vm.assignAssignee()) {
     let vp = [
       ["Title", vm.requestID()],
-      ["Role", "Action Resolver"],
+      ["Role", role],
       ["ActionOffice", vm.assignAssignee().ID],
     ];
     vm.listRefAssignment().createListItem(
       vp,
       (id) => {
         console.log("Assigned: ", id);
-        SP.UI.Notify.addNotification(
-          vm.assignAssignee().Title + " assigned",
-          true
-        );
+        timedNotification(vm.assignAssignee().Title + " assigned");
 
         $("#wo-routing").accordion("open", 0);
         fetchRequestAssignments(vm.requestID(), (assignments) => {
@@ -737,21 +742,13 @@ function fetchAllAssignments(callback) {
     "</Eq></Where></Query></View>";
   let start = new Date();
   vm.listRefAssignment().getListItems(camlq, (assignments) => {
-    vm.allAssignments(assignments);
-
     assignments.map(
       (assignment) =>
         (assignment.actionOffice = vm
           .configActionOffices()
           .find((ao) => ao.ID == assignment.ActionOffice.get_lookupId()))
     );
-
-    // Map our assignments to our orders
-    vm.allOrders().map((order) => {
-      order.requestAssignmentMap = assignments.filter(
-        (assignment) => assignment.Title == order.Title
-      );
-    });
+    vm.allAssignments(assignments);
 
     let end = new Date();
     console.log(`assignments mapped in ${end - start} ms`);
@@ -778,16 +775,35 @@ function fetchRequestAssignments(title = null, callback = null) {
           .find((ao) => ao.ID == assignment.ActionOffice.get_lookupId()))
     );
 
-    //vm.requestAssignees(assignments);
+    assignments.forEach((assignment) => {
+      if (
+        vm
+          .allAssignments()
+          .find((allAssignment) => allAssignment.ID == assignment.ID)
+      ) {
+        // If this is already in our assignment list, update it
+        vm.allAssignments(
+          vm
+            .allAssignments()
+            .map((allAssignment) =>
+              allAssignment.ID == assignment.ID ? assignment : allAssignment
+            )
+        );
+      } else {
+        // Push the new assignment to the list
+        vm.allAssignments.push(assignment);
+      }
+    });
+
     vm.requestAssignments(assignments);
 
-    vm
-      .allOrders()
-      .find(
-        (order) => order.Title == queryTitle
-      ).requestAssignmentMap = assignments;
+    // vm
+    //   .allOrders()
+    //   .find(
+    //     (order) => order.Title == queryTitle
+    //   ).requestAssignmentMap = assignments;
 
-    vm.allOrders.valueHasMutated();
+    vm.allAssignments.valueHasMutated();
     if (callback) {
       callback(assignments);
     }
@@ -826,13 +842,22 @@ function fetchMyAOAssignments() {
     });
     var vanilla = $.makeArray(filtered);
     vm.assignedOpenOrders(vanilla);
-    makeDataTable("#wo-assigned-orders");
+    //makeDataTable("#wo-assigned-orders");
   });
 }
 
 /************************************************************
  * Approvals
  ************************************************************/
+function approveRequest() {
+  // Find the assignment that needs approving and approve!
+  vm.requestAssignments().forEach((assignment) => {
+    if (vm.assignmentCurUserCanApprove(assignment)) {
+      vm.assignmentApprove(assignment);
+    }
+  });
+}
+
 function newApproval() {
   vm.listRefApproval().showModal(
     "NewForm.aspx",
@@ -959,14 +984,16 @@ function newCommentCallback(result, value) {
 
 function submitComment() {
   SP.UI.ModalDialog.showWaitScreenWithNoClose("Submitting Comment...");
-  vm.listRefComment().createListItem(
-    [
-      ["Title", vm.requestID()],
-      ["Comment", vm.commentNew()],
-    ],
-    submitCommentCallback,
-    vm.requestorOffice().Title
-  );
+  if (vm.commentNew()) {
+    vm.listRefComment().createListItem(
+      [
+        ["Title", vm.requestID()],
+        ["Comment", vm.commentNew()],
+      ],
+      submitCommentCallback,
+      vm.requestorOffice().Title
+    );
+  }
 }
 
 function submitCommentCallback(id) {
@@ -1041,7 +1068,12 @@ function newEmailCallback(result, value) {
 /************************************************************
  * Pipeline
  ************************************************************/
-
+/**
+ * Documentation - pipelineForward
+ * Progress the current request pipeline forward, increment
+ * stage number, handle closing, and handle assignments from
+ * new ConfigPipeline stage.
+ */
 function pipelineForward() {
   let valuePairs = new Array();
 
@@ -1059,43 +1091,67 @@ function pipelineForward() {
       vm.requestHeader().ID,
       valuePairs,
       function () {
-        SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
         console.log("pipeline moved to next stage.");
         buildPipelineElement();
-
-        // Build our email
-        let to = [
-          vm
-            .configActionOffices()
-            .find(
-              (aoid) => aoid.ID == vm.requestStage().Assignee.get_lookupId()
-            ).UserAddress,
-        ];
-
-        let subject = `Work Order -${vm.requestStage().Title}- ${
-          vm.selectedServiceType().Title
-        } - ${vm.requestID()}`;
-
-        let body =
-          `Greetings Colleagues,<br><br> The following service request has changed, requiring your attention:<br>` +
-          `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
-            vm.selectedServiceType().Title
-          }<br><br>` +
-          `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
-          `${vm.requestLinkAdmin()}`;
-
-        createEmail(to, [], [], subject, body);
-
-        // Create the action
-        createAction(
-          vm.requestStage().Title == "Closed" ? "Closed" : "Progressed",
-          `${sal.globalConfig.currentUser.get_title()} has moved the request to stage ${
-            vm.requestStage().Step
-          }: ${vm.requestStage().Title}`
-        );
+        pipelineNotifications();
+        pipelineAssignments();
+        SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
       }
     );
   }
+}
+
+function pipelineAssignments() {
+  if (vm.requestIsActive() && vm.requestStage()) {
+    switch (vm.requestStage().ActionType) {
+      case "Pending Approval":
+        // The assigned approver needs to check off
+        vm.assignAssignee(vm.requestStageOffice());
+        createAssignment("Approver");
+        break;
+      case "Pending Action":
+        vm.assignAssignee(vm.requestStageOffice());
+        createAssignment("Action Resolver");
+        break;
+      case "Pending Resolution":
+      case "Pending Assignment":
+      default:
+        break;
+    }
+  }
+}
+
+function pipelineNotifications() {
+  let to = [
+    vm.requestStageOffice() ? vm.requestStageOffice().UserAddress : null,
+  ];
+
+  let cc = new Array();
+  if (vm.requestStageOrg()) {
+    cc.push(vm.requestStageOrg().UserGroup);
+  }
+
+  let subject = `Work Order -${vm.requestStage().Title}- ${
+    vm.selectedServiceType().Title
+  } - ${vm.requestID()}`;
+
+  let body =
+    `Greetings Colleagues,<br><br> The following service request has changed, requiring your attention:<br>` +
+    `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
+      vm.selectedServiceType().Title
+    }<br><br>` +
+    `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
+    `${vm.requestLinkAdmin()}`;
+
+  createEmail(to, cc, [], subject, body);
+
+  // Create the action
+  createAction(
+    vm.requestStage().Title == "Closed" ? "Closed" : "Progressed",
+    `${sal.globalConfig.currentUser.get_title()} has moved the request to stage ${
+      vm.requestStage().Step
+    }: ${vm.requestStage().Title}`
+  );
 }
 
 function cancelWorkOrder() {
@@ -1135,7 +1191,7 @@ function closeWorkOrder(reason = "Closed") {
     // Create the action
     createAction(
       reason,
-      `${sal.globalConfig.currentUser.get_title()} has moved ${reason} the request`
+      `${sal.globalConfig.currentUser.get_title()} has ${reason} the request`
     );
     SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
     refreshWorkOrderItem(vm.requestID());
@@ -1171,7 +1227,6 @@ function initApp() {
 
 function initServiceTypes() {
   //Initialize the rest of our list references
-  initServiceTypeListRefs();
   initTemplates();
 }
 
@@ -1200,6 +1255,8 @@ function initTemplates() {
 }
 
 function initComplete() {
+  initServiceTypeListRefDefs();
+
   //Parse Page Params
   var path = window.location.pathname;
   vm.page(path.split("/").pop());
@@ -1225,6 +1282,7 @@ function initComplete() {
   if (!tab) {
     switch (vm.page()) {
       case "app.aspx":
+        vm.userRole("user");
         if (!tab) {
           vm.tab("my-orders");
         }
@@ -1232,8 +1290,9 @@ function initComplete() {
 
       case "admin.aspx":
         //fetchMyAOAssignments();
+        vm.userRole("admin");
         if (!tab) {
-          vm.tab("assigned-orders");
+          vm.tab("my-orders");
         }
         break;
 
@@ -1252,6 +1311,7 @@ function initComplete() {
 
 function initUIComponents() {
   makeDataTable("#wo-open-orders");
+  makeDataTable("#wo-assigned-orders");
   makeDataTable("#wo-closed-orders");
   makeDataTable("#wo-cancelled-orders");
 

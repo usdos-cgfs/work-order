@@ -44,7 +44,7 @@
         <input
           class="editable-field"
           type="text"
-          data-bind="value: ironkeyUserName"
+          data-bind="disable: currentView() == 'view', value: ironkeyUserName"
         />
       </div>
       <div class="field">
@@ -63,7 +63,7 @@
         <input
           class="editable-field"
           type="text"
-          data-bind="value: ironkeySupervisor"
+          data-bind="disable: currentView() == 'view', value: ironkeySupervisor"
         />
       </div>
       <div class="field">

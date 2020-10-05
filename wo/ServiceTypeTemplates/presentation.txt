@@ -8,7 +8,7 @@
     title: "st_presentation",
     viewFields: {
       ID: { type: "Text", koMap: "empty" },
-      Title: { type: "Text", koMap: "empty" },
+      Title: { type: "Text", koMap: "requestID" },
       PresentationDate: { type: "Text", koMap: "presentationDate" },
       Location: { type: "Text", koMap: "presentationLocation" },
       Duration: { type: "Text", koMap: "presentationDuration" },
