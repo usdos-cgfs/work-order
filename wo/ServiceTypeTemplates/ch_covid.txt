@@ -9,34 +9,22 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      AccessType: { type: "Text", koMap: "accessType", required: false },
-      EmployeeType: {
+      Office: { type: "Text", koMap: "covidOffice", required: true },
+      Location: { type: "Text", koMap: "covidLocation", required: true },
+      NumEmployees: {
         type: "Text",
-        koMap: "accessEmployeeType",
-        required: false,
+        koMap: "covidNumEmployees",
+        required: true,
       },
-      FullName: { type: "Text", koMap: "accessFullName", required: false },
-      BadgeNum: { type: "Text", koMap: "accessBadgeNum", required: false },
-      ExpirationDate: {
-        type: "Text",
-        koMap: "accessExpirationDate",
-        required: false,
+      SanitizerWipes: {
+        type: "Bool",
+        koMap: "covidSanitizerWipes",
+        required: true,
       },
-      Locations: {
-        type: "Text",
-        koMap: "accessLocations",
-        required: false,
-      },
-      Justification: {
-        type: "Text",
-        koMap: "accessJustification",
-        required: false,
-      },
-      Description: { type: "Text", koMap: "accessDesc" },
-      SpecialInstructions: {
-        type: "Text",
-        koMap: "accessSpecInst",
-        required: false,
+      SanitizerLiquid: {
+        type: "Bool",
+        koMap: "covidSanitizerLiquid",
+        required: true,
       },
     },
   });
@@ -44,8 +32,64 @@
   /***************************************************************
    *    Declare Observables
    ***************************************************************/
+  vm.covidOffice = ko.observable();
+  vm.covidLocation = ko.observable();
+  vm.covidNumEmployees = ko.observable();
+  vm.covidSanitizerWipes = ko.observable();
+  vm.covidSanitizerLiquid = ko.observable();
 </script>
 
 <script type="text/html" id="tmpl_ch_covid">
-  <div class="ui form"></div>
+  <div class="ui form">
+    <div class="two fields">
+      <div class="field">
+        <label>Office:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+                value: covidOffice"
+        />
+      </div>
+      <div class="field">
+        <label>Location:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+                value: covidLocation"
+        />
+      </div>
+    </div>
+    <div class="three fields">
+      <div class="field">
+        <label>Number of Employees:</label>
+        <input
+          class="editable-field"
+          type="number"
+          min="1"
+          data-bind="disable: currentView() == 'view',
+                value: covidNumEmployees"
+        />
+      </div>
+      <div class="field">
+        <label>Sanitizer Wipes:</label>
+        <input
+          class="editable-field"
+          type="checkbox"
+          data-bind="disable: currentView() == 'view',
+                checked: covidSanitizerWipes"
+        />
+      </div>
+      <div class="field">
+        <label>Sanitizer Liquid:</label>
+        <input
+          class="editable-field"
+          type="checkbox"
+          data-bind="disable: currentView() == 'view',
+                checked: covidSanitizerLiquid"
+        />
+      </div>
+    </div>
+  </div>
 </script>
