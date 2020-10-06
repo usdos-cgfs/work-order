@@ -48,7 +48,7 @@
         <label>Job Title:</label>
         <input
           class="editable-field"
-          type="checkbox"
+          type="text"
           data-bind="disable: currentView() == 'view',
               value: classificationJobTitle"
         />
@@ -57,7 +57,7 @@
         <label>Series:</label>
         <input
           class="editable-field"
-          type="checkbox"
+          type="text"
           data-bind="disable: currentView() == 'view',
               value: classificationSeries"
         />
@@ -68,7 +68,7 @@
         <label>Grade:</label>
         <input
           class="editable-field"
-          type="checkbox"
+          type="text"
           data-bind="disable: currentView() == 'view',
               value: classificationGrade"
         />
@@ -77,7 +77,7 @@
         <label>Series:</label>
         <input
           class="editable-field"
-          type="checkbox"
+          type="text"
           data-bind="disable: currentView() == 'view',
               value: classificationHiringManager"
         />
@@ -85,13 +85,13 @@
     </div>
     <div class="eight wide field">
       <label>Purpose:</label>
-      <input
+      <select
         class="editable-field"
-        type="checkbox"
+        type="text"
         data-bind="disable: currentView() == 'view',
             value: classificationPurpose, options: classificationPurposeOpts
             optionsCaption: 'Select...'"
-      />
+      ></select>
     </div>
   </div>
 </script>
