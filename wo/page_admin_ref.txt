@@ -500,7 +500,7 @@
                   data-bind="visible: requestCurUserApprove()"
                   onclick="approveRequest()"
                 >
-                  Approve All
+                  Approve
                 </button>
               </div>
               <div class="four wide column"></div>

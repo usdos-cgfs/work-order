@@ -1,11 +1,17 @@
 <div>
-    <div class="admin-action-zone">
-        <h2>Administrative Action Zone</h2>
-        <p>Your input is required. Use the button below to approve or reject the selected Work Order:</p>
-        <button type="button" href="javascript:void(0)" onclick="newApproval()"
-                data-bind="disabled: !requestID()">
-            Approve/Reject
-        </button>
-    </div>
+  <div class="admin-action-zone">
+    <h2>Administrative Action Zone</h2>
+    <p>
+      Your input is required. Use the button below to approve or reject the
+      selected Work Order:
+    </p>
+    <button
+      type="button"
+      href="javascript:void(0)"
+      onclick="newApproval()"
+      data-bind="disabled: !requestID()"
+    >
+      Approve/Reject
+    </button>
+  </div>
 </div>
-

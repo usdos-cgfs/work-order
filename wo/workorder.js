@@ -720,8 +720,18 @@ function createAssignment(role = "Action Resolver", notify = false) {
             `${vm.requestLinkAdmin()}`;
           let addendum = new String();
           if ((role = "Approver")) {
-            addendum =
-              `<br><br>Click the link below to quick approve this request:<br>` +
+            let valuePairs = getValuePairs(
+              vm.selectedServiceType().listDef.viewFields
+            );
+            addendum += "<br><br><ul>";
+            if (valuePairs.length) {
+              valuePairs.forEach((vp) => {
+                addendum += `<li>${vp[0]} - ${vp[1]}</li>`;
+              });
+            }
+            addendum += "</ul>";
+            addendum +=
+              `<br>Click the link below to quick approve this request:<br>` +
               `<a href="${vm.requestLinkAdminApprove(
                 id
               )}" target="blank">${vm.requestLinkAdminApprove(id)}</a><br><br>`;
