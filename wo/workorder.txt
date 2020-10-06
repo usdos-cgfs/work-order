@@ -523,7 +523,7 @@
                 </div>
                 <div class="two fields">
                   <div class="field">
-                    <label> Requestor Name: </label>
+                    <label>Requestor Name: </label>
                     <input
                       class="non-editable-field"
                       type="text"
@@ -531,9 +531,9 @@
                     />
                   </div>
                   <div class="field">
-                    <label data-bind="if: requestorOffice"> Manager: </label>
+                    <label data-bind="if: requestorOffice">Manager: </label>
                     <input
-                      class="non-editable-field"
+                      class="editable-field"
                       type="text"
                       data-bind="value: requestorManager"
                     />
@@ -541,7 +541,7 @@
                 </div>
                 <div class="two fields">
                   <div class="field">
-                    <label> Requestor Phone: </label>
+                    <label>Requestor Phone: </label>
                     <input
                       class="editable-field"
                       type="text"

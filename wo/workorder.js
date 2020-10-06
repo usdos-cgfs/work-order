@@ -718,15 +718,15 @@ function createAssignment(role = "Action Resolver", notify = false) {
             }<br><br>` +
             `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
             `${vm.requestLinkAdmin()}`;
-
+          let addendum = new String();
           if ((role = "Approver")) {
-            let addendum =
-              `Click the link below to quick approve this request:<br>` +
+            addendum =
+              `<br><br>Click the link below to quick approve this request:<br>` +
               `<a href="${vm.requestLinkAdminApprove(
                 id
               )}" target="blank">${vm.requestLinkAdminApprove(id)}</a><br><br>`;
           }
-          createEmail(to, [], [], subject, body);
+          createEmail(to, [], [], subject, body + addendum);
         }
         //Update the request with a new assignment:
         // Create Action
@@ -734,7 +734,7 @@ function createAssignment(role = "Action Resolver", notify = false) {
           "Assignment",
           `The following Action Office has been assigned to this request: ${
             vm.assignAssignee().Title
-          }`
+          } - ${role}`
         );
         vm.assignAssignee(null);
       },
@@ -1114,7 +1114,7 @@ function pipelineAssignments() {
       case "Pending Approval":
         // The assigned approver needs to check off
         vm.assignAssignee(vm.requestStageOffice());
-        createAssignment("Approver");
+        createAssignment("Approver", true);
         break;
       case "Pending Action":
         vm.assignAssignee(vm.requestStageOffice());

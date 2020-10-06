@@ -4,8 +4,8 @@
    ************************************************************/
   vm.listDefs.push({
     uid: "ch_resupplies",
-    name: "st_ch_resupplies",
-    title: "st_ch_resupplies",
+    name: "st_ch_supplies",
+    title: "st_ch_supplies",
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
@@ -46,6 +46,6 @@
    ***************************************************************/
 </script>
 
-<script type="text/html" id="tmpl_ch_resupplies">
+<script type="text/html" id="tmpl_ch_supplies">
   <div class="ui form"></div>
 </script>

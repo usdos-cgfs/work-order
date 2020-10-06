@@ -253,15 +253,20 @@ function koviewmodel() {
   self.userActionOfficeMembership = ko.pureComputed(() => {
     // Return the configActionOffice offices this user is a part of
     return self.configActionOffices().filter((ao) => {
-      let isAO =
-        ao.UserAddress.get_lookupId() == sal.globalConfig.currentUser.get_id();
+      if (ao.UserAddress) {
+        let isAO =
+          ao.UserAddress.get_lookupId() ==
+          sal.globalConfig.currentUser.get_id();
 
-      let isGroup = self
-        .userGroupMembership()
-        .map((group) => group.Title)
-        .includes(ao.UserAddress.get_lookupValue());
+        let isGroup = self
+          .userGroupMembership()
+          .map((group) => group.Title)
+          .includes(ao.UserAddress.get_lookupValue());
 
-      return isAO || isGroup;
+        return isAO || isGroup;
+      } else {
+        return false;
+      }
     });
   });
 

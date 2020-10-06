@@ -246,6 +246,7 @@ function buildROFoldersAssocLists() {
   buildROFolders(vm.listRefComment());
   buildROFolders(vm.listRefWO());
   buildROFolders(vm.libRefWODocs());
+  buildROFolders(vm.listRefWOEmails());
 }
 
 function buildROFolders(listRef) {

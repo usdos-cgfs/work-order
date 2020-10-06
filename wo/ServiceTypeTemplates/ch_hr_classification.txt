@@ -89,7 +89,7 @@
         class="editable-field"
         type="text"
         data-bind="disable: currentView() == 'view',
-            value: classificationPurpose, options: classificationPurposeOpts
+            value: classificationPurpose, options: classificationPurposeOpts,
             optionsCaption: 'Select...'"
       ></select>
     </div>
