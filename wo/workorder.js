@@ -684,7 +684,7 @@ function newAssignmentForm(role) {
   );
 }
 
-function createAssignment(role = "Action Resolver") {
+function createAssignment(role = "Action Resolver", notify = false) {
   // Create a new assignment based off our set observables
   if (vm.assignAssignee()) {
     let vp = [
@@ -703,24 +703,32 @@ function createAssignment(role = "Action Resolver") {
           //let rvp = [["RequestAssignments", vm.requestAssignmentIds()]];
           //vm.listRefWO().updateListItem(vm.requestHeader().ID, rvp, () => {});
         });
-        //Update the request with a new assignment:
-        // Build our email
-        let to = [vm.assignAssignee().UserAddress];
+        if (notify) {
+          // Build our email
+          let to = [vm.assignAssignee().UserAddress];
 
-        let subject = `Work Order -${vm.requestStage().Title}- ${
-          vm.selectedServiceType().Title
-        } - ${vm.requestID()}`;
-
-        let body =
-          `Greetings Colleagues,<br><br> You have been assigned to the following workorder request by your action office assignor:<br>` +
-          `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
+          let subject = `Work Order -${vm.requestStage().Title}- ${
             vm.selectedServiceType().Title
-          }<br><br>` +
-          `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
-          `${vm.requestLinkAdmin()}`;
+          } - ${vm.requestID()}`;
 
-        createEmail(to, [], [], subject, body);
+          let body =
+            `Greetings Colleagues,<br><br> You have been assigned to the following workorder request by your action office assignor:<br>` +
+            `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
+              vm.selectedServiceType().Title
+            }<br><br>` +
+            `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
+            `${vm.requestLinkAdmin()}`;
 
+          if ((role = "Approver")) {
+            let addendum =
+              `Click the link below to quick approve this request:<br>` +
+              `<a href="${vm.requestLinkAdminApprove(
+                id
+              )}" target="blank">${vm.requestLinkAdminApprove(id)}</a><br><br>`;
+          }
+          createEmail(to, [], [], subject, body);
+        }
+        //Update the request with a new assignment:
         // Create Action
         createAction(
           "Assignment",
@@ -1093,7 +1101,6 @@ function pipelineForward() {
       function () {
         console.log("pipeline moved to next stage.");
         buildPipelineElement();
-        pipelineNotifications();
         pipelineAssignments();
         SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
       }
@@ -1117,12 +1124,15 @@ function pipelineAssignments() {
       case "Pending Resolution":
       case "Pending Assignment":
       default:
+        pipelineNotifications();
         break;
     }
+  } else {
+    pipelineNotifications();
   }
 }
 
-function pipelineNotifications() {
+function pipelineNotifications(addendum = null) {
   let to = [
     vm.requestStageOffice() ? vm.requestStageOffice().UserAddress : null,
   ];

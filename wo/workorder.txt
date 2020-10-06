@@ -530,7 +530,7 @@
                       data-bind="value: requestorName"
                     />
                   </div>
-                  <div class="field" style="display: none">
+                  <div class="field">
                     <label data-bind="if: requestorOffice"> Manager: </label>
                     <input
                       class="non-editable-field"

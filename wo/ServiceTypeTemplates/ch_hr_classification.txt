@@ -14,19 +14,84 @@
         koMap: "classificationJobTitle",
         required: true,
       },
-      JobTitle: { type: "Text", koMap: "classification", required: true },
-      JobTitle: { type: "Text", koMap: "classification", required: true },
-      JobTitle: { type: "Text", koMap: "classification", required: true },
-      JobTitle: { type: "Text", koMap: "classification", required: true },
-      JobTitle: { type: "Text", koMap: "classification", required: true },
+      Series: { type: "Text", koMap: "classificationSeries", required: true },
+      Grade: { type: "Text", koMap: "classificationGrade", required: true },
+      HiringManager: {
+        type: "Text",
+        koMap: "classificationHiringManager",
+        required: true,
+      },
+      Purpose: { type: "Text", koMap: "classificationPurpose", required: true },
     },
   });
 
   /***************************************************************
    *    Declare Observables
    ***************************************************************/
+
+  vm.classificationJobTitle = ko.observable();
+  vm.classificationSeries = ko.observable();
+  vm.classificationGrade = ko.observable();
+  vm.classificationHiringManager = ko.observable();
+  vm.classificationPurpose = ko.observable();
+  vm.classificationPurposeOpts = ko.observableArray([
+    "New",
+    "Minor",
+    "Recertification",
+  ]);
 </script>
 
 <script type="text/html" id="tmpl_ch_hr_classification">
-  <div class="ui form"></div>
+  <div class="ui form">
+    <div class="two fields">
+      <div class="field">
+        <label>Job Title:</label>
+        <input
+          class="editable-field"
+          type="checkbox"
+          data-bind="disable: currentView() == 'view',
+              value: classificationJobTitle"
+        />
+      </div>
+      <div class="field">
+        <label>Series:</label>
+        <input
+          class="editable-field"
+          type="checkbox"
+          data-bind="disable: currentView() == 'view',
+              value: classificationSeries"
+        />
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label>Grade:</label>
+        <input
+          class="editable-field"
+          type="checkbox"
+          data-bind="disable: currentView() == 'view',
+              value: classificationGrade"
+        />
+      </div>
+      <div class="field">
+        <label>Series:</label>
+        <input
+          class="editable-field"
+          type="checkbox"
+          data-bind="disable: currentView() == 'view',
+              value: classificationHiringManager"
+        />
+      </div>
+    </div>
+    <div class="eight wide field">
+      <label>Purpose:</label>
+      <input
+        class="editable-field"
+        type="checkbox"
+        data-bind="disable: currentView() == 'view',
+            value: classificationPurpose, options: classificationPurposeOpts
+            optionsCaption: 'Select...'"
+      />
+    </div>
+  </div>
 </script>

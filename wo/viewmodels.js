@@ -959,6 +959,14 @@ function koviewmodel() {
       `/Pages/admin.aspx?tab=order-detail&reqid=${self.requestID()}`
     );
   });
+
+  self.requestLinkAdminApprove = (id) => {
+    return (
+      _spPageContextInfo.webAbsoluteUrl +
+      `/Pages/approval.aspx?assignment=` +
+      id
+    );
+  };
   /************************************************************
    * Observables for work order header
    ************************************************************/
