@@ -508,7 +508,8 @@ function getValuePairs(listDef) {
     if (!["ID", "ClosedDate", "Created"].includes(field)) {
       let koMap = obj.koMap;
       console.log(koMap);
-      let fieldValue = !$.isEmptyObject(vm[koMap]()) ? vm[koMap]() : "";
+      let fieldValue = vm[koMap]();
+      //let fieldValue = !$.isEmptyObject(vm[koMap]()) ? vm[koMap]() : "";
 
       // Based on the field type, do any casting or conversions here
       switch (obj.type) {
