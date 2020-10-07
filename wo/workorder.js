@@ -1300,28 +1300,26 @@ function initComplete() {
   //If we're on a separate tab, switch back to the tab from the url.
 
   // if no tab is present, switch based on page
-  if (!tab) {
-    switch (vm.page()) {
-      case "app.aspx":
-        vm.userRole("user");
-        if (!tab) {
-          vm.tab("my-orders");
-        }
-        break;
 
-      case "admin.aspx":
-        //fetchMyAOAssignments();
-        vm.userRole("admin");
-        if (!tab) {
-          vm.tab("my-orders");
-        }
-        break;
+  switch (vm.page()) {
+    case "app.aspx":
+      vm.userRole("user");
+      if (!tab) {
+        vm.tab("my-orders");
+      }
+      break;
 
-      default:
-    }
-  } else {
-    vm.tab(tab);
+    case "admin.aspx":
+      //fetchMyAOAssignments();
+      vm.userRole("admin");
+      if (!tab) {
+        vm.tab("my-orders");
+      }
+      break;
+
+    default:
   }
+  vm.tab(tab);
 
   ko.applyBindings(vm);
   $("#tabs").show();
