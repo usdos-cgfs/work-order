@@ -150,40 +150,48 @@ function viewWorkOrderItem(woID) {
 
   //$.tab('change tab', '');
   //$("#tabs").tabs({ active: tabsEnum['#order-detail'] });
-  vm.currentView("view");
-  vm.requestID(woID);
+  let request = vm.allOrders().find((order) => order.Title == woID);
 
-  vm.requestHeader(vm.allOrders().find((order) => order.Title == woID));
-  console.log("workorder fetched - setting value pairs");
-  vm.selectedServiceType("");
-  setValuePairs(workOrderListDef.viewFields, vm.requestHeader());
-
-  vm.requestAssignments(vm.allRequestAssignmentsMap()[woID]);
-  /* Fetch all associated Items */
-  //fetchRequestAssignments();
-  fetchActions(function () {
-    console.log("actions fetched");
-    $(".ui.accordion").accordion();
-  });
-  fetchApprovals(function () {
-    console.log("approvals fetched");
-  });
-  fetchAttachments();
-  fetchComments(function () {
-    console.log("comments fetched");
-  });
-
-  /* Fetch the associated service type items */
-  if (vm.selectedServiceType().listDef) {
-    viewServiceTypeItem();
+  if (!request) {
+    // Clear urlparam
+    updateUrlParam("reqid", "");
+    vm.tab("my-orders");
   } else {
-    vm.requestLoaded(new Date());
-    SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+    vm.currentView("view");
+    vm.requestID(woID);
+
+    vm.requestHeader(request);
+    console.log("workorder fetched - setting value pairs");
+    vm.selectedServiceType("");
+    setValuePairs(workOrderListDef.viewFields, vm.requestHeader());
+
+    vm.requestAssignments(vm.allRequestAssignmentsMap()[woID]);
+    /* Fetch all associated Items */
+    //fetchRequestAssignments();
+    fetchActions(function () {
+      console.log("actions fetched");
+      $(".ui.accordion").accordion();
+    });
+    fetchApprovals(function () {
+      console.log("approvals fetched");
+    });
+    fetchAttachments();
+    fetchComments(function () {
+      console.log("comments fetched");
+    });
+
+    /* Fetch the associated service type items */
+    if (vm.selectedServiceType().listDef) {
+      viewServiceTypeItem();
+    } else {
+      vm.requestLoaded(new Date());
+      SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+    }
+    buildPipelineElement();
+    $(".editable-field").prop("disabled", true);
+    vm.tab("order-detail");
+    //initUIComponents();
   }
-  buildPipelineElement();
-  $(".editable-field").prop("disabled", true);
-  vm.tab("order-detail");
-  //initUIComponents();
 }
 
 function viewServiceTypeItem() {

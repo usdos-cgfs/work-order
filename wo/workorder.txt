@@ -432,7 +432,7 @@
       <div class="content">
         <h3>
           Please select an open request from the
-          <a href="./app.aspx?tab=open-orders">Open Orders</a> Tab or
+          <a href="./app.aspx?tab=my-orders">Open Orders</a> Tab or
           <a href="./app.aspx?tab=order-new"> Create a New Order</a>
         </h3>
       </div>
@@ -530,6 +530,7 @@
                       data-bind="value: requestorName"
                     />
                   </div>
+                  <!--
                   <div class="field">
                     <label data-bind="if: requestorOffice">Manager: </label>
                     <input
@@ -538,6 +539,7 @@
                       data-bind="value: requestorManager"
                     />
                   </div>
+                -->
                 </div>
                 <div class="two fields">
                   <div class="field">
