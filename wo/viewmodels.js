@@ -52,6 +52,7 @@ var workOrderListDef = {
     RequestSubmitted: { type: "DateTime", koMap: "requestSubmittedDate" },
     ServiceType: { type: "Text", koMap: "requestServiceTypeLookupId" },
     ClosedDate: { type: "Text", koMap: "requestClosedDate" },
+    Author: { type: "Text", koMap: "empty" },
     Created: { type: "Date", koMap: "empty" },
   },
 };
