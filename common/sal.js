@@ -89,9 +89,9 @@ function getUserProperties() {
   });
 }
 
-sal.ensureUser = (userName, callback) => {
-  let context = new SP.ClientContext.get_current();
-  let user = context.get_web().ensureUser(userName);
+function ensureUser(userName, callback) {
+  var context = new SP.ClientContext.get_current();
+  var user = context.get_web().ensureUser(userName);
 
   function onEnsureUserSucceeded(sender, args) {
     var self = this;
@@ -113,9 +113,10 @@ sal.ensureUser = (userName, callback) => {
     Function.createDelegate(data, onEnsureUserSucceeded),
     Function.createDelegate(data, onEnsureUserFailed)
   );
-};
+}
 
-sal.ensureUserRest = (userName) => {
+ensureUserRest = (userName = "i:0#.w|cgfs\backlundpf") => {
+  // sample userName
   var item = {
     logonName: userName,
   };

@@ -157,7 +157,6 @@ function viewWorkOrderItem(woID) {
     updateUrlParam("reqid", "");
     vm.tab("my-orders");
   } else {
-    vm.currentView("view");
     vm.requestID(woID);
 
     vm.requestHeader(request);
@@ -180,16 +179,13 @@ function viewWorkOrderItem(woID) {
       console.log("comments fetched");
     });
 
+    buildPipelineElement();
     /* Fetch the associated service type items */
     if (vm.selectedServiceType().listDef) {
       viewServiceTypeItem();
     } else {
-      vm.requestLoaded(new Date());
-      SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+      onViewWorkOrderItemComplete();
     }
-    buildPipelineElement();
-    $(".editable-field").prop("disabled", true);
-    vm.tab("order-detail");
     //initUIComponents();
   }
 }
@@ -203,7 +199,6 @@ function viewServiceTypeItem() {
   vm.selectedServiceType().listRef.getListItems(serviceTypeCaml, (items) => {
     if (items[0]) {
       let res = items[0];
-      vm.requestLoaded(new Date());
       vm.serviceTypeHeader(res);
       console.log("service type fetched -- setting valuepairs", items);
       setValuePairs(
@@ -213,9 +208,15 @@ function viewServiceTypeItem() {
     } else {
       timedNotification("Warning: couldn't find Service Type Info");
     }
-
-    SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+    onViewWorkOrderItemComplete();
   });
+}
+
+function onViewWorkOrderItemComplete() {
+  vm.requestLoaded(new Date());
+  vm.tab("order-detail");
+  vm.currentView("view");
+  SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
 
 function buildPipelineElement() {
@@ -516,15 +517,19 @@ function getValuePairs(listDef) {
     if (!["ID", "ClosedDate", "Created"].includes(field)) {
       let koMap = obj.koMap;
       console.log(koMap);
-      let fieldValue = vm[koMap]();
+      let observable = vm[koMap];
       //let fieldValue = !$.isEmptyObject(vm[koMap]()) ? vm[koMap]() : "";
 
       // Based on the field type, do any casting or conversions here
       switch (obj.type) {
         case "DateTime":
-          fieldValue = fieldValue.toISOString();
+          fieldValue = observable().toISOString();
+          break;
+        case "Person":
+          fieldValue = observable.userId();
           break;
         default:
+          fieldValue = observable();
       }
       // Check if this field is required
       // TODO: highlight the offending field
@@ -545,7 +550,14 @@ function setValuePairs(listDef, jObject) {
   $.each(listDef, function (field, obj) {
     //console.log(field + " " + obj.koMap + " " );
     console.log(`Setting ${obj.koMap} to ${jObject[field]} from ${field}`);
-    vm[obj.koMap](jObject[field]);
+    let observable = vm[obj.koMap];
+    switch (obj.type) {
+      case "Person":
+        observable.userId(jObject[field]);
+        break;
+      default:
+        observable(jObject[field]);
+    }
   });
 }
 
@@ -1313,25 +1325,32 @@ function initComplete() {
   switch (vm.page()) {
     case "app.aspx":
       vm.userRole("user");
-      if (!tab) {
-        vm.tab("my-orders");
-      }
+
       break;
 
     case "admin.aspx":
       //fetchMyAOAssignments();
       vm.userRole("admin");
-      if (!tab) {
-        vm.tab("my-orders");
-      }
+
       break;
 
     default:
   }
-  vm.tab(tab);
 
   ko.applyBindings(vm);
   $("#tabs").show();
+
+  switch (tab) {
+    case null:
+      vm.tab("my-orders");
+      break;
+    case "detail-view":
+      if (id) {
+        viewWorkOrderItem(id);
+      }
+    default:
+      vm.tab(tab);
+  }
 
   initUIComponents();
   SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);

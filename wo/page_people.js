@@ -1,8 +1,12 @@
 $(document).ready(function () {
   // Specify the unique ID of the DOM element where the
   // picker will render.
-  // SP.SOD.ExecuteOrDelayUntilScriptLoaded(initApp, "SP.js");
-  initApp();
+  SP.SOD.executeFunc(
+    "sp.js",
+    "SP.ClientContext",
+    ExecuteOrDelayUntilScriptLoaded(initApp, "sp.js")
+  );
+  //initApp();
 });
 
 function initApp() {
@@ -20,7 +24,7 @@ function initializePeoplePicker(peoplePickerElementId) {
   schema["PrincipalAccountType"] = "User,DL,SecGroup,SPGroup";
   schema["SearchPrincipalSource"] = 15;
   schema["ResolvePrincipalSource"] = 15;
-  //schema["AllowMultipleValues"] = false;
+  schema["AllowMultipleValues"] = false;
   schema["MaximumEntitySuggestions"] = 50;
   schema["Width"] = "280px";
 
@@ -88,7 +92,7 @@ ko.bindingHandlers.people = {
       console.log("OnControlResolvedUserChanged");
       //get current selected users
       console.log(picker.GetAllUserInfo());
-      sal.ensureUser(picker.GetAllUserKeys()[0], (user) => {
+      ensureUser(picker.GetAllUserKeys(), (user) => {
         value(user);
       });
       //value(picker.GetAllUserKeys());
@@ -107,3 +111,49 @@ ko.bindingHandlers.people = {
   },
 };
 // https://knockoutjs.com/documentation/custom-bindings.html
+
+ko.bindingHandlers.kopeoplepicker = {
+  init: function (element, valueAccessor, allBindingsAccessor) {
+    var schema = {};
+    schema["PrincipalAccountType"] = "User";
+    schema["SearchPrincipalSource"] = 15;
+    schema["ShowUserPresence"] = true;
+    schema["ResolvePrincipalSource"] = 15;
+    schema["AllowEmailAddresses"] = true;
+    schema["AllowMultipleValues"] = false;
+    schema["MaximumEntitySuggestions"] = 50;
+    schema["Width"] = "280px";
+    schema["OnUserResolvedClientScript"] = function (elemId, userKeys) {
+      //  get reference of People Picker Control
+      var pickerElement = SPClientPeoplePicker.SPClientPeoplePickerDict[elemId];
+      var observable = valueAccessor();
+      var userJSObject = pickerElement.GetControlValueAsJSObject()[0];
+      ensureUser(userJSObject.Key, (user) => {
+        observable(user);
+      });
+      observable(pickerElement.GetControlValueAsJSObject()[0]);
+      console.log(JSON.stringify(pickerElement.GetControlValueAsJSObject()[0]));
+    };
+
+    //  TODO: You can provide schema settings as options
+    var mergedOptions = allBindingsAccessor().options || schema;
+
+    //  Initialize the Control, MS enforces to pass the Element ID hence we need to provide
+    //  ID to our element, no other options
+    this.SPClientPeoplePicker_InitStandaloneControlWrapper(
+      element.id,
+      null,
+      mergedOptions
+    );
+
+    //  Force to Ensure User
+    var userValue = ko.utils.unwrapObservable(valueAccessor());
+    var pickerControl =
+      SPClientPeoplePicker.SPClientPeoplePickerDict[element.id + "_TopSpan"];
+    var editId = "#" + pickerControl.EditorElementId;
+    jQuery(editId).val(userValue);
+
+    // Resolve the User
+    pickerControl.AddUnresolvedUserFromEditor(true);
+  },
+};

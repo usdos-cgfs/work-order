@@ -1,4 +1,4 @@
-<script src="../_layouts/15/SP.js"></script>
+<script src="../Apps/_layouts/15/SP.js"></script>
 
   <script
     src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.6.2.min.js"
@@ -21,11 +21,11 @@
   <script src="../SiteAssets/workorder/vendor/knockout/knockout-3.5.0.js"></script>
 
  
-  <!-- <script
+  <script
     type="text/javascript"
     src="../Apps/_layouts/15/sp.runtime.js"
   ></script>
-  <script type="text/javascript" src="../Apps/_layouts/15/sp.core.js"></script> -->
+  <!-- <script type="text/javascript" src="../Apps/_layouts/15/sp.core.js"></script> -->
   <script src="../SiteAssets/workorder/common/sal.js"></script>
   <script src="../SiteAssets/workorder/wo/page_people.js"></script>
   <script type="text/javascript">
@@ -35,7 +35,7 @@
 
 
   <div id="peoplePickerDiv" data-bind="people: userOne"></div>
-  <div id="peoplePicker2Div"></div>
+  <div id="peoplePicker2Div" data-bind="kopeoplepicker: userTwo"></div>
   <div>
     <br />
     <input type="button" value="Get User Info" onclick="getUserInfo()" />
