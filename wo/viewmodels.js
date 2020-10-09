@@ -531,7 +531,7 @@ function koviewmodel() {
       updateUrlParam("reqid", self.requestID());
     }
     updateUrlParam("tab", newPage);
-    self.setFieldState();
+    //self.setFieldState();
   });
 
   /************************************************************
@@ -834,11 +834,11 @@ function koviewmodel() {
   // The available service types (we'll set this from a json array)
 
   self.currentView = ko.observable();
-  self.currentView.subscribe((val) => {
-    self.setFieldState();
-  });
+  // self.currentView.subscribe((val) => {
+  //   self.setFieldState();
+  // });
 
-  self.setFieldState = function () {
+  self.setFieldState = ko.computed(() => {
     //Based off our current observables, set the abledness
     if (self.tab() == "order-detail") {
       switch (self.currentView()) {
@@ -874,7 +874,7 @@ function koviewmodel() {
         default:
       }
     }
-  };
+  });
 
   self.requestIsSaveable = ko.observable();
   self.requestAttachments = ko.observableArray();
