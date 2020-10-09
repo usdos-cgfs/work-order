@@ -162,6 +162,7 @@ function viewWorkOrderItem(woID) {
     vm.requestHeader(request);
     console.log("workorder fetched - setting value pairs");
     vm.selectedServiceType("");
+    clearValuePairs(workOrderListDef.viewFields);
     setValuePairs(workOrderListDef.viewFields, vm.requestHeader());
 
     vm.requestAssignments(vm.allRequestAssignmentsMap()[woID]);
@@ -564,7 +565,14 @@ function setValuePairs(listDef, jObject) {
 function clearValuePairs(listDef) {
   $.each(listDef, function (field, obj) {
     if (obj.koMap != "requestID") {
-      vm[obj.koMap]("");
+      let observable = vm[obj.koMap];
+      switch (obj.type) {
+        case "Person":
+          observable.user(new Object());
+          break;
+        default:
+          observable("");
+      }
     }
   });
 }

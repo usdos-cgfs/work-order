@@ -234,6 +234,11 @@ var configServiceTypeListDef = {
 
 function PeopleField() {
   this.user = ko.observable();
+  this.userName = ko.pureComputed({
+    read: () => {
+      return this.user() ? this.user().userName : "";
+    },
+  });
   this.userId = ko.pureComputed(
     {
       read: () => {
@@ -1239,11 +1244,13 @@ function koviewmodel() {
       }
     },
     write: function (value) {
-      self.selectedServiceType(
-        self
-          .configServiceTypes()
-          .find((stype) => stype.ID == value.get_lookupId())
-      );
+      if (value) {
+        self.selectedServiceType(
+          self
+            .configServiceTypes()
+            .find((stype) => stype.ID == value.get_lookupId())
+        );
+      }
     },
   });
 }
