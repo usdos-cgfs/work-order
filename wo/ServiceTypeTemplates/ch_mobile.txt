@@ -9,43 +9,63 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      AccessType: { type: "Text", koMap: "accessType", required: false },
-      EmployeeType: {
-        type: "Text",
-        koMap: "accessEmployeeType",
-        required: false,
-      },
-      FullName: { type: "Text", koMap: "accessFullName", required: false },
-      BadgeNum: { type: "Text", koMap: "accessBadgeNum", required: false },
-      ExpirationDate: {
-        type: "Text",
-        koMap: "accessExpirationDate",
-        required: false,
-      },
-      Locations: {
-        type: "Text",
-        koMap: "accessLocations",
-        required: false,
-      },
-      Justification: {
-        type: "Text",
-        koMap: "accessJustification",
-        required: false,
-      },
-      Description: { type: "Text", koMap: "accessDesc" },
-      SpecialInstructions: {
-        type: "Text",
-        koMap: "accessSpecInst",
-        required: false,
-      },
+      Supervisor: { type: "Person", koMap: "mobileSupervisor", required: true },
+      PhoneNum: { type: "Text", koMap: "mobilePhone", required: true },
+      ServiceType: { type: "Text", koMap: "mobileType", required: true },
     },
   });
 
   /***************************************************************
    *    Declare Observables
    ***************************************************************/
+  vm.mobileSupervisor = new PeopleField();
+  vm.mobilePhone = ko.observable();
+  vm.mobileType = ko.observable();
+  vm.mobileTypeOpts = ko.observableArray([
+    "New Temporary (include dates in Justification)",
+    "Replacement/Upgrade",
+    "Return/Deactivation",
+    "Other",
+  ]);
 </script>
 
 <script type="text/html" id="tmpl_ch_mobile">
-  <div class="ui form"></div>
+  <div class="ui form">
+    <div class="two fields">
+      <div class="field">
+        <label>Supervisor: </label>
+        <input
+          class="editable-field"
+          type="text"
+          disabled="true"
+          data-bind="value: mobileSupervisor.userName, visible: currentView() == 'view'"
+        />
+        <div
+          id="peoplemobileSupervisor"
+          class="editable-field"
+          data-bind="people: mobileSupervisor.user, 
+          visible: currentView() != 'view'"
+        ></div>
+      </div>
+      <div class="field">
+        <label>Phone Num (if applicable):</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+            value: mobilePhone"
+        />
+      </div>
+    </div>
+    <div class="eight wide field">
+      <label>Service Type:</label>
+      <select
+        class="editable-field"
+        type="text"
+        data-bind="disable: currentView() == 'view',
+          value: mobileType, options: mobileTypeOpts,
+          optionsCaption: 'Select...'"
+      ></select>
+    </div>
+  </div>
 </script>

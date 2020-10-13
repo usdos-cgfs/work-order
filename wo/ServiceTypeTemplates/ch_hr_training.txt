@@ -9,43 +9,83 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      AccessType: { type: "Text", koMap: "accessType", required: false },
       EmployeeType: {
         type: "Text",
-        koMap: "accessEmployeeType",
+        koMap: "trainingEmployeeType",
         required: false,
       },
-      FullName: { type: "Text", koMap: "accessFullName", required: false },
-      BadgeNum: { type: "Text", koMap: "accessBadgeNum", required: false },
-      ExpirationDate: {
-        type: "Text",
-        koMap: "accessExpirationDate",
-        required: false,
-      },
-      Locations: {
-        type: "Text",
-        koMap: "accessLocations",
-        required: false,
-      },
-      Justification: {
-        type: "Text",
-        koMap: "accessJustification",
-        required: false,
-      },
-      Description: { type: "Text", koMap: "accessDesc" },
-      SpecialInstructions: {
-        type: "Text",
-        koMap: "accessSpecInst",
-        required: false,
-      },
+      Vendor: { type: "Text", koMap: "trainingVendor", required: false },
+      Location: { type: "Text", koMap: "trainingLocation", required: false },
+      Dates: { type: "Text", koMap: "trainingDates", required: false },
+      Cost: { type: "Text", koMap: "trainingCost", required: false },
     },
   });
 
   /***************************************************************
    *    Declare Observables
    ***************************************************************/
+  vm.trainingEmployeeType = ko.observable();
+  vm.trainingEmployeeTypeOpts = ko.observableArray([
+    "Direct Hire",
+    "Contractor",
+  ]);
+  vm.trainingVendor = ko.observable();
+  vm.trainingLocation = ko.observable();
+  vm.trainingDates = ko.observable();
+  vm.trainingCost = ko.observable();
 </script>
 
 <script type="text/html" id="tmpl_ch_hr_training">
-  <div class="ui form"></div>
+  <div class="ui form">
+    <div class="two fields">
+      <div class="field">
+        <label>Training Provider/Vendor: </label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="value: trainingVendor, disable: currentView() == 'view'"
+        />
+      </div>
+      <div class="field">
+        <label> Employee Type<span class="required">*</span>: </label>
+        <select
+          class="editable-field new"
+          type="select"
+          data-bind="value: trainingEmployeeType,
+              options: trainingEmployeeTypeOpts(),
+              optionsCaption: 'Select...',
+              disable: currentView() == 'view'"
+        ></select>
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label>Location: </label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="value: trainingLocation, disable: currentView() == 'view'"
+        />
+      </div>
+      <div class="field">
+        <label>Training Dates: </label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="value: trainingDates, disable: currentView() == 'view'"
+        />
+      </div>
+    </div>
+    <div class="eight wide field">
+      <label>Training Cost: </label>
+      <input
+        class="editable-field"
+        type="text"
+        data-bind="value: trainingCost, disable: currentView() == 'view'"
+      />
+    </div>
+  </div>
 </script>
+
+Employee Type - check box option “Direct Hire” and “Contractor) ​ Training
+Provider/Vendor ​ Location​ Dates​ Cost

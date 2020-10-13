@@ -9,7 +9,7 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      FullName: { type: "Text", koMap: "overtimeFullName", required: true },
+      FullName: { type: "Person", koMap: "overtimeFullName", required: true },
       ManagerDept: {
         type: "Person",
         koMap: "overtimeManagerDept",
@@ -47,9 +47,9 @@
   /***************************************************************
    *    Declare Observables
    ***************************************************************/
-  vm.overtimeFullName = ko.observable();
-  vm.overtimeManagerDept = ko.observable();
-  vm.overtimeManagerTask = ko.observable();
+  vm.overtimeFullName = new PeopleField();
+  vm.overtimeManagerDept = new PeopleField();
+  vm.overtimeManagerTask = new PeopleField();
   vm.overtimeDepartment = ko.observable();
   vm.overtimeRequisitionOrder = ko.observable();
   vm.overtimeContractorType = ko.observable();
@@ -62,33 +62,51 @@
   <div class="ui form">
     <div class="two fields">
       <div class="field">
-        <label>Contractor Name:</label>
+        <label>Contractor: </label>
         <input
           class="editable-field"
           type="text"
-          data-bind="disabled:
-              currentView() == 'view', value: overtimeFullName"
+          disabled="true"
+          data-bind="value: overtimeFullName.userName, visible: currentView() == 'view'"
         />
+        <div
+          id="peopleovertimeFullName"
+          class="editable-field"
+          data-bind="people: overtimeFullName.user, 
+            visible: currentView() != 'view'"
+        ></div>
       </div>
       <div class="field">
-        <label>Department Manager:</label>
+        <label>Dept Manager: </label>
         <input
           class="editable-field"
           type="text"
-          data-bind="disable: currentView() == 'view',
-              value: overtimeManagerDept"
+          disabled="true"
+          data-bind="value: overtimeManagerDept.userName, visible: currentView() == 'view'"
         />
+        <div
+          id="peopleovertimeManagerDept"
+          class="editable-field"
+          data-bind="people: overtimeManagerDept.user, 
+            visible: currentView() != 'view'"
+        ></div>
       </div>
     </div>
     <div class="two fields">
       <div class="field">
-        <label>Task Manager:</label>
+        <label>Task Manager: </label>
         <input
           class="editable-field"
           type="text"
-          data-bind="disabled:
-              currentView() == 'view', value: overtimeManagerTask"
+          disabled="true"
+          data-bind="value: overtimeManagerTask.userName, visible: currentView() == 'view'"
         />
+        <div
+          id="peopleovertimeManagerTask"
+          class="editable-field"
+          data-bind="people: overtimeManagerTask.user, 
+            visible: currentView() != 'view'"
+        ></div>
       </div>
       <div class="field">
         <label>Department:</label>
