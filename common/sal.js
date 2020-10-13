@@ -89,6 +89,62 @@ function getUserProperties() {
   });
 }
 
+function ensureUser(userName, callback) {
+  var context = new SP.ClientContext.get_current();
+  var user = context.get_web().ensureUser(userName);
+
+  function onEnsureUserSucceeded(sender, args) {
+    var self = this;
+    self.callback(user);
+  }
+
+  function onEnsureUserFailed(sender, args) {
+    alert(
+      "Failed to ensure user :" +
+        args.get_message() +
+        "\n" +
+        args.get_stackTrace()
+    );
+  }
+  data = { user, callback };
+
+  context.load(user);
+  context.executeQueryAsync(
+    Function.createDelegate(data, onEnsureUserSucceeded),
+    Function.createDelegate(data, onEnsureUserFailed)
+  );
+}
+
+ensureUserRest = (userName = "i:0#.w|cgfs\backlundpf") => {
+  // sample userName
+  var item = {
+    logonName: userName,
+  };
+  var UserId = $.ajax({
+    url: _spPageContextInfo.siteAbsoluteUrl + "/_api/web/ensureuser",
+    type: "POST",
+    async: false,
+    contentType: "application/json;odata=verbose",
+    data: JSON.stringify(item),
+    headers: {
+      Accept: "application/json;odata=verbose",
+      "X-RequestDigest": $("#__REQUESTDIGEST").val(),
+    },
+    success: function (data) {
+      return data.Id + ";#" + data.Title + ";#";
+    },
+    error: function (data) {
+      failure(data);
+    },
+  });
+  return (
+    JSON.parse(UserId.responseText).d.Id +
+    ";#" +
+    JSON.parse(UserId.responseText).d.Title +
+    ";#"
+  );
+};
+
 function m_fnLoadSiteGroups(itemColl) {
   let m_arrSiteGroups = new Array();
 

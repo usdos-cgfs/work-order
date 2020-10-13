@@ -44,7 +44,7 @@ var workOrderListDef = {
     RequestOrgs: { type: "Lookup", koMap: "requestOrgIds" },
     RequestorEmail: { type: "Text", koMap: "requestorEmail" },
     RequestorName: { type: "Text", koMap: "requestorName" },
-    RequestorOffice: { type: "Person", koMap: "requestorOfficeLookupId" },
+    RequestorOffice: { type: "Text", koMap: "requestorOfficeLookupId" },
     RequestorPhone: { type: "Text", koMap: "requestorTelephone" },
     RequestStage: { type: "Text", koMap: "requestStageNum" },
     RequestStatus: { type: "Text", koMap: "requestStatus" },
@@ -52,6 +52,7 @@ var workOrderListDef = {
     RequestSubmitted: { type: "DateTime", koMap: "requestSubmittedDate" },
     ServiceType: { type: "Text", koMap: "requestServiceTypeLookupId" },
     ClosedDate: { type: "Text", koMap: "requestClosedDate" },
+    Author: { type: "Text", koMap: "empty" },
     Created: { type: "Date", koMap: "empty" },
   },
 };
@@ -89,7 +90,7 @@ var assignmentListDef = {
   viewFields: {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "empty" },
-    Assignee: { type: "Person", koMap: "empty" },
+    Assignee: { type: "Text", koMap: "empty" },
     ActionOffice: { type: "Lookup", koMap: "empty" },
     CanDelegate: { type: "Bool" },
     Comment: { type: "Text", koMap: "empty" },
@@ -119,9 +120,9 @@ var workOrderEmailsListDef = {
   viewFields: {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "empty" },
-    To: { type: "Person", koMap: "empty" },
-    CC: { type: "Person", koMap: "empty" },
-    BCC: { type: "Person", koMap: "empty" },
+    To: { type: "Text", koMap: "empty" },
+    CC: { type: "Text", koMap: "empty" },
+    BCC: { type: "Text", koMap: "empty" },
     Body: { type: "Text", koMap: "empty" },
     Sent: { type: "Bool", koMap: "empty" },
     DateSent: { type: "Date", koMap: "empty" },
@@ -231,6 +232,31 @@ var configServiceTypeListDef = {
   },
 };
 
+function PeopleField() {
+  this.user = ko.observable();
+  this.userName = ko.pureComputed({
+    read: () => {
+      return this.user() ? this.user().userName : "";
+    },
+  });
+  this.userId = ko.pureComputed(
+    {
+      read: () => {
+        return this.user().ID;
+      },
+      write: (value) => {
+        if (value) {
+          let user = new Object();
+          user.ID = value.get_lookupId();
+          user.userName = value.get_lookupValue();
+          user.isEnsured = false;
+          this.user(user);
+        }
+      },
+    },
+    this
+  );
+}
 /************************************************************
  * Set Knockout View Model
  ************************************************************/
@@ -506,11 +532,11 @@ function koviewmodel() {
       console.log("Activate Accordion");
       $(".ui.accordion").accordion();
     }
-
     if (self.requestID()) {
       updateUrlParam("reqid", self.requestID());
     }
     updateUrlParam("tab", newPage);
+    //self.setFieldState();
   });
 
   /************************************************************
@@ -813,6 +839,47 @@ function koviewmodel() {
   // The available service types (we'll set this from a json array)
 
   self.currentView = ko.observable();
+  // self.currentView.subscribe((val) => {
+  //   self.setFieldState();
+  // });
+
+  self.setFieldState = ko.computed(() => {
+    //Based off our current observables, set the abledness
+    if (self.tab() == "order-detail") {
+      switch (self.currentView()) {
+        case "view":
+          $(".editable-field").prop("disabled", true);
+          $(".editable-field")
+            .find('[class$="-delImage"]')
+            .each(function () {
+              $(this).hide();
+            });
+          $(".editable-field")
+            .find("input")
+            .each(function () {
+              $(this).prop("disabled", true);
+            });
+
+          break;
+        case "edit":
+        case "new":
+          $(".editable-field").prop("disabled", false);
+          $(".editable-field")
+            .find('[class$="-delImage"]')
+            .each(function () {
+              $(this).show();
+            });
+          $(".editable-field")
+            .find("input")
+            .each(function () {
+              $(this).prop("disabled", false);
+            });
+
+          break;
+        default:
+      }
+    }
+  });
 
   self.requestIsSaveable = ko.observable();
   self.requestAttachments = ko.observableArray();
@@ -890,7 +957,7 @@ function koviewmodel() {
   self.selectedServiceType = ko.observable();
 
   self.selectedServiceTypeTemplate = function () {
-    if (vm.selectedServiceType()) {
+    if (self.selectedServiceType()) {
       return "tmpl_" + vm.selectedServiceType().UID;
     } else {
       return "";
@@ -1059,7 +1126,22 @@ function koviewmodel() {
   self.requestorName = ko.observable();
   self.requestorTelephone = ko.observable();
   self.requestorEmail = ko.observable();
-  self.requestorManager = ko.observable();
+  self.requestorManager = new PeopleField();
+  self.requestorManagerLookupId = ko.observable;
+  // self.requestorManagerLookupId = ko.pureComputed({
+  //   read: () => {
+  //     return self.requestorManager().ID;
+  //   },
+  //   write: (value) => {
+  //     if (value) {
+  //       let user = new Object();
+  //       user.ID = value.get_lookupId();
+  //       user.userName = value.get_lookupValue();
+  //       user.isEnsured = false;
+  //       self.requestorManager(user);
+  //     }
+  //   },
+  // });
 
   self.requestOrgs = ko.observableArray(new Array());
 
@@ -1162,11 +1244,13 @@ function koviewmodel() {
       }
     },
     write: function (value) {
-      self.selectedServiceType(
-        self
-          .configServiceTypes()
-          .find((stype) => stype.ID == value.get_lookupId())
-      );
+      if (value) {
+        self.selectedServiceType(
+          self
+            .configServiceTypes()
+            .find((stype) => stype.ID == value.get_lookupId())
+        );
+      }
     },
   });
 }
@@ -1214,6 +1298,75 @@ ko.bindingHandlers.trix = {
   update: function (element, valueAccessor) {
     console.log("Doing something in trix");
     //$(element).html(valueAccessor());
+  },
+};
+
+// ko.extenders.peopleField = function (target, associated) {
+//   let result = ko.pureComputed({
+//     read: target,
+//     write: function (newValue) {},
+//   });
+// };
+
+ko.bindingHandlers.people = {
+  init: function (element, valueAccessor, allBindingsAccessor) {
+    var schema = {};
+    schema["PrincipalAccountType"] = "User";
+    schema["SearchPrincipalSource"] = 15;
+    schema["ShowUserPresence"] = true;
+    schema["ResolvePrincipalSource"] = 15;
+    schema["AllowEmailAddresses"] = true;
+    schema["AllowMultipleValues"] = false;
+    schema["MaximumEntitySuggestions"] = 50;
+    schema["Width"] = "280px";
+    schema["OnUserResolvedClientScript"] = function (elemId, userKeys) {
+      //  get reference of People Picker Control
+      var pickerElement = SPClientPeoplePicker.SPClientPeoplePickerDict[elemId];
+      var observable = valueAccessor();
+      var userJSObject = pickerElement.GetControlValueAsJSObject()[0];
+      if (userJSObject) {
+        ensureUser(userJSObject.Key, (user) => {
+          let userObj = new Object();
+          userObj["ID"] = user.get_id();
+          userObj["userName"] = user.get_loginName();
+          userObj["isEnsured"] = true;
+          observable(userObj);
+        });
+      }
+      //observable(pickerElement.GetControlValueAsJSObject()[0]);
+      console.log(JSON.stringify(pickerElement.GetControlValueAsJSObject()[0]));
+    };
+
+    //  TODO: You can provide schema settings as options
+    var mergedOptions = allBindingsAccessor().options || schema;
+
+    //  Initialize the Control, MS enforces to pass the Element ID hence we need to provide
+    //  ID to our element, no other options
+    this.SPClientPeoplePicker_InitStandaloneControlWrapper(
+      element.id,
+      null,
+      mergedOptions
+    );
+  },
+  update: function (
+    element,
+    valueAccessor,
+    allBindings,
+    viewModel,
+    bindingContext
+  ) {
+    //debugger;
+    //  Force to Ensure User
+    var userValue = ko.utils.unwrapObservable(valueAccessor());
+    if (userValue && !userValue.isEnsured) {
+      var pickerControl =
+        SPClientPeoplePicker.SPClientPeoplePickerDict[element.id + "_TopSpan"];
+      var editId = "#" + pickerControl.EditorElementId;
+      jQuery(editId).val(userValue.userName);
+
+      // Resolve the User
+      pickerControl.AddUnresolvedUserFromEditor(true);
+    }
   },
 };
 

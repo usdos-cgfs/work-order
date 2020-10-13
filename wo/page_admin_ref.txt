@@ -734,13 +734,19 @@
                       data-bind="value: requestorName"
                     />
                   </div>
-                  <div class="field" style="display: none">
-                    <label data-bind="if: requestorOffice"> Manager: </label>
-                    <input
+                  <div class="">
+                    <label> Manager: </label>
+                    <!-- <input
                       class="non-editable-field"
                       type="text"
-                      data-bind="value: requestorManager"
-                    />
+                      data-bind="value: requestorManager().userName"
+                    /> -->
+                    <div
+                      id="peopleRequestorManager"
+                      class="editable-field"
+                      data-bind="people: requestorManager.user, 
+                          disable: currentView() == 'view'"
+                    ></div>
                   </div>
                 </div>
                 <div class="two fields">
@@ -1113,6 +1119,19 @@
 <!--<script src="/_layouts/15/SP.Runtime.js"></script>
 <script src="/_layouts/15/SP.js"></script>
 <script src="/_layouts/15/SP.UserProfiles.js"></script>-->
+<script
+  type="text/javascript"
+  src="../Apps/_layouts/15/clienttemplates.js"
+></script>
+<script
+  type="text/javascript"
+  src="../Apps/_layouts/15/clientforms.js"
+></script>
+<script
+  type="text/javascript"
+  src="../Apps/_layouts/15/clientpeoplepicker.js"
+></script>
+<script type="text/javascript" src="../Apps/_layouts/15/autofill.js"></script>
 
 <script src="../SiteAssets/workorder/vendor/jquery/jquery-3.3.1.min.js"></script>
 <script src="../SiteAssets/workorder/vendor/jquery/jquery.SPServices.min.js"></script>

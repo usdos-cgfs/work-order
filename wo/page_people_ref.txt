@@ -1,0 +1,48 @@
+<script src="../Apps/_layouts/15/SP.js"></script>
+
+  <script
+    src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.6.2.min.js"
+    type="text/javascript"
+  ></script>
+  <script
+    type="text/javascript"
+    src="../Apps/_layouts/15/clienttemplates.js"
+  ></script>
+  <script
+    type="text/javascript"
+    src="../Apps/_layouts/15/clientforms.js"
+  ></script>
+  <script
+    type="text/javascript"
+    src="../Apps/_layouts/15/clientpeoplepicker.js"
+  ></script>
+  <script type="text/javascript" src="../Apps/_layouts/15/autofill.js"></script>
+
+  <script src="../SiteAssets/workorder/vendor/knockout/knockout-3.5.0.js"></script>
+
+ 
+  <script
+    type="text/javascript"
+    src="../Apps/_layouts/15/sp.runtime.js"
+  ></script>
+  <!-- <script type="text/javascript" src="../Apps/_layouts/15/sp.core.js"></script> -->
+  <script src="../SiteAssets/workorder/common/sal.js"></script>
+  <script src="../SiteAssets/workorder/wo/page_people.js"></script>
+  <script type="text/javascript">
+    // Run your custom code when the DOM is ready.
+    
+  </script>
+
+
+  <div id="peoplePickerDiv" data-bind="people: userOne"></div>
+  <div id="peoplePicker2Div" data-bind="kopeoplepicker: userTwo"></div>
+  <div>
+    <br />
+    <input type="button" value="Get User Info" onclick="getUserInfo()" />
+    <br />
+    <h1>User info:</h1>
+    <p id="resolvedUsers"></p>
+    <h1>User keys:</h1>
+    <p id="userKeys"></p>
+  </div> </asp:content
+​​​​​​​​​
