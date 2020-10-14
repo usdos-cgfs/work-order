@@ -86,6 +86,3 @@
     </div>
   </div>
 </script>
-
-Employee Type - check box option “Direct Hire” and “Contractor) ​ Training
-Provider/Vendor ​ Location​ Dates​ Cost

@@ -16,12 +16,22 @@
       },
       Series: { type: "Text", koMap: "classificationSeries", required: true },
       Grade: { type: "Text", koMap: "classificationGrade", required: true },
-      HiringManager: {
-        type: "Text",
-        koMap: "classificationHiringManager",
+      Supervisor: {
+        type: "Person",
+        koMap: "classificationSupervisor",
         required: true,
       },
-      Purpose: { type: "Text", koMap: "classificationPurpose", required: true },
+      ClassificationType: {
+        type: "Text",
+        koMap: "classificationCaseNum",
+        required: true,
+      },
+      CaseNum: { type: "Text", koMap: "classificationPurpose", required: true },
+      DateCreated: {
+        type: "Date",
+        koMap: "classificationDateCreated",
+        required: true,
+      },
     },
   });
 
@@ -32,13 +42,16 @@
   vm.classificationJobTitle = ko.observable();
   vm.classificationSeries = ko.observable();
   vm.classificationGrade = ko.observable();
-  vm.classificationHiringManager = ko.observable();
+  vm.classificationSupervisor = new PeopleField();
   vm.classificationPurpose = ko.observable();
   vm.classificationPurposeOpts = ko.observableArray([
     "New",
-    "Minor",
+    "Minor Pen & Ink",
     "Recertification",
   ]);
+
+  vm.classificationCaseNum = ko.observable();
+  vm.classificationDateCreated = ko.observable();
 </script>
 
 <script type="text/html" id="tmpl_ch_hr_classification">
@@ -74,17 +87,23 @@
         />
       </div>
       <div class="field">
-        <label>Series:</label>
+        <label>Direct Supervisor: </label>
         <input
           class="editable-field"
           type="text"
-          data-bind="disable: currentView() == 'view',
-              value: classificationHiringManager"
+          disabled="true"
+          data-bind="value: classificationSupervisor.userName, visible: currentView() == 'view'"
         />
+        <div
+          id="peopleclassificationSupervisor"
+          class="editable-field"
+          data-bind="people: classificationSupervisor.user, 
+          visible: currentView() != 'view'"
+        ></div>
       </div>
     </div>
     <div class="eight wide field">
-      <label>Purpose:</label>
+      <label>Classification Type:</label>
       <select
         class="editable-field"
         type="text"
@@ -93,5 +112,27 @@
             optionsCaption: 'Select...'"
       ></select>
     </div>
+    <!-- ko if: userRole() == 'admin' -->
+    <div class="two fields">
+      <div class="field">
+        <label>HRCC Case #:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+              value: classificationCaseNum"
+        />
+      </div>
+      <div class="field">
+        <label>Date Created:</label>
+        <input
+          class="editable-field"
+          type="date"
+          data-bind="disable: currentView() == 'view',
+              value: classificationDateCreated"
+        />
+      </div>
+    </div>
+    <!-- /ko -->
   </div>
 </script>
