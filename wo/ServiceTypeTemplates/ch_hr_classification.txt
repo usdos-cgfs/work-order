@@ -21,12 +21,12 @@
         koMap: "classificationSupervisor",
         required: true,
       },
-      ClassificationType: {
+      classificationPurpose: {
         type: "Text",
-        koMap: "classificationCaseNum",
+        koMap: "classificationPurpose",
         required: true,
       },
-      CaseNum: { type: "Text", koMap: "classificationPurpose", required: true },
+      CaseNum: { type: "Text", koMap: "classificationCaseNum", required: true },
       DateCreated: {
         type: "Date",
         koMap: "classificationDateCreated",

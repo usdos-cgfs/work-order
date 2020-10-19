@@ -10,7 +10,7 @@
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
       Location: { type: "Text", koMap: "repairLocation", required: true },
-      Type: { type: "Type", koMap: "repairType", required: true },
+      RepairType: { type: "Type", koMap: "repairType", required: true },
     },
   });
 

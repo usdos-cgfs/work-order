@@ -9,7 +9,7 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      EmployeeName: {
+      Employee: {
         type: "Person",
         koMap: "voicemailEmployeeName",
         required: false,
