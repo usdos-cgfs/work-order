@@ -99,7 +99,7 @@ function ensureUser(userName, callback) {
   }
 
   function onEnsureUserFailed(sender, args) {
-    alert(
+    console.error(
       "Failed to ensure user :" +
         args.get_message() +
         "\n" +
@@ -578,8 +578,9 @@ function SPList(listDef) {
    * @param {Array} valuePairs A 2d array containing groups and permission levels
    *    e.g. [["Owners", "Full Control"], ["Members", "Contribute"]]
    */
-  self.setItemPermissions = function (id, valuePairs) {
+  self.setItemPermissions = function (id, valuePairs, removeCurUser = false) {
     //TODO: Validate that the groups and permissions exist on the site.
+    var users = new Array();
     var currCtx = new SP.ClientContext.get_current();
     var web = currCtx.get_web();
 
@@ -589,20 +590,95 @@ function SPList(listDef) {
     oListItem.resetRoleInheritance();
     oListItem.breakRoleInheritance(false, false);
 
+    if (removeCurUser) {
+      oListItem
+        .get_roleAssignments()
+        .getByPrincipal(sal.globalConfig.currentUser)
+        .deleteObject();
+    }
+
     valuePairs.forEach((vp) => {
       let roleDefBindingColl = SP.RoleDefinitionBindingCollection.newObject(
         currCtx
       );
-      roleDefBindingColl.add(web.get_roleDefinitions().getByName(vp[1]));
-      oListItem
-        .get_roleAssignments()
-        .add(sal.getSPSiteGroupByName(vp[0]), roleDefBindingColl);
+      let resolvedGroup = sal.getSPSiteGroupByName(vp[0]);
+      if (resolvedGroup) {
+        roleDefBindingColl.add(web.get_roleDefinitions().getByName(vp[1]));
+        oListItem.get_roleAssignments().add(resolvedGroup, roleDefBindingColl);
+      } else {
+        users.push([currCtx.get_web().ensureUser(vp[0]), vp[1]]);
+        // ensureUser(vp[0], (resolvedUser) => {
+        //   self.setItemPermissionsUser(id, resolvedUser, vp[1]);
+        // });
+      }
     });
 
-    oListItem
-      .get_roleAssignments()
-      .getByPrincipal(sal.globalConfig.currentUser)
-      .deleteObject();
+    function onUpdatePermsSucceeded() {
+      console.log(
+        "Successfully set group permissions on " +
+          this.oListItem.get_item("Title")
+      );
+      var currCtx = new SP.ClientContext.get_current();
+      var web = currCtx.get_web();
+
+      var oList = web.get_lists().getByTitle(self.config.def.title);
+
+      let iListItem = oList.getItemById(id);
+      users.forEach((userPairs) => {
+        let roleDefBindingColl = SP.RoleDefinitionBindingCollection.newObject(
+          currCtx
+        );
+        roleDefBindingColl.add(
+          web.get_roleDefinitions().getByName(userPairs[1])
+        );
+        iListItem.get_roleAssignments().add(userPairs[0], roleDefBindingColl);
+      });
+
+      currCtx.load(iListItem);
+      currCtx.executeQueryAsync(
+        () => console.log("Successfully set user perms"),
+        (sender, args) => console.error("Failed to set user perms", args)
+      );
+    }
+
+    function onUpdatePermsFailed(sender, args) {
+      console.error(
+        "Failed to update permissions on item: " +
+          this.title +
+          args.get_message() +
+          "\n" +
+          args.get_stackTrace(),
+        false
+      );
+    }
+    let data = { id, oListItem, users };
+    //let data = { title: oListItem.get_item("Title"), oListItem: oListItem };
+
+    currCtx.load(oListItem);
+    users.map((user) => currCtx.load(user[0]));
+    currCtx.executeQueryAsync(
+      Function.createDelegate(data, onUpdatePermsSucceeded),
+      Function.createDelegate(data, onUpdatePermsFailed)
+    );
+  };
+
+  self.setItemPermissionsUser = function (id, ensuredUser, permission) {
+    //Expect a fully resolved SP.User.
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+
+    var oList = web.get_lists().getByTitle(self.config.def.title);
+
+    let oListItem = oList.getItemById(id);
+    // oListItem.resetRoleInheritance();
+    oListItem.breakRoleInheritance(false, false);
+
+    let roleDefBindingColl = SP.RoleDefinitionBindingCollection.newObject(
+      currCtx
+    );
+
+    roleDefBindingColl.add(web.get_roleDefinitions().getByName(permission));
+    oListItem.get_roleAssignments().add(ensuredUser, roleDefBindingColl);
 
     function onUpdatePermsSucceeded() {
       console.log(
@@ -611,8 +687,8 @@ function SPList(listDef) {
     }
 
     function onUpdatePermsFailed(sender, args) {
-      SP.UI.Notify.addNotification(
-        "Failed to update permissions on item: " +
+      console.error(
+        "Failed to update permissions on user: " +
           this.title +
           args.get_message() +
           "\n" +
@@ -839,6 +915,75 @@ function SPList(listDef) {
       );
     };
     createFolderInternal(list.get_rootFolder(), folderUrl, success);
+  };
+
+  self.setLibFolderPermissions = function (
+    path,
+    valuePairs,
+    removeCurUser = false
+  ) {
+    var users = new Array();
+    var resolvedGroups = new Array();
+    let relativeUrl =
+      sal.globalConfig.siteUrl + "/" + self.config.def.name + "/" + path;
+
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+    var folder = web.getFolderByServerRelativeUrl(relativeUrl);
+
+    valuePairs.forEach((vp) => {
+      let resolvedGroup = sal.getSPSiteGroupByName(vp[0]);
+      if (resolvedGroup) {
+        resolvedGroups.push([resolvedGroup, vp[1]]);
+      } else {
+        //This doesn't appear to be a group, let's see if we can find them
+        users.push([currCtx.get_web().ensureUser(vp[0]), vp[1]]);
+      }
+    });
+
+    function onFindFolderSuccess() {
+      var currCtx = new SP.ClientContext.get_current();
+      var web = currCtx.get_web();
+
+      this.folder.breakRoleInheritance(false, false);
+
+      this.resolvedGroups.forEach((groupPairs) => {
+        let roleDefBindingColl = SP.RoleDefinitionBindingCollection.newObject(
+          currCtx
+        );
+        roleDefBindingColl.add(
+          web.get_roleDefinitions().getByName(groupPairs[1])
+        );
+        this.folder
+          .get_roleAssignments()
+          .add(groupPairs[0], roleDefBindingColl);
+      });
+
+      this.users.forEach((userPairs) => {
+        let roleDefBindingColl = SP.RoleDefinitionBindingCollection.newObject(
+          currCtx
+        );
+        roleDefBindingColl.add(
+          web.get_roleDefinitions().getByName(userPairs[1])
+        );
+        this.folder.get_roleAssignments().add(userPairs[0], roleDefBindingColl);
+      });
+
+      currCtx.load(folder);
+      currCtx.executeQueryAsync(
+        () => console.log("Successfully set permissions"),
+        (sender, args) => console.error("Failed to set lib folder permissions")
+      );
+    }
+
+    var data = { folder, users, resolvedGroups, valuePairs };
+
+    users.map((user) => currCtx.load(user[0]));
+    currCtx.load(folder);
+    currCtx.executeQueryAsync(
+      Function.createDelegate(data, onFindFolderSuccess),
+      Function.createDelegate(data, onFindFolderFailure)
+    );
   };
 
   self.showListView = function (filter) {

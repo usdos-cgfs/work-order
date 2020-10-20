@@ -424,27 +424,13 @@ function onSaveNewWorkOrderMaster(id) {
   console.log("callback val: ", id);
 
   // Create our New Work Order Email
-  let to = vm
-    .requestOrgs()
-    .map((ao) => vm.configRequestOrgs().find((aoid) => aoid.ID == ao.ID))
-    .map((aoids) => aoids.UserGroup);
-
-  let subject = `Work Order -New- ${
-    vm.selectedServiceType().Title
-  } - ${vm.requestID()}`;
-
-  let body =
-    `Greetings Colleagues,<br><br> A new service request has been opened requiring your attention:<br>` +
-    `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
-      vm.selectedServiceType().Title
-    }<br><br>` +
-    `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
-    `${vm.requestLinkAdmin()}`;
-
-  createEmail(to, [], [], subject, body);
+  Workorder.Notifications.newWorkorderEmails();
 
   // Offload our reminder emails to a separate function
-  createReminderEmails(id);
+  Workorder.Notifications.workorderReminderEmails(id);
+
+  // Create our new folders for each list/lib
+  createWorkorderFolders();
 
   // Create our Action
   createAction(
@@ -465,44 +451,68 @@ function onSaveEditWorkOrderCallback(val) {
   SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
 
-function createReminderEmails(id) {
-  if (vm.selectedServiceType().ReminderDays) {
-    // If we have reminders create our New Work Order Email
-    let to = vm
-      .requestOrgs()
-      .map((ao) => vm.configRequestOrgs().find((aoid) => aoid.ID == ao.ID))
-      .map((aoids) => aoids.UserGroup);
+function createWorkorderFolders() {
+  let folderPath = vm.requestorOffice().Title;
+  // Set all permissions up front
+  let folderPermissions = [
+    [sal.globalConfig.currentUser.get_loginName(), "Restricted Contribute"],
+    ["workorder Owners", "Full Control"],
+  ];
 
-    let days = vm.selectedServiceType().ReminderDays.split(",");
+  vm.selectedPipeline().forEach((stage) => {
+    // first get the action office
+    let assignedOffice = vm
+      .configActionOffices()
+      .find((ao) => ao.ID == stage.ActionOffice.get_lookupId());
+    let assignedOrg = vm
+      .configRequestOrgs()
+      .find((ro) => ro.ID == assignedOffice.RequestOrg.get_lookupId());
+    folderPermissions.push([
+      assignedOrg.UserGroup.get_lookupValue(),
+      "Restricted Contribute",
+    ]);
 
-    days.forEach((day) => {
-      let intDay = parseInt(day);
-
-      let sendDate = businessDaysFromDate(vm.requestEstClosed(), intDay);
-      if (sendDate > new Date()) {
-        let reminder = intDay > 0 ? intDay + " Day " : "";
-
-        let subject = `Work Order -${reminder}Reminder- ${
-          vm.selectedServiceType().Title
-        } - ${vm.requestID()}`;
-
-        let body =
-          `Greetings Colleagues,<br><br> This is a ${reminder}reminder for the following` +
-          ` service request requiring your attention:<br>` +
-          `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
-            vm.selectedServiceType().Title
-          }<br><br>` +
-          `This request has an estimated completion date of: ${vm
-            .requestEstClosed()
-            .toDateString()}<br><br>` +
-          `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
-          `${vm.requestLinkAdmin()}`;
-
-        createEmail(to, [], [], subject, body, sendDate, id);
+    //If there's a wildcard assignee, get them too
+    if (stage.WildCardAssignee) {
+      let user = vm[stage.WildCardAssignee].userName();
+      if (user) {
+        folderPermissions.push([
+          vm[stage.WildCardAssignee].userName(),
+          "Restricted Contribute",
+        ]);
       }
-    });
-  }
+    }
+  });
+
+  //For each of our multi-item lists, create a new folder
+  [
+    vm.listRefAction(),
+    vm.listRefApproval(),
+    vm.listRefAssignment(),
+    vm.listRefComment(),
+    vm.listRefWOEmails(),
+  ].map((listRef) =>
+    listRef.createListFolder(
+      vm.requestID(),
+      (folderId) => {
+        // Update the permissions for the new folder
+        if (folderId) {
+          listRef.setItemPermissions(folderId, folderPermissions, true);
+        }
+      },
+      folderPath
+    )
+  );
+
+  vm.libRefWODocs().createFolderRec(vm.requestFolderPath(), (folder) => {
+    vm.libRefWODocs().setLibFolderPermissions(
+      vm.requestFolderPath(),
+      folderPermissions,
+      true
+    );
+  });
 }
+
 /************************************************************
  * ValuePair Binding Getters and Setters
  ************************************************************/
@@ -994,7 +1004,7 @@ function createAction(type, desc, sendEmail = false) {
   vm.listRefAction().createListItem(
     vp,
     () => newActionCallback(SP.UI.DialogResult.OK, null),
-    vm.requestorOffice().Title
+    vm.requestFolderPath()
   );
 }
 
@@ -1058,7 +1068,7 @@ function submitComment() {
         ["Comment", vm.commentNew()],
       ],
       submitCommentCallback,
-      vm.requestorOffice().Title
+      vm.requestFolderPath()
     );
   }
 }
@@ -1114,7 +1124,7 @@ function createEmail(
   vm.listRefWOEmails().createListItem(
     vp,
     () => newEmailCallback(SP.UI.DialogResult.OK, null),
-    vm.requestorOffice().Title
+    vm.requestFolderPath()
   );
 }
 
@@ -1293,6 +1303,9 @@ function initApp() {
 
   // Initialize our SharePoint Access Layer
   var ini = initSal();
+
+  // Initialize our Notifications
+  InitNotifications();
 
   // Initialize ViewModel
   vm = new koviewmodel();

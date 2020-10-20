@@ -243,7 +243,9 @@ function PeopleField() {
   this.userId = ko.pureComputed(
     {
       read: () => {
-        return this.user().ID;
+        if (this.user()) {
+          return this.user().ID;
+        }
       },
       write: (value) => {
         if (value) {
@@ -1059,6 +1061,10 @@ function koviewmodel() {
       id
     );
   };
+
+  self.requestFolderPath = ko.pureComputed(() => {
+    return `${vm.requestorOffice().Title}/${vm.requestID()}`;
+  });
   /************************************************************
    * Observables for work order header
    ************************************************************/

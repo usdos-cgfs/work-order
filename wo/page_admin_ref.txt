@@ -1168,5 +1168,6 @@
 <script src="../SiteAssets/workorder/common/sal.js"></script>
 <script src="../SiteAssets/workorder/common/common.js"></script>
 
+<script src="../SiteAssets/workorder/wo/notifications.js"></script>
 <script src="../SiteAssets/workorder/wo/viewmodels.js"></script>
 <script src="../SiteAssets/workorder/wo/workorder.js"></script>
