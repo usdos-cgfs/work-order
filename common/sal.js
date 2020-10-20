@@ -945,7 +945,8 @@ function SPList(listDef) {
       var currCtx = new SP.ClientContext.get_current();
       var web = currCtx.get_web();
 
-      this.folder.breakRoleInheritance(false, false);
+      let folderItem = this.folder.get_listItemAllFields();
+      folderItem.breakRoleInheritance(false, false);
 
       this.resolvedGroups.forEach((groupPairs) => {
         let roleDefBindingColl = SP.RoleDefinitionBindingCollection.newObject(
@@ -954,9 +955,7 @@ function SPList(listDef) {
         roleDefBindingColl.add(
           web.get_roleDefinitions().getByName(groupPairs[1])
         );
-        this.folder
-          .get_roleAssignments()
-          .add(groupPairs[0], roleDefBindingColl);
+        folderItem.get_roleAssignments().add(groupPairs[0], roleDefBindingColl);
       });
 
       this.users.forEach((userPairs) => {
@@ -966,13 +965,20 @@ function SPList(listDef) {
         roleDefBindingColl.add(
           web.get_roleDefinitions().getByName(userPairs[1])
         );
-        this.folder.get_roleAssignments().add(userPairs[0], roleDefBindingColl);
+        folderItem.get_roleAssignments().add(userPairs[0], roleDefBindingColl);
       });
 
-      currCtx.load(folder);
+      currCtx.load(folderItem);
       currCtx.executeQueryAsync(
         () => console.log("Successfully set permissions"),
         (sender, args) => console.error("Failed to set lib folder permissions")
+      );
+    }
+
+    function onFindFolderFailure(sender, args) {
+      console.error(
+        "Something went wrong setting perms on library folder",
+        args
       );
     }
 
