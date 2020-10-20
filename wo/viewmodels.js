@@ -192,6 +192,7 @@ var configPipelinesListDef = {
     ActionType: { type: "Text", koMap: "empty" },
     ActionOffice: { type: "Lookup", koMap: "empty" },
     RequestOrg: { type: "Lookup", koMap: "empty" },
+    WildCardAssignee: { type: "Text", koMap: "empty" },
   },
 };
 
@@ -251,11 +252,14 @@ function PeopleField() {
           user.userName = value.get_lookupValue();
           user.isEnsured = false;
           this.user(user);
+          this.lookupUser(value);
         }
       },
     },
     this
   );
+  this.lookupUser = ko.observable();
+  this.ensuredUser = ko.observable();
 }
 /************************************************************
  * Set Knockout View Model
@@ -355,6 +359,22 @@ function koviewmodel() {
     }
   });
 
+  self.assignmentCurUserIsAOorAssignee = function (assignment) {
+    let isAssignee = false;
+    let isAO = false;
+    if (assignment.Assignee) {
+      isAssignee =
+        assignment.Assignee.get_lookupId() ==
+        sal.globalConfig.currentUser.get_id();
+    } else if (assignment.ActionOffice) {
+      isAO = vm
+        .userActionOfficeMembership()
+        .map((ao) => ao.ID)
+        .includes(assignment.ActionOffice.get_lookupId());
+    }
+    return isAO || isAssignee;
+  };
+
   // Assignment Level: Action Item
   self.assignmentCurUserCanComplete = function (assignment) {
     let isStatus = assignment.Status == "In Progress";
@@ -362,14 +382,12 @@ function koviewmodel() {
     if (isType && isStatus) {
       // This is the most intensive check, so let's only perform if the easy
       // ones are true
-      return vm
-        .userActionOfficeMembership()
-        .map((ao) => ao.ID)
-        .includes(assignment.actionOffice.ID);
+      return self.assignmentCurUserIsAOorAssignee(assignment);
     } else {
       return false;
     }
   };
+
   self.assignmentComplete = function (assignment, advance = false) {
     // Update this assignment with our approval
     let vp = [
@@ -406,10 +424,7 @@ function koviewmodel() {
     if (isType && isStatus) {
       // This is the most intensive check, so let's only perform if the easy
       // ones are true
-      return vm
-        .userActionOfficeMembership()
-        .map((ao) => ao.ID)
-        .includes(assignment.actionOffice.ID);
+      return self.assignmentCurUserIsAOorAssignee(assignment);
     } else {
       return false;
     }
@@ -489,9 +504,10 @@ function koviewmodel() {
     self.requestOrgs(self.requestOrgs().filter((ao) => ao.ID != assignment.ID));
   };
 
+  self.assignActionOffice = ko.observable();
   self.assignAssignee = ko.observable();
 
-  self.assignOfficeAssignee = ko.observable();
+  self.assignRequestOffice = ko.observable();
 
   /************************************************************
    * ADMIN: Advance
@@ -797,7 +813,11 @@ function koviewmodel() {
     let myAOIDs = self.userActionOfficeMembership().map((ao) => ao.ID);
     return self
       .allAssignments()
-      .filter((asg) => myAOIDs.includes(asg.actionOffice.ID));
+      .filter((asg) =>
+        asg.actionOffice
+          ? myAOIDs.includes(asg.actionOffice.ID)
+          : asg.Assignee.get_lookupId == sal.globalConfig.currentUser.get_id()
+      );
   });
 
   self.assignedOpenOrders = ko.pureComputed(() => {
@@ -958,7 +978,7 @@ function koviewmodel() {
 
   self.selectedServiceTypeTemplate = function () {
     if (self.selectedServiceType()) {
-      return "tmpl_" + vm.selectedServiceType().UID;
+      return "tmpl_" + self.selectedServiceType().UID;
     } else {
       return "";
     }
@@ -1112,15 +1132,15 @@ function koviewmodel() {
     }
   });
 
-  self.requestStageOfficeOrg = ko.pureComputed(() => {
-    if (self.requestStageOffice()) {
-      return self
-        .configRequestOrgs()
-        .find(
-          (ro) => ro.ID == self.requestStageOffice().RequestOrg.get_lookupId()
-        );
-    }
-  });
+  // self.requestStageOfficeOrg = ko.pureComputed(() => {
+  //   if (self.requestStageOffice()) {
+  //     return self
+  //       .configRequestOrgs()
+  //       .find(
+  //         (ro) => ro.ID == self.requestStageOffice().RequestOrg.get_lookupId()
+  //       );
+  //   }
+  // });
 
   // Requestor/Header Info
   self.requestorName = ko.observable();
@@ -1330,6 +1350,7 @@ ko.bindingHandlers.people = {
           userObj["ID"] = user.get_id();
           userObj["userName"] = user.get_loginName();
           userObj["isEnsured"] = true;
+          userObj["ensuredUser"] = user;
           observable(userObj);
         });
       }

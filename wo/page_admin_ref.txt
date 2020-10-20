@@ -95,8 +95,10 @@
                 data-bind="foreach: {data: tableRequestAssignments, as: 'Assignment'}"
               >
                 <li>
+                  <!-- ko if: Assignment.actionOffice -->
                   <span data-bind="text: Assignment.actionOffice.Title"></span>
-                  - <span data-bind="text: Assignment.Role"></span>
+                  -
+                  <!-- /ko --><span data-bind="text: Assignment.Role"></span>
                 </li>
               </ul>
             </div>
@@ -133,7 +135,9 @@
                     <ul
                       data-bind="foreach: $root.readRequestAssignments($data)"
                     >
+                      <!-- ko if: ActionOffice -->
                       <li data-bind="text: actionOffice.Title"></li>
+                      <!-- /ko -->
                     </ul>
                     <!-- /ko -->
                   </td>
@@ -470,7 +474,7 @@
                 >
                   <select
                     class="ui search dropdown"
-                    data-bind=" value: assignAssignee,
+                    data-bind=" value: assignActionOffice,
                         options: assignCurUserAssignees, 
                         optionsText: (AO) => {return AO.Title}, 
                         optionsCaption: 'Select...'"
@@ -479,7 +483,7 @@
                     type="button"
                     class="ui primary right attached button"
                     onclick="createAssignment()"
-                    data-bind="enable: assignAssignee"
+                    data-bind="enable: assignActionOffice"
                   >
                     Assign
                   </button>
@@ -577,7 +581,7 @@
                 <thead>
                   <tr>
                     <th>Assignee</th>
-                    <th>Office</th>
+                    <th>Owner</th>
                     <th>Role</th>
                     <th>Assignment Date</th>
                     <th>Status</th>
@@ -588,11 +592,20 @@
                 <tbody data-bind="foreach: vm.readRequestAssignments()()">
                   <tr>
                     <td>
+                      <!-- ko if: Assignee -->
+                      <p data-bind="text: Assignee.get_lookupValue()"></p>
+                      <!-- /ko -->
+                      <!-- ko ifnot: Assignee -->
                       <p data-bind="text: ActionOffice.get_lookupValue()"></p>
+                      <!-- /ko -->
                     </td>
-                    <td
-                      data-bind="text: actionOffice.RequestOrg.get_lookupValue()"
-                    ></td>
+                    <td>
+                      <!-- ko if: ActionOffice -->
+                      <p
+                        data-bind="text: actionOffice.RequestOrg.get_lookupValue()"
+                      ></p>
+                      <!-- /ko -->
+                    </td>
                     <td>
                       <p data-bind="text: Role"></p>
                     </td>
@@ -642,7 +655,7 @@
               <div class="ui compact menu">
                 <select
                   class="ui search dropdown"
-                  data-bind=" value: assignOfficeAssignee,
+                  data-bind=" value: assignRequestOffice,
                   options: configRequestOrgs, 
                   optionsText: (AO) => {return AO.Title}, 
                   optionsCaption: 'Select...'"
@@ -651,7 +664,7 @@
                   type="button"
                   class="ui primary right attached button"
                   onclick="newOfficeAssignment()"
-                  data-bind="enable: assignOfficeAssignee"
+                  data-bind="enable: assignRequestOffice"
                 >
                   Assign
                 </button>

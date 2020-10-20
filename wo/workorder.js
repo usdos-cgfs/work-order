@@ -689,12 +689,12 @@ function fetchAttachments() {
  ************************************************************/
 function newOfficeAssignment() {
   // Takes a new action office and adds it to the request assigned offices
-  vm.requestOrgs.push(vm.assignOfficeAssignee());
+  vm.requestOrgs.push(vm.assignRequestOffice());
 
   vm.listRefWO().updateListItem(
     vm.requestHeader().ID,
     [["RequestOrgs", vm.requestOrgIds()]],
-    () => vm.assignOfficeAssignee(null)
+    () => vm.assignRequestOffice(null)
   );
 }
 
@@ -715,17 +715,21 @@ function newAssignmentForm(role) {
 
 function createAssignment(role = "Action Resolver", notify = false) {
   // Create a new assignment based off our set observables
-  if (vm.assignAssignee()) {
+  if (vm.assignActionOffice() || vm.assignAssignee()) {
     let vp = [
       ["Title", vm.requestID()],
       ["Role", role],
-      ["ActionOffice", vm.assignAssignee().ID],
     ];
+    if (vm.assignActionOffice()) {
+      vp.push(["ActionOffice", vm.assignActionOffice().ID]);
+    }
+    if (vm.assignAssignee()) {
+      vp.push(["Assignee", vm.assignAssignee().userId()]);
+    }
     vm.listRefAssignment().createListItem(
       vp,
       (id) => {
         console.log("Assigned: ", id);
-        timedNotification(vm.assignAssignee().Title + " assigned");
 
         $("#wo-routing").accordion("open", 0);
         fetchRequestAssignments(vm.requestID(), (assignments) => {
@@ -734,7 +738,13 @@ function createAssignment(role = "Action Resolver", notify = false) {
         });
         if (notify) {
           // Build our email
-          let to = [vm.assignAssignee().UserAddress];
+          //If we have an assignee, send direct to them
+          let to = [];
+          if (vm.assignAssignee()) {
+            to.push(vm.assignAssignee().lookupUser());
+          } else if (vm.assignActionOffice()) {
+            to.push(vm.assignActionOffice());
+          }
 
           let subject = `Work Order -${vm.requestStage().Title}- ${
             vm.selectedServiceType().Title
@@ -769,12 +779,20 @@ function createAssignment(role = "Action Resolver", notify = false) {
         }
         //Update the request with a new assignment:
         // Create Action
-        createAction(
-          "Assignment",
-          `The following Action Office has been assigned to this request: ${
-            vm.assignAssignee().Title
-          } - ${role}`
-        );
+        let actionText = new String();
+        if (vm.assignAssignee()) {
+          actionText = `The following Individual has been assigned to this request: ${vm
+            .assignAssignee()
+            .lookupUser()
+            .get_lookupValue()} - ${role}`;
+        } else if (vm.assignActionOffice()) {
+          actionText = `The following Action Office has been assigned to this request: ${
+            vm.assignActionOffice().Title
+          } - ${role}`;
+        }
+        createAction("Assignment", actionText);
+        timedNotification(actionText);
+        vm.assignActionOffice(null);
         vm.assignAssignee(null);
       },
       vm.requestorOffice().Title
@@ -789,12 +807,13 @@ function fetchAllAssignments(callback) {
     "</Eq></Where></Query></View>";
   let start = new Date();
   vm.listRefAssignment().getListItems(camlq, (assignments) => {
-    assignments.map(
-      (assignment) =>
-        (assignment.actionOffice = vm
+    assignments.map((assignment) => {
+      if (assignment.ActionOffice) {
+        assignment.actionOffice = vm
           .configActionOffices()
-          .find((ao) => ao.ID == assignment.ActionOffice.get_lookupId()))
-    );
+          .find((ao) => ao.ID == assignment.ActionOffice.get_lookupId());
+      }
+    });
     vm.allAssignments(assignments);
 
     let end = new Date();
@@ -815,12 +834,13 @@ function fetchRequestAssignments(title = null, callback = null) {
 
   vm.listRefAssignment().getListItems(camlq, function (assignments) {
     // Let's connect our Action offices here.
-    assignments.map(
-      (assignment) =>
-        (assignment.actionOffice = vm
+    assignments.map((assignment) => {
+      if (assignment.ActionOffice) {
+        assignment.actionOffice = vm
           .configActionOffices()
-          .find((ao) => ao.ID == assignment.ActionOffice.get_lookupId()))
-    );
+          .find((ao) => ao.ID == assignment.ActionOffice.get_lookupId());
+      }
+    });
 
     assignments.forEach((assignment) => {
       if (
@@ -1149,14 +1169,27 @@ function pipelineForward() {
 
 function pipelineAssignments() {
   if (vm.requestIsActive() && vm.requestStage()) {
+    if (vm.requestStage().WildCardAssignee) {
+      let personName = vm.requestStage().WildCardAssignee;
+      // This should be a person field
+      try {
+        let personObservable = vm[personName];
+        vm.assignAssignee(personObservable);
+      } catch (err) {
+        console.error(
+          `Something went wrong fetching ${personName} from viewmodel:`,
+          err
+        );
+      }
+    }
     switch (vm.requestStage().ActionType) {
       case "Pending Approval":
         // The assigned approver needs to check off
-        vm.assignAssignee(vm.requestStageOffice());
+        vm.assignActionOffice(vm.requestStageOffice());
         createAssignment("Approver", true);
         break;
       case "Pending Action":
-        vm.assignAssignee(vm.requestStageOffice());
+        vm.assignActionOffice(vm.requestStageOffice());
         createAssignment("Action Resolver");
         break;
       case "Notification":
