@@ -854,15 +854,60 @@ function SPList(listDef) {
     );
   };
 
+  self.upsertListFolderPath = function (folderPath, callback) {
+    var folderArr = folderPath.split("/");
+    var idx = 0;
+
+    upsertListFolderInner = function (parentPath, folderArr, idx, success) {
+      let folderName = folderArr[idx];
+      idx++;
+      let curPath = folderArr.slice(0, idx).join("/");
+      self.ensureListFolder(
+        curPath,
+        (iFolder) => {
+          if (idx >= folderArr.length) {
+            //We've reached the innermost folder and found it exists
+            success(iFolder.get_id());
+          } else {
+            upsertListFolderInner(curPath, folderArr, idx, success);
+          }
+        },
+        () => {
+          self.createListFolder(
+            folderName,
+            (iFolder) => {
+              if (idx >= folderArr.length) {
+                //We've reached the innermost folder and found it exists
+                success(iFolder);
+              } else {
+                upsertListFolderInner(curPath, folderArr, idx, success);
+              }
+            },
+            parentPath
+          );
+        }
+      );
+    };
+    upsertListFolderInner("", folderArr, idx, callback);
+  };
+  /**
+   * CreateListFolder
+   * Creates a folder at the specified path
+   * @param {String} folderName
+   * @param {Function} callback
+   * @param {String} path
+   */
   self.createListFolder = function (folderName, callback, path = "") {
     // Used for lists, duh
-    self.requestedCallback = callback;
-
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+    var oList = web.get_lists().getByTitle(self.config.def.title);
+    let folderUrl = "";
     var itemCreateInfo = new SP.ListItemCreationInformation();
     itemCreateInfo.set_underlyingObjectType(SP.FileSystemObjectType.folder);
     itemCreateInfo.set_leafName(folderName);
     if (path) {
-      let folderUrl =
+      folderUrl =
         sal.globalConfig.siteUrl +
         "/Lists/" +
         self.config.def.name +
@@ -871,7 +916,7 @@ function SPList(listDef) {
       itemCreateInfo.set_folderUrl(folderUrl);
     }
 
-    var newItem = self.config.listRef.addItem(itemCreateInfo);
+    var newItem = oList.addItem(itemCreateInfo);
     newItem.set_item("Title", folderName);
 
     newItem.update();
@@ -886,6 +931,59 @@ function SPList(listDef) {
     self.config.currentContext.executeQueryAsync(
       Function.createDelegate(data, onCreateFolderSucceeded),
       onQueryFailed
+    );
+  };
+
+  self.ensureListFolder = function (path, onExists, onNonExists) {
+    let folderUrl =
+      sal.globalConfig.siteUrl + "/Lists/" + self.config.def.name + "/" + path;
+
+    var ctx = SP.ClientContext.get_current();
+
+    // Could also call getFileByServerRelativeUrl() here. Doesn't matter.
+    // The way this works is identical for files and folders.
+    var folder = ctx.get_web().getFolderByServerRelativeUrl(folderUrl);
+    folder.get_listItemAllFields();
+    var data = { folder, path, onExists, onNonExists };
+    ctx.load(folder, "Exists", "Name");
+
+    function onQueryFolderSucceeded() {
+      if (folder.get_exists()) {
+        // Folder exists and isn't hidden from us. Print its name.
+        console.log(folder.get_name());
+        var currCtx = new SP.ClientContext.get_current();
+
+        var folderItem = folder.get_listItemAllFields();
+        function onQueryFolderItemSuccess() {
+          onExists(folderItem);
+        }
+        function onQueryFolderItemFailure(sender, args) {
+          console.error("Failed to find folder at " + path, args);
+        }
+        data = { folderItem, path, onExists };
+        currCtx.load(folderItem);
+        currCtx.executeQueryAsync(
+          Function.createDelegate(data, onQueryFolderItemSuccess),
+          Function.createDelegate(data, onQueryFolderItemFailure)
+        );
+      } else {
+        console.warn("Folder exists but is hidden (security-trimmed) for us.");
+      }
+    }
+
+    function onQueryFolderFailed(sender, args) {
+      if (args.get_errorTypeName() === "System.IO.FileNotFoundException") {
+        // Folder doesn't exist at all.
+        console.log("Folder does not exist.");
+        onNonExists();
+      } else {
+        // An unexpected error occurred.
+        console.error("Error: " + args.get_message());
+      }
+    }
+    ctx.executeQueryAsync(
+      Function.createDelegate(data, onQueryFolderSucceeded),
+      Function.createDelegate(data, onQueryFolderFailed)
     );
   };
 

@@ -319,12 +319,6 @@ function saveWorkOrder() {
   // Need to get the value of the trix editor.
   vm.requestDescriptionHTML($("#trix-request-description").html());
 
-  if (vm.selectedServiceType().listDef) {
-    var typeValuePairs = getValuePairs(
-      vm.selectedServiceType().listDef.viewFields
-    );
-  }
-
   // If all of our required fields are present.
   if (vm.requestIsSaveable()) {
     // First, save or update the parent work order item.
@@ -343,11 +337,9 @@ function saveWorkOrder() {
             }
           }
         );
-        if (vm.selectedServiceType().listDef) {
-          // If we are saving to any other list.
-          var typeValuePairs = getValuePairs(
-            vm.selectedServiceType().listDef.viewFields
-          );
+        if (vm.requestSvcTypeListBool()) {
+          var typeValuePairs = getValuePairs(vm.requestSvcTypeListViewFields());
+
           vm.selectedServiceType().listRef.updateListItem(
             vm.serviceTypeHeader().ID,
             typeValuePairs,
@@ -361,62 +353,84 @@ function saveWorkOrder() {
         // we are saving a new record, create a new copy of each of the record types.
         // Save the current work order
 
-        // Check the submitted date, if it's between 3 pm, (19 UTC) and midnight (4 UTC)
-        // it needs to be set as submitted the next business day
-        let now = new Date();
-        if (now.getUTCHours() >= 19 || now.getUTCHours() < 4) {
-          console.log("its after 3, this is submitted tomorrow");
-          let tomorrow = businessDaysFromDate(now, 1);
-          tomorrow.setUTCHours(13);
-          tomorrow.setUTCMinutes(0);
-          vm.requestSubmittedDate(tomorrow);
-        } else {
-          vm.requestSubmittedDate(new Date());
-        }
-
-        // Set the est closed date based off our submit date
-        vm.requestEstClosed(
-          businessDaysFromDate(
-            vm.requestSubmittedDate(),
-            vm.selectedServiceType().DaysToCloseDisp
-          )
-        );
-
-        //Set the request orgs
-        vm.requestOrgIds(vm.selectedServiceType().RequestOrgs);
-
-        //vm.requestStageNum(0);
-        vm.requestStatus("Open");
-        var valuePairs = getValuePairs(workOrderListDef.viewFields);
-
-        // TODO: Figure out how to submit people to people picker fields.
-        console.log("vp", valuePairs);
-        vm.listRefWO().createListItem(
-          valuePairs,
-          function (id) {
-            console.log("saved", id);
-            //Once we've sucessfully saved the master document
-            if (id) {
-              if (typeValuePairs) {
-                // Save the workorder specific info here:
-                vm.selectedServiceType().listRef.createListItem(
-                  typeValuePairs,
-                  () => onSaveNewWorkOrderMaster(id),
-                  vm.requestorOffice().Title
-                );
-              } else {
-                onSaveNewWorkOrderMaster(id);
-              }
-            }
-          },
-          vm.requestorOffice().Title
-        );
+        /* The following actions need to be performed atomically
+            If any step fails, the entire process fails, should alert user
+            to retry.
+          1. createWorkorderFolders - Create new folders in each list/lib 
+            a. Update folder permissions - handled in 1, on increment
+          2. createWorkorderItem - On success of 1a,  
+              triggered by vm.foldersCreated subscriber
+        */
+        createWorkorderFolders();
 
         break;
     }
   } else {
     SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
   }
+}
+
+function calcNewWorkorderDates() {
+  // Check the submitted date, if it's between 3 pm, (19 UTC) and midnight (4 UTC)
+  // it needs to be set as submitted the next business day
+  let now = new Date();
+  if (now.getUTCHours() >= 19 || now.getUTCHours() < 4) {
+    console.log("its after 3, this is submitted tomorrow");
+    let tomorrow = businessDaysFromDate(now, 1);
+    tomorrow.setUTCHours(13);
+    tomorrow.setUTCMinutes(0);
+    vm.requestSubmittedDate(tomorrow);
+  } else {
+    vm.requestSubmittedDate(new Date());
+  }
+
+  // Set the est closed date based off our submit date
+  vm.requestEstClosed(
+    businessDaysFromDate(
+      vm.requestSubmittedDate(),
+      vm.selectedServiceType().DaysToCloseDisp
+    )
+  );
+
+  //Set the request orgs
+  vm.requestOrgIds(vm.selectedServiceType().RequestOrgs);
+
+  //vm.requestStageNum(0);
+  vm.requestStatus("Open");
+}
+
+function createNewWorkorderItems() {
+  // triggered by vm.foldersCreated.subscribe in viewmodel.js
+  // This should only run once the appropriate permissions are set
+  // at the folder level to prevent info spillage.
+
+  calcNewWorkorderDates();
+
+  var valuePairs = getValuePairs(workOrderListDef.viewFields);
+
+  console.log("vp", valuePairs);
+  vm.listRefWO().createListItem(
+    valuePairs,
+    function (id) {
+      console.log("saved", id);
+      //Once we've sucessfully saved the master document
+      if (id) {
+        if (vm.requestSvcTypeListBool()) {
+          var typeValuePairs = getValuePairs(vm.requestSvcTypeListViewFields());
+
+          // Save the workorder specific info here:
+          vm.selectedServiceType().listRef.createListItem(
+            typeValuePairs,
+            () => onSaveNewWorkOrderMaster(id),
+            vm.requestorOffice().Title
+          );
+        } else {
+          onSaveNewWorkOrderMaster(id);
+        }
+      }
+    },
+    vm.requestorOffice().Title
+  );
 }
 
 function onSaveNewWorkOrderMaster(id) {
@@ -428,9 +442,6 @@ function onSaveNewWorkOrderMaster(id) {
 
   // Offload our reminder emails to a separate function
   Workorder.Notifications.workorderReminderEmails(id);
-
-  // Create our new folders for each list/lib
-  createWorkorderFolders();
 
   // Create our Action
   createAction(
@@ -486,22 +497,18 @@ function createWorkorderFolders() {
 
   //For each of our multi-item lists, create a new folder
   [
+    vm.listRefWO(),
     vm.listRefAction(),
-    vm.listRefApproval(),
     vm.listRefAssignment(),
     vm.listRefComment(),
     vm.listRefWOEmails(),
   ].map((listRef) =>
-    listRef.createListFolder(
-      vm.requestID(),
-      (folderId) => {
-        // Update the permissions for the new folder
-        if (folderId) {
-          listRef.setItemPermissions(folderId, folderPermissions, true);
-        }
-      },
-      folderPath
-    )
+    listRef.upsertListFolderPath(vm.requestFolderPath(), (folderId) => {
+      // Update the permissions for the new folder
+      if (folderId) {
+        listRef.setItemPermissions(folderId, folderPermissions, true);
+      }
+    })
   );
 
   vm.libRefWODocs().createFolderRec(vm.requestFolderPath(), (folder) => {

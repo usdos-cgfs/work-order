@@ -1032,7 +1032,10 @@ function koviewmodel() {
   };
 
   self.loadedListItemLists.subscribe(function (val) {
-    if (val == 8) {
+    let NUM_CONFIG_LISTS = 6;
+    let NUM_PREFETCH_LISTS = 2;
+    let TOTAL_LISTS_TO_LOAD = NUM_CONFIG_LISTS + NUM_PREFETCH_LISTS;
+    if (val == TOTAL_LISTS_TO_LOAD) {
       initServiceTypes();
     }
   });
@@ -1062,12 +1065,51 @@ function koviewmodel() {
     );
   };
 
+  /************************************************************
+   * Observables for work order Folders
+   ************************************************************/
   self.requestFolderPath = ko.pureComputed(() => {
     return `${vm.requestorOffice().Title}/${vm.requestID()}`;
+  });
+
+  self.foldersToCreate = ko.observable();
+  self.foldersCreated = ko.observable();
+  self.foldersCreatedInc = function () {
+    self.foldersCreated(self.foldersCreated() + 1);
+  };
+  self.foldersCreated.subscribe((numCreated) => {
+    let NUM_LIST_FOLDERS = 5;
+    let NUM_LIB_FOLDERS = 1;
+    let NUM_ST_FOLDERS = self.requestHasListDef() ? 1 : 0;
+
+    let TOTAL_FOLDERS_TO_CREATE =
+      NUM_LIB_FOLDERS + NUM_LIST_FOLDERS + NUM_ST_FOLDERS;
+
+    if (numCreated == TOTAL_FOLDERS_TO_CREATE) {
+      createNewWorkorderItems();
+    }
   });
   /************************************************************
    * Observables for work order header
    ************************************************************/
+  self.requestSvcTypeListBool = ko.pureComputed(() => {
+    return self.requestServiceTypeListDef() ? true : false;
+  });
+
+  self.requestSvcTypeListDef = ko.pureComputed(() => {
+    return self.selectedServiceType()
+      ? self.selectedServiceType().listDef
+        ? self.selectedServiceType().listDef
+        : null
+      : null;
+  });
+
+  self.requestSvcTypeListViewFields = ko.pureComputed(() => {
+    return self.requestSvcTypeListDef()
+      ? self.requestSvcTypeListDef().viewFields
+      : null;
+  });
+
   self.requestLoaded = ko.observable(new Date());
   self.requestID = ko.observable(); // This is the key that will map everything together.
   self.requestHeader = ko.observable(); // This is the raw JSON object returned by the work order query.
@@ -1078,21 +1120,6 @@ function koviewmodel() {
   self.requestEstClosed = ko.observable();
 
   self.requestShowDescription = ko.observable(false);
-
-  // self.requestDescription = ko.pureComputed({
-  //   read: function () {
-  //     if (self.currentView() != "view") {
-  //       console.log("we are editing");
-  //       return $("#request-description").val();
-  //     } else {
-  //       console.log("we are viewing");
-  //       return self.requestDescriptionHTML();
-  //     }
-  //   },
-  //   write: (val) => {
-  //     self.requestDescriptionHTML(val);
-  //   },
-  // });
 
   self.requestIsActive = ko.observable(); // Bool
   self.requestStatus = ko.observable(); // Open, Closed, etc
@@ -1138,36 +1165,11 @@ function koviewmodel() {
     }
   });
 
-  // self.requestStageOfficeOrg = ko.pureComputed(() => {
-  //   if (self.requestStageOffice()) {
-  //     return self
-  //       .configRequestOrgs()
-  //       .find(
-  //         (ro) => ro.ID == self.requestStageOffice().RequestOrg.get_lookupId()
-  //       );
-  //   }
-  // });
-
   // Requestor/Header Info
   self.requestorName = ko.observable();
   self.requestorTelephone = ko.observable();
   self.requestorEmail = ko.observable();
   self.requestorManager = new PeopleField();
-  self.requestorManagerLookupId = ko.observable;
-  // self.requestorManagerLookupId = ko.pureComputed({
-  //   read: () => {
-  //     return self.requestorManager().ID;
-  //   },
-  //   write: (value) => {
-  //     if (value) {
-  //       let user = new Object();
-  //       user.ID = value.get_lookupId();
-  //       user.userName = value.get_lookupValue();
-  //       user.isEnsured = false;
-  //       self.requestorManager(user);
-  //     }
-  //   },
-  // });
 
   self.requestOrgs = ko.observableArray(new Array());
 
