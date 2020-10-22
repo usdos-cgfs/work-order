@@ -18,13 +18,15 @@ function initStaticListRefs() {
   vm.listRefWOEmails(new sal.NewSPList(workOrderEmailsListDef));
 
   /* Configuration lists */
-  vm.listRefConfigActionOffices(new SPList(configActionOfficesListDef));
+  vm.listRefConfigActionOffices(new sal.NewSPList(configActionOfficesListDef));
   //vm.listRefconfigRequestOrgs(new SPList(configRequestOrgsListDef));
-  vm.listRefConfigHolidays(new SPList(configHolidaysListDef));
-  vm.listRefConfigPipelines(new SPList(configPipelinesListDef));
-  vm.listRefConfigRequestingOffices(new SPList(configRequestingOfficesListDef));
-  vm.listRefConfigRequestOrgs(new SPList(configRequestOrgsListDef));
-  vm.listRefConfigServiceType(new SPList(configServiceTypeListDef));
+  vm.listRefConfigHolidays(new sal.NewSPList(configHolidaysListDef));
+  vm.listRefConfigPipelines(new sal.NewSPList(configPipelinesListDef));
+  vm.listRefConfigRequestingOffices(
+    new sal.NewSPList(configRequestingOfficesListDef)
+  );
+  vm.listRefConfigRequestOrgs(new sal.NewSPList(configRequestOrgsListDef));
+  vm.listRefConfigServiceType(new sal.NewSPList(configServiceTypeListDef));
 }
 
 function initServiceTypeListRefDefs() {
@@ -39,7 +41,7 @@ function initServiceTypeListRefDefs() {
       if (listDef) {
         serviceType.listDef = listDef;
 
-        serviceType.listRef = new SPList(listDef);
+        serviceType.listRef = new sal.NewSPList(listDef);
       }
     }
   });
@@ -194,9 +196,11 @@ function viewWorkOrderItem(woID) {
 function viewServiceTypeItem() {
   // Fetches the list item info from the currently selected service type and record.
   var serviceTypeCaml =
-    '<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' +
+    '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
+    '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
+    '</Eq><Eq><FieldRef Name="Title"/><Value Type="Text">' +
     vm.requestID() +
-    "</Value></Eq></Where></Query></View>";
+    "</Value></Eq></And></Where></Query></View>";
   vm.selectedServiceType().listRef.getListItems(serviceTypeCaml, (items) => {
     if (items[0]) {
       let res = items[0];
@@ -482,45 +486,22 @@ function createWorkorderFolders() {
   vm.foldersCreated(0);
 
   // Set all permissions up front
-  let folderPermissions = [
-    [sal.globalConfig.currentUser.get_loginName(), "Restricted Contribute"],
-    ["workorder Owners", "Full Control"],
-    ["Restricted Readers", "Restricted Read"],
-  ];
-
-  vm.selectedPipeline().forEach((stage) => {
-    // first get the action office
-    let assignedOffice = vm
-      .configActionOffices()
-      .find((ao) => ao.ID == stage.ActionOffice.get_lookupId());
-    let assignedOrg = vm
-      .configRequestOrgs()
-      .find((ro) => ro.ID == assignedOffice.RequestOrg.get_lookupId());
-    folderPermissions.push([
-      assignedOrg.UserGroup.get_lookupValue(),
-      "Restricted Contribute",
-    ]);
-
-    //If there's a wildcard assignee, get them too
-    if (stage.WildCardAssignee) {
-      let user = vm[stage.WildCardAssignee].userName();
-      if (user) {
-        folderPermissions.push([
-          vm[stage.WildCardAssignee].userName(),
-          "Restricted Contribute",
-        ]);
-      }
-    }
-  });
+  let folderPermissions = vm.requestFolderPerms();
 
   //For each of our multi-item lists, create a new folder
-  [
+  let listRefs = [
     vm.listRefWO(),
     vm.listRefAction(),
     vm.listRefAssignment(),
-    vm.listRefComment(),
     vm.listRefWOEmails(),
-  ].forEach((listRef) =>
+  ];
+
+  if (vm.requestSvcTypeListBool()) {
+    // Also create a folder for the service type
+    listRefs.push(vm.selectedServiceType().listRef);
+  }
+
+  listRefs.forEach((listRef) =>
     listRef.upsertListFolderPath(vm.requestFolderPath(), (folderId) => {
       // Update the permissions for the new folder
       if (folderId) {
@@ -536,16 +517,16 @@ function createWorkorderFolders() {
     })
   );
 
-  vm.libRefWODocs().createFolderRec(vm.requestFolderPath(), (folder) => {
-    vm.libRefWODocs().setLibFolderPermissions(
-      vm.requestFolderPath(),
-      folderPermissions,
-      () => {
-        vm.foldersCreatedInc();
-      },
-      true
-    );
-  });
+  // vm.libRefWODocs().createFolderRec(vm.requestFolderPath(), (folder) => {
+  //   vm.libRefWODocs().setLibFolderPermissions(
+  //     vm.requestFolderPath(),
+  //     folderPermissions,
+  //     () => {
+  //       vm.foldersCreatedInc();
+  //     },
+  //     true
+  //   );
+  // });
 }
 
 /************************************************************
@@ -555,6 +536,7 @@ function createWorkorderFolders() {
 function getValuePairs(listDef) {
   console.log(listDef);
   var valuePairs = [];
+  let missingFields = new Array();
   $.each(listDef, function (field, obj) {
     console.log(field, obj);
 
@@ -580,13 +562,23 @@ function getValuePairs(listDef) {
       // Check if this field is required
       // TODO: highlight the offending field
       if (obj.required && !fieldValue) {
-        alert(field + " field is required");
+        missingFields.push(field);
         //vm.requestIsSaveable(false);
       } else {
         valuePairs.push([field, fieldValue]);
       }
     }
   });
+
+  if (missingFields.length) {
+    let warn =
+      "The request has not been saved. The following fields are missing: \n";
+    missingFields.forEach((field) => {
+      warn += field + "\n";
+    });
+    alert(warn);
+  }
+
   return valuePairs;
 }
 
@@ -697,23 +689,27 @@ function fetchAllOrders(callback) {
  * Attachments
  ************************************************************/
 function newAttachment() {
-  let folderPath = vm.requestorOffice().Title + "/" + vm.requestID();
-  vm.libRefWODocs().createFolderRec(folderPath, () => {
-    vm.libRefWODocs().uploadNewDocument(
-      folderPath,
-      "Attach a New Document",
-      { id: vm.requestID() },
-      function () {
-        console.log("success");
-        fetchAttachments();
-      }
+  vm.libRefWODocs().createFolderRec(vm.requestFolderPath(), () => {
+    vm.libRefWODocs().setLibFolderPermissions(
+      vm.requestFolderPath(),
+      vm.requestFolderPerms(),
+      () => {
+        vm.libRefWODocs().uploadNewDocument(
+          vm.requestFolderPath(),
+          "Attach a New Document",
+          { id: vm.requestID() },
+          function () {
+            console.log("success");
+            fetchAttachments();
+          }
+        );
+      },
+      true
     );
   });
 }
 
 function fetchAttachments() {
-  let folderPath = vm.requestorOffice().Title + "/" + vm.requestID();
-
   //Update the attachments from SAL and load them to the page.
   let camlq =
     '<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name="WorkOrderID"/><Value Type="Text">' +
@@ -784,43 +780,7 @@ function createAssignment(role = "Action Resolver", notify = false) {
         if (notify) {
           // Build our email
           //If we have an assignee, send direct to them
-          let to = [];
-          if (vm.assignAssignee()) {
-            to.push(vm.assignAssignee().lookupUser());
-          } else if (vm.assignActionOffice()) {
-            to.push(vm.assignActionOffice());
-          }
-
-          let subject = `Work Order -${vm.requestStage().Title}- ${
-            vm.selectedServiceType().Title
-          } - ${vm.requestID()}`;
-
-          let body =
-            `Greetings Colleagues,<br><br> You have been assigned to the following workorder request by your action office assignor:<br>` +
-            `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
-              vm.selectedServiceType().Title
-            }<br><br>` +
-            `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
-            `${vm.requestLinkAdmin()}`;
-          let addendum = new String();
-          if ((role = "Approver")) {
-            let valuePairs = getValuePairs(
-              vm.selectedServiceType().listDef.viewFields
-            );
-            addendum += "<br><br><ul>";
-            if (valuePairs.length) {
-              valuePairs.forEach((vp) => {
-                addendum += `<li>${vp[0]} - ${vp[1]}</li>`;
-              });
-            }
-            addendum += "</ul>";
-            addendum +=
-              `<br>Click the link below to quick approve this request:<br>` +
-              `<a href="${vm.requestLinkAdminApprove(
-                id
-              )}" target="blank">${vm.requestLinkAdminApprove(id)}</a><br><br>`;
-          }
-          createEmail(to, [], [], subject, body + addendum);
+          Workorder.Notifications.newAssignmentNotification(role, id);
         }
         //Update the request with a new assignment:
         // Create Action
@@ -840,7 +800,7 @@ function createAssignment(role = "Action Resolver", notify = false) {
         vm.assignActionOffice(null);
         vm.assignAssignee(null);
       },
-      vm.requestorOffice().Title
+      vm.requestFolderPath()
     );
   }
 }
@@ -873,9 +833,11 @@ function fetchRequestAssignments(title = null, callback = null) {
   let queryTitle = title ? title : vm.requestID();
 
   var camlq =
-    '<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' +
+    '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
+    '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
+    '</Eq><Eq><FieldRef Name="Title"/><Value Type="Text">' +
     queryTitle +
-    "</Value></Eq></Where></Query></View>";
+    "</Value></Eq></And></Where></Query></View>";
 
   vm.listRefAssignment().getListItems(camlq, function (assignments) {
     // Let's connect our Action offices here.
@@ -932,7 +894,9 @@ function updateTableRequest(id) {
 
 function fetchMyAOAssignments() {
   var camlq =
-    '<View Scope="RecursiveAll"><Query><Where><In>' +
+    '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
+    '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
+    "</Eq><In>" +
     '<FieldRef Name="ActionOffice" LookupId="TRUE"/><Values>' +
     vm
       .userActionOfficeMembership()
@@ -940,7 +904,7 @@ function fetchMyAOAssignments() {
         return '<Value Type="Lookup">' + ao.ID + "</Value>";
       })
       .join("") +
-    "</Values></In></Where></Query></View>";
+    "</Values></In></And></Where></Query></View>";
 
   vm.listRefAssignment().getListItems(camlq, function (assignments) {
     console.log(assignments);
@@ -981,9 +945,11 @@ function newApproval() {
 
 function fetchApprovals(callback) {
   var camlq =
-    '<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' +
+    '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
+    '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
+    '</Eq><Eq><FieldRef Name="Title"/><Value Type="Text">' +
     vm.requestID() +
-    "</Value></Eq></Where></Query></View>";
+    "</Value></Eq></And></Where></Query></View>";
   vm.listRefApproval().getListItems(camlq, function (approvals) {
     vm.requestApprovals(approvals);
     callback();
@@ -1045,9 +1011,11 @@ function createAction(type, desc, sendEmail = false) {
 
 function fetchActions(callback) {
   var camlq =
-    '<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' +
+    '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
+    '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
+    '</Eq><Eq><FieldRef Name="Title"/><Value Type="Text">' +
     vm.requestID() +
-    "</Value></Eq></Where></Query></View>";
+    "</Value></Eq></And></Where></Query></View>";
   vm.listRefAction().getListItems(camlq, function (actions) {
     vm.requestActions(actions);
     callback();
@@ -1075,7 +1043,7 @@ function newComment() {
   vm.listRefComment().showModal(
     "CustomNewForm.aspx",
     "New Comment",
-    { woId: vm.requestID(), rootFolder: vm.requestorOffice().Title + "/" },
+    { woId: vm.requestID(), rootFolder: vm.requestFolderPath() + "/" },
     newCommentCallback
   );
 }
@@ -1097,13 +1065,28 @@ function newCommentCallback(result, value) {
 function submitComment() {
   if (vm.commentNew()) {
     SP.UI.ModalDialog.showWaitScreenWithNoClose("Submitting Comment...");
-    vm.listRefComment().createListItem(
-      [
-        ["Title", vm.requestID()],
-        ["Comment", vm.commentNew()],
-      ],
-      submitCommentCallback,
-      vm.requestFolderPath()
+    vm.listRefComment().upsertListFolderPath(
+      vm.requestFolderPath(),
+      (folderId) => {
+        // Update the permissions for the new folder
+        if (folderId) {
+          vm.listRefComment().setItemPermissions(
+            folderId,
+            vm.requestFolderPerms(),
+            () => {
+              vm.listRefComment().createListItem(
+                [
+                  ["Title", vm.requestID()],
+                  ["Comment", vm.commentNew()],
+                ],
+                submitCommentCallback,
+                vm.requestFolderPath()
+              );
+            },
+            true
+          );
+        }
+      }
     );
   }
 }
@@ -1117,64 +1100,15 @@ function submitCommentCallback(id) {
 
 function fetchComments(callback) {
   var camlq =
-    '<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' +
+    '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
+    '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
+    '</Eq><Eq><FieldRef Name="Title"/><Value Type="Text">' +
     vm.requestID() +
-    "</Value></Eq></Where></Query></View>";
+    "</Value></Eq></And></Where></Query></View>";
   vm.listRefComment().getListItems(camlq, function (comments) {
     vm.requestComments(comments);
     callback();
   });
-}
-
-/************************************************************
- * Email
- ************************************************************/
-
-function createEmail(
-  to,
-  cc,
-  bcc,
-  subject,
-  body,
-  sendDate = null,
-  id = vm.requestHeader().ID
-) {
-  let toArr = createEmailAddressee(to);
-  let ccArr = createEmailAddressee(cc);
-  let bccArr = createEmailAddressee(bcc);
-
-  let vp = [
-    ["To", toArr],
-    ["CC", ccArr],
-    ["BCC", bccArr],
-    ["Title", subject],
-    ["Body", body],
-    ["Request", id],
-  ];
-
-  if (sendDate) {
-    vp.push(["DateToSend", sendDate]);
-  }
-
-  vm.listRefWOEmails().createListItem(
-    vp,
-    () => newEmailCallback(SP.UI.DialogResult.OK, null),
-    vm.requestFolderPath()
-  );
-}
-
-function createEmailAddressee(arr) {
-  let vps = new Array();
-
-  arr.forEach((ao) => {
-    vps.push(ao.get_lookupId());
-    vps.push(ao.get_lookupValue());
-  });
-
-  return vps.join(";#");
-}
-function newEmailCallback(result, value) {
-  console.log("Email created successfully");
 }
 
 /************************************************************
@@ -1250,28 +1184,7 @@ function pipelineAssignments() {
 }
 
 function pipelineNotifications(addendum = null) {
-  let to = [
-    vm.requestStageOffice() ? vm.requestStageOffice().UserAddress : null,
-  ];
-
-  let cc = new Array();
-  if (vm.requestStageOrg()) {
-    cc.push(vm.requestStageOrg().UserGroup);
-  }
-
-  let subject = `Work Order -${vm.requestStage().Title}- ${
-    vm.selectedServiceType().Title
-  } - ${vm.requestID()}`;
-
-  let body =
-    `Greetings Colleagues,<br><br> The following service request has changed, requiring your attention:<br>` +
-    `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
-      vm.selectedServiceType().Title
-    }<br><br>` +
-    `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
-    `${vm.requestLinkAdmin()}`;
-
-  createEmail(to, cc, [], subject, body);
+  Workorder.Notfications.pipelineStageNotification();
 
   // Create the action
   createAction(
@@ -1297,24 +1210,7 @@ function closeWorkOrder(reason = "Closed") {
   vm.listRefWO().updateListItem(vm.requestHeader().ID, vp, function () {
     alert("Record succesfully closed");
 
-    let to = vm
-      .requestOrgs()
-      .map((ao) => vm.configRequestOrgs().find((aoid) => aoid.ID == ao.ID))
-      .map((aoids) => aoids.UserGroup);
-
-    let subject = `Work Order -${reason}- ${
-      vm.selectedServiceType().Title
-    } - ${vm.requestID()}`;
-
-    let body =
-      `Greetings Colleagues,<br><br> The following service request has been ${reason.toLocaleLowerCase()}:<br>` +
-      `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
-        vm.selectedServiceType().Title
-      }<br><br>` +
-      `To view an archive of the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
-      `${vm.requestLinkAdmin()}`;
-
-    createEmail(to, [], [], subject, body);
+    Workorder.Notifications.workorderClosedEmail(reason);
 
     // Create the action
     createAction(

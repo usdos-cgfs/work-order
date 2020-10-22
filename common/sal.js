@@ -392,9 +392,11 @@ sal.NewSPList = function (listDef) {
   /*****************************************************************
                                 createListItem      
     ******************************************************************/
-  self.createListItem = function (valuePairs, callback, folderName = "") {
+  function createListItem(valuePairs, callback, folderName = "") {
     //self.updateConfig();
-    var oList = self.config.listRef;
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+    var oList = web.get_lists().getByTitle(self.config.def.title);
 
     var itemCreateInfo = new SP.ListItemCreationInformation();
 
@@ -435,12 +437,12 @@ sal.NewSPList = function (listDef) {
       Function.createDelegate(data, onCreateListItemSucceeded),
       Function.createDelegate(data, onCreateListItemFailed)
     );
-  };
+  }
 
   /*****************************************************************
                                 getListItems      
     ******************************************************************/
-  self.getListItems = function (caml, callback) {
+  function getListItems(caml, callback) {
     /*
         Obtain all list items that match the querystring passed by caml.
         */
@@ -449,7 +451,12 @@ sal.NewSPList = function (listDef) {
     var camlQuery = new SP.CamlQuery.createAllItemsQuery();
 
     camlQuery.set_viewXml(caml);
-    let collListItem = self.config.listRef.getItems(camlQuery);
+
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+    var oList = web.get_lists().getByTitle(self.config.def.title);
+
+    let collListItem = oList.getItems(camlQuery);
 
     function onGetListItemsSucceeded(sender, args) {
       var self = this;
@@ -500,7 +507,7 @@ sal.NewSPList = function (listDef) {
     let data = {
       collListItem,
       callback,
-      def: this.config.def,
+      def: self.config.def,
     };
 
     self.config.currentContext.load(collListItem);
@@ -508,15 +515,17 @@ sal.NewSPList = function (listDef) {
       Function.createDelegate(data, onGetListItemsSucceeded),
       Function.createDelegate(data, onGetListItemsFailed)
     );
-  };
+  }
 
   /*****************************************************************
                             updateListItem      
     ******************************************************************/
-  self.updateListItem = function (id, valuePairs, callback) {
+  function updateListItem(id, valuePairs, callback) {
     //[["ColName", "Value"], ["Col2", "Value2"]]
     //self.updateConfig();
-    var oList = self.config.listRef;
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+    var oList = web.get_lists().getByTitle(self.config.def.title);
 
     let oListItem = oList.getItemById(id);
     for (i = 0; i < valuePairs.length; i++) {
@@ -544,29 +553,40 @@ sal.NewSPList = function (listDef) {
       Function.createDelegate(data, onUpdateListItemsSucceeded),
       Function.createDelegate(data, onUpdateListItemFailed)
     );
-  };
+  }
 
   /*****************************************************************
                             deleteListItem      
     ******************************************************************/
-  self.deleteListItem = function (id, callback) {
+  function deleteListItem(id, callback) {
     //[["ColName", "Value"], ["Col2", "Value2"]]
-    self.callbackDeleteListItem = callback;
+    //self.callbackDeleteListItem = callback;
     //self.updateConfig();
-    var oList = self.config.listRef;
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+    var oList = web.get_lists().getByTitle(self.config.def.title);
 
+    let data = { callback };
     this.oListItem = oList.getItemById(id);
     this.oListItem.deleteObject();
 
-    self.config.currentContext.executeQueryAsync(
-      onDeleteListItemsSucceeded.bind(this),
-      onQueryFailed.bind(this)
-    );
-  };
+    function onDeleteListItemsSucceeded(sender, args) {
+      //alert('Item updated!');
+      callback();
+    }
 
-  function onDeleteListItemsSucceeded(sender, args) {
-    //alert('Item updated!');
-    self.callbackDeleteListItem();
+    function onDeleteListItemsFailed(sender, args) {
+      console.error(
+        `sal.SPList.deleteListItem: Request on list ${
+          self.config.def.name
+        } failed, producing the following error: \n ${args.get_message()} \nStackTrack: \n ${args.get_stackTrace()}`
+      );
+    }
+
+    self.config.currentContext.executeQueryAsync(
+      Function.createDelegate(data, onDeleteListItemsSucceeded),
+      Function.createDelegate(data, onDeleteListItemsFailed)
+    );
   }
 
   /*****************************************************************
@@ -578,7 +598,7 @@ sal.NewSPList = function (listDef) {
    * @param {Array} valuePairs A 2d array containing groups and permission levels
    *    e.g. [["Owners", "Full Control"], ["Members", "Contribute"]]
    */
-  self.setItemPermissions = function (id, valuePairs, callback, reset = false) {
+  function setItemPermissions(id, valuePairs, callback, reset = false) {
     //TODO: Validate that the groups and permissions exist on the site.
     var users = new Array();
     var resolvedGroups = new Array();
@@ -688,56 +708,12 @@ sal.NewSPList = function (listDef) {
       Function.createDelegate(data, onFindItemSucceeded),
       Function.createDelegate(data, onFindItemFailed)
     );
-  };
-
-  self.setItemPermissionsUser = function (id, ensuredUser, permission) {
-    //Expect a fully resolved SP.User.
-    var currCtx = new SP.ClientContext.get_current();
-    var web = currCtx.get_web();
-
-    var oList = web.get_lists().getByTitle(self.config.def.title);
-
-    let oListItem = oList.getItemById(id);
-    // oListItem.resetRoleInheritance();
-    oListItem.breakRoleInheritance(false, false);
-
-    let roleDefBindingColl = SP.RoleDefinitionBindingCollection.newObject(
-      currCtx
-    );
-
-    roleDefBindingColl.add(web.get_roleDefinitions().getByName(permission));
-    oListItem.get_roleAssignments().add(ensuredUser, roleDefBindingColl);
-
-    function onUpdatePermsSucceeded() {
-      console.log(
-        "Successfully set permissions on " + this.oListItem.get_item("Title")
-      );
-    }
-
-    function onUpdatePermsFailed(sender, args) {
-      console.error(
-        "Failed to update permissions on user: " +
-          this.title +
-          args.get_message() +
-          "\n" +
-          args.get_stackTrace(),
-        false
-      );
-    }
-    let data = { oListItem: oListItem };
-    //let data = { title: oListItem.get_item("Title"), oListItem: oListItem };
-
-    currCtx.load(oListItem);
-    currCtx.executeQueryAsync(
-      Function.createDelegate(data, onUpdatePermsSucceeded),
-      Function.createDelegate(data, onUpdatePermsFailed)
-    );
-  };
+  }
 
   /*****************************************************************
                             getFolderContents          
     ******************************************************************/
-  self.getFolderContents = function (folderName, callback) {
+  function getFolderContents(folderName, callback) {
     var folder = sal.globalConfig.website.getFolderByServerRelativeUrl(
       sal.globalConfig.siteUrl + "/" + self.config.def.name + "/" + folderName
     );
@@ -776,13 +752,13 @@ sal.NewSPList = function (listDef) {
       Function.createDelegate(data, onGetListFilesSucceeded),
       Function.createDelegate(data, ongetListFilesFailed)
     );
-  };
+  }
 
   /*****************************************************************
                                   
     ******************************************************************/
 
-  self.showModal = function (formName, title, args, callback) {
+  function showModal(formName, title, args, callback) {
     var id = "";
     var options = SP.UI.$create_DialogOptions();
     options.title = title;
@@ -824,9 +800,9 @@ sal.NewSPList = function (listDef) {
       rootFolder;
     console.log("Options url: " + options.url);
     SP.UI.ModalDialog.showModalDialog(options);
-  };
+  }
 
-  self.uploadNewDocument = function (folder, title, args, callback) {
+  function uploadNewDocument(folder, title, args, callback) {
     //folder = folder != '/' ? folder : '';
     var options = SP.UI.$create_DialogOptions();
     options.title = title;
@@ -853,44 +829,17 @@ sal.NewSPList = function (listDef) {
 
     console.log("Options url: " + options.url);
     SP.UI.ModalDialog.showModalDialog(options);
-  };
+  }
 
-  self.createFolder = function (folderName, callback, requestingOffice = null) {
-    // Used in document libraries
-    self.requestedCallback = callback;
-
-    if (requestingOffice) {
-      var folder = self.config.listRef
-        .get_rootFolder()
-        .get_folders()
-        .add(folderName);
-    } else {
-      var folder = self.config.listRef
-        .get_rootFolder()
-        .get_folders()
-        .add(folderName);
-    }
-    function onCreateFolderSucceeded(sender, args) {
-      this.callback();
-    }
-
-    let data = { folderName, callback, folder };
-    self.config.currentContext.load(folder);
-    self.config.currentContext.executeQueryAsync(
-      Function.createDelegate(data, onCreateFolderSucceeded),
-      onQueryFailed
-    );
-  };
-
-  self.upsertListFolderPath = function (folderPath, callback) {
+  function upsertListFolderPath(folderPath, callback) {
     var folderArr = folderPath.split("/");
     var idx = 0;
 
-    upsertListFolderInner = function (parentPath, folderArr, idx, success) {
+    let upsertListFolderInner = function (parentPath, folderArr, idx, success) {
       let folderName = folderArr[idx];
       idx++;
       let curPath = folderArr.slice(0, idx).join("/");
-      self.ensureListFolder(
+      ensureListFolder(
         curPath,
         (iFolder) => {
           if (idx >= folderArr.length) {
@@ -917,7 +866,7 @@ sal.NewSPList = function (listDef) {
       );
     };
     upsertListFolderInner("", folderArr, idx, callback);
-  };
+  }
   /**
    * CreateListFolder
    * Creates a folder at the specified path
@@ -970,7 +919,7 @@ sal.NewSPList = function (listDef) {
     );
   };
 
-  self.ensureListFolder = function (path, onExists, onNonExists) {
+  function ensureListFolder(path, onExists, onNonExists) {
     let folderUrl =
       sal.globalConfig.siteUrl + "/Lists/" + self.config.def.name + "/" + path;
 
@@ -1026,9 +975,9 @@ sal.NewSPList = function (listDef) {
       Function.createDelegate(data, onQueryFolderSucceeded),
       Function.createDelegate(data, onQueryFolderFailed)
     );
-  };
+  }
 
-  self.createFolderRec = function (folderUrl, success) {
+  function createFolderRec(folderUrl, success) {
     var ctx = SP.ClientContext.get_current();
     var list = self.config.listRef;
     var createFolderInternal = function (parentFolder, folderUrl, success) {
@@ -1054,14 +1003,9 @@ sal.NewSPList = function (listDef) {
       );
     };
     createFolderInternal(list.get_rootFolder(), folderUrl, success);
-  };
+  }
 
-  self.setLibFolderPermissions = function (
-    path,
-    valuePairs,
-    callback,
-    reset = false
-  ) {
+  function setLibFolderPermissions(path, valuePairs, callback, reset = false) {
     var users = new Array();
     var resolvedGroups = new Array();
     let relativeUrl =
@@ -1157,9 +1101,9 @@ sal.NewSPList = function (listDef) {
       Function.createDelegate(data, onFindFolderSuccess),
       Function.createDelegate(data, onFindFolderFailure)
     );
-  };
+  }
 
-  self.showListView = function (filter) {
+  function showListView(filter) {
     // Redirect to the default sharepoint list view
     listUrl =
       sal.globalConfig.siteUrl +
@@ -1168,9 +1112,23 @@ sal.NewSPList = function (listDef) {
       "/AllItems.aspx" +
       filter;
     window.location.assign(listUrl);
-  };
+  }
 
   let publicMembers = {
     createListItem,
+    getListItems,
+    updateListItem,
+    deleteListItem,
+    setItemPermissions,
+    getFolderContents,
+    showModal,
+    uploadNewDocument,
+    upsertListFolderPath,
+    ensureListFolder,
+    createFolderRec,
+    setLibFolderPermissions,
+    showListView,
   };
+
+  return publicMembers;
 };

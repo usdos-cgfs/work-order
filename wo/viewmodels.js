@@ -1078,8 +1078,12 @@ function koviewmodel() {
     self.foldersCreated(self.foldersCreated() + 1);
   };
   self.foldersCreated.subscribe((numCreated) => {
-    let NUM_LIST_FOLDERS = 5;
-    let NUM_LIB_FOLDERS = 1;
+    // We'll create the attachments folder when they click upload.
+    // We'll create the comments folder when they click submit.
+    // Otherwise, we'll pre-create the following:
+    // Workorder, Action, Assignment, Emails
+    let NUM_LIST_FOLDERS = 4;
+    let NUM_LIB_FOLDERS = 0;
     let NUM_ST_FOLDERS = self.requestSvcTypeListBool() ? 1 : 0;
 
     let TOTAL_FOLDERS_TO_CREATE =
@@ -1088,6 +1092,40 @@ function koviewmodel() {
     if (numCreated == TOTAL_FOLDERS_TO_CREATE) {
       createNewWorkorderItems();
     }
+  });
+
+  self.requestFolderPerms = ko.pureComputed(() => {
+    let folderPermissions = [
+      [sal.globalConfig.currentUser.get_loginName(), "Restricted Contribute"],
+      ["workorder Owners", "Full Control"],
+      ["Restricted Readers", "Restricted Read"],
+    ];
+
+    vm.selectedPipeline().forEach((stage) => {
+      // first get the action office
+      let assignedOffice = vm
+        .configActionOffices()
+        .find((ao) => ao.ID == stage.ActionOffice.get_lookupId());
+      let assignedOrg = vm
+        .configRequestOrgs()
+        .find((ro) => ro.ID == assignedOffice.RequestOrg.get_lookupId());
+      folderPermissions.push([
+        assignedOrg.UserGroup.get_lookupValue(),
+        "Restricted Contribute",
+      ]);
+
+      //If there's a wildcard assignee, get them too
+      if (stage.WildCardAssignee) {
+        let user = vm[stage.WildCardAssignee].userName();
+        if (user) {
+          folderPermissions.push([
+            vm[stage.WildCardAssignee].userName(),
+            "Restricted Contribute",
+          ]);
+        }
+      }
+    });
+    return folderPermissions;
   });
   /************************************************************
    * Observables for work order header
