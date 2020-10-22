@@ -7,15 +7,15 @@ tabsEnum = {
 };
 
 function initStaticListRefs() {
-  vm.listRefWO(new SPList(workOrderListDef));
+  vm.listRefWO(new sal.NewSPList(workOrderListDef));
   //vm.listRefpu10k(new SPList(pu10kListDef));
 
-  vm.listRefApproval(new SPList(approvalListDef));
-  vm.listRefAction(new SPList(actionListDef));
-  vm.libRefWODocs(new SPList(workOrderDocDef));
-  vm.listRefAssignment(new SPList(assignmentListDef));
-  vm.listRefComment(new SPList(commentListDef));
-  vm.listRefWOEmails(new SPList(workOrderEmailsListDef));
+  vm.listRefApproval(new sal.NewSPList(approvalListDef));
+  vm.listRefAction(new sal.NewSPList(actionListDef));
+  vm.libRefWODocs(new sal.NewSPList(workOrderDocDef));
+  vm.listRefAssignment(new sal.NewSPList(assignmentListDef));
+  vm.listRefComment(new sal.NewSPList(commentListDef));
+  vm.listRefWOEmails(new sal.NewSPList(workOrderEmailsListDef));
 
   /* Configuration lists */
   vm.listRefConfigActionOffices(new SPList(configActionOfficesListDef));
@@ -400,6 +400,7 @@ function calcNewWorkorderDates() {
 }
 
 function createNewWorkorderItems() {
+  window.clearTimeout(window.breakingPermissionsTimeoutID);
   // triggered by vm.foldersCreated.subscribe in viewmodel.js
   // This should only run once the appropriate permissions are set
   // at the folder level to prevent info spillage.
@@ -422,14 +423,14 @@ function createNewWorkorderItems() {
           vm.selectedServiceType().listRef.createListItem(
             typeValuePairs,
             () => onSaveNewWorkOrderMaster(id),
-            vm.requestorOffice().Title
+            vm.requestFolderPath()
           );
         } else {
           onSaveNewWorkOrderMaster(id);
         }
       }
     },
-    vm.requestorOffice().Title
+    vm.requestFolderPath()
   );
 }
 
@@ -462,12 +463,29 @@ function onSaveEditWorkOrderCallback(val) {
   SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
 
+function breakingPermissionsTimeoutFunc() {
+  alert(
+    "Looks like something went wrong while setting the permissions." +
+      "Please try to save the workorder again. \n" +
+      "If you continue to see this message, please " +
+      "report it to cgfssharepoint@state.gov."
+  );
+  Workorder.Notifications.breakingPermissionsTimeout();
+  SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+}
+
 function createWorkorderFolders() {
-  let folderPath = vm.requestorOffice().Title;
+  window.breakingPermissionsTimeoutID = window.setTimeout(
+    breakingPermissionsTimeoutFunc,
+    5000
+  );
+  vm.foldersCreated(0);
+
   // Set all permissions up front
   let folderPermissions = [
     [sal.globalConfig.currentUser.get_loginName(), "Restricted Contribute"],
     ["workorder Owners", "Full Control"],
+    ["Restricted Readers", "Restricted Read"],
   ];
 
   vm.selectedPipeline().forEach((stage) => {
@@ -502,11 +520,18 @@ function createWorkorderFolders() {
     vm.listRefAssignment(),
     vm.listRefComment(),
     vm.listRefWOEmails(),
-  ].map((listRef) =>
+  ].forEach((listRef) =>
     listRef.upsertListFolderPath(vm.requestFolderPath(), (folderId) => {
       // Update the permissions for the new folder
       if (folderId) {
-        listRef.setItemPermissions(folderId, folderPermissions, true);
+        listRef.setItemPermissions(
+          folderId,
+          folderPermissions,
+          () => {
+            vm.foldersCreatedInc();
+          },
+          true
+        );
       }
     })
   );
@@ -515,6 +540,9 @@ function createWorkorderFolders() {
     vm.libRefWODocs().setLibFolderPermissions(
       vm.requestFolderPath(),
       folderPermissions,
+      () => {
+        vm.foldersCreatedInc();
+      },
       true
     );
   });
@@ -553,7 +581,7 @@ function getValuePairs(listDef) {
       // TODO: highlight the offending field
       if (obj.required && !fieldValue) {
         alert(field + " field is required");
-        vm.requestIsSaveable(false);
+        //vm.requestIsSaveable(false);
       } else {
         valuePairs.push([field, fieldValue]);
       }
@@ -1067,8 +1095,8 @@ function newCommentCallback(result, value) {
 }
 
 function submitComment() {
-  SP.UI.ModalDialog.showWaitScreenWithNoClose("Submitting Comment...");
   if (vm.commentNew()) {
+    SP.UI.ModalDialog.showWaitScreenWithNoClose("Submitting Comment...");
     vm.listRefComment().createListItem(
       [
         ["Title", vm.requestID()],

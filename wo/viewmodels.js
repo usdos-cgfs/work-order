@@ -1080,7 +1080,7 @@ function koviewmodel() {
   self.foldersCreated.subscribe((numCreated) => {
     let NUM_LIST_FOLDERS = 5;
     let NUM_LIB_FOLDERS = 1;
-    let NUM_ST_FOLDERS = self.requestHasListDef() ? 1 : 0;
+    let NUM_ST_FOLDERS = self.requestSvcTypeListBool() ? 1 : 0;
 
     let TOTAL_FOLDERS_TO_CREATE =
       NUM_LIB_FOLDERS + NUM_LIST_FOLDERS + NUM_ST_FOLDERS;
@@ -1093,7 +1093,7 @@ function koviewmodel() {
    * Observables for work order header
    ************************************************************/
   self.requestSvcTypeListBool = ko.pureComputed(() => {
-    return self.requestServiceTypeListDef() ? true : false;
+    return self.requestSvcTypeListDef() ? true : false;
   });
 
   self.requestSvcTypeListDef = ko.pureComputed(() => {
