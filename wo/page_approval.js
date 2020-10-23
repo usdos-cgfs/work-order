@@ -17,7 +17,7 @@ function initApp() {
     },
   };
 
-  let assignmentListRef = new SPList(assignmentListDef);
+  let assignmentListRef = new NewSPList(assignmentListDef);
 
   const queryString = window.location.search;
   const urlParams = new URLSearchParams(queryString);

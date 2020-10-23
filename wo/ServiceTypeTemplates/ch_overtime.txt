@@ -26,6 +26,12 @@
         koMap: "overtimeRequisitionOrder",
         required: true,
       },
+      LaborCategory: {
+        type: "Text",
+        koMap: "overtimeLaborCategory",
+        required: true,
+      },
+      LaborRate: { type: "Num", koMap: "overtimeLaborRate", required: true },
       ContractorType: {
         type: "Text",
         koMap: "overtimeContractorType",
@@ -52,6 +58,8 @@
   vm.overtimeManagerTask = new PeopleField();
   vm.overtimeDepartment = ko.observable();
   vm.overtimeRequisitionOrder = ko.observable();
+  vm.overtimeLaborCategory = ko.observable();
+  vm.overtimeLaborRate = ko.observable();
   vm.overtimeContractorType = ko.observable();
   vm.overtimeContractorTypeOpts = ko.observableArray(["SCA", "Non-SCA"]);
   vm.overtimeDates = ko.observable();
@@ -115,6 +123,27 @@
           type="text"
           data-bind="disable: currentView() == 'view',
               value: overtimeDepartment"
+        />
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label>Labor Category (LCAT):</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disabled:
+              currentView() == 'view', value: overtimeRequisitionOrder"
+        />
+      </div>
+      <div class="field">
+        <label>Labor Rate (Hourly Rate):</label>
+        <input
+          class="editable-field"
+          type="number"
+          min="0"
+          data-bind="disabled:
+              currentView() == 'view', value: overtimeRequisitionOrder"
         />
       </div>
     </div>
