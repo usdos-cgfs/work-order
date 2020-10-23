@@ -803,6 +803,9 @@ function koviewmodel() {
       case "DateTime":
         return new Date(val).toLocaleDateString();
         break;
+      case "Person":
+        return val.userName();
+        break;
       default:
         return val;
     }

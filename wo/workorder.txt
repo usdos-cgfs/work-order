@@ -371,7 +371,7 @@
       data-bind="foreach: configServiceTypes().sort(sortByTitle)"
     >
       <!-- ko if: Active -->
-      <div class="card" data-bind="click: showDescription.bind($data)">
+      <div class="card pointer" data-bind="click: showDescription.bind($data)">
         <!--<div class="center aligned content">
                     <div class="header" data-bind="text: vm.serviceTypeViews()[$data].name"></div>
                 </div>-->
@@ -533,8 +533,8 @@
                     />
                   </div>
 
-                  <div class="field">
-                    <label>Manager: </label>
+                  <!-- <div class="field">
+                    <label>Request Manager: </label>
                     <input
                       class="editable-field"
                       type="text"
@@ -547,7 +547,7 @@
                       data-bind="people: requestorManager.user, 
                         visible: currentView() != 'view'"
                     ></div>
-                  </div>
+                  </div> -->
                 </div>
                 <div class="two fields">
                   <div class="field">

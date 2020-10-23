@@ -1300,9 +1300,9 @@ function initComplete() {
   let stypeId = urlParams.get("stype");
   let stype = null;
 
-  if (id) {
-    viewWorkOrderItem(id);
-  }
+  // if (id && tab == 'order-detail') {
+  //   viewWorkOrderItem(id);
+  // }
   //If we're on a separate tab, switch back to the tab from the url.
 
   // if no tab is present, switch based on page
@@ -1324,20 +1324,21 @@ function initComplete() {
 
   ko.applyBindings(vm);
   $("#tabs").show();
+  initUIComponents();
 
   switch (tab) {
     case null:
       vm.tab("my-orders");
       break;
-    case "detail-view":
+    case "order-detail":
       if (id) {
         viewWorkOrderItem(id);
       }
+      break;
     default:
       vm.tab(tab);
   }
 
-  initUIComponents();
   SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
 

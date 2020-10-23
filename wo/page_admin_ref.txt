@@ -747,20 +747,20 @@
                       data-bind="value: requestorName"
                     />
                   </div>
-                  <div class="">
+                  <!-- <div class="">
                     <label> Manager: </label>
-                    <!-- <input
+                     <input
                       class="non-editable-field"
                       type="text"
                       data-bind="value: requestorManager().userName"
-                    /> -->
+                    />
                     <div
                       id="peopleRequestorManager"
                       class="editable-field"
                       data-bind="people: requestorManager.user, 
                           disable: currentView() == 'view'"
                     ></div>
-                  </div>
+                  </div> -->
                 </div>
                 <div class="two fields">
                   <div class="field">
