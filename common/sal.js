@@ -278,6 +278,52 @@ function getCurrentUserGroups(callback) {
   );
 }
 
+sal.addUsersToGroup = function (userNameArr, groupName) {
+  var currCtx = new SP.ClientContext.get_current();
+  var web = currCtx.get_web();
+
+  var siteGroups = web.get_siteGroups();
+  var group = siteGroups.getByName(groupName);
+  let userCollection = group.get_users();
+
+  var ensuredUsers = new Array();
+
+  userNameArr.forEach((userName) => {
+    ensuredUsers.push(web.ensureUser(userName));
+  });
+
+  ensuredUsers.forEach((user) => currCtx.load(user));
+
+  currCtx.load(group);
+
+  let data = { ensuredUsers, group, groupName, userCollection, userNameArr };
+
+  function onQuerySucceeded() {
+    console.log("Found Group: " + group.get_title(), userNameArr);
+    console.log("Ensured Users: ");
+
+    var currCtx = new SP.ClientContext.get_current();
+
+    ensuredUsers.forEach((user) => userCollection.addUser(user));
+
+    currCtx.load(group);
+    currCtx.executeQueryAsync(
+      () => console.log("great success!"),
+      () => console.log("Terrible Failure!")
+    );
+  }
+
+  function onQueryFailed(sender, args) {
+    console.warn("Unable to add users to group " + groupName, userNameArr);
+    console.warn(groupName, args);
+  }
+
+  currCtx.executeQueryAsync(
+    Function.createDelegate(data, onQuerySucceeded),
+    Function.createDelegate(data, onQueryFailed)
+  );
+};
+
 sal.NewSPList = function (listDef) {
   /*
       Expecting a list definition object in the following format:
