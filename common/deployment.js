@@ -14,15 +14,17 @@ function addActionOfficeUsersToGroups() {
       //Add the users to the group
       if (reqOrg) {
         if (!arrays[reqOrg.Title]) {
-          arrays[reqOrg.Title] = new Array();
-        } else {
-          arrays[reqOrg.Title].push(ao.userAddress.get_lookupValue());
-        }
-        new sal.addUsersToGroup(
-          [ao.UserAddress.get_lookupValue()],
-          reqOrg.UserGroup.get_lookupValue()
-        );
+          arrays[reqOrg.Title] = new Object();
+          arrays[reqOrg.Title].group = reqOrg.UserGroup.get_lookupValue()
+          arrays[reqOrg.Title].arr = new Array();
+        } 
+          arrays[reqOrg.Title].arr.push(ao.UserAddress.get_lookupValue());
+        // Use this to do each user at a time
+        new sal.addUsersToGroup( [ao.UserAddress.get_lookupValue()], reqOrg.UserGroup.get_lookupValue())
       }
     }
   });
+  /*for (const [key, ro] of Object.entries(arrays)) {
+   new sal.addUsersToGroup( ro.arr, ro.group)
+  }*/
 }
