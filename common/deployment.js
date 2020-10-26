@@ -15,6 +15,7 @@ function addActionOfficeUsersToGroups() {
       if (reqOrg) {
         if (!arrays[reqOrg.Title]) {
           arrays[reqOrg.Title] = new Object();
+<<<<<<< HEAD
           arrays[reqOrg.Title].group = reqOrg.UserGroup.get_lookupValue();
           arrays[reqOrg.Title].arr = new Array();
         }
@@ -131,4 +132,18 @@ function syncListDefs() {
       );
     }
   });
+=======
+          arrays[reqOrg.Title].group = reqOrg.UserGroup.get_lookupValue()
+          arrays[reqOrg.Title].arr = new Array();
+        } 
+          arrays[reqOrg.Title].arr.push(ao.UserAddress.get_lookupValue());
+        // Use this to do each user at a time
+        new sal.addUsersToGroup( [ao.UserAddress.get_lookupValue()], reqOrg.UserGroup.get_lookupValue())
+      }
+    }
+  });
+  /*for (const [key, ro] of Object.entries(arrays)) {
+   new sal.addUsersToGroup( ro.arr, ro.group)
+  }*/
+>>>>>>> 95c563b9f67a9de34ce74b4ff5bb87c194e922f3
 }
