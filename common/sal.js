@@ -78,9 +78,9 @@ function getUserProperties() {
     success: function (data) {
       sal.globalConfig.currentUserProfile = data.d;
       vm.requestorTelephone(
-        data.d.UserProfileProperties.results.find(
-          (prop) => prop.Key == "WorkPhone"
-        ).Value
+        data.d.UserProfileProperties.results.find(function (prop) {
+          return prop.Key == "WorkPhone";
+        }).Value
       );
     },
     error: function (jqxr, errorCode, errorThrown) {
@@ -106,7 +106,7 @@ function ensureUser(userName, callback) {
         args.get_stackTrace()
     );
   }
-  data = { user, callback };
+  data = { user: user, callback: callback };
 
   context.load(user);
   context.executeQueryAsync(
@@ -288,6 +288,7 @@ sal.addUsersToGroup = function (userNameArr, groupName) {
 
   var ensuredUsers = new Array();
 
+  //TODO: If one user fails validation, the whole process fails. Fix?
   userNameArr.forEach((userName) => {
     ensuredUsers.push(web.ensureUser(userName));
   });
