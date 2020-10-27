@@ -1,6 +1,19 @@
-<h1 id="approval-message">Approving Record</h1>
+<h1 id="approval-message">
+  Approving Record:
+  <a
+    target="blank"
+    data-bind="attr: { href: requestLink }, text: pageApprovalRequestId"
+  ></a>
+</h1>
+<p data-bind="text: pageApprovalMessage"></p>
+<script src="../SiteAssets/workorder/vendor/knockout/knockout-3.5.0.js"></script>
+<!-- <script src="../SiteAssets/workorder/vendor/jquery/jquery-3.3.1.min.js"></script> -->
+
 <script src="../SiteAssets/workorder/vendor/jquery/jquery-3.3.1.min.js"></script>
 <script src="../SiteAssets/workorder/common/sal.js"></script>
+<script src="../SiteAssets/workorder/common/common.js"></script>
 <script src="../SiteAssets/workorder/common/notifications.js"></script>
 
+<script src="../SiteAssets/workorder/wo/viewmodels.js"></script>
+<script src="../SiteAssets/workorder/wo/workorder.js"></script>
 <script src="../SiteAssets/workorder/wo/page_approval.js"></script>

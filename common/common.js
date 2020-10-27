@@ -23,6 +23,15 @@ window.console = window.console || {
 //    return this[this.length - 1];
 // }
 
+var Workorder = window.Workorder || {};
+Workorder.Common = Workorder.Common || {};
+
+function InitCommon() {
+  Workorder.Common.Utilities = new Workorder.Common.NewUtilities();
+}
+
+Workorder.Common.NewUtilities = function () {};
+
 function convertModelToViewfield(model) {
   vf = "<ViewFields>";
   for (i = 0; i < model.length; i++) {
@@ -245,3 +254,7 @@ function stripHtml(html) {
   tmp.innerHTML = html;
   return tmp.textContent || tmp.innerText || "";
 }
+
+// function isFunction(possibleFunction) {
+//   return typeof possibleFunction === typeof Function;
+// }

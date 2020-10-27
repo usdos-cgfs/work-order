@@ -271,6 +271,14 @@ function koviewmodel() {
 
   self.empty = ko.observable();
 
+  self.applicationIsLoaded = ko.observable(false);
+
+  self.applicationIsLoaded.subscribe(function (state) {
+    if (state && typeof initAppPage === typeof Function) {
+      initAppPage();
+    }
+  });
+
   //self.serviceTypeAbbreviations = ko.observableArray(Object.keys(woViews));
   //self.serviceTypeViews = ko.observable(woViews);
 
@@ -369,7 +377,7 @@ function koviewmodel() {
         assignment.Assignee.get_lookupId() ==
         sal.globalConfig.currentUser.get_id();
     } else if (assignment.ActionOffice) {
-      isAO = vm
+      isAO = self
         .userActionOfficeMembership()
         .map((ao) => ao.ID)
         .includes(assignment.ActionOffice.get_lookupId());
@@ -445,7 +453,11 @@ function koviewmodel() {
       // Create a new action
       createAction("Approved", `The request has been approved.`);
 
-      fetchRequestAssignments();
+      fetchRequestAssignments(self.requestID(), function (assignment) {
+        if (advance) {
+          actionComplete();
+        }
+      });
     });
   };
 
@@ -545,10 +557,14 @@ function koviewmodel() {
   self.tab = ko.observable();
   self.tab.subscribe(function (newPage) {
     console.log("New Page: ", newPage);
-    $(".ui.menu").find(".item").tab("change tab", newPage);
-    if (newPage == "order-detail") {
-      console.log("Activate Accordion");
-      $(".ui.accordion").accordion();
+    try {
+      $(".ui.menu").find(".item").tab("change tab", newPage);
+      if (newPage == "order-detail") {
+        console.log("Activate Accordion");
+        $(".ui.accordion").accordion();
+      }
+    } catch (e) {
+      console.warn("Error setting tab, are we on a page that supports it?", e);
     }
     if (self.requestID()) {
       updateUrlParam("reqid", self.requestID());
@@ -1064,7 +1080,9 @@ function koviewmodel() {
     return (
       _spPageContextInfo.webAbsoluteUrl +
       `/Pages/approval.aspx?assignment=` +
-      id
+      id +
+      `&request=` +
+      self.requestID()
     );
   };
 
@@ -1072,7 +1090,7 @@ function koviewmodel() {
    * Observables for work order Folders
    ************************************************************/
   self.requestFolderPath = ko.pureComputed(() => {
-    return `${vm.requestorOffice().Title}/${vm.requestID()}`;
+    return `${self.requestorOffice().Title}/${self.requestID()}`;
   });
 
   self.foldersToCreate = ko.observable();
@@ -1104,12 +1122,12 @@ function koviewmodel() {
       ["Restricted Readers", "Restricted Read"],
     ];
 
-    vm.selectedPipeline().forEach((stage) => {
+    self.selectedPipeline().forEach((stage) => {
       // first get the action office
-      let assignedOffice = vm
+      let assignedOffice = self
         .configActionOffices()
         .find((ao) => ao.ID == stage.ActionOffice.get_lookupId());
-      let assignedOrg = vm
+      let assignedOrg = self
         .configRequestOrgs()
         .find((ro) => ro.ID == assignedOffice.RequestOrg.get_lookupId());
       folderPermissions.push([
@@ -1119,10 +1137,10 @@ function koviewmodel() {
 
       //If there's a wildcard assignee, get them too
       if (stage.WildCardAssignee) {
-        let user = vm[stage.WildCardAssignee].userName();
+        let user = self[stage.WildCardAssignee].userName();
         if (user) {
           folderPermissions.push([
-            vm[stage.WildCardAssignee].userName(),
+            self[stage.WildCardAssignee].userName(),
             "Restricted Contribute",
           ]);
         }

@@ -172,7 +172,11 @@ function viewWorkOrderItem(woID) {
     //fetchRequestAssignments();
     fetchActions(function () {
       console.log("actions fetched");
-      $(".ui.accordion").accordion();
+      try {
+        $(".ui.accordion").accordion();
+      } catch (e) {
+        console.log("error showing accordion");
+      }
     });
     fetchApprovals(function () {
       console.log("approvals fetched");
@@ -296,8 +300,6 @@ function actionComplete() {
 
   // Enter the next stage, close if necessary.
   pipelineForward();
-
-  // TODO: Anything that needs to be done in the new stage
 }
 
 function editWorkOrder() {
@@ -771,8 +773,11 @@ function createAssignment(role = "Action Resolver", notify = false) {
       vp,
       (id) => {
         console.log("Assigned: ", id);
-
-        $("#wo-routing").accordion("open", 0);
+        try {
+          $("#wo-routing").accordion("open", 0);
+        } catch (e) {
+          console.warn("Do we have any accordions?", e);
+        }
         fetchRequestAssignments(vm.requestID(), (assignments) => {
           //let rvp = [["RequestAssignments", vm.requestAssignmentIds()]];
           //vm.listRefWO().updateListItem(vm.requestHeader().ID, rvp, () => {});
@@ -1310,35 +1315,36 @@ function initComplete() {
   switch (vm.page()) {
     case "app.aspx":
       vm.userRole("user");
-
       break;
 
     case "admin.aspx":
       //fetchMyAOAssignments();
       vm.userRole("admin");
-
       break;
 
     default:
   }
 
+  vm.applicationIsLoaded(true);
   ko.applyBindings(vm);
-  $("#tabs").show();
-  initUIComponents();
 
-  switch (tab) {
-    case null:
-      vm.tab("my-orders");
-      break;
-    case "order-detail":
-      if (id) {
-        viewWorkOrderItem(id);
-      }
-      break;
-    default:
-      vm.tab(tab);
+  if (vm.page() != "Approval.aspx") {
+    $("#tabs").show();
+    initUIComponents();
+
+    switch (tab) {
+      case null:
+        vm.tab("my-orders");
+        break;
+      case "order-detail":
+        if (id) {
+          viewWorkOrderItem(id);
+        }
+        break;
+      default:
+        vm.tab(tab);
+    }
   }
-
   SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
 

@@ -449,8 +449,18 @@
               <div class="sixteen wide column">
                 <div id="wo-progress-pipeline"></div>
                 <p>
+                  <span>
+                    <a
+                      title="View this link on the admin dash"
+                      target="blank"
+                      class="fas fa-user-shield"
+                      data-bind="attr: { href: requestLinkAdmin }, "
+                    >
+                    </a>
+                  </span>
                   <span
-                    class="fas fa-sync"
+                    title="Refresh this request"
+                    class="fas fa-sync pointer"
                     onclick="refreshWorkOrderItem(vm.requestID())"
                   ></span>
                   Loaded:
