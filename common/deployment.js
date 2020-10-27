@@ -1,3 +1,6 @@
+Workorder = window.Workorder || new Object();
+Workorder.Deployment = Workorder.Deployment || new Object();
+
 // Set up our lists/libraries default states etc.
 function addActionOfficeUsersToGroups() {
   let arrays = new Object();
@@ -132,3 +135,138 @@ function syncListDefs() {
     }
   });
 }
+
+Workorder.Deployment.NewPipelinesCharleston = function () {
+  let pipelineDefs = new Object();
+  pipelineDefs.ch_equip_repair = [
+    [
+      ["Step", 1],
+      ["Title", "Supervisor Approval"],
+      ["ServiceType", 32],
+      ["ActionType", "Pending Approval"],
+      ["ActionOffice", 15], //ADO
+      ["RequestOrg", 5], //ADO
+      ["WildCardAssignee", "repairSupervisor"],
+    ],
+    [
+      ["Step", 2],
+      ["Title", "ADO Approval"],
+      ["ServiceType", 32],
+      ["ActionType", "Pending Approval"],
+      ["ActionOffice", 16],
+      ["RequestOrg", 5],
+    ],
+  ];
+
+  pipelineDefs.ch_hr_classification = [
+    [
+      ["Step", 1],
+      ["Title", "Manager Approval"],
+      ["ServiceType", 33],
+      ["ActionType", "Pending Approval"],
+      ["ActionOffice", 12], // HR
+      ["RequestOrg", 6], //ADO
+      ["WildCardAssignee", "classificationSupervisor"],
+    ],
+    [
+      ["Step", 2],
+      ["Title", "Assignment"],
+      ["ServiceType", 33],
+      ["ActionType", "Pending Assignment"],
+      ["ActionOffice", 12],
+      ["RequestOrg", 6],
+    ],
+    [
+      ["Step", 3],
+      ["Title", "Fulfillment"],
+      ["ServiceType", 33],
+      ["ActionType", "Pending Resolution"],
+      ["ActionOffice", 12],
+      ["RequestOrg", 6],
+    ],
+  ];
+
+  pipelineDefs.ch_hr_personnel_action = [
+    [
+      ["Step", 1],
+      ["Title", "Manager Approval"],
+      ["ServiceType", 34],
+      ["ActionType", "Pending Approval"],
+      ["ActionOffice", 12], // HR
+      ["RequestOrg", 6], //ADO
+      ["WildCardAssignee", "hrActionSupervisor"],
+    ],
+    [
+      ["Step", 2],
+      ["Title", "Assignment"],
+      ["ServiceType", 34],
+      ["ActionType", "Pending Assignment"],
+      ["ActionOffice", 12],
+      ["RequestOrg", 6],
+    ],
+    [
+      ["Step", 3],
+      ["Title", "Fulfillment"],
+      ["ServiceType", 34],
+      ["ActionType", "Pending Resolution"],
+      ["ActionOffice", 12],
+      ["RequestOrg", 6],
+    ],
+  ];
+
+  pipelineDefs.ch_hr_training = [
+    [
+      ["Step", 1],
+      ["Title", "Manager Approval"],
+      ["ServiceType", 36],
+      ["ActionType", "Pending Approval"],
+      ["ActionOffice", 12], // HR
+      ["RequestOrg", 6], //ADO
+      ["WildCardAssignee", "requestorManager"],
+    ],
+    [
+      ["Step", 2],
+      ["Title", "Assignment"],
+      ["ServiceType", 36],
+      ["ActionType", "Pending Assignment"],
+      ["ActionOffice", 12],
+      ["RequestOrg", 6],
+    ],
+    [
+      ["Step", 3],
+      ["Title", "Fulfillment"],
+      ["ServiceType", 36],
+      ["ActionType", "Pending Resolution"],
+      ["ActionOffice", 12],
+      ["RequestOrg", 6],
+    ],
+  ];
+
+  function buildAllPipelines() {
+    [
+      "ch_equip_repair",
+      "ch_hr_classification",
+      "ch_hr_personnel_action",
+      "ch_hr_training",
+    ].forEach((type) => {
+      pipelineDefs[type].forEach((stage) => {
+        vm.listRefConfigPipelines().createListItem(stage, function (id) {
+          console.log("Created");
+        });
+      });
+    });
+  }
+
+  function buildServicePipeline(serviceUID) {
+    pipelineDefs[serviceUID].forEach((stage) => {
+      vm.listRefConfigPipelines().createListItem(stage, function (id) {
+        console.log("Created");
+      });
+    });
+  }
+  let publicMembers = {
+    buildServicePipeline,
+    buildAllPipelines,
+  };
+  return publicMembers;
+};

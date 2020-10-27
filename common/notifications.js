@@ -6,6 +6,7 @@ function InitNotifications() {
 
 Workorder.NewNotifications = function () {
   function newWorkorderEmails() {
+    // 1. Send emails to request orgs letting them know there's a new email.
     let to = vm
       .requestOrgs()
       .map((ao) => vm.configRequestOrgs().find((aoid) => aoid.ID == ao.ID))
@@ -24,6 +25,23 @@ Workorder.NewNotifications = function () {
       `${vm.requestLinkAdmin()}`;
 
     createEmail(to, [], [], subject, body);
+
+    // 2. Send email to user, letting them know their request has been created
+    let toUser = sal.globalConfig.currentUser;
+
+    let subjectUser = subject;
+
+    let bodyUser =
+      `You're ${
+        vm.selectedServiceType().Title
+      } request  has been successfully submitted.</br></br>` +
+      `<a href="${vm.requestLink()}" target="blank">${vm.requestID()}</a> - ${
+        vm.selectedServiceType().Title
+      }<br><br>` +
+      `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
+      `${vm.requestLink()}`;
+
+    createEmail(toUser, [], [], subjectUser, bodyUser);
   }
 
   function workorderReminderEmails(id) {
