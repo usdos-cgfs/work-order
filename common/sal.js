@@ -47,11 +47,9 @@ function initSal() {
       //   getUserProperties,
       //   "SP.UserProfiles.js"
       // );
-      SP.SOD.executeFunc(
-        "SP.UserProfiles.js",
-        "SP.UserProfiles",
-        getUserProperties
-      );
+
+      getUserProperties;
+
       sal.globalConfig.siteGroups = m_fnLoadSiteGroups(siteGroupCollection);
       //alert("User is: " + user.get_title()); //there is also id, email, so this is pretty useful.
     },

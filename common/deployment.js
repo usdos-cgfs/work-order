@@ -22,6 +22,11 @@ function addActionOfficeUsersToGroups() {
           arrays[reqOrg.Title].arr = new Array();
         }
         arrays[reqOrg.Title].arr.push(ao.UserAddress.get_lookupValue());
+
+        new sal.addUsersToGroup(
+          [ao.UserAddress.get_lookupValue()],
+          reqOrg.UserGroup.get_lookupValue()
+        );
       }
     }
   });
