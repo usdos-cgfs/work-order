@@ -27,7 +27,7 @@ Workorder.NewNotifications = function () {
     createEmail(to, [], [], subject, body);
 
     // 2. Send email to user, letting them know their request has been created
-    let toUser = sal.globalConfig.currentUser;
+    let toUser = [sal.globalConfig.currentUser];
 
     let subjectUser = subject;
 
