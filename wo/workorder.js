@@ -321,6 +321,7 @@ function saveWorkOrder() {
   );
 
   vm.requestIsSaveable(true);
+  ensureAttachments();
 
   // Need to get the value of the trix editor.
   vm.requestDescriptionHTML($("#trix-request-description").html());
@@ -529,6 +530,17 @@ function createWorkorderFolders() {
   //     true
   //   );
   // });
+}
+
+function ensureAttachments() {
+  if (vm.selectedServiceType().AttachmentRequired) {
+    if (vm.requestAttachments().length == 0) {
+      vm.requestIsSaveable(false);
+      alert(
+        "This request has not been saved. It is missing the required attachments."
+      );
+    }
+  }
 }
 
 /************************************************************

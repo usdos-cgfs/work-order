@@ -128,7 +128,8 @@ Workorder.NewNotifications = function () {
   }
 
   function workorderClosedEmail(reason) {
-    let to = vm
+    let to = [vm.requestHeader().Author];
+    let cc = vm
       .requestOrgs()
       .map((ao) => vm.configRequestOrgs().find((aoid) => aoid.ID == ao.ID))
       .map((aoids) => aoids.UserGroup);
@@ -137,15 +138,26 @@ Workorder.NewNotifications = function () {
       vm.selectedServiceType().Title
     } - ${vm.requestID()}`;
 
+    // Let's switch verbiage
+    if (reason == "Closed") {
+      reason = "Fulfilled";
+    }
+
     let body =
       `Greetings Colleagues,<br><br> The following service request has been ${reason.toLocaleLowerCase()}:<br>` +
-      `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
+      `<a href="${vm.requestLink()}" target="blank">${vm.requestID()}</a> - ${
         vm.selectedServiceType().Title
       }<br><br>` +
       `To view an archive of the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
-      `${vm.requestLinkAdmin()}`;
+      `${vm.requestLinkAdmin()}<br><br>`;
 
-    createEmail(to, [], [], subject, body);
+    if (reason == "Cancelled") {
+      body +=
+        "<b>Note:</b> This request cannot be reactivated. " +
+        "To reinitiate, please create a new service request.<br><br>";
+    }
+
+    createEmail(to, cc, [], subject, body);
   }
 
   function pipelineStageNotification() {
@@ -210,12 +222,16 @@ Workorder.NewNotifications = function () {
     let vps = new Array();
 
     arr.forEach((ao) => {
-      if (ao.get_lookupId) {
-        vps.push(ao.get_lookupId());
-        vps.push(ao.get_lookupValue());
-      } else if (ao.get_id) {
-        vps.push(ao.get_id());
-        vps.push(ao.get_loginName());
+      switch (ao.constructor.getName()) {
+        case "SP.FieldUserValue":
+          vps.push(ao.get_lookupId());
+          vps.push(ao.get_lookupValue());
+          break;
+        case "SP.User":
+          vps.push(ao.get_id());
+          vps.push(ao.get_loginName());
+          break;
+        default:
       }
     });
 

@@ -9,7 +9,7 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      Supervisor: { type: "Text", koMap: "repairSupervisor", required: true },
+      Supervisor: { type: "Person", koMap: "repairSupervisor", required: true },
       Location: { type: "Text", koMap: "repairLocation", required: true },
       RepairType: { type: "Type", koMap: "repairType", required: true },
     },
