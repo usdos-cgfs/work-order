@@ -210,8 +210,13 @@ Workorder.NewNotifications = function () {
     let vps = new Array();
 
     arr.forEach((ao) => {
-      vps.push(ao.get_lookupId());
-      vps.push(ao.get_lookupValue());
+      if (ao.get_lookupId) {
+        vps.push(ao.get_lookupId());
+        vps.push(ao.get_lookupValue());
+      } else if (ao.get_id) {
+        vps.push(ao.get_id());
+        vps.push(ao.get_loginName());
+      }
     });
 
     return vps.join(";#");
