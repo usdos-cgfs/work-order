@@ -1081,8 +1081,19 @@ function koviewmodel() {
       _spPageContextInfo.webAbsoluteUrl +
       `/Pages/approval.aspx?assignment=` +
       id +
-      `&request=` +
+      `&reqid=` +
       self.requestID()
+    );
+  };
+
+  self.requestLinkAdminReject = (id) => {
+    return (
+      _spPageContextInfo.webAbsoluteUrl +
+      `/Pages/approval.aspx?assignment=` +
+      id +
+      `&reqid=` +
+      self.requestID() +
+      `reject=true`
     );
   };
 

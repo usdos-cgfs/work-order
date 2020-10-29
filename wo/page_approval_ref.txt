@@ -1,11 +1,44 @@
+<style>
+  textarea {
+    margin-bottom: 5px;
+  }
+</style>
+
 <h1 id="approval-message">
-  Approving Record:
+  Finding Record:
   <a
     target="blank"
-    data-bind="attr: { href: requestLink }, text: pageApprovalRequestId"
+    data-bind="attr: { href: requestLink }, text: pageApproval.requestId"
   ></a>
 </h1>
-<p data-bind="text: pageApprovalMessage"></p>
+<div data-bind="html: pageApproval.message"></div>
+<div
+  style="display: none"
+  data-bind="visible: pageApproval.isReject && pageApproval.affirm"
+>
+  <label for="reject-reason"
+    >Please provide a rejection reason:<br />
+    <textarea
+      rows="5"
+      cols="50"
+      name="reject-reason"
+      data-bind="value: assignmentRejectComment"
+    ></textarea></label
+  ><br />
+  <button type="button" onclick="Workorder.PageApproval.Page.reject()">
+    Reject
+  </button>
+  <br />
+  <br />
+  <label
+    >Did you mean to approve? No problem:<br />
+
+    <button type="button" onclick="Workorder.PageApproval.Page.approve()">
+      Approve
+    </button>
+  </label>
+</div>
+<div style="display: none" id="service-type-templates"></div>
 <script src="../SiteAssets/workorder/vendor/knockout/knockout-3.5.0.js"></script>
 <!-- <script src="../SiteAssets/workorder/vendor/jquery/jquery-3.3.1.min.js"></script> -->
 

@@ -1328,7 +1328,7 @@ function initComplete() {
   vm.applicationIsLoaded(true);
   ko.applyBindings(vm);
 
-  if (vm.page() != "Approval.aspx") {
+  if (vm.page().toLocaleLowerCase() != "approval.aspx") {
     $("#tabs").show();
     initUIComponents();
 
