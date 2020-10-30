@@ -811,19 +811,22 @@ function koviewmodel() {
   });
 
   self.lookupParseText = function (col, viewFields, val) {
-    // Parse the type of val and return text
-    switch (viewFields[col].type) {
-      case "RichText":
-        return $(val).text();
-        break;
-      case "DateTime":
-        return new Date(val).toLocaleDateString();
-        break;
-      case "Person":
-        return val.userName();
-        break;
-      default:
-        return val;
+    // If there's a value for this field
+    if (val) {
+      // Parse the type of val and return text
+      switch (viewFields[col].type) {
+        case "RichText":
+          return $(val).text();
+          break;
+        case "DateTime":
+          return new Date(val).toLocaleDateString();
+          break;
+        case "Person":
+          return val.userName();
+          break;
+        default:
+          return val;
+      }
     }
   };
 

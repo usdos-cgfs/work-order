@@ -73,7 +73,7 @@
           class="editable-field"
           type="text"
           data-bind="disable: currentView() == 'view',
-            value: hrRecruitPosition"
+            value: hrRecruitNumPositions"
         />
       </div>
       <div class="field">
