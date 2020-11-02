@@ -123,6 +123,11 @@ Workorder.NewNotifications = function () {
         `<a href="${vm.requestLinkAdminApprove(
           id
         )}" target="blank">${vm.requestLinkAdminApprove(id)}</a><br><br>`;
+      addendum +=
+        `<br>Click the link below to quick reject this request:<br>` +
+        `<a href="${vm.requestLinkAdminReject(
+          id
+        )}" target="blank">${vm.requestLinkAdminReject(id)}</a><br><br>`;
     }
     createEmail(to, [], [], subject, body + addendum);
   }
@@ -151,11 +156,16 @@ Workorder.NewNotifications = function () {
       `To view an archive of the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
       `${vm.requestLinkAdmin()}<br><br>`;
 
-    if (reason == "Cancelled") {
+    if (reason == "Closed") {
+      body += "This request has been succesfully fulfilled.<br><br>";
+    } else if (reason == "Cancelled") {
       body +=
-        "<b>Note:</b> This request cannot be reactivated. " +
-        "To reinitiate, please create a new service request.<br><br>";
+        "This request has been cancelled with the following justification:<br>" +
+        vm.assignmentRejectComment();
     }
+    body +=
+      "<b>Note:</b> This request cannot be reactivated. " +
+      "To reinitiate, please create a new service request.<br><br>";
 
     createEmail(to, cc, [], subject, body);
   }

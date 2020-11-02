@@ -369,6 +369,15 @@ function koviewmodel() {
     }
   });
 
+  self.assignmentShowAssignment = function (assignment) {
+    let args = { id: assignment.ID };
+    self
+      .listRefAssignment()
+      .showModal("DispForm.aspx", assignment.Title, args, function () {
+        fetchRequestAssignments();
+      });
+  };
+
   self.assignmentCurUserIsAOorAssignee = function (assignment) {
     let isAssignee = false;
     let isAO = false;
@@ -1096,7 +1105,7 @@ function koviewmodel() {
       id +
       `&reqid=` +
       self.requestID() +
-      `reject=true`
+      `&reject=true`
     );
   };
 
@@ -1291,6 +1300,20 @@ function koviewmodel() {
         self.requestAssignments(new Array());
       }
     },
+  });
+
+  self.requestAssignmentsUsers = ko.pureComputed(function () {
+    let userArr = new Array();
+    self.requestAssignments().map(function (assignment) {
+      if (assignment.Assignee) {
+        // This was a wildcard assignment
+        userArr.push(assignment.Assignee);
+      } else if (assignment.actionOffice) {
+        //There's an action office here,
+        userArr.push(assignment.actionOffice.UserAddress);
+      }
+    });
+    return userArr;
   });
 
   // JSON Object for the requesting office

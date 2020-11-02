@@ -591,7 +591,9 @@
                 </thead>
                 <tbody data-bind="foreach: vm.readRequestAssignments()()">
                   <tr>
-                    <td>
+                    <td
+                      data-bind="click: $root.assignmentShowAssignment.bind($data)"
+                    >
                       <!-- ko if: Assignee -->
                       <p data-bind="text: Assignee.get_lookupValue()"></p>
                       <!-- /ko -->
