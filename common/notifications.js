@@ -139,6 +139,8 @@ Workorder.NewNotifications = function () {
       .map((ao) => vm.configRequestOrgs().find((aoid) => aoid.ID == ao.ID))
       .map((aoids) => aoids.UserGroup);
 
+    cc.concat(vm.requestAssignmentsUsers());
+
     let subject = `Work Order -${reason}- ${
       vm.selectedServiceType().Title
     } - ${vm.requestID()}`;
