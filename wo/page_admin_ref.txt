@@ -591,9 +591,7 @@
                 </thead>
                 <tbody data-bind="foreach: vm.readRequestAssignments()()">
                   <tr>
-                    <td
-                      data-bind="click: $root.assignmentShowAssignment.bind($data)"
-                    >
+                    <td>
                       <!-- ko if: Assignee -->
                       <p data-bind="text: Assignee.get_lookupValue()"></p>
                       <!-- /ko -->
@@ -628,18 +626,23 @@
                       <!-- ko if:  $root.assignmentCurUserCanApprove($data) -->
                       <i
                         title="Approve"
-                        class="fas fa-check pointer"
+                        class="green fas fa-check pointer"
                         data-bind="click: $root.assignmentApprove.bind($data)"
                       ></i>
                       <i
                         title="Reject"
-                        class="fas fa-times-circle pointer"
+                        class="red fas fa-times-circle pointer"
                         data-bind="click: $root.assignmentReject.bind($data)"
                       ></i>
                       <!-- /ko -->
                     </td>
                     <td>
                       <!-- ko if:  $root.assignmentCurUserCanRemove($data) -->
+                      <i
+                        title="View"
+                        class="fas fa-search-plus pointer"
+                        data-bind="click: $root.assignmentShowAssignment.bind($data)"
+                      ></i>
                       <i
                         title="Remove"
                         class="fas fa-user-times pointer"

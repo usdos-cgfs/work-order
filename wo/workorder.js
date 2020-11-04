@@ -1201,7 +1201,7 @@ function pipelineAssignments() {
 }
 
 function pipelineNotifications(addendum = null) {
-  Workorder.Notfications.pipelineStageNotification();
+  Workorder.Notifications.pipelineStageNotification();
 
   // Create the action
   createAction(
