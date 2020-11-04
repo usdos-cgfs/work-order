@@ -28,30 +28,43 @@ function initSal() {
       : _spPageContextInfo.webServerRelativeUrl;
 
   //sal.globalConfig.user =
-  sal.globalConfig.listServices = "../_vti_bin/ListData.svc/";
+  sal.globalConfig.listServices =
+    sal.globalConfig.siteUrl + "/_vti_bin/ListData.svc/";
 
-  sal.globalConfig.currentContext = new SP.ClientContext.get_current();
-  sal.globalConfig.website = sal.globalConfig.currentContext.get_web();
+  var currCtx = new SP.ClientContext.get_current();
+  var web = currCtx.get_web();
   //sal.site = sal.siteConnection;
 
-  var user = sal.globalConfig.website.get_currentUser(); //must load this to access info.
-  sal.globalConfig.currentContext.load(user);
+  // Get Current User information
+  var user = web.get_currentUser(); //must load this to access info.
+  currCtx.load(user);
 
-  var siteGroupCollection = sal.globalConfig.website.get_siteGroups();
-  sal.globalConfig.currentContext.load(siteGroupCollection);
+  // Get the site groups
+  var siteGroupCollection = web.get_siteGroups();
+  currCtx.load(siteGroupCollection);
 
-  sal.globalConfig.currentContext.executeQueryAsync(
+  // Get the roles upfront so we can validate they're present on the site.
+  sal.globalConfig.roles = new Array();
+  var oRoleDefinitions = currCtx.get_web().get_roleDefinitions();
+  currCtx.load(oRoleDefinitions);
+
+  currCtx.executeQueryAsync(
     function () {
       sal.globalConfig.currentUser = user;
-      // SP.SOD.executeOrDelayUntilScriptLoaded(
-      //   getUserProperties,
-      //   "SP.UserProfiles.js"
-      // );
-
       getUserProperties();
 
       sal.globalConfig.siteGroups = m_fnLoadSiteGroups(siteGroupCollection);
       //alert("User is: " + user.get_title()); //there is also id, email, so this is pretty useful.
+
+      // Role Definitions
+      var oEnumerator = oRoleDefinitions.getEnumerator();
+      while (oEnumerator.moveNext()) {
+        var oRoleDefinition = oEnumerator.get_current();
+        sal.globalConfig.roles.push(oRoleDefinition.get_name());
+      }
+
+      sal.config = new sal.NewAppConfig();
+      sal.utilities = new sal.NewUtilities();
     },
     function () {
       alert(":(");
@@ -59,6 +72,116 @@ function initSal() {
   );
   // console.log()
 }
+
+sal.NewAppConfig = function () {
+  let siteRoles = new Object();
+  siteRoles.roles = {
+    FullControl: "Full Control",
+    Design: "Design",
+    Edit: "Edit",
+    Contribute: "Contribute",
+    Read: "Read",
+    LimitedAccess: "Limited Access",
+    RestrictedRead: "Restricted Read",
+    RestrictedContribute: "Restricted Contribute",
+    InitialCreate: "Initial Create",
+  };
+
+  siteRoles.validate = function () {
+    Object.keys(siteRoles.roles).forEach(function (role) {
+      let roleName = siteRoles.roles[role];
+      if (!sal.globalConfig.roles.includes(roleName)) {
+        console.error(`${roleName} is not in the global roles list`);
+      } else {
+        console.log(roleName);
+      }
+    });
+  };
+
+  let siteGroups = new Object();
+  siteGroups.groups = {
+    Owners: "workorder Owners",
+    Members: "workorder Members",
+    Visitors: "workorder Visitors",
+    RestrictedReaders: "Restricted Readers",
+  };
+
+  let publicMembers = {
+    siteRoles,
+    siteGroups,
+  };
+
+  return publicMembers;
+};
+
+sal.NewUtilities = function () {
+  function createSiteGroup(groupName, permissions, callback = null) {
+    /* groupName: the name of the new SP Group
+     *  permissions: an array of permissions to assign to the group
+     * groupOwner: the name of the owner group
+     */
+
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+
+    var groupCreationInfo = new SP.GroupCreationInformation();
+    groupCreationInfo.set_title(groupName);
+    this.oGroup = oWebsite.get_siteGroups().add(groupCreationInfo);
+    oGroup.set_owner(oWebsite.get_associatedOwnerGroup());
+
+    oGroup.update();
+    var collRoleDefinitionBinding = SP.RoleDefinitionBindingCollection.newObject(
+      clientContext
+    );
+
+    this.oRoleDefinitions = [];
+
+    permissions.forEach((perm) => {
+      let oRoleDefinition = oWebsite.get_roleDefinitions().getByName(perm);
+      this.oRoleDefinitions.push(oRoleDefinition);
+      collRoleDefinitionBinding.add(oRoleDefinition);
+    });
+
+    var collRollAssignment = oWebsite.get_roleAssignments();
+    collRollAssignment.add(oGroup, collRoleDefinitionBinding);
+
+    function onCreateGroupSucceeded() {
+      var roleInfo =
+        oGroup.get_title() +
+        " created and assigned to " +
+        oRoleDefinitions.forEach((rd) => rd + ", ");
+      if (callback) {
+        callback(oGroup.get_id());
+      }
+      console.log(roleInfo);
+    }
+
+    function onCreateGroupFailed(sender, args) {
+      alert(
+        groupnName +
+          " - Create group failed. " +
+          args.get_message() +
+          "\n" +
+          args.get_stackTrace()
+      );
+    }
+
+    clientContext.load(oGroup, "Title");
+
+    let data = { groupName, oGroup, oRoleDefinition, callback };
+
+    clientContext.executeQueryAsync(
+      Function.createDelegate(data, onCreateGroupSucceeded),
+      Function.createDelegate(data, onCreateGroupFailed)
+    );
+  }
+
+  let publicMembers = {
+    createSiteGroup,
+  };
+
+  return publicMembers;
+};
 
 function getUserProperties() {
   var requestHeaders = {
@@ -188,57 +311,6 @@ sal.generateEmptyItem = function (viewFields) {
   });
   return focusedItems;
 };
-
-function createSiteGroup(groupName, permissions, groupOwner) {
-  /* groupName: the name of the new SP Group
-   *  permissions: an array of permissions to assign to the group
-   * groupOwner: the name of the owner group
-   */
-
-  var clientContext = SP.ClientContext.get_current();
-  this.oWebsite = clientContext.get_web();
-
-  var groupCreationInfo = new SP.GroupCreationInformation();
-  groupCreationInfo.set_title(groupName);
-  this.oGroup = oWebsite.get_siteGroups().add(groupCreationInfo);
-  oGroup.set_owner(oWebsite.get_associatedOwnerGroup());
-
-  oGroup.update();
-  var collRoleDefinitionBinding = SP.RoleDefinitionBindingCollection.newObject(
-    clientContext
-  );
-
-  this.oRoleDefinitions = [];
-
-  permissions.forEach((perm) => {
-    let oRoleDefinition = oWebsite.get_roleDefinitions().getByName(perm);
-    this.oRoleDefinitions.push(oRoleDefinition);
-    collRoleDefinitionBinding.add(oRoleDefinition);
-  });
-
-  var collRollAssignment = oWebsite.get_roleAssignments();
-  collRollAssignment.add(oGroup, collRoleDefinitionBinding);
-
-  clientContext.load(oGroup, "Title");
-  //clientContext.load(oRoleDefinition, "Name");
-
-  clientContext.executeQueryAsync(
-    Function.createDelegate(this, this.onCreateGroupSucceeded),
-    Function.createDelegate(this, this.onCreateGroupFailed)
-  );
-}
-
-function onCreateGroupSucceeded() {
-  var roleInfo =
-    oGroup.get_title() +
-    " created and assigned to " +
-    oRoleDefinitions.forEach((rd) => rd + ", ");
-  console.log(roleInfo);
-}
-
-function onCreateGroupFailed(sender, args) {
-  alert("Request failed. " + args.get_message() + "\n" + args.get_stackTrace());
-}
 
 function getCurrentUserGroups(callback) {
   var clientContext = SP.ClientContext.get_current();
@@ -759,7 +831,10 @@ sal.NewSPList = function (listDef) {
                             getFolderContents          
     ******************************************************************/
   function getFolderContents(folderName, callback) {
-    var folder = sal.globalConfig.website.getFolderByServerRelativeUrl(
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+
+    var folder = web.getFolderByServerRelativeUrl(
       sal.globalConfig.siteUrl + "/" + self.config.def.name + "/" + folderName
     );
     files = folder.get_files();

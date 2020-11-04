@@ -2,144 +2,194 @@ Workorder = window.Workorder || new Object();
 Workorder.Deployment = Workorder.Deployment || new Object();
 
 // Set up our lists/libraries default states etc.
-function addActionOfficeUsersToGroups() {
-  let arrays = new Object();
-  vm.configActionOffices().forEach((ao) => {
-    if (ao.UserAddress) {
-      console.log(
-        `finding ${ao.ID}: ${ao.Title} - ${ao.UserAddress.get_lookupValue()}`
-      );
-      //Get the request org group
-      let reqOrg = vm
-        .configRequestOrgs()
-        .find((ro) => ro.ID == ao.RequestOrg.get_lookupId());
 
-      //Add the users to the group
-      if (reqOrg) {
-        if (!arrays[reqOrg.Title]) {
-          arrays[reqOrg.Title] = new Object();
-          arrays[reqOrg.Title].group = reqOrg.UserGroup.get_lookupValue();
-          arrays[reqOrg.Title].arr = new Array();
+Workorder.Deployment.NewPermissions = function () {
+  let debug = true;
+  /*************************************************** */
+  //1. Validate Permission roles exist on site.
+  /*************************************************** */
+  function validatePermissionRoles() {
+    console.log("Validating Site Roles exist");
+    sal.config.siteRoles.validate();
+  }
+
+  /*************************************************** */
+  //2. Validate our Requesting Offices exist on the site and have their folders
+  /*************************************************** */
+  function validateRequestingOffices() {
+    console.log("Validating Requesting Offices Exist");
+    let siteGroupArr = sal.globalConfig.siteGroups.map(function (group) {
+      return group.title;
+    });
+    vm.configRequestingOffices().forEach(function (ro) {
+      // If the group column hasn't been set, let's check for it and add if not found
+      if (!ro.ROGroup) {
+        let roTitle = "RO_" + ro.Title;
+
+        // Check we're in the sitegroups first
+        if (!siteGroupArr.includes(roTitle)) {
+          // Group doesn't exist on site, let's attempt to create.
+          console.log(
+            `Looks like ${roTitle} isn't in the sitegroups, attempting to create.`
+          );
+          sal.utilities.createSiteGroup(roTitle, [
+            sal.config.siteRoles.roles.RestrictedContribute,
+          ]);
         }
-        arrays[reqOrg.Title].arr.push(ao.UserAddress.get_lookupValue());
-
-        new sal.addUsersToGroup(
-          [ao.UserAddress.get_lookupValue()],
-          reqOrg.UserGroup.get_lookupValue()
-        );
       }
-    }
-  });
-  arrays.forEach((ro) => {
-    new sal.addUsersToGroup(ro.arr, ro.group);
-  });
-}
+    });
 
-function loadListDefsToSP() {
-  $.each(woViews, function (name, view) {
-    //vm["listRef" + name]().setValuePairs(["ListDef", JSON.stringify(view.listDef]));
+    console.log("Validating Requesting Offices Have folders on assoc lists");
 
-    if (view.spid && view.spid != null) {
-      console.log("Saving: ", view.name);
-      vm.listRefConfigServiceType().updateListItem(
-        view.spid,
-        [["ListDef", JSON.stringify(view.listDef)]],
-        () => console.log("saved")
-      );
-    }
-  });
-}
+    // Build the RO Folders -
+    // The base method buildROFolders is overwrite safe and
+    // can be run multiple times.
 
-function loadPipelinesToSP() {
-  $.each(vm.configServiceTypes(), function (index, serviceType) {
-    console.log(serviceType);
-    let vp = [
-      ["Title", "Assigned"],
-      ["ServiceType", serviceType.ID.toString()],
-      ["Step", 2],
-      ["ActionType", "Pending Resolution"],
+    //Check that we have a folder on each of our generic lists,
+    buildROFoldersAssocLists();
+
+    //Check that we have a folder on each of our generic lists
+    buildROFoldersServiceTypes();
+  }
+
+  function buildROFoldersServiceTypes() {
+    // Build a folder for each Requesting Office in each of our lists
+    window.alert = function () {};
+    vm.configServiceTypes().forEach((stype) => {
+      if (stype.listRef) {
+        console.log("Creating ", stype.Title);
+        buildROFolders(stype.listRef);
+      }
+    });
+  }
+
+  function buildROFoldersAssocLists() {
+    buildROFolders(vm.listRefAction());
+    buildROFolders(vm.listRefApproval());
+    buildROFolders(vm.listRefAssignment());
+    buildROFolders(vm.listRefComment());
+    buildROFolders(vm.listRefWO());
+    buildROFolders(vm.libRefWODocs());
+    buildROFolders(vm.listRefWOEmails());
+  }
+
+  function buildROFolders(listRef) {
+    // Build a folder for each Requesting Office in each of our lists
+    window.alert = function () {};
+
+    let requestOrgs = [
+      ...new Set(
+        vm.configRequestOrgs().map((ro) => ro.UserGroup.get_lookupValue())
+      ),
     ];
-    vm.listRefConfigPipelines().createListItem(vp, function (idx) {
-      console.log("Index Created", idx);
+
+    vm.configRequestingOffices().forEach((ro) => {
+      let vp = [[]];
+      listRef.upsertListFolderPath(ro.Title, (id) => {
+        console.log(`Create Folder Success:  ${ro.Title} id: ${id}`);
+        let vp = [
+          [
+            ro.ROGroup.get_lookupValue(),
+            sal.config.siteRoles.roles.InitialCreate,
+          ],
+        ];
+        vp.push([
+          sal.config.siteGroups.groups.Owners,
+          sal.config.siteRoles.roles.FullControl,
+        ]);
+        vp.push([
+          sal.config.siteGroups.groups.Members,
+          sal.config.siteRoles.roles.RestrictedContribute,
+        ]);
+        vp.push([
+          sal.config.siteGroups.groups.RestrictedReaders,
+          sal.config.siteRoles.roles.RestrictedContribute,
+        ]);
+        requestOrgs.forEach((ro) =>
+          vp.push([ro, sal.config.siteRoles.roles.RestrictedContribute])
+        );
+        listRef.setItemPermissions(id, vp);
+        console.log(`Setting ${listRef.title} - ${ro.Title} Permissions:`, vp);
+      });
     });
-  });
-}
+  }
 
-function buildROFoldersServiceTypes() {
-  // Build a folder for each Requesting Office in each of our lists
-  window.alert = function () {};
-  vm.configServiceTypes().forEach((stype) => {
-    if (stype.listRef) {
-      console.log("Creating ", stype.Title);
-      buildROFolders(stype.listRef);
-    }
-  });
-}
-
-function buildROFoldersAssocLists() {
-  buildROFolders(vm.listRefAction());
-  buildROFolders(vm.listRefApproval());
-  buildROFolders(vm.listRefAssignment());
-  buildROFolders(vm.listRefComment());
-  buildROFolders(vm.listRefWO());
-  buildROFolders(vm.libRefWODocs());
-  buildROFolders(vm.listRefWOEmails());
-}
-
-function buildROFolders(listRef) {
-  // Build a folder for each Requesting Office in each of our lists
-  window.alert = function () {};
-
-  let actionOffices = [
-    ...new Set(
-      vm.configRequestOrgs().map((ro) => ro.UserGroup.get_lookupValue())
-    ),
-  ];
-
-  vm.configRequestingOffices().forEach((ro) => {
-    let vp = [[]];
-    listRef.createListFolder(ro.Title, (id) => {
-      console.log(`Create Folder Success:  ${ro.Title} id: ${id}`);
-      let vp = [[ro.ROGroup.get_lookupValue(), "Restricted Contribute"]];
-      vp.push(["workorder Owners", "Full Control"]);
-      vp.push(["workorder Members", "Contribute"]);
-      actionOffices.forEach((ao) => vp.push([ao, "Restricted Contribute"]));
-      listRef.setItemPermissions(id, vp);
-      console.log(`Setting Permissions: ${vp[0][0]} - ${vp[0][1]}`);
+  function createROGroups() {
+    // Create a group for each RO and assign the restricted read role.
+    vm.configRequestingOffices().forEach((ro) => {
+      sal.utilities.createSiteGroup("RO_" + ro.Title, [
+        sal.config.siteRoles.roles.RestrictedContribute,
+      ]);
     });
-  });
-}
+  }
 
-function createROGroups() {
-  // Create a group for each RO and assign the restricted read role.
-  vm.configRequestingOffices().forEach((ro) => {
-    createSiteGroup("RO_" + ro.Title, ["Restricted Read"], "workorder Owners");
-  });
-}
-function syncListDefs() {
-  let cnt = 0;
-  vm.listDefs().forEach((listDef) => {
-    let strListDef = JSON.stringify(listDef);
-    let stype = vm
-      .configServiceTypes()
-      .find((stype) => stype.UID == listDef.uid);
-    if (stype.ListDef != strListDef) {
-      cnt++;
-      //Our listdefs don't match, update the sharepoint item.
-      vm.listRefConfigServiceType().updateListItem(
-        stype.ID,
-        [["ListDef", strListDef]],
-        () => {
-          console.log("updated: ", stype.Title);
-          if (!--cnt) {
-            alert("Synchronized all lists, reloading");
-            location.reload();
-          }
+  /*************************************************** */
+  // 3. Ensure Request Orgs are set up and ready to go
+  /*************************************************** */
+  function validateRequestOrgs() {
+    console.log("Validating Request Orgs");
+    vm.configRequestOrgs().forEach(function (reqOrg) {
+      reqOrgTitle = "AO_" + reqOrg.Title.replaceAll("/", "_");
+      if (!reqOrg.UserGroup) {
+        if (
+          window.confirm("Group not found, create " + reqOrgTitle + " group?")
+        ) {
+          sal.utilities.createSiteGroup(reqOrgTitle, [
+            sal.config.siteRoles.roles.RestrictedContribute,
+          ]);
         }
-      );
-    }
-  });
-}
+      }
+    });
+  }
+
+  /*************************************************** */
+  // 4. Ensure Action Offices are set up and ready to go
+  /*************************************************** */
+  function validateActionOffices() {
+    console.log("Validating Action Offices");
+    // Check that each of the action office userAddress is in the
+    // corresponding RequestOrgs group.
+    addActionOfficeUsersToGroups();
+  }
+  function addActionOfficeUsersToGroups() {
+    vm.configActionOffices().forEach(function (ao) {
+      if (ao.UserAddress) {
+        console.log(
+          `finding ${ao.ID}: ${ao.Title} - ${ao.UserAddress.get_lookupValue()}`
+        );
+        //Get the request org group
+        let reqOrg = vm
+          .configRequestOrgs()
+          .find((ro) => ro.ID == ao.RequestOrg.get_lookupId());
+
+        //Add the users to the group
+        if (reqOrg) {
+          new sal.addUsersToGroup(
+            [ao.UserAddress.get_lookupValue()],
+            reqOrg.UserGroup.get_lookupValue()
+          );
+        }
+      }
+    });
+  }
+
+  function validateAll() {
+    validatePermissionRoles();
+    validateRequestingOffices();
+    validateRequestOrgs();
+    validateActionOffices();
+  }
+
+  var publicMembers = {
+    validatePermissionRoles,
+    validateRequestingOffices,
+    validateRequestOrgs,
+    validateActionOffices,
+    validateAll,
+  };
+
+  return publicMembers;
+};
 
 Workorder.Deployment.NewPipelinesCharleston = function () {
   let pipelineDefs = new Object();
