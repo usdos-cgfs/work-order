@@ -176,8 +176,56 @@ sal.NewUtilities = function () {
     );
   }
 
+  function getUserGroups(user, callback) {
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+
+    let everyone = web.ensureUser(user);
+    let oGroups = everyone.get_groups();
+
+    function onQueryGroupsSucceeded() {
+      let groups = new Array();
+      let groupsInfo = new String();
+      let groupsEnumerator = oGroups.getEnumerator();
+      while (groupsEnumerator.moveNext()) {
+        var oGroup = groupsEnumerator.get_current();
+        var group = {};
+        group.ID = oGroup.get_id();
+        group.Title = oGroup.get_title();
+        groupsInfo +=
+          "\n" +
+          "Group ID: " +
+          oGroup.get_id() +
+          ", " +
+          "Title : " +
+          oGroup.get_title();
+        groups.push(group);
+      }
+      console.log(groupsInfo.toString());
+      callback(groups);
+    }
+
+    function onQueryGroupsFailed(sender, args) {
+      console.error(
+        " Everyone - Query Everyone group failed. " +
+          args.get_message() +
+          "\n" +
+          args.get_stackTrace()
+      );
+    }
+    currCtx.load(everyone);
+    currCtx.load(oGroups);
+    data = { everyone, oGroups, callback };
+
+    currCtx.executeQueryAsync(
+      Function.createDelegate(data, onQueryGroupsSucceeded),
+      Function.createDelegate(data, onQueryGroupsFailed)
+    );
+  }
+
   let publicMembers = {
     createSiteGroup,
+    getUserGroups,
   };
 
   return publicMembers;
@@ -314,11 +362,19 @@ sal.generateEmptyItem = function (viewFields) {
 
 function getCurrentUserGroups(callback) {
   var clientContext = SP.ClientContext.get_current();
-  oUser = clientContext.get_web().get_currentUser();
+  var web = clientContext.get_web();
+  oUser = web.get_currentUser();
   oGroups = oUser.get_groups();
+
+  everyone = web.ensureUser("Everyone");
+  everyoneGroups = everyone.get_groups();
+
   this.getCurrentUserGroupsCallback = callback;
   clientContext.load(oUser);
   clientContext.load(oGroups);
+  clientContext.load(everyone);
+  clientContext.load(everyoneGroups);
+
   clientContext.executeQueryAsync(
     Function.createDelegate(this, function () {
       var groupsInfo = "";
@@ -327,6 +383,22 @@ function getCurrentUserGroups(callback) {
       console.log("Count of current user groups: " + oGroups.get_count());
       while (groupsEnumerator.moveNext()) {
         var oGroup = groupsEnumerator.get_current();
+        var group = {};
+        group.ID = oGroup.get_id();
+        group.Title = oGroup.get_title();
+        groupsInfo +=
+          "\n" +
+          "Group ID: " +
+          oGroup.get_id() +
+          ", " +
+          "Title : " +
+          oGroup.get_title();
+        groups.push(group);
+      }
+      var everyoneGroupsEnumerator = everyoneGroups.getEnumerator();
+      console.log("Count of current user groups: " + oGroups.get_count());
+      while (everyoneGroupsEnumerator.moveNext()) {
+        var oGroup = everyoneGroupsEnumerator.get_current();
         var group = {};
         group.ID = oGroup.get_id();
         group.Title = oGroup.get_title();

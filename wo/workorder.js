@@ -117,13 +117,12 @@ function refreshWorkOrderItem(woID, callback = null) {
     "</Eq></And></Where></Query><RowLimit>1</RowLimit></View>";
 
   let reqCamlq =
-    '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
-    '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
-    "</Eq><Eq>" +
-    '<FieldRef Name="Title"/><Value Type="Text">' +
+    '<View Scope="RecursiveAll"><Query><Where><And>' +
+    '<Eq><FieldRef Name="FSObjType"/><Value Type="int">0</Value></Eq>' +
+    '<Eq><FieldRef Name="Title"/><Value Type="Text">' +
     woID +
-    "</Value>" +
-    "</Eq></And></Where></Query><RowLimit>1</RowLimit></View>";
+    "</Value></Eq>" +
+    "</And></Where></Query><RowLimit>1</RowLimit></View>";
 
   vm.listRefWO().getListItems(camlq, (items) => {
     console.log("loading open orders", items);
