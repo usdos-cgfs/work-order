@@ -282,7 +282,7 @@ function koviewmodel() {
   //self.serviceTypeAbbreviations = ko.observableArray(Object.keys(woViews));
   //self.serviceTypeViews = ko.observable(woViews);
 
-  self.userGroupMembership = ko.observable();
+  self.userGroupMembership = ko.observableArray();
 
   /************************************************************
    * ADMIN: Authorize Current user to take actions

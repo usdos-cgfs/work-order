@@ -1251,11 +1251,20 @@ function initApp() {
   // Initialize our SharePoint Access Layer
   var ini = initSal();
 
-  // Initialize our Notifications
-  InitNotifications();
-
   // Initialize ViewModel
   vm = new koviewmodel();
+
+  /* Depending on our page, we may need additional info */
+  /* Submitter/Action Office/Approval */
+  if (typeof InitNotifications != "undefined") {
+    // Initialize our Notifications
+    InitNotifications();
+  }
+
+  /* Reports */
+  if (typeof InitReport != "undefined") {
+    InitReport();
+  }
 
   // Setup models for each of the config lists we may connect to
   initStaticListRefs();
@@ -1339,7 +1348,9 @@ function initComplete() {
   vm.applicationIsLoaded(true);
   ko.applyBindings(vm);
 
-  if (vm.page().toLocaleLowerCase() != "approval.aspx") {
+  if (
+    !["approval.aspx", "reports.aspx"].includes(vm.page().toLocaleLowerCase())
+  ) {
     $("#tabs").show();
     initUIComponents();
 
