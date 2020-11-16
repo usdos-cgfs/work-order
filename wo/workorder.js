@@ -1188,6 +1188,9 @@ function pipelineAssignments() {
         createAssignment("Action Resolver");
         break;
       case "Notification":
+        pipelineNotifications();
+        pipelineForward();
+        break;
       case "Pending Resolution":
       case "Pending Assignment":
       default:

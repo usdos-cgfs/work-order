@@ -176,6 +176,19 @@ Workorder.NewNotifications = function () {
     let to = [
       vm.requestStageOffice() ? vm.requestStageOffice().UserAddress : null,
     ];
+    if (vm.requestStage().WildCardAssignee) {
+      let personName = vm.requestStage().WildCardAssignee;
+      // This should be a person field
+      try {
+        let personObservable = vm[personName];
+        to.push(personObservable.lookupUser());
+      } catch (err) {
+        console.error(
+          `Something went wrong fetching ${personName} from viewmodel:`,
+          err
+        );
+      }
+    }
 
     let cc = new Array();
     if (vm.requestStageOrg()) {
