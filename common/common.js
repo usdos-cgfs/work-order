@@ -110,6 +110,9 @@ function makeDataTable(id) {
   });
 }
 
+/* Business days start at 0, i.e. a workorder opened and closed
+ on the same day will result in 0 days passed
+ */
 function businessDaysFromDate(date, businessDays) {
   var counter = 0,
     tmp = new Date(date);
@@ -125,6 +128,19 @@ function businessDaysFromDate(date, businessDays) {
     ++counter;
   }
   return tmp;
+}
+
+function businessDays(startDate, endDate) {
+  var counter = 0;
+  let temp = new Date(startDate);
+
+  while (temp.getDate() != endDate.getDate()) {
+    if (isBusinessDay(temp) && !isConfigHoliday(temp)) {
+      counter++;
+    }
+    temp.setDate(temp.getDate() + 1);
+  }
+  return counter;
 }
 
 function isConfigHoliday(date) {

@@ -1264,11 +1264,6 @@ function initApp() {
     InitNotifications();
   }
 
-  /* Reports */
-  if (typeof InitReport != "undefined") {
-    InitReport();
-  }
-
   // Setup models for each of the config lists we may connect to
   initStaticListRefs();
 
@@ -1370,6 +1365,11 @@ function initComplete() {
         vm.tab(tab);
     }
   }
+  /* Reports 
+  if (typeof InitReport != "undefined") {
+    InitReport();
+  }
+  */
   SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
 

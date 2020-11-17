@@ -274,6 +274,7 @@ function koviewmodel() {
   self.applicationIsLoaded = ko.observable(false);
 
   self.applicationIsLoaded.subscribe(function (state) {
+    // Whatever page we're on, now is the time to init our local app
     if (state && typeof initAppPage === typeof Function) {
       initAppPage();
     }
