@@ -381,6 +381,9 @@ function koviewmodel() {
   self.assignmentCurUserIsAOorAssignee = function (assignment) {
     let isAssignee = false;
     let isAO = false;
+    if (self.userIsSysAdmin()) {
+      return true;
+    }
     if (assignment.Assignee) {
       isAssignee =
         assignment.Assignee.get_lookupId() ==
@@ -537,15 +540,19 @@ function koviewmodel() {
    ************************************************************/
   self.requestCurUserAdvance = ko.pureComputed(function () {
     if (self.requestStage() && self.requestStage().Title != "Closed") {
-      // which offices is the current user a member of?
-      let uao = self
-        .userActionOfficeMembership()
-        .map((uao) => uao.RequestOrg.get_lookupValue());
+      if (vm.userIsSysAdmin()) {
+        return true;
+      } else {
+        // which offices is the current user a member of?
+        let uao = self
+          .userActionOfficeMembership()
+          .map((uao) => uao.RequestOrg.get_lookupValue());
 
-      // Check if we are part of the action office assigned to this request,
-      return uao.includes(
-        self.requestStageOrg() ? self.requestStageOrg().Title : null
-      );
+        // Check if we are part of the action office assigned to this request,
+        return uao.includes(
+          self.requestStageOrg() ? self.requestStageOrg().Title : null
+        );
+      }
     }
   });
 

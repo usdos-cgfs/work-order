@@ -462,16 +462,11 @@
                 </p>
               </div>
             </div>
-            <!-- ko if: requestCurUserAssign || requestCurUserAdvance -->
-            <div
-              class="row"
-              data-bind="if: requestCurUserAssign || requestCurUserAdvance"
-            >
+            <!-- ko if: requestCurUserAssign() || requestCurUserAdvance() -->
+            <div class="row">
               <div class="four wide column">
-                <div
-                  class="ui compact menu"
-                  data-bind="if: requestCurUserAssign()"
-                >
+                <!-- ko if: requestCurUserAssign() -->
+                <div class="ui compact menu" data-bind="">
                   <select
                     class="ui search dropdown"
                     data-bind=" value: assignActionOffice,
@@ -496,6 +491,7 @@
                       New Assignment
                     </button> -->
                 </div>
+                <!-- /ko -->
               </div>
               <div class="four wide column">
                 <button
@@ -512,7 +508,7 @@
                 <button
                   type="button"
                   class="ui fluid green button"
-                  data-bind="visible: requestCurUserAdvance"
+                  data-bind="visible: requestCurUserAdvance()"
                   onclick="actionComplete()"
                 >
                   Next Step <span class="fa fa-chevron-right"></span>

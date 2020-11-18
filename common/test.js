@@ -21,4 +21,9 @@ vm.listRefApproval().setItemPermissions(
   true
 );
 
+var camlq =
+  '<View Scope="RecursiveAll"><Query><Where><Eq>' +
+  '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
+  "</Eq></Where></Query></View>";
+
 SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
