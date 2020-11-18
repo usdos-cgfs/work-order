@@ -644,15 +644,15 @@ function koviewmodel() {
   };
 
   self.allOfficeOrders = ko.pureComputed(() => {
-    let offices = self
+    let orgs = self
       .userActionOfficeMembership()
       .map((ao) => ao.RequestOrg.get_lookupValue());
     // Get the types of orders we're responsible for based on the ConfigServiceType
 
     if (!self.adminAllOrdersBool()) {
       let officeOrders = self.allOrders().filter((order) => {
-        return order.RequestOrgs.find((ao) =>
-          offices.includes(ao.get_lookupValue())
+        return order.RequestOrgs.find((ro) =>
+          orgs.includes(ro.get_lookupValue())
         );
       });
 

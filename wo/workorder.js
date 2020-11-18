@@ -776,6 +776,12 @@ function createAssignment(role = "Action Resolver", notify = false) {
     ];
     if (vm.assignActionOffice()) {
       vp.push(["ActionOffice", vm.assignActionOffice().ID]);
+      if (vm.assignActionOffice().RequestOrg) {
+        reqOrgId = vm.assignActionOffice().RequestOrg.get_lookupId();
+        reqOrg = vm.configRequestOrgs().find(function (org) {
+          return org.ID == reqOrgId;
+        });
+      }
     }
     if (vm.assignAssignee()) {
       vp.push(["Assignee", vm.assignAssignee().userId()]);
@@ -1146,6 +1152,27 @@ function pipelineForward() {
     // valuePairs.push(["RequestStatus", "Closed"]);
     closeWorkOrder();
   } else {
+    /*
+        // Add the current stages Request Org to requests RequestOrg column
+    // This is an off by one issue since stage 0 is editing but isn't
+    // in our pipeline.
+    let nextStage = vm.selectedPipeline().find(function (stage) {
+      return stage.Step == t;
+    });
+    if (nextStage.ActionOffice) {
+      let actionOfficeId = nextStage.ActionOffice.get_lookupId();
+      let actionOffice = vm.configActionOffices().find(function (office) {
+        return office.ID == actionOfficeId;
+      });
+      let reqOrg = vm.configRequestOrgs().find(function (org) {
+        return org.ID == actionOffice.RequestOrg.get_lookupId();
+      });
+      if (reqOrg) {
+        vm.requestOrgs.push(reqOrg);
+        valuePairs.push(["RequestOrgs", vm.requestOrgIds()]);
+      }
+    }
+    */
     vm.requestStageNum(t);
     valuePairs.push(["RequestStage", vm.requestStageNum()]);
 
@@ -1177,6 +1204,16 @@ function pipelineAssignments() {
         );
       }
     }
+
+    // Add the current stages Request Org to requests RequestOrg column
+    // This is an off by one issue since stage 0 is editing but isn't
+    // in our pipeline.
+
+    if (vm.requestStageOrg()) {
+      vm.requestOrgs.push(vm.requestStageOrg());
+      valuePairs = [["RequestOrgs", vm.requestOrgIds()]];
+    }
+
     switch (vm.requestStage().ActionType) {
       case "Pending Approval":
         // The assigned approver needs to check off

@@ -91,7 +91,7 @@ Workorder.NewNotifications = function () {
     let to = [];
     if (vm.assignAssignee() && vm.assignAssignee().userName()) {
       to.push(vm.assignAssignee().lookupUser());
-    } else if (vm.assignActionOffice()) {
+    } else if (vm.assignActionOffice() && vm.assignActionOffice().UserAddress) {
       to.push(vm.assignActionOffice().UserAddress);
     }
 
@@ -106,7 +106,9 @@ Workorder.NewNotifications = function () {
       }<br><br>` +
       `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
       `${vm.requestLinkAdmin()}`;
+
     let addendum = new String();
+
     if ((role = "Approver")) {
       let valuePairs = getValuePairs(
         vm.selectedServiceType().listDef.viewFields
