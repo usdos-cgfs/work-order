@@ -233,6 +233,31 @@ var configServiceTypeListDef = {
   },
 };
 
+function Incremental(entry = 0, target = null, next = null) {
+  var self = this;
+  this.val = ko.observable(entry);
+  this.inc = function (incrementer = 1) {
+    self.val(self.val() + incrementer);
+  };
+  this.dec = function (decrementer = 1) {
+    self.val(self.val() - decrementer);
+  };
+  this.val.subscribe(function (val) {
+    if (target != null && val == target) {
+      typeof self.callback == "function"
+        ? self.callback()
+        : console.log("target reached: ", val);
+    }
+  });
+  this.callback = next;
+  this.set = function (val) {
+    self.val(val);
+  };
+  this.reset = function () {
+    self.val(entry);
+  };
+}
+
 function PeopleField() {
   this.user = ko.observable();
   this.userName = ko.pureComputed({
@@ -314,6 +339,21 @@ function koviewmodel() {
   self.userActionOfficeOwnership = ko.pureComputed(() => {
     return self.userActionOfficeMembership().filter((uao) => {
       return uao.CanAssign;
+    });
+  });
+
+  self.user = {};
+
+  self.user.requestOrgMembership = ko.pureComputed(function () {
+    reqOrgIds = [
+      ...new Set(
+        self.configActionOffices().map(function (ao) {
+          return ao.RequestOrg.get_lookupId();
+        })
+      ),
+    ];
+    return self.configRequestOrgs().filter(function (reqOrg) {
+      return reqOrgIds.includes(reqOrg.ID);
     });
   });
 
@@ -1432,6 +1472,28 @@ ko.bindingHandlers.trix = {
 //     write: function (newValue) {},
 //   });
 // };
+
+ko.bindingHandlers.date = {
+  init: function (element, valueAccessor, allBindingsAccessor) {
+    $(element).change(function () {
+      var targDate = new Date($(element).val());
+      var value = valueAccessor();
+      value(targDate);
+    });
+  },
+  update: function (
+    element,
+    valueAccessor,
+    allBindings,
+    viewModel,
+    bindingContext
+  ) {
+    var value = valueAccessor();
+    var valueUnwrapped = ko.unwrap(value);
+    var formattedDate = new Date(valueUnwrapped).format("yyyy-MM-dd");
+    $(element).val(formattedDate);
+  },
+};
 
 ko.bindingHandlers.people = {
   init: function (element, valueAccessor, allBindingsAccessor) {
