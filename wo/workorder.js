@@ -413,6 +413,11 @@ function createNewWorkorderItems() {
 
   calcNewWorkorderDates();
 
+  //Set the workorder request orgs.
+  vm.request.allPipelineOrgs().forEach(function (org) {
+    vm.requestOrgs.push(org);
+  });
+
   var valuePairs = getValuePairs(workOrderListDef.viewFields);
 
   console.log("vp", valuePairs);

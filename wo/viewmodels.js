@@ -1223,6 +1223,21 @@ function koviewmodel() {
     });
     return folderPermissions;
   });
+
+  self.request = {};
+  self.request.allPipelineOrgs = ko.pureComputed(function () {
+    return self.selectedPipeline().map(function (stage) {
+      // first get the action office
+      let assignedOffice = self
+        .configActionOffices()
+        .find((ao) => ao.ID == stage.ActionOffice.get_lookupId());
+
+      return self
+        .configRequestOrgs()
+        .find((ro) => ro.ID == assignedOffice.RequestOrg.get_lookupId());
+    });
+  });
+
   /************************************************************
    * Observables for work order header
    ************************************************************/
