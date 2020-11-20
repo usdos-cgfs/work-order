@@ -86,10 +86,21 @@ function makeDataTable(id) {
           if (
             !["Assignees", "Description"].includes($(column.header()).html())
           ) {
+            var className = "";
+            if ($(column.header()).html()) {
+              className =
+                "dataTableSelect" +
+                $(column.header()).html().replace(/\s+/g, "");
+            }
+            debugger;
             //var columnValues = [];
             //var columnTitle = $(column.header()).html();
             // $(column.header()).append("<br>");
-            var select = $('<select><option value=""></option></select>')
+            var select = $(
+              '<select class="' +
+                className +
+                '"><option value=""></option></select>'
+            )
               .appendTo($(column.footer()).empty())
               //.appendTo($(column.header()))
               .on("change", function () {
@@ -97,6 +108,7 @@ function makeDataTable(id) {
 
                 column.search(val ? "^" + val + "$" : "", true, false).draw();
               });
+              
             column
               .data()
               .unique()
@@ -110,6 +122,9 @@ function makeDataTable(id) {
   });
 }
 
+/* Business days start at 0, i.e. a workorder opened and closed
+ on the same day will result in 0 days passed
+ */
 function businessDaysFromDate(date, businessDays) {
   var counter = 0,
     tmp = new Date(date);
@@ -125,6 +140,19 @@ function businessDaysFromDate(date, businessDays) {
     ++counter;
   }
   return tmp;
+}
+
+function businessDays(startDate, endDate) {
+  var counter = 0;
+  let temp = new Date(startDate);
+
+  while (temp.getDate() != endDate.getDate()) {
+    if (isBusinessDay(temp) && !isConfigHoliday(temp)) {
+      counter++;
+    }
+    temp.setDate(temp.getDate() + 1);
+  }
+  return counter;
 }
 
 function isConfigHoliday(date) {

@@ -233,6 +233,31 @@ var configServiceTypeListDef = {
   },
 };
 
+function Incremental(entry = 0, target = null, next = null) {
+  var self = this;
+  this.val = ko.observable(entry);
+  this.inc = function (incrementer = 1) {
+    self.val(self.val() + incrementer);
+  };
+  this.dec = function (decrementer = 1) {
+    self.val(self.val() - decrementer);
+  };
+  this.val.subscribe(function (val) {
+    if (target != null && val == target) {
+      typeof self.callback == "function"
+        ? self.callback()
+        : console.log("target reached: ", val);
+    }
+  });
+  this.callback = next;
+  this.set = function (val) {
+    self.val(val);
+  };
+  this.reset = function () {
+    self.val(entry);
+  };
+}
+
 function PeopleField() {
   this.user = ko.observable();
   this.userName = ko.pureComputed({
@@ -274,6 +299,7 @@ function koviewmodel() {
   self.applicationIsLoaded = ko.observable(false);
 
   self.applicationIsLoaded.subscribe(function (state) {
+    // Whatever page we're on, now is the time to init our local app
     if (state && typeof initAppPage === typeof Function) {
       initAppPage();
     }
@@ -282,7 +308,7 @@ function koviewmodel() {
   //self.serviceTypeAbbreviations = ko.observableArray(Object.keys(woViews));
   //self.serviceTypeViews = ko.observable(woViews);
 
-  self.userGroupMembership = ko.observable();
+  self.userGroupMembership = ko.observableArray();
 
   /************************************************************
    * ADMIN: Authorize Current user to take actions
@@ -313,6 +339,21 @@ function koviewmodel() {
   self.userActionOfficeOwnership = ko.pureComputed(() => {
     return self.userActionOfficeMembership().filter((uao) => {
       return uao.CanAssign;
+    });
+  });
+
+  self.user = {};
+
+  self.user.requestOrgMembership = ko.pureComputed(function () {
+    reqOrgIds = [
+      ...new Set(
+        self.configActionOffices().map(function (ao) {
+          return ao.RequestOrg.get_lookupId();
+        })
+      ),
+    ];
+    return self.configRequestOrgs().filter(function (reqOrg) {
+      return reqOrgIds.includes(reqOrg.ID);
     });
   });
 
@@ -1082,17 +1123,21 @@ function koviewmodel() {
    * Selected Work Order
    ************************************************************/
   self.requestLink = ko.pureComputed(() => {
-    return (
+    var link =
       _spPageContextInfo.webAbsoluteUrl +
-      `/Pages/app.aspx?tab=order-detail&reqid=${self.requestID()}`
-    );
+      "/Pages/app.aspx?tab=order-detail&reqid=";
+
+    var id = self.requestID() ? self.requestID() : "";
+    return link + id;
   });
 
   self.requestLinkAdmin = ko.pureComputed(() => {
-    return (
+    var link =
       _spPageContextInfo.webAbsoluteUrl +
-      `/Pages/admin.aspx?tab=order-detail&reqid=${self.requestID()}`
-    );
+      "/Pages/admin.aspx?tab=order-detail&reqid=";
+
+    var id = self.requestID() ? self.requestID() : "";
+    return link + id;
   });
 
   self.requestLinkAdminApprove = (id) => {
@@ -1439,6 +1484,28 @@ ko.bindingHandlers.trix = {
 //   });
 // };
 
+ko.bindingHandlers.date = {
+  init: function (element, valueAccessor, allBindingsAccessor) {
+    $(element).change(function () {
+      var targDate = new Date($(element).val());
+      var value = valueAccessor();
+      value(targDate);
+    });
+  },
+  update: function (
+    element,
+    valueAccessor,
+    allBindings,
+    viewModel,
+    bindingContext
+  ) {
+    var value = valueAccessor();
+    var valueUnwrapped = ko.unwrap(value);
+    var formattedDate = new Date(valueUnwrapped).format("yyyy-MM-dd");
+    $(element).val(formattedDate);
+  },
+};
+
 ko.bindingHandlers.people = {
   init: function (element, valueAccessor, allBindingsAccessor) {
     var schema = {};
@@ -1499,6 +1566,45 @@ ko.bindingHandlers.people = {
       // Resolve the User
       pickerControl.AddUnresolvedUserFromEditor(true);
     }
+  },
+};
+
+ko.bindingHandlers.toggleClick = {
+  init: function (element, valueAccessor, allBindings) {
+    var value = valueAccessor();
+
+    ko.utils.registerEventHandler(element, "click", function () {
+      var classToToggle = allBindings.get("toggleClass");
+      var classContainer = allBindings.get("classContainer");
+      var containerType = allBindings.get("containerType");
+
+      if (containerType && containerType == "sibling") {
+        $(element)
+          .nextUntil(classContainer)
+          .each(function () {
+            $(this).toggleClass(classToToggle);
+          });
+      } else if (containerType && containerType == "doc") {
+        var curIcon = $(element).attr("src");
+        if (curIcon == "/_layouts/images/minus.gif")
+          $(element).attr("src", "/_layouts/images/plus.gif");
+        else $(element).attr("src", "/_layouts/images/minus.gif");
+
+        if ($(element).parent() && $(element).parent().parent()) {
+          $(element)
+            .parent()
+            .parent()
+            .nextUntil(classContainer)
+            .each(function () {
+              $(this).toggleClass(classToToggle);
+            });
+        }
+      } else if (containerType && containerType == "any") {
+        if ($("." + classToToggle).is(":visible"))
+          $("." + classToToggle).hide();
+        else $("." + classToToggle).show();
+      } else $(element).find(classContainer).toggleClass(classToToggle);
+    });
   },
 };
 

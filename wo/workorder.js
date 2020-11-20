@@ -1291,11 +1291,15 @@ function initApp() {
   // Initialize our SharePoint Access Layer
   var ini = initSal();
 
-  // Initialize our Notifications
-  InitNotifications();
-
   // Initialize ViewModel
   vm = new koviewmodel();
+
+  /* Depending on our page, we may need additional info */
+  /* Submitter/Action Office/Approval */
+  if (typeof InitNotifications != "undefined") {
+    // Initialize our Notifications
+    InitNotifications();
+  }
 
   // Setup models for each of the config lists we may connect to
   initStaticListRefs();
@@ -1353,7 +1357,7 @@ function initComplete() {
 
   let tab = urlParams.get("tab");
   let id = urlParams.get("reqid");
-  let stypeId = urlParams.get("stype");
+  let service = urlParams.get("lookup");
   let stype = null;
 
   // if (id && tab == 'order-detail') {
@@ -1379,7 +1383,9 @@ function initComplete() {
   vm.applicationIsLoaded(true);
   ko.applyBindings(vm);
 
-  if (vm.page().toLocaleLowerCase() != "approval.aspx") {
+  if (
+    !["approval.aspx", "reports.aspx"].includes(vm.page().toLocaleLowerCase())
+  ) {
     $("#tabs").show();
     initUIComponents();
 
@@ -1396,6 +1402,11 @@ function initComplete() {
         vm.tab(tab);
     }
   }
+  /* Reports 
+  if (typeof InitReport != "undefined") {
+    InitReport();
+  }
+  */
   SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
 
