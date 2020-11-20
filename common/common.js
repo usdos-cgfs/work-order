@@ -86,10 +86,21 @@ function makeDataTable(id) {
           if (
             !["Assignees", "Description"].includes($(column.header()).html())
           ) {
+            var className = "";
+            if ($(column.header()).html()) {
+              className =
+                "dataTableSelect" +
+                $(column.header()).html().replace(/\s+/g, "");
+            }
+            debugger;
             //var columnValues = [];
             //var columnTitle = $(column.header()).html();
             // $(column.header()).append("<br>");
-            var select = $('<select><option value=""></option></select>')
+            var select = $(
+              '<select class="' +
+                className +
+                '"><option value=""></option></select>'
+            )
               .appendTo($(column.footer()).empty())
               //.appendTo($(column.header()))
               .on("change", function () {
@@ -97,6 +108,7 @@ function makeDataTable(id) {
 
                 column.search(val ? "^" + val + "$" : "", true, false).draw();
               });
+              
             column
               .data()
               .unique()

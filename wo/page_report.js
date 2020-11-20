@@ -30,6 +30,9 @@ Workorder.Report.NewReportPage = function () {
       return self.timerEnd() - self.timerStart();
     });
 
+    self.thresholdGreen = ko.observable(90);
+    self.thresholdYellow = ko.observable(40);
+
     self.view = ko.observable();
     self.viewOpts = ko.observableArray(["Closed", "Open"]);
 

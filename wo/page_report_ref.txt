@@ -88,10 +88,10 @@
         <td></td>
         <td data-bind="text: _report.completedTotalWO.val"></td>
         <td data-bind="text: _report.completedTotalMtgStandard.val"></td>
-        <td data-bind="text: _report.completedTotalMtgStandard.val"></td>
-        <td data-bind="text: _report.completedTotalMtgStandardPerc">
-          % Meeting Standard
-        </td>
+        <td data-bind="text: _report.completedTotalNotMtgStandard.val"></td>
+        <td></td>
+        <td></td>
+        <td data-bind="text: _report.completedTotalMtgStandardPerc"></td>
         <td data-bind="text: _report.completedTotalAvgDaysFloat">
           Avg Completion Time (Days)
         </td>
@@ -99,9 +99,11 @@
       <tr>
         <td>Service Type</td>
         <td>Standard</td>
-        <td>Completed</td>
+        <td data-bind="text: _report.view() == 'Open' ? 'Open' : 'Complete'"></td>
         <td># Meeting Standard</td>
         <td># Not Meeting Standard</td>
+        <td>KPI</td>
+        <td>Late</td>
         <td>% Meeting Standard</td>
         <td>Avg Completion Time (Days)</td>
       </tr>
@@ -113,6 +115,40 @@
         <td data-bind="text: completedWO"></td>
         <td data-bind="text: completedMeetingStandard"></td>
         <td data-bind="text: completedNotMeetingStandard"></td>
+        <td>
+          <span data-bind="if: completedPercMeetingStandard >= $root._report.thresholdGreen() && completedWO > 0"><img src='../PublishingImages/KPIGreen.GIF'></img></span>
+          <span data-bind="if: completedPercMeetingStandard < $root._report.thresholdGreen() && completedPercMeetingStandard >= $root._report.thresholdYellow() && completedWO > 0"><img src='../PublishingImages/KPIGold.GIF'></img></span>
+          <span data-bind="if: completedPercMeetingStandard < $root._report.thresholdYellow() && completedWO > 0"><img src='../PublishingImages/KPIRed.GIF'></img></span>
+        </td>
+        <td>
+          <span
+            class="lateIDContainers"
+            data-bind="visible: lateIDs.length > 0, toggleClick: $data, toggleClass: 'collapsed', classContainer: '.lateID-item'"
+          >
+            <span class="ui-icon ui-icon-search"></span>
+            <a href="javascript:void(0)">View Late IDs</a>
+
+            <!-- ko foreach: lateIDs-->
+            <div class="lateID-item collapsed">
+              <a
+                target="_blank"
+                data-bind="attr: { href: $root.requestLinkAdmin() + title}"
+                >[<span data-bind="text: title"></span> /
+                <span data-bind="text: days"></span>]</a
+              >
+            </div>
+            <!-- /ko -->
+          </span>
+          <!-- <span data-bind="visible: lateIDs.length > 0">
+            ko foreach: lateIDs
+            <div class="">
+              <a target="_blank" data-bind="attr: {href: '../'}"
+                ><span data-bind="text: ID"></span
+              ></a>
+            </div>
+             /ko
+          </span> -->
+        </td>
         <td data-bind="text: completedPercMeetingStandard"></td>
         <td data-bind="text: completedAvgTime"></td>
       </tr>

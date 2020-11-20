@@ -1320,7 +1320,7 @@ function initComplete() {
 
   let tab = urlParams.get("tab");
   let id = urlParams.get("reqid");
-  let stypeId = urlParams.get("stype");
+  let service = urlParams.get("lookup");
   let stype = null;
 
   // if (id && tab == 'order-detail') {
