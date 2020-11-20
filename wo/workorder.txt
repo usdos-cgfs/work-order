@@ -371,7 +371,7 @@
       data-bind="foreach: configServiceTypes().sort(sortByTitle)"
     >
       <!-- ko if: Active -->
-      <div class="card" data-bind="click: showDescription.bind($data)">
+      <div class="card pointer" data-bind="click: showDescription.bind($data)">
         <!--<div class="center aligned content">
                     <div class="header" data-bind="text: vm.serviceTypeViews()[$data].name"></div>
                 </div>-->
@@ -449,8 +449,18 @@
               <div class="sixteen wide column">
                 <div id="wo-progress-pipeline"></div>
                 <p>
+                  <span>
+                    <a
+                      title="View this link on the admin dash"
+                      target="blank"
+                      class="fas fa-user-shield"
+                      data-bind="attr: { href: requestLinkAdmin }, "
+                    >
+                    </a>
+                  </span>
                   <span
-                    class="fas fa-sync"
+                    title="Refresh this request"
+                    class="fas fa-sync pointer"
                     onclick="refreshWorkOrderItem(vm.requestID())"
                   ></span>
                   Loaded:
@@ -533,8 +543,8 @@
                     />
                   </div>
 
-                  <div class="field">
-                    <label>Manager: </label>
+                  <!-- <div class="field">
+                    <label>Request Manager: </label>
                     <input
                       class="editable-field"
                       type="text"
@@ -547,7 +557,7 @@
                       data-bind="people: requestorManager.user, 
                         visible: currentView() != 'view'"
                     ></div>
-                  </div>
+                  </div> -->
                 </div>
                 <div class="two fields">
                   <div class="field">
@@ -953,6 +963,8 @@
 
 <script src="../SiteAssets/workorder/common/sal.js"></script>
 <script src="../SiteAssets/workorder/common/common.js"></script>
+<script src="../SiteAssets/workorder/common/notifications.js"></script>
+<script src="../SiteAssets/workorder/common/deployment.js"></script>
 
 <script src="../SiteAssets/workorder/wo/viewmodels.js"></script>
 <script src="../SiteAssets/workorder/wo/workorder.js"></script>

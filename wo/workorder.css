@@ -114,6 +114,14 @@
   cursor: pointer;
 }
 
+.green {
+  color: green;
+}
+
+.red {
+  color: red;
+}
+
 .sticky {
   position: sticky;
   top: 0;

@@ -1,0 +1,152 @@
+﻿<div>
+	<table>
+		<!-- By Office -->
+		<tr>
+			<td colspan="2">Office Configurations</td>
+		</tr>
+		<tr>
+			<td>Filter on Owner: </td>
+			<span id="lblsOwner"></span>
+		</tr>
+		<tr>
+			<td>List Title Holiday:</td>
+			<td><span id="lblListTitleHoliday">WO Holiday</span> </td>
+		</tr>
+		<tr>
+			<td>List Title Work Order Cycle Times:</td>
+			<td><span id="lbllistTitleWorkOrderCycleTimes">WO Cycle Time</span> </td>
+		</tr>
+		<tr>
+			<td>List Title Work Order Library:</td>
+			<td><span id="lbllibTitleWorkOrder">Work Order Library</span> </td>
+		</tr>
+		<tr>
+			<td>Name Title Work Order Library:</td>
+			<td><span id="lbllibNameWorkOrder">Work%20Order%20Library</span></td>
+		</tr>
+		<tr>
+			<td>WO Completed Service Type List View:</td>
+			<td><span id="lblwoCompletedServiceTypeListView">ADMINC</span> </td>
+		</tr>
+		<tr>
+			<td>WO Active Service Type List View:</td>
+			<td><span id="lblwoActiveServiceTypeListView">Active</span> </td>
+		</tr>
+		<tr>
+			<td>Internal Field Name Yellow Threshold:</td>
+			<td>
+			<span id="lblslistTitleWorkOrderCycleTimesInternalYellowThreshold">KPI_x0020_Yellow_x0020_Threshold</span></td>
+		</tr>
+		<tr>
+			<td>Internal Field Name Green Threshold:</td>
+			<td>
+			<span id="lblslistTitleWorkOrderCycleTimesInternalGreenThreshold">KPI_x0020_Green_x0020_Threshold</span></td>
+		</tr>
+
+		<!-- End office-->
+	
+		<!-- Admin -->
+		<!--
+		<tr>
+			<td colspan="2">Admin Configurations</td>
+		</tr>
+		<tr>
+			<td>Filter on Owner: </td>
+			<span id="lblsOwner">Admin</span>
+		</tr>
+		<tr>
+			<td>List Title Holiday:</td>
+			<td><span id="lblListTitleHoliday">WO Holiday</span> </td>
+		</tr>
+		<tr>
+			<td>List Title Work Order Cycle Times:</td>
+			<td><span id="lbllistTitleWorkOrderCycleTimes">Work Order Cycle Time 
+			(Admin)</span> </td>
+		</tr>
+		<tr>
+			<td>List Title Work Order Library:</td>
+			<td><span id="lbllibTitleWorkOrder">Work Order Library</span> </td>
+		</tr>
+		<tr>
+			<td>Name Title Work Order Library:</td>
+			<td><span id="lbllibNameWorkOrder">Work%20Order%20Library</span></td>
+		</tr>
+		<tr>
+			<td>WO Completed Service Type List View:</td>
+			<td><span id="lblwoCompletedServiceTypeListView">ADMINC</span> </td>
+		</tr>
+		<tr>
+			<td>WO Active Service Type List View:</td>
+			<td><span id="lblwoActiveServiceTypeListView">Active</span> </td>
+		</tr>
+		<tr>
+			<td>Internal Field Name Yellow Threshold:</td>
+			<td>
+			<span id="lblslistTitleWorkOrderCycleTimesInternalYellowThreshold">KPI_x0020_Yellow_x0020_Threshold</span></td>
+		</tr>
+		<tr>
+			<td>Internal Field Name Green Threshold:</td>
+			<td>
+			<span id="lblslistTitleWorkOrderCycleTimesInternalGreenThreshold">KPI_x0020_Green_x0020_Threshold</span></td>
+		</tr>
+		-->
+		<!-- IT configurations -->
+		<!--
+		<tr>
+			<td colspan="2">IT Configurations</td>
+		</tr>
+		<tr>
+			<td>Filter on Owner: </td>
+			<span id="lblsOwner">IT</span>
+		</tr>
+		<tr>
+			<td>List Title Holiday:</td>
+			<td><span id="lblListTitleHoliday">WO Holiday IT</span> </td>
+		</tr>
+		<tr>
+			<td>List Title Work Order Cycle Times:</td>
+			<td><span id="lbllistTitleWorkOrderCycleTimes">WO Cycle Time (MOB)</span>
+			</td>
+		</tr>
+		<tr>
+			<td>List Title Work Order Library:</td>
+			<td><span id="lbllibTitleWorkOrder">Work Order Library</span> </td>
+		</tr>
+		<tr>
+			<td>Name Title Work Order Library:</td>
+			<td><span id="lbllibNameWorkOrder">Work%20Order%20Library</span>
+			</td>
+		</tr>
+		<tr>
+			<td>WO Completed Service Type List View:</td>
+			<td><span id="lblwoCompletedServiceTypeListView">ADMINC</span> </td>
+		</tr>
+		<tr>
+			<td>WO Active Service Type List View:</td>
+			<td><span id="lblwoActiveServiceTypeListView">Active</span> </td>
+		</tr>
+		<tr>
+			<td>Internal Field Name Yellow Threshold:</td>
+			<td>
+			<span id="lblslistTitleWorkOrderCycleTimesInternalYellowThreshold">KPI_x0020_Yellew_x0020_Threshold</span>
+			</td>
+		</tr>
+		<tr>
+			<td>Internal Field Name Green Threshold:</td>
+			<td>
+			<span id="lblslistTitleWorkOrderCycleTimesInternalGreenThreshold">KPI_x0020_Green_x0020_Threhold</span>
+			</td>
+		</tr>
+		-->
+		<!--end IT-->
+		
+		<tr>
+			<td>Filter on Admin User: </td>
+			<td><input id="tbFilterAdmin" value="" /> </td>
+		</tr>
+		<tr>
+			<td>Filter on Office: </td>
+			<td><input id="tbFilterOffice" value="" /> </td>
+		</tr>
+	</table>
+</div>

@@ -9,33 +9,15 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      AccessType: { type: "Text", koMap: "accessType", required: false },
-      EmployeeType: {
-        type: "Text",
-        koMap: "accessEmployeeType",
+      Employee: {
+        type: "Person",
+        koMap: "voicemailEmployeeName",
         required: false,
       },
-      FullName: { type: "Text", koMap: "accessFullName", required: false },
-      BadgeNum: { type: "Text", koMap: "accessBadgeNum", required: false },
-      ExpirationDate: {
+      Phone: { type: "Text", koMap: "voicemailPhone", required: false },
+      Location: {
         type: "Text",
-        koMap: "accessExpirationDate",
-        required: false,
-      },
-      Locations: {
-        type: "Text",
-        koMap: "accessLocations",
-        required: false,
-      },
-      Justification: {
-        type: "Text",
-        koMap: "accessJustification",
-        required: false,
-      },
-      Description: { type: "Text", koMap: "accessDesc" },
-      SpecialInstructions: {
-        type: "Text",
-        koMap: "accessSpecInst",
+        koMap: "voicemailLocation",
         required: false,
       },
     },
@@ -44,8 +26,42 @@
   /***************************************************************
    *    Declare Observables
    ***************************************************************/
+  vm.voicemailEmployeeName = new PeopleField();
+  vm.voicemailPhone = ko.observable();
+  vm.voicemailLocation = ko.observable();
 </script>
 
 <script type="text/html" id="tmpl_ch_voicemail">
-  <div class="ui form"></div>
+  <div class="ui form">
+    <div class="two fields">
+      <div class="field">
+        <label>Employee Name<span class="required">*</span>: </label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="value: voicemailEmployeeName.userName, visible: currentView() == 'view'"
+        />
+        <div
+          type="text"
+          data-bind="people: voicemailEmployeeName, visible: currentView()!='view'"
+        ></div>
+      </div>
+      <div class="field">
+        <label>Phone Number: </label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="value: voicemailPhone, disable: currentView() == 'view'"
+        />
+      </div>
+    </div>
+    <div class="eight wide field">
+      <label>Location: </label>
+      <input
+        class="editable-field"
+        type="text"
+        data-bind="value: voicemailLocation, disable: currentView() == 'view'"
+      />
+    </div>
+  </div>
 </script>

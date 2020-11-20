@@ -28,32 +28,43 @@ function initSal() {
       : _spPageContextInfo.webServerRelativeUrl;
 
   //sal.globalConfig.user =
-  sal.globalConfig.listServices = "../_vti_bin/ListData.svc/";
+  sal.globalConfig.listServices =
+    sal.globalConfig.siteUrl + "/_vti_bin/ListData.svc/";
 
-  sal.globalConfig.currentContext = new SP.ClientContext.get_current();
-  sal.globalConfig.website = sal.globalConfig.currentContext.get_web();
+  var currCtx = new SP.ClientContext.get_current();
+  var web = currCtx.get_web();
   //sal.site = sal.siteConnection;
 
-  var user = sal.globalConfig.website.get_currentUser(); //must load this to access info.
-  sal.globalConfig.currentContext.load(user);
+  // Get Current User information
+  var user = web.get_currentUser(); //must load this to access info.
+  currCtx.load(user);
 
-  var siteGroupCollection = sal.globalConfig.website.get_siteGroups();
-  sal.globalConfig.currentContext.load(siteGroupCollection);
+  // Get the site groups
+  var siteGroupCollection = web.get_siteGroups();
+  currCtx.load(siteGroupCollection);
 
-  sal.globalConfig.currentContext.executeQueryAsync(
+  // Get the roles upfront so we can validate they're present on the site.
+  sal.globalConfig.roles = new Array();
+  var oRoleDefinitions = currCtx.get_web().get_roleDefinitions();
+  currCtx.load(oRoleDefinitions);
+
+  currCtx.executeQueryAsync(
     function () {
       sal.globalConfig.currentUser = user;
-      // SP.SOD.executeOrDelayUntilScriptLoaded(
-      //   getUserProperties,
-      //   "SP.UserProfiles.js"
-      // );
-      SP.SOD.executeFunc(
-        "SP.UserProfiles.js",
-        "SP.UserProfiles",
-        getUserProperties
-      );
+      getUserProperties();
+
       sal.globalConfig.siteGroups = m_fnLoadSiteGroups(siteGroupCollection);
       //alert("User is: " + user.get_title()); //there is also id, email, so this is pretty useful.
+
+      // Role Definitions
+      var oEnumerator = oRoleDefinitions.getEnumerator();
+      while (oEnumerator.moveNext()) {
+        var oRoleDefinition = oEnumerator.get_current();
+        sal.globalConfig.roles.push(oRoleDefinition.get_name());
+      }
+
+      sal.config = new sal.NewAppConfig();
+      sal.utilities = new sal.NewUtilities();
     },
     function () {
       alert(":(");
@@ -61,6 +72,164 @@ function initSal() {
   );
   // console.log()
 }
+
+sal.NewAppConfig = function () {
+  let siteRoles = new Object();
+  siteRoles.roles = {
+    FullControl: "Full Control",
+    Design: "Design",
+    Edit: "Edit",
+    Contribute: "Contribute",
+    Read: "Read",
+    LimitedAccess: "Limited Access",
+    RestrictedRead: "Restricted Read",
+    RestrictedContribute: "Restricted Contribute",
+    InitialCreate: "Initial Create",
+  };
+
+  siteRoles.validate = function () {
+    Object.keys(siteRoles.roles).forEach(function (role) {
+      let roleName = siteRoles.roles[role];
+      if (!sal.globalConfig.roles.includes(roleName)) {
+        console.error(`${roleName} is not in the global roles list`);
+      } else {
+        console.log(roleName);
+      }
+    });
+  };
+
+  let siteGroups = new Object();
+  siteGroups.groups = {
+    Owners: "workorder Owners",
+    Members: "workorder Members",
+    Visitors: "workorder Visitors",
+    RestrictedReaders: "Restricted Readers",
+  };
+
+  let publicMembers = {
+    siteRoles,
+    siteGroups,
+  };
+
+  return publicMembers;
+};
+
+sal.NewUtilities = function () {
+  function createSiteGroup(groupName, permissions, callback = null) {
+    /* groupName: the name of the new SP Group
+     *  permissions: an array of permissions to assign to the group
+     * groupOwner: the name of the owner group
+     */
+
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+
+    var groupCreationInfo = new SP.GroupCreationInformation();
+    groupCreationInfo.set_title(groupName);
+    this.oGroup = oWebsite.get_siteGroups().add(groupCreationInfo);
+    oGroup.set_owner(oWebsite.get_associatedOwnerGroup());
+
+    oGroup.update();
+    var collRoleDefinitionBinding = SP.RoleDefinitionBindingCollection.newObject(
+      clientContext
+    );
+
+    this.oRoleDefinitions = [];
+
+    permissions.forEach((perm) => {
+      let oRoleDefinition = oWebsite.get_roleDefinitions().getByName(perm);
+      this.oRoleDefinitions.push(oRoleDefinition);
+      collRoleDefinitionBinding.add(oRoleDefinition);
+    });
+
+    var collRollAssignment = oWebsite.get_roleAssignments();
+    collRollAssignment.add(oGroup, collRoleDefinitionBinding);
+
+    function onCreateGroupSucceeded() {
+      var roleInfo =
+        oGroup.get_title() +
+        " created and assigned to " +
+        oRoleDefinitions.forEach((rd) => rd + ", ");
+      if (callback) {
+        callback(oGroup.get_id());
+      }
+      console.log(roleInfo);
+    }
+
+    function onCreateGroupFailed(sender, args) {
+      alert(
+        groupnName +
+          " - Create group failed. " +
+          args.get_message() +
+          "\n" +
+          args.get_stackTrace()
+      );
+    }
+
+    clientContext.load(oGroup, "Title");
+
+    let data = { groupName, oGroup, oRoleDefinition, callback };
+
+    clientContext.executeQueryAsync(
+      Function.createDelegate(data, onCreateGroupSucceeded),
+      Function.createDelegate(data, onCreateGroupFailed)
+    );
+  }
+
+  function getUserGroups(user, callback) {
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+
+    let everyone = web.ensureUser(user);
+    let oGroups = everyone.get_groups();
+
+    function onQueryGroupsSucceeded() {
+      let groups = new Array();
+      let groupsInfo = new String();
+      let groupsEnumerator = oGroups.getEnumerator();
+      while (groupsEnumerator.moveNext()) {
+        var oGroup = groupsEnumerator.get_current();
+        var group = {};
+        group.ID = oGroup.get_id();
+        group.Title = oGroup.get_title();
+        groupsInfo +=
+          "\n" +
+          "Group ID: " +
+          oGroup.get_id() +
+          ", " +
+          "Title : " +
+          oGroup.get_title();
+        groups.push(group);
+      }
+      console.log(groupsInfo.toString());
+      callback(groups);
+    }
+
+    function onQueryGroupsFailed(sender, args) {
+      console.error(
+        " Everyone - Query Everyone group failed. " +
+          args.get_message() +
+          "\n" +
+          args.get_stackTrace()
+      );
+    }
+    currCtx.load(everyone);
+    currCtx.load(oGroups);
+    data = { everyone, oGroups, callback };
+
+    currCtx.executeQueryAsync(
+      Function.createDelegate(data, onQueryGroupsSucceeded),
+      Function.createDelegate(data, onQueryGroupsFailed)
+    );
+  }
+
+  let publicMembers = {
+    createSiteGroup,
+    getUserGroups,
+  };
+
+  return publicMembers;
+};
 
 function getUserProperties() {
   var requestHeaders = {
@@ -78,9 +247,9 @@ function getUserProperties() {
     success: function (data) {
       sal.globalConfig.currentUserProfile = data.d;
       vm.requestorTelephone(
-        data.d.UserProfileProperties.results.find(
-          (prop) => prop.Key == "WorkPhone"
-        ).Value
+        data.d.UserProfileProperties.results.find(function (prop) {
+          return prop.Key == "WorkPhone";
+        }).Value
       );
     },
     error: function (jqxr, errorCode, errorThrown) {
@@ -99,14 +268,14 @@ function ensureUser(userName, callback) {
   }
 
   function onEnsureUserFailed(sender, args) {
-    alert(
+    console.error(
       "Failed to ensure user :" +
         args.get_message() +
         "\n" +
         args.get_stackTrace()
     );
   }
-  data = { user, callback };
+  data = { user: user, callback: callback };
 
   context.load(user);
   context.executeQueryAsync(
@@ -191,64 +360,21 @@ sal.generateEmptyItem = function (viewFields) {
   return focusedItems;
 };
 
-function createSiteGroup(groupName, permissions, groupOwner) {
-  /* groupName: the name of the new SP Group
-   *  permissions: an array of permissions to assign to the group
-   * groupOwner: the name of the owner group
-   */
-
-  var clientContext = SP.ClientContext.get_current();
-  this.oWebsite = clientContext.get_web();
-
-  var groupCreationInfo = new SP.GroupCreationInformation();
-  groupCreationInfo.set_title(groupName);
-  this.oGroup = oWebsite.get_siteGroups().add(groupCreationInfo);
-  oGroup.set_owner(oWebsite.get_associatedOwnerGroup());
-
-  oGroup.update();
-  var collRoleDefinitionBinding = SP.RoleDefinitionBindingCollection.newObject(
-    clientContext
-  );
-
-  this.oRoleDefinitions = [];
-
-  permissions.forEach((perm) => {
-    let oRoleDefinition = oWebsite.get_roleDefinitions().getByName(perm);
-    this.oRoleDefinitions.push(oRoleDefinition);
-    collRoleDefinitionBinding.add(oRoleDefinition);
-  });
-
-  var collRollAssignment = oWebsite.get_roleAssignments();
-  collRollAssignment.add(oGroup, collRoleDefinitionBinding);
-
-  clientContext.load(oGroup, "Title");
-  //clientContext.load(oRoleDefinition, "Name");
-
-  clientContext.executeQueryAsync(
-    Function.createDelegate(this, this.onCreateGroupSucceeded),
-    Function.createDelegate(this, this.onCreateGroupFailed)
-  );
-}
-
-function onCreateGroupSucceeded() {
-  var roleInfo =
-    oGroup.get_title() +
-    " created and assigned to " +
-    oRoleDefinitions.forEach((rd) => rd + ", ");
-  console.log(roleInfo);
-}
-
-function onCreateGroupFailed(sender, args) {
-  alert("Request failed. " + args.get_message() + "\n" + args.get_stackTrace());
-}
-
 function getCurrentUserGroups(callback) {
   var clientContext = SP.ClientContext.get_current();
-  oUser = clientContext.get_web().get_currentUser();
+  var web = clientContext.get_web();
+  oUser = web.get_currentUser();
   oGroups = oUser.get_groups();
+
+  everyone = web.ensureUser("Everyone");
+  everyoneGroups = everyone.get_groups();
+
   this.getCurrentUserGroupsCallback = callback;
   clientContext.load(oUser);
   clientContext.load(oGroups);
+  clientContext.load(everyone);
+  clientContext.load(everyoneGroups);
+
   clientContext.executeQueryAsync(
     Function.createDelegate(this, function () {
       var groupsInfo = "";
@@ -257,6 +383,22 @@ function getCurrentUserGroups(callback) {
       console.log("Count of current user groups: " + oGroups.get_count());
       while (groupsEnumerator.moveNext()) {
         var oGroup = groupsEnumerator.get_current();
+        var group = {};
+        group.ID = oGroup.get_id();
+        group.Title = oGroup.get_title();
+        groupsInfo +=
+          "\n" +
+          "Group ID: " +
+          oGroup.get_id() +
+          ", " +
+          "Title : " +
+          oGroup.get_title();
+        groups.push(group);
+      }
+      var everyoneGroupsEnumerator = everyoneGroups.getEnumerator();
+      console.log("Count of current user groups: " + oGroups.get_count());
+      while (everyoneGroupsEnumerator.moveNext()) {
+        var oGroup = everyoneGroupsEnumerator.get_current();
         var group = {};
         group.ID = oGroup.get_id();
         group.Title = oGroup.get_title();
@@ -278,7 +420,54 @@ function getCurrentUserGroups(callback) {
   );
 }
 
-function SPList(listDef) {
+sal.addUsersToGroup = function (userNameArr, groupName) {
+  var currCtx = new SP.ClientContext.get_current();
+  var web = currCtx.get_web();
+
+  var siteGroups = web.get_siteGroups();
+  var group = siteGroups.getByName(groupName);
+  let userCollection = group.get_users();
+
+  var ensuredUsers = new Array();
+
+  //TODO: If one user fails validation, the whole process fails. Fix?
+  userNameArr.forEach((userName) => {
+    ensuredUsers.push(web.ensureUser(userName));
+  });
+
+  ensuredUsers.forEach((user) => currCtx.load(user));
+
+  currCtx.load(group);
+
+  let data = { ensuredUsers, group, groupName, userCollection, userNameArr };
+
+  function onQuerySucceeded() {
+    console.log("Found Group: " + group.get_title(), userNameArr);
+    console.log("Ensured Users: ");
+
+    var currCtx = new SP.ClientContext.get_current();
+
+    ensuredUsers.forEach((user) => userCollection.addUser(user));
+
+    currCtx.load(group);
+    currCtx.executeQueryAsync(
+      () => console.log("great success!"),
+      () => console.log("Terrible Failure!")
+    );
+  }
+
+  function onQueryFailed(sender, args) {
+    console.warn("Unable to add users to group " + groupName, userNameArr);
+    console.warn(groupName, args);
+  }
+
+  currCtx.executeQueryAsync(
+    Function.createDelegate(data, onQuerySucceeded),
+    Function.createDelegate(data, onQueryFailed)
+  );
+};
+
+sal.NewSPList = function (listDef) {
   /*
       Expecting a list definition object in the following format:
         var assignmentListDef = {
@@ -392,9 +581,11 @@ function SPList(listDef) {
   /*****************************************************************
                                 createListItem      
     ******************************************************************/
-  self.createListItem = function (valuePairs, callback, folderName = "") {
+  function createListItem(valuePairs, callback, folderName = "") {
     //self.updateConfig();
-    var oList = self.config.listRef;
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+    var oList = web.get_lists().getByTitle(self.config.def.title);
 
     var itemCreateInfo = new SP.ListItemCreationInformation();
 
@@ -435,12 +626,12 @@ function SPList(listDef) {
       Function.createDelegate(data, onCreateListItemSucceeded),
       Function.createDelegate(data, onCreateListItemFailed)
     );
-  };
+  }
 
   /*****************************************************************
                                 getListItems      
     ******************************************************************/
-  self.getListItems = function (caml, callback) {
+  function getListItems(caml, callback) {
     /*
         Obtain all list items that match the querystring passed by caml.
         */
@@ -449,7 +640,12 @@ function SPList(listDef) {
     var camlQuery = new SP.CamlQuery.createAllItemsQuery();
 
     camlQuery.set_viewXml(caml);
-    let collListItem = self.config.listRef.getItems(camlQuery);
+
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+    var oList = web.get_lists().getByTitle(self.config.def.title);
+
+    let collListItem = oList.getItems(camlQuery);
 
     function onGetListItemsSucceeded(sender, args) {
       var self = this;
@@ -493,14 +689,14 @@ function SPList(listDef) {
 
       alert(
         `Request on list ${
-          this.def.name
+          self.config.def.name
         } failed, producing the following error: \n ${args.get_message()} \nStackTrack: \n ${args.get_stackTrace()}`
       );
     }
     let data = {
       collListItem,
       callback,
-      def: this.config.def,
+      def: self.config.def,
     };
 
     self.config.currentContext.load(collListItem);
@@ -508,15 +704,17 @@ function SPList(listDef) {
       Function.createDelegate(data, onGetListItemsSucceeded),
       Function.createDelegate(data, onGetListItemsFailed)
     );
-  };
+  }
 
   /*****************************************************************
                             updateListItem      
     ******************************************************************/
-  self.updateListItem = function (id, valuePairs, callback) {
+  function updateListItem(id, valuePairs, callback) {
     //[["ColName", "Value"], ["Col2", "Value2"]]
     //self.updateConfig();
-    var oList = self.config.listRef;
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+    var oList = web.get_lists().getByTitle(self.config.def.title);
 
     let oListItem = oList.getItemById(id);
     for (i = 0; i < valuePairs.length; i++) {
@@ -544,29 +742,40 @@ function SPList(listDef) {
       Function.createDelegate(data, onUpdateListItemsSucceeded),
       Function.createDelegate(data, onUpdateListItemFailed)
     );
-  };
+  }
 
   /*****************************************************************
                             deleteListItem      
     ******************************************************************/
-  self.deleteListItem = function (id, callback) {
+  function deleteListItem(id, callback) {
     //[["ColName", "Value"], ["Col2", "Value2"]]
-    self.callbackDeleteListItem = callback;
+    //self.callbackDeleteListItem = callback;
     //self.updateConfig();
-    var oList = self.config.listRef;
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+    var oList = web.get_lists().getByTitle(self.config.def.title);
 
+    let data = { callback };
     this.oListItem = oList.getItemById(id);
     this.oListItem.deleteObject();
 
-    self.config.currentContext.executeQueryAsync(
-      onDeleteListItemsSucceeded.bind(this),
-      onQueryFailed.bind(this)
-    );
-  };
+    function onDeleteListItemsSucceeded(sender, args) {
+      //alert('Item updated!');
+      callback();
+    }
 
-  function onDeleteListItemsSucceeded(sender, args) {
-    //alert('Item updated!');
-    self.callbackDeleteListItem();
+    function onDeleteListItemsFailed(sender, args) {
+      console.error(
+        `sal.SPList.deleteListItem: Request on list ${
+          self.config.def.name
+        } failed, producing the following error: \n ${args.get_message()} \nStackTrack: \n ${args.get_stackTrace()}`
+      );
+    }
+
+    self.config.currentContext.executeQueryAsync(
+      Function.createDelegate(data, onDeleteListItemsSucceeded),
+      Function.createDelegate(data, onDeleteListItemsFailed)
+    );
   }
 
   /*****************************************************************
@@ -578,40 +787,99 @@ function SPList(listDef) {
    * @param {Array} valuePairs A 2d array containing groups and permission levels
    *    e.g. [["Owners", "Full Control"], ["Members", "Contribute"]]
    */
-  self.setItemPermissions = function (id, valuePairs) {
+  function setItemPermissions(id, valuePairs, callback, reset = false) {
     //TODO: Validate that the groups and permissions exist on the site.
+    var users = new Array();
+    var resolvedGroups = new Array();
     var currCtx = new SP.ClientContext.get_current();
     var web = currCtx.get_web();
 
     var oList = web.get_lists().getByTitle(self.config.def.title);
 
     let oListItem = oList.getItemById(id);
-    oListItem.resetRoleInheritance();
-    oListItem.breakRoleInheritance(false, false);
 
     valuePairs.forEach((vp) => {
-      let roleDefBindingColl = SP.RoleDefinitionBindingCollection.newObject(
-        currCtx
-      );
-      roleDefBindingColl.add(web.get_roleDefinitions().getByName(vp[1]));
-      oListItem
-        .get_roleAssignments()
-        .add(sal.getSPSiteGroupByName(vp[0]), roleDefBindingColl);
+      // let roleDefBindingColl = SP.RoleDefinitionBindingCollection.newObject(
+      //   currCtx
+      // );
+      let resolvedGroup = sal.getSPSiteGroupByName(vp[0]);
+      if (resolvedGroup) {
+        resolvedGroups.push([resolvedGroup, vp[1]]);
+
+        // roleDefBindingColl.add(web.get_roleDefinitions().getByName(vp[1]));
+        // oListItem.get_roleAssignments().add(resolvedGroup, roleDefBindingColl);
+      } else {
+        users.push([currCtx.get_web().ensureUser(vp[0]), vp[1]]);
+        // ensureUser(vp[0], (resolvedUser) => {
+        //   self.setItemPermissionsUser(id, resolvedUser, vp[1]);
+        // });
+      }
     });
 
-    oListItem
-      .get_roleAssignments()
-      .getByPrincipal(sal.globalConfig.currentUser)
-      .deleteObject();
+    function onFindItemSucceeded() {
+      console.log("Successfully found item");
+      var currCtx = new SP.ClientContext.get_current();
+      var web = currCtx.get_web();
 
-    function onUpdatePermsSucceeded() {
-      console.log(
-        "Successfully set permissions on " + this.oListItem.get_item("Title")
+      if (reset) {
+        oListItem.resetRoleInheritance();
+        oListItem.breakRoleInheritance(false, false);
+        oListItem
+          .get_roleAssignments()
+          .getByPrincipal(sal.globalConfig.currentUser)
+          .deleteObject();
+      } else {
+        oListItem.breakRoleInheritance(false, false);
+      }
+      //var oList = web.get_lists().getByTitle(self.config.def.title);
+
+      this.resolvedGroups.forEach((groupPairs) => {
+        let roleDefBindingColl = SP.RoleDefinitionBindingCollection.newObject(
+          currCtx
+        );
+        roleDefBindingColl.add(
+          web.get_roleDefinitions().getByName(groupPairs[1])
+        );
+        oListItem.get_roleAssignments().add(groupPairs[0], roleDefBindingColl);
+      });
+
+      this.users.forEach((userPairs) => {
+        let roleDefBindingColl = SP.RoleDefinitionBindingCollection.newObject(
+          currCtx
+        );
+        roleDefBindingColl.add(
+          web.get_roleDefinitions().getByName(userPairs[1])
+        );
+        oListItem.get_roleAssignments().add(userPairs[0], roleDefBindingColl);
+      });
+
+      let data = { oListItem, callback };
+
+      function onSetItemPermissionsSuccess() {
+        console.log("Successfully set permissions");
+        callback(oListItem);
+      }
+
+      function onSetItemPermissionsFailure(sender, args) {
+        console.error(
+          "Failed to update permissions on item: " +
+            this.oListItem.get_lookupValue() +
+            args.get_message() +
+            "\n" +
+            args.get_stackTrace(),
+          false
+        );
+      }
+
+      currCtx.load(oListItem);
+      currCtx.executeQueryAsync(
+        Function.createDelegate(data, onSetItemPermissionsSuccess),
+        Function.createDelegate(data, onSetItemPermissionsFailure)
       );
     }
 
-    function onUpdatePermsFailed(sender, args) {
-      SP.UI.Notify.addNotification(
+    function onFindItemFailed(sender, args) {
+      console.error(
         "Failed to update permissions on item: " +
           this.title +
           args.get_message() +
@@ -620,21 +888,25 @@ function SPList(listDef) {
         false
       );
     }
-    let data = { oListItem: oListItem };
+    let data = { id, oListItem, users, resolvedGroups, callback };
     //let data = { title: oListItem.get_item("Title"), oListItem: oListItem };
 
     currCtx.load(oListItem);
+    users.map((user) => currCtx.load(user[0]));
     currCtx.executeQueryAsync(
-      Function.createDelegate(data, onUpdatePermsSucceeded),
-      Function.createDelegate(data, onUpdatePermsFailed)
+      Function.createDelegate(data, onFindItemSucceeded),
+      Function.createDelegate(data, onFindItemFailed)
     );
-  };
+  }
 
   /*****************************************************************
                             getFolderContents          
     ******************************************************************/
-  self.getFolderContents = function (folderName, callback) {
-    var folder = sal.globalConfig.website.getFolderByServerRelativeUrl(
+  function getFolderContents(folderName, callback) {
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+
+    var folder = web.getFolderByServerRelativeUrl(
       sal.globalConfig.siteUrl + "/" + self.config.def.name + "/" + folderName
     );
     files = folder.get_files();
@@ -672,13 +944,13 @@ function SPList(listDef) {
       Function.createDelegate(data, onGetListFilesSucceeded),
       Function.createDelegate(data, ongetListFilesFailed)
     );
-  };
+  }
 
   /*****************************************************************
                                   
     ******************************************************************/
 
-  self.showModal = function (formName, title, args, callback) {
+  function showModal(formName, title, args, callback) {
     var id = "";
     var options = SP.UI.$create_DialogOptions();
     options.title = title;
@@ -720,9 +992,9 @@ function SPList(listDef) {
       rootFolder;
     console.log("Options url: " + options.url);
     SP.UI.ModalDialog.showModalDialog(options);
-  };
+  }
 
-  self.uploadNewDocument = function (folder, title, args, callback) {
+  function uploadNewDocument(folder, title, args, callback) {
     //folder = folder != '/' ? folder : '';
     var options = SP.UI.$create_DialogOptions();
     options.title = title;
@@ -749,44 +1021,62 @@ function SPList(listDef) {
 
     console.log("Options url: " + options.url);
     SP.UI.ModalDialog.showModalDialog(options);
-  };
+  }
 
-  self.createFolder = function (folderName, callback, requestingOffice = null) {
-    // Used in document libraries
-    self.requestedCallback = callback;
+  function upsertListFolderPath(folderPath, callback) {
+    var folderArr = folderPath.split("/");
+    var idx = 0;
 
-    if (requestingOffice) {
-      var folder = self.config.listRef
-        .get_rootFolder()
-        .get_folders()
-        .add(folderName);
-    } else {
-      var folder = self.config.listRef
-        .get_rootFolder()
-        .get_folders()
-        .add(folderName);
-    }
-    function onCreateFolderSucceeded(sender, args) {
-      this.callback();
-    }
-
-    let data = { folderName, callback, folder };
-    self.config.currentContext.load(folder);
-    self.config.currentContext.executeQueryAsync(
-      Function.createDelegate(data, onCreateFolderSucceeded),
-      onQueryFailed
-    );
-  };
-
+    let upsertListFolderInner = function (parentPath, folderArr, idx, success) {
+      let folderName = folderArr[idx];
+      idx++;
+      let curPath = folderArr.slice(0, idx).join("/");
+      ensureListFolder(
+        curPath,
+        (iFolder) => {
+          if (idx >= folderArr.length) {
+            //We've reached the innermost folder and found it exists
+            success(iFolder.get_id());
+          } else {
+            upsertListFolderInner(curPath, folderArr, idx, success);
+          }
+        },
+        () => {
+          self.createListFolder(
+            folderName,
+            (iFolder) => {
+              if (idx >= folderArr.length) {
+                //We've reached the innermost folder and found it exists
+                success(iFolder);
+              } else {
+                upsertListFolderInner(curPath, folderArr, idx, success);
+              }
+            },
+            parentPath
+          );
+        }
+      );
+    };
+    upsertListFolderInner("", folderArr, idx, callback);
+  }
+  /**
+   * CreateListFolder
+   * Creates a folder at the specified path
+   * @param {String} folderName
+   * @param {Function} callback
+   * @param {String} path
+   */
   self.createListFolder = function (folderName, callback, path = "") {
     // Used for lists, duh
-    self.requestedCallback = callback;
-
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+    var oList = web.get_lists().getByTitle(self.config.def.title);
+    let folderUrl = "";
     var itemCreateInfo = new SP.ListItemCreationInformation();
     itemCreateInfo.set_underlyingObjectType(SP.FileSystemObjectType.folder);
     itemCreateInfo.set_leafName(folderName);
     if (path) {
-      let folderUrl =
+      folderUrl =
         sal.globalConfig.siteUrl +
         "/Lists/" +
         self.config.def.name +
@@ -795,13 +1085,21 @@ function SPList(listDef) {
       itemCreateInfo.set_folderUrl(folderUrl);
     }
 
-    var newItem = self.config.listRef.addItem(itemCreateInfo);
+    var newItem = oList.addItem(itemCreateInfo);
     newItem.set_item("Title", folderName);
 
     newItem.update();
 
     function onCreateFolderSucceeded(sender, args) {
-      this.callback(this.newItem.get_id());
+      callback(this.newItem.get_id());
+    }
+
+    function onCreateFolderFailed(sender, args) {
+      alert(
+        `Request on list ${
+          self.config.def.name
+        } failed, producing the following error: \n ${args.get_message()} \nStackTrack: \n ${args.get_stackTrace()}`
+      );
     }
 
     let data = { folderName, callback, newItem };
@@ -809,11 +1107,69 @@ function SPList(listDef) {
     self.config.currentContext.load(newItem);
     self.config.currentContext.executeQueryAsync(
       Function.createDelegate(data, onCreateFolderSucceeded),
-      onQueryFailed
+      Function.createDelegate(data, onCreateFolderFailed)
     );
   };
 
-  self.createFolderRec = function (folderUrl, success) {
+  function ensureListFolder(path, onExists, onNonExists) {
+    let folderUrl =
+      sal.globalConfig.siteUrl + "/Lists/" + self.config.def.name + "/" + path;
+
+    var ctx = SP.ClientContext.get_current();
+
+    // Could also call getFileByServerRelativeUrl() here. Doesn't matter.
+    // The way this works is identical for files and folders.
+    var folder = ctx.get_web().getFolderByServerRelativeUrl(folderUrl);
+    folder.get_listItemAllFields();
+    var data = { folder, path, onExists, onNonExists };
+    ctx.load(folder, "Exists", "Name");
+
+    function onQueryFolderSucceeded() {
+      if (folder.get_exists()) {
+        // Folder exists and isn't hidden from us. Print its name.
+        console.log(
+          `Folder ${folder.get_name()} exists in ${self.config.def.name}`
+        );
+        var currCtx = new SP.ClientContext.get_current();
+
+        var folderItem = folder.get_listItemAllFields();
+        function onQueryFolderItemSuccess() {
+          onExists(folderItem);
+        }
+        function onQueryFolderItemFailure(sender, args) {
+          console.error("Failed to find folder at " + path, args);
+        }
+        data = { folderItem, path, onExists };
+        currCtx.load(folderItem);
+        currCtx.executeQueryAsync(
+          Function.createDelegate(data, onQueryFolderItemSuccess),
+          Function.createDelegate(data, onQueryFolderItemFailure)
+        );
+      } else {
+        console.warn("Folder exists but is hidden (security-trimmed) for us.");
+      }
+    }
+
+    function onQueryFolderFailed(sender, args) {
+      if (args.get_errorTypeName() === "System.IO.FileNotFoundException") {
+        // Folder doesn't exist at all.
+        console.log(
+          `SAL.SPList.ensureListFolder: \
+          Folder ${path} does not exist in ${self.config.def.name}`
+        );
+        onNonExists();
+      } else {
+        // An unexpected error occurred.
+        console.error("Error: " + args.get_message());
+      }
+    }
+    ctx.executeQueryAsync(
+      Function.createDelegate(data, onQueryFolderSucceeded),
+      Function.createDelegate(data, onQueryFolderFailed)
+    );
+  }
+
+  function createFolderRec(folderUrl, success) {
     var ctx = SP.ClientContext.get_current();
     var list = self.config.listRef;
     var createFolderInternal = function (parentFolder, folderUrl, success) {
@@ -839,9 +1195,107 @@ function SPList(listDef) {
       );
     };
     createFolderInternal(list.get_rootFolder(), folderUrl, success);
-  };
+  }
 
-  self.showListView = function (filter) {
+  function setLibFolderPermissions(path, valuePairs, callback, reset = false) {
+    var users = new Array();
+    var resolvedGroups = new Array();
+    let relativeUrl =
+      sal.globalConfig.siteUrl + "/" + self.config.def.name + "/" + path;
+
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+    var folder = web.getFolderByServerRelativeUrl(relativeUrl);
+
+    valuePairs.forEach((vp) => {
+      let resolvedGroup = sal.getSPSiteGroupByName(vp[0]);
+      if (resolvedGroup) {
+        resolvedGroups.push([resolvedGroup, vp[1]]);
+      } else {
+        //This doesn't appear to be a group, let's see if we can find a user
+        users.push([currCtx.get_web().ensureUser(vp[0]), vp[1]]);
+      }
+    });
+
+    function onFindFolderSuccess() {
+      var currCtx = new SP.ClientContext.get_current();
+      var web = currCtx.get_web();
+
+      let folderItem = this.folder.get_listItemAllFields();
+      if (reset) {
+        folderItem.resetRoleInheritance();
+        folderItem.breakRoleInheritance(false, false);
+        folderItem
+          .get_roleAssignments()
+          .getByPrincipal(sal.globalConfig.currentUser)
+          .deleteObject();
+      } else {
+        folderItem.breakRoleInheritance(false, false);
+      }
+
+      this.resolvedGroups.forEach((groupPairs) => {
+        let roleDefBindingColl = SP.RoleDefinitionBindingCollection.newObject(
+          currCtx
+        );
+        roleDefBindingColl.add(
+          web.get_roleDefinitions().getByName(groupPairs[1])
+        );
+        folderItem.get_roleAssignments().add(groupPairs[0], roleDefBindingColl);
+      });
+
+      this.users.forEach((userPairs) => {
+        let roleDefBindingColl = SP.RoleDefinitionBindingCollection.newObject(
+          currCtx
+        );
+        roleDefBindingColl.add(
+          web.get_roleDefinitions().getByName(userPairs[1])
+        );
+        folderItem.get_roleAssignments().add(userPairs[0], roleDefBindingColl);
+      });
+
+      let data = { folderItem, callback };
+
+      function onSetFolderPermissionsSuccess() {
+        console.log("Successfully set permissions");
+        this.callback(folderItem);
+      }
+
+      function onSetFolderPermissionsFailure(sender, args) {
+        console.error(
+          "Failed to update permissions on item: " +
+            this.folderItem.get_lookupValue() +
+            args.get_message() +
+            "\n" +
+            args.get_stackTrace(),
+          false
+        );
+      }
+
+      currCtx.load(folderItem);
+      currCtx.executeQueryAsync(
+        Function.createDelegate(data, onSetFolderPermissionsSuccess),
+        Function.createDelegate(data, onSetFolderPermissionsFailure)
+      );
+    }
+
+    function onFindFolderFailure(sender, args) {
+      console.error(
+        "Something went wrong setting perms on library folder",
+        args
+      );
+    }
+
+    var data = { folder, users, callback, resolvedGroups, valuePairs, reset };
+
+    users.map((user) => currCtx.load(user[0]));
+    currCtx.load(folder);
+    currCtx.executeQueryAsync(
+      Function.createDelegate(data, onFindFolderSuccess),
+      Function.createDelegate(data, onFindFolderFailure)
+    );
+  }
+
+  function showListView(filter) {
     // Redirect to the default sharepoint list view
     listUrl =
       sal.globalConfig.siteUrl +
@@ -850,5 +1304,23 @@ function SPList(listDef) {
       "/AllItems.aspx" +
       filter;
     window.location.assign(listUrl);
+  }
+
+  let publicMembers = {
+    createListItem,
+    getListItems,
+    updateListItem,
+    deleteListItem,
+    setItemPermissions,
+    getFolderContents,
+    showModal,
+    uploadNewDocument,
+    upsertListFolderPath,
+    ensureListFolder,
+    createFolderRec,
+    setLibFolderPermissions,
+    showListView,
   };
-}
+
+  return publicMembers;
+};

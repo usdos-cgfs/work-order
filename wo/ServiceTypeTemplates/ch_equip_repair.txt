@@ -9,8 +9,9 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
+      Supervisor: { type: "Person", koMap: "repairSupervisor", required: true },
       Location: { type: "Text", koMap: "repairLocation", required: true },
-      Type: { type: "Type", koMap: "repairType", required: true },
+      RepairType: { type: "Type", koMap: "repairType", required: true },
     },
   });
 
@@ -18,6 +19,8 @@
    *    Declare Observables
    ***************************************************************/
   vm.repairLocation = ko.observable();
+
+  vm.repairSupervisor = new PeopleField();
 
   vm.repairType = ko.observable();
   vm.repairTypeOpts = ko.observableArray([
@@ -31,6 +34,21 @@
 
 <script type="text/html" id="tmpl_ch_equip_repair">
   <div class="ui form">
+    <div class="eight wide field">
+      <label>Supervisor: </label>
+      <input
+        class="editable-field"
+        type="text"
+        disabled="true"
+        data-bind="value: repairSupervisor.userName, visible: currentView() == 'view'"
+      />
+      <div
+        id="peoplerepairSupervisor"
+        class="editable-field"
+        data-bind="people: repairSupervisor.user, 
+          visible: currentView() != 'view'"
+      ></div>
+    </div>
     <div class="two fields">
       <div class="field">
         <label>Location:</label>

@@ -9,7 +9,7 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      FullName: { type: "Text", koMap: "overtimeFullName", required: true },
+      FullName: { type: "Person", koMap: "overtimeFullName", required: true },
       ManagerDept: {
         type: "Person",
         koMap: "overtimeManagerDept",
@@ -26,6 +26,12 @@
         koMap: "overtimeRequisitionOrder",
         required: true,
       },
+      LaborCategory: {
+        type: "Text",
+        koMap: "overtimeLaborCategory",
+        required: true,
+      },
+      LaborRate: { type: "Num", koMap: "overtimeLaborRate", required: true },
       ContractorType: {
         type: "Text",
         koMap: "overtimeContractorType",
@@ -47,11 +53,13 @@
   /***************************************************************
    *    Declare Observables
    ***************************************************************/
-  vm.overtimeFullName = ko.observable();
-  vm.overtimeManagerDept = ko.observable();
-  vm.overtimeManagerTask = ko.observable();
+  vm.overtimeFullName = new PeopleField();
+  vm.overtimeManagerDept = new PeopleField();
+  vm.overtimeManagerTask = new PeopleField();
   vm.overtimeDepartment = ko.observable();
   vm.overtimeRequisitionOrder = ko.observable();
+  vm.overtimeLaborCategory = ko.observable();
+  vm.overtimeLaborRate = ko.observable();
   vm.overtimeContractorType = ko.observable();
   vm.overtimeContractorTypeOpts = ko.observableArray(["SCA", "Non-SCA"]);
   vm.overtimeDates = ko.observable();
@@ -62,33 +70,51 @@
   <div class="ui form">
     <div class="two fields">
       <div class="field">
-        <label>Contractor Name:</label>
+        <label>Contractor: </label>
         <input
           class="editable-field"
           type="text"
-          data-bind="disabled:
-              currentView() == 'view', value: overtimeFullName"
+          disabled="true"
+          data-bind="value: overtimeFullName.userName, visible: currentView() == 'view'"
         />
+        <div
+          id="peopleovertimeFullName"
+          class="editable-field"
+          data-bind="people: overtimeFullName.user, 
+            visible: currentView() != 'view'"
+        ></div>
       </div>
       <div class="field">
-        <label>Department Manager:</label>
+        <label>Dept Manager: </label>
         <input
           class="editable-field"
           type="text"
-          data-bind="disable: currentView() == 'view',
-              value: overtimeManagerDept"
+          disabled="true"
+          data-bind="value: overtimeManagerDept.userName, visible: currentView() == 'view'"
         />
+        <div
+          id="peopleovertimeManagerDept"
+          class="editable-field"
+          data-bind="people: overtimeManagerDept.user, 
+            visible: currentView() != 'view'"
+        ></div>
       </div>
     </div>
     <div class="two fields">
       <div class="field">
-        <label>Task Manager:</label>
+        <label>Task Manager: </label>
         <input
           class="editable-field"
           type="text"
-          data-bind="disabled:
-              currentView() == 'view', value: overtimeManagerTask"
+          disabled="true"
+          data-bind="value: overtimeManagerTask.userName, visible: currentView() == 'view'"
         />
+        <div
+          id="peopleovertimeManagerTask"
+          class="editable-field"
+          data-bind="people: overtimeManagerTask.user, 
+            visible: currentView() != 'view'"
+        ></div>
       </div>
       <div class="field">
         <label>Department:</label>
@@ -97,6 +123,27 @@
           type="text"
           data-bind="disable: currentView() == 'view',
               value: overtimeDepartment"
+        />
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label>Labor Category (LCAT):</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disabled:
+              currentView() == 'view', value: overtimeLaborCategory"
+        />
+      </div>
+      <div class="field">
+        <label>Labor Rate (Hourly Rate):</label>
+        <input
+          class="editable-field"
+          type="number"
+          min="0"
+          data-bind="disabled:
+              currentView() == 'view', value: overtimeLaborRate"
         />
       </div>
     </div>

@@ -192,6 +192,7 @@ var configPipelinesListDef = {
     ActionType: { type: "Text", koMap: "empty" },
     ActionOffice: { type: "Lookup", koMap: "empty" },
     RequestOrg: { type: "Lookup", koMap: "empty" },
+    WildCardAssignee: { type: "Text", koMap: "empty" },
   },
 };
 
@@ -242,7 +243,9 @@ function PeopleField() {
   this.userId = ko.pureComputed(
     {
       read: () => {
-        return this.user().ID;
+        if (this.user()) {
+          return this.user().ID;
+        }
       },
       write: (value) => {
         if (value) {
@@ -251,11 +254,14 @@ function PeopleField() {
           user.userName = value.get_lookupValue();
           user.isEnsured = false;
           this.user(user);
+          this.lookupUser(value);
         }
       },
     },
     this
   );
+  this.lookupUser = ko.observable();
+  this.ensuredUser = ko.observable();
 }
 /************************************************************
  * Set Knockout View Model
@@ -264,6 +270,14 @@ function koviewmodel() {
   var self = this;
 
   self.empty = ko.observable();
+
+  self.applicationIsLoaded = ko.observable(false);
+
+  self.applicationIsLoaded.subscribe(function (state) {
+    if (state && typeof initAppPage === typeof Function) {
+      initAppPage();
+    }
+  });
 
   //self.serviceTypeAbbreviations = ko.observableArray(Object.keys(woViews));
   //self.serviceTypeViews = ko.observable(woViews);
@@ -355,6 +369,34 @@ function koviewmodel() {
     }
   });
 
+  self.assignmentShowAssignment = function (assignment) {
+    let args = { id: assignment.ID };
+    self
+      .listRefAssignment()
+      .showModal("DispForm.aspx", assignment.Title, args, function () {
+        fetchRequestAssignments();
+      });
+  };
+
+  self.assignmentCurUserIsAOorAssignee = function (assignment) {
+    let isAssignee = false;
+    let isAO = false;
+    if (self.userIsSysAdmin()) {
+      return true;
+    }
+    if (assignment.Assignee) {
+      isAssignee =
+        assignment.Assignee.get_lookupId() ==
+        sal.globalConfig.currentUser.get_id();
+    } else if (assignment.ActionOffice) {
+      isAO = self
+        .userActionOfficeMembership()
+        .map((ao) => ao.ID)
+        .includes(assignment.ActionOffice.get_lookupId());
+    }
+    return isAO || isAssignee;
+  };
+
   // Assignment Level: Action Item
   self.assignmentCurUserCanComplete = function (assignment) {
     let isStatus = assignment.Status == "In Progress";
@@ -362,14 +404,12 @@ function koviewmodel() {
     if (isType && isStatus) {
       // This is the most intensive check, so let's only perform if the easy
       // ones are true
-      return vm
-        .userActionOfficeMembership()
-        .map((ao) => ao.ID)
-        .includes(assignment.actionOffice.ID);
+      return self.assignmentCurUserIsAOorAssignee(assignment);
     } else {
       return false;
     }
   };
+
   self.assignmentComplete = function (assignment, advance = false) {
     // Update this assignment with our approval
     let vp = [
@@ -406,10 +446,7 @@ function koviewmodel() {
     if (isType && isStatus) {
       // This is the most intensive check, so let's only perform if the easy
       // ones are true
-      return vm
-        .userActionOfficeMembership()
-        .map((ao) => ao.ID)
-        .includes(assignment.actionOffice.ID);
+      return self.assignmentCurUserIsAOorAssignee(assignment);
     } else {
       return false;
     }
@@ -428,7 +465,11 @@ function koviewmodel() {
       // Create a new action
       createAction("Approved", `The request has been approved.`);
 
-      fetchRequestAssignments();
+      fetchRequestAssignments(self.requestID(), function (assignment) {
+        if (advance) {
+          actionComplete();
+        }
+      });
     });
   };
 
@@ -489,24 +530,29 @@ function koviewmodel() {
     self.requestOrgs(self.requestOrgs().filter((ao) => ao.ID != assignment.ID));
   };
 
+  self.assignActionOffice = ko.observable();
   self.assignAssignee = ko.observable();
 
-  self.assignOfficeAssignee = ko.observable();
+  self.assignRequestOffice = ko.observable();
 
   /************************************************************
    * ADMIN: Advance
    ************************************************************/
   self.requestCurUserAdvance = ko.pureComputed(function () {
     if (self.requestStage() && self.requestStage().Title != "Closed") {
-      // which offices is the current user a member of?
-      let uao = self
-        .userActionOfficeMembership()
-        .map((uao) => uao.RequestOrg.get_lookupValue());
+      if (vm.userIsSysAdmin()) {
+        return true;
+      } else {
+        // which offices is the current user a member of?
+        let uao = self
+          .userActionOfficeMembership()
+          .map((uao) => uao.RequestOrg.get_lookupValue());
 
-      // Check if we are part of the action office assigned to this request,
-      return uao.includes(
-        self.requestStageOrg() ? self.requestStageOrg().Title : null
-      );
+        // Check if we are part of the action office assigned to this request,
+        return uao.includes(
+          self.requestStageOrg() ? self.requestStageOrg().Title : null
+        );
+      }
     }
   });
 
@@ -527,10 +573,14 @@ function koviewmodel() {
   self.tab = ko.observable();
   self.tab.subscribe(function (newPage) {
     console.log("New Page: ", newPage);
-    $(".ui.menu").find(".item").tab("change tab", newPage);
-    if (newPage == "order-detail") {
-      console.log("Activate Accordion");
-      $(".ui.accordion").accordion();
+    try {
+      $(".ui.menu").find(".item").tab("change tab", newPage);
+      if (newPage == "order-detail") {
+        console.log("Activate Accordion");
+        $(".ui.accordion").accordion();
+      }
+    } catch (e) {
+      console.warn("Error setting tab, are we on a page that supports it?", e);
     }
     if (self.requestID()) {
       updateUrlParam("reqid", self.requestID());
@@ -601,15 +651,15 @@ function koviewmodel() {
   };
 
   self.allOfficeOrders = ko.pureComputed(() => {
-    let offices = self
+    let orgs = self
       .userActionOfficeMembership()
       .map((ao) => ao.RequestOrg.get_lookupValue());
     // Get the types of orders we're responsible for based on the ConfigServiceType
 
     if (!self.adminAllOrdersBool()) {
       let officeOrders = self.allOrders().filter((order) => {
-        return order.RequestOrgs.find((ao) =>
-          offices.includes(ao.get_lookupValue())
+        return order.RequestOrgs.find((ro) =>
+          orgs.includes(ro.get_lookupValue())
         );
       });
 
@@ -777,16 +827,22 @@ function koviewmodel() {
   });
 
   self.lookupParseText = function (col, viewFields, val) {
-    // Parse the type of val and return text
-    switch (viewFields[col].type) {
-      case "RichText":
-        return $(val).text();
-        break;
-      case "DateTime":
-        return new Date(val).toLocaleDateString();
-        break;
-      default:
-        return val;
+    // If there's a value for this field
+    if (val) {
+      // Parse the type of val and return text
+      switch (viewFields[col].type) {
+        case "RichText":
+          return $(val).text();
+          break;
+        case "DateTime":
+          return new Date(val).toLocaleDateString();
+          break;
+        case "Person":
+          return val.userName();
+          break;
+        default:
+          return val;
+      }
     }
   };
 
@@ -797,7 +853,11 @@ function koviewmodel() {
     let myAOIDs = self.userActionOfficeMembership().map((ao) => ao.ID);
     return self
       .allAssignments()
-      .filter((asg) => myAOIDs.includes(asg.actionOffice.ID));
+      .filter((asg) =>
+        asg.actionOffice
+          ? myAOIDs.includes(asg.actionOffice.ID)
+          : asg.Assignee.get_lookupId == sal.globalConfig.currentUser.get_id()
+      );
   });
 
   self.assignedOpenOrders = ko.pureComputed(() => {
@@ -958,7 +1018,7 @@ function koviewmodel() {
 
   self.selectedServiceTypeTemplate = function () {
     if (self.selectedServiceType()) {
-      return "tmpl_" + vm.selectedServiceType().UID;
+      return "tmpl_" + self.selectedServiceType().UID;
     } else {
       return "";
     }
@@ -1010,7 +1070,10 @@ function koviewmodel() {
   };
 
   self.loadedListItemLists.subscribe(function (val) {
-    if (val == 8) {
+    let NUM_CONFIG_LISTS = 6;
+    let NUM_PREFETCH_LISTS = 2;
+    let TOTAL_LISTS_TO_LOAD = NUM_CONFIG_LISTS + NUM_PREFETCH_LISTS;
+    if (val == TOTAL_LISTS_TO_LOAD) {
       initServiceTypes();
     }
   });
@@ -1036,12 +1099,106 @@ function koviewmodel() {
     return (
       _spPageContextInfo.webAbsoluteUrl +
       `/Pages/approval.aspx?assignment=` +
-      id
+      id +
+      `&reqid=` +
+      self.requestID()
     );
   };
+
+  self.requestLinkAdminReject = (id) => {
+    return (
+      _spPageContextInfo.webAbsoluteUrl +
+      `/Pages/approval.aspx?assignment=` +
+      id +
+      `&reqid=` +
+      self.requestID() +
+      `&reject=true`
+    );
+  };
+
+  /************************************************************
+   * Observables for work order Folders
+   ************************************************************/
+  self.requestFolderPath = ko.pureComputed(() => {
+    return `${self.requestorOffice().Title}/${self.requestID()}`;
+  });
+
+  self.foldersToCreate = ko.observable();
+  self.foldersCreated = ko.observable();
+  self.foldersCreatedInc = function () {
+    self.foldersCreated(self.foldersCreated() + 1);
+  };
+  self.foldersCreated.subscribe((numCreated) => {
+    // We'll create the attachments folder when they click upload.
+    // We'll create the comments folder when they click submit.
+    // Otherwise, we'll pre-create the following:
+    // Workorder, Action, Assignment, Emails
+    let NUM_LIST_FOLDERS = 4;
+    let NUM_LIB_FOLDERS = 0;
+    let NUM_ST_FOLDERS = self.requestSvcTypeListBool() ? 1 : 0;
+
+    let TOTAL_FOLDERS_TO_CREATE =
+      NUM_LIB_FOLDERS + NUM_LIST_FOLDERS + NUM_ST_FOLDERS;
+
+    if (numCreated == TOTAL_FOLDERS_TO_CREATE) {
+      createNewWorkorderItems();
+    }
+  });
+
+  self.requestFolderPerms = ko.pureComputed(() => {
+    let folderPermissions = [
+      [sal.globalConfig.currentUser.get_loginName(), "Restricted Contribute"],
+      ["workorder Owners", "Full Control"],
+      ["Restricted Readers", "Restricted Read"],
+    ];
+
+    self.selectedPipeline().forEach((stage) => {
+      // first get the action office
+      let assignedOffice = self
+        .configActionOffices()
+        .find((ao) => ao.ID == stage.ActionOffice.get_lookupId());
+      let assignedOrg = self
+        .configRequestOrgs()
+        .find((ro) => ro.ID == assignedOffice.RequestOrg.get_lookupId());
+      folderPermissions.push([
+        assignedOrg.UserGroup.get_lookupValue(),
+        "Restricted Contribute",
+      ]);
+
+      //If there's a wildcard assignee, get them too
+      if (stage.WildCardAssignee) {
+        let user = self[stage.WildCardAssignee].userName();
+        if (user) {
+          folderPermissions.push([
+            self[stage.WildCardAssignee].userName(),
+            "Restricted Contribute",
+          ]);
+        }
+      }
+    });
+    return folderPermissions;
+  });
   /************************************************************
    * Observables for work order header
    ************************************************************/
+  self.requestSvcTypeListBool = ko.pureComputed(() => {
+    return self.requestSvcTypeListDef() ? true : false;
+  });
+
+  self.requestSvcTypeListDef = ko.pureComputed(() => {
+    return self.selectedServiceType()
+      ? self.selectedServiceType().listDef
+        ? self.selectedServiceType().listDef
+        : null
+      : null;
+  });
+
+  self.requestSvcTypeListViewFields = ko.pureComputed(() => {
+    return self.requestSvcTypeListDef()
+      ? self.requestSvcTypeListDef().viewFields
+      : null;
+  });
+
   self.requestLoaded = ko.observable(new Date());
   self.requestID = ko.observable(); // This is the key that will map everything together.
   self.requestHeader = ko.observable(); // This is the raw JSON object returned by the work order query.
@@ -1052,21 +1209,6 @@ function koviewmodel() {
   self.requestEstClosed = ko.observable();
 
   self.requestShowDescription = ko.observable(false);
-
-  // self.requestDescription = ko.pureComputed({
-  //   read: function () {
-  //     if (self.currentView() != "view") {
-  //       console.log("we are editing");
-  //       return $("#request-description").val();
-  //     } else {
-  //       console.log("we are viewing");
-  //       return self.requestDescriptionHTML();
-  //     }
-  //   },
-  //   write: (val) => {
-  //     self.requestDescriptionHTML(val);
-  //   },
-  // });
 
   self.requestIsActive = ko.observable(); // Bool
   self.requestStatus = ko.observable(); // Open, Closed, etc
@@ -1112,36 +1254,11 @@ function koviewmodel() {
     }
   });
 
-  self.requestStageOfficeOrg = ko.pureComputed(() => {
-    if (self.requestStageOffice()) {
-      return self
-        .configRequestOrgs()
-        .find(
-          (ro) => ro.ID == self.requestStageOffice().RequestOrg.get_lookupId()
-        );
-    }
-  });
-
   // Requestor/Header Info
   self.requestorName = ko.observable();
   self.requestorTelephone = ko.observable();
   self.requestorEmail = ko.observable();
   self.requestorManager = new PeopleField();
-  self.requestorManagerLookupId = ko.observable;
-  // self.requestorManagerLookupId = ko.pureComputed({
-  //   read: () => {
-  //     return self.requestorManager().ID;
-  //   },
-  //   write: (value) => {
-  //     if (value) {
-  //       let user = new Object();
-  //       user.ID = value.get_lookupId();
-  //       user.userName = value.get_lookupValue();
-  //       user.isEnsured = false;
-  //       self.requestorManager(user);
-  //     }
-  //   },
-  // });
 
   self.requestOrgs = ko.observableArray(new Array());
 
@@ -1190,6 +1307,20 @@ function koviewmodel() {
         self.requestAssignments(new Array());
       }
     },
+  });
+
+  self.requestAssignmentsUsers = ko.pureComputed(function () {
+    let userArr = new Array();
+    self.requestAssignments().map(function (assignment) {
+      if (assignment.Assignee) {
+        // This was a wildcard assignment
+        userArr.push(assignment.Assignee);
+      } else if (assignment.actionOffice) {
+        //There's an action office here,
+        userArr.push(assignment.actionOffice.UserAddress);
+      }
+    });
+    return userArr;
   });
 
   // JSON Object for the requesting office
@@ -1330,6 +1461,7 @@ ko.bindingHandlers.people = {
           userObj["ID"] = user.get_id();
           userObj["userName"] = user.get_loginName();
           userObj["isEnsured"] = true;
+          userObj["ensuredUser"] = user;
           observable(userObj);
         });
       }

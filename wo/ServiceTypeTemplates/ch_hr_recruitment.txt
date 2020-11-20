@@ -9,43 +9,83 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      AccessType: { type: "Text", koMap: "accessType", required: false },
-      EmployeeType: {
+      Position: { type: "Text", koMap: "hrRecruitPosition", required: true },
+      NumPositions: {
         type: "Text",
-        koMap: "accessEmployeeType",
-        required: false,
+        koMap: "hrRecruitNumPositions",
+        required: true,
       },
-      FullName: { type: "Text", koMap: "accessFullName", required: false },
-      BadgeNum: { type: "Text", koMap: "accessBadgeNum", required: false },
-      ExpirationDate: {
-        type: "Text",
-        koMap: "accessExpirationDate",
-        required: false,
+      HiringManager: {
+        type: "Person",
+        koMap: "hrRecuitHiringManager",
+        required: true,
       },
-      Locations: {
-        type: "Text",
-        koMap: "accessLocations",
-        required: false,
-      },
-      Justification: {
-        type: "Text",
-        koMap: "accessJustification",
-        required: false,
-      },
-      Description: { type: "Text", koMap: "accessDesc" },
-      SpecialInstructions: {
-        type: "Text",
-        koMap: "accessSpecInst",
-        required: false,
-      },
+      Method: { type: "Text", koMap: "hrRecuitMethod", required: true },
     },
   });
 
   /***************************************************************
    *    Declare Observables
    ***************************************************************/
+  vm.hrRecruitPosition = ko.observable();
+  vm.hrRecruitNumPositions = ko.observable();
+  vm.hrRecuitHiringManager = new PeopleField();
+  vm.hrRecuitMethod = ko.observable();
+  vm.hrRecuitMethodOpts = ko.observableArray([
+    "Reassignment",
+    "Non-Competive",
+    "Merit Promotion",
+  ]);
 </script>
 
 <script type="text/html" id="tmpl_ch_hr_recruitment">
-  <div class="ui form"></div>
+  <div class="ui form">
+    <div class="two fields">
+      <div class="field">
+        <label>Position:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+              value: hrRecruitPosition"
+        />
+      </div>
+      <div class="field">
+        <label>Hiring Manager: </label>
+        <input
+          class="editable-field"
+          type="text"
+          disabled="true"
+          data-bind="value: hrRecuitHiringManager.userName, visible: currentView() == 'view'"
+        />
+        <div
+          id="peoplehrRecuitHiringManager"
+          class="editable-field"
+          data-bind="people: hrRecuitHiringManager.user, 
+          visible: currentView() != 'view'"
+        ></div>
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label>Number of Positions:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+            value: hrRecruitNumPositions"
+        />
+      </div>
+      <div class="field">
+        <label>Method of Recruitment:</label>
+        <select
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+            value: hrRecuitMethod, options: hrRecuitMethodOpts,
+            optionsCaption: 'Select...'"
+        ></select>
+      </div>
+    </div>
+  </div>
 </script>

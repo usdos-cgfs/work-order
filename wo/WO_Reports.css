@@ -1,0 +1,145 @@
+﻿
+#s4-searcharea,#SearchBox {
+	DISPLAY: none
+}
+.ms-quicklaunchheader {
+	DISPLAY: none
+}
+
+/*remove the background on notifications*/
+.s4-noti-in2
+{
+	background: none;
+	background-color: yellow;
+}
+
+.ms-formbody{
+	background-color: #EEEEF1;
+}
+.ms-formlabel{
+	background-color: #EEEEF1;
+	color:black;
+}
+
+.hiddenRow{
+	display:none; 
+	font-weight:bold; 
+	padding-bottom:5px; 
+	width:800px;
+	text-align:center;
+}
+.collapsed
+{
+	display:none;
+}
+
+.tablesorter
+{
+	border-collapse: collapse !important;
+}
+.tablesorter th
+{
+	border: 1px DarkGray solid !important;
+	background-color: Gainsboro;
+}
+
+table.tablesorter td
+{
+	border: 1px DarkGray solid !important;
+	vertical-align:top;
+	color: #595959 !important;  
+	vertical-align:top;
+}
+
+.tablesorter tbody
+{
+	/*text-align:center !important;*/
+}
+
+.tablesorter tbody td
+{
+	text-align:left;
+	padding-left:5px;
+	padding-right:5px;
+}
+
+.tablesorter tfoot th, .tablesorter thead th
+{
+	text-align:left;
+	padding-left:5px;
+}
+
+table.tablesorter thead tr .header {
+    background-position: left center;
+    padding-left: 20px;
+}​
+
+
+table.tablesorter tbody td:hover
+{
+   /* works background-color: blue !important; */
+}
+
+table.tablesorter tbody tr:hover {
+	/*background-color:lemonchiffon !important ;*/
+}
+TABLE.tablesorter THEAD TR .header
+{
+	padding-right: 10px !important;
+}
+
+
+.report tfoot th
+{
+	text-align:left;
+}
+
+.clear { /* generic container (i.e. div) for floating buttons */
+    overflow: hidden;
+    width: 100%;
+}
+
+.ui-icon
+{
+	margin-bottom:2px;
+	padding-top: 0px;
+	padding-bottom: 0px;
+	
+	display: inline-block !important;
+	white-space: normal !important;
+	/*zoom: 1.25;*/
+	vertical-align: middle !important;
+}
+fieldset
+{
+	margin-bottom:10px;
+	/*border-color:lightsteelblue;*/
+	border-width:2px;
+	padding-left: 5px;
+	padding-right: 5px;
+	padding-bottom:10px;
+}
+legend
+{
+	color:green;
+	padding-bottom:5px;
+}
+
+/*
+.ui-datepicker {
+    background: gainsboro;
+}
+*/
+@media print
+{
+	a {text-decoration:none;} 
+	body {font-family:Arial;}
+	
+	tfoot {display: table-footer-group;}
+	thead {display: table-header-group;}
+	
+	#s4-ribbonrow{display:none;}
+	#s4-titlerow{display:none !important}
+	.s4-title{display:none;}
+	.hideOnPrint{display:none;}
+}
