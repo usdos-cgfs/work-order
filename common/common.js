@@ -63,63 +63,65 @@ var pageViewModel = ["Title", "ViewArea", "ViewBody"];
 var linkViewModel = ["Title", "LinkType", "LinkUrl"];
 
 function makeDataTable(id) {
-  $(id).DataTable({
-    order: [[0, "desc"]],
-    iDisplayLength: 25,
-    deferRender: true,
-    bDestroy: true,
-    columnDefs: [{ width: "10%", targets: 0 }],
-    initComplete: function () {
-      //this.api().columns([1, 3, 4]).every( function () {
-      // this.api()
-      //   .columns()
-      //   .every(function () {
-      //     var tempCol = this;
-      //     $("").appendTo($(tempCol.header()));
-      //   });
-      this.api()
-        .columns()
-        .every(function () {
-          //this.api().columns([0, 2, 5]).every( function () {
-          // colum filtering from https://datatables.net/examples/api/multi_filter_select.html
-          var column = this;
-          if (
-            !["Assignees", "Description"].includes($(column.header()).html())
-          ) {
-            var className = "";
-            if ($(column.header()).html()) {
-              className =
-                "dataTableSelect" +
-                $(column.header()).html().replace(/\s+/g, "");
-            }
-            debugger;
-            //var columnValues = [];
-            //var columnTitle = $(column.header()).html();
-            // $(column.header()).append("<br>");
-            var select = $(
-              '<select class="' +
-                className +
-                '"><option value=""></option></select>'
-            )
-              .appendTo($(column.footer()).empty())
-              //.appendTo($(column.header()))
-              .on("change", function () {
-                var val = $.fn.dataTable.util.escapeRegex($(this).val());
+  if ($(id).length) {
+    $(id).DataTable({
+      order: [[0, "desc"]],
+      iDisplayLength: 25,
+      deferRender: true,
+      bDestroy: true,
+      columnDefs: [{ width: "10%", targets: 0 }],
+      initComplete: function () {
+        //this.api().columns([1, 3, 4]).every( function () {
+        // this.api()
+        //   .columns()
+        //   .every(function () {
+        //     var tempCol = this;
+        //     $("").appendTo($(tempCol.header()));
+        //   });
+        this.api()
+          .columns()
+          .every(function () {
+            //this.api().columns([0, 2, 5]).every( function () {
+            // colum filtering from https://datatables.net/examples/api/multi_filter_select.html
+            var column = this;
+            if (
+              !["Assignees", "Description"].includes($(column.header()).html())
+            ) {
+              var className = "";
+              if ($(column.header()).html()) {
+                className =
+                  "dataTableSelect" +
+                  $(column.header()).html().replace(/\s+/g, "");
+              }
+              debugger;
+              //var columnValues = [];
+              //var columnTitle = $(column.header()).html();
+              // $(column.header()).append("<br>");
+              var select = $(
+                '<select class="' +
+                  className +
+                  '"><option value=""></option></select>'
+              )
+                .appendTo($(column.footer()).empty())
+                //.appendTo($(column.header()))
+                .on("change", function () {
+                  var val = $.fn.dataTable.util.escapeRegex($(this).val());
 
-                column.search(val ? "^" + val + "$" : "", true, false).draw();
-              });
-              
-            column
-              .data()
-              .unique()
-              .sort()
-              .each(function (d, j) {
-                select.append('<option value="' + d + '">' + d + "</option>");
-              });
-          }
-        });
-    },
-  });
+                  column.search(val ? "^" + val + "$" : "", true, false).draw();
+                });
+
+              column
+                .data()
+                .unique()
+                .sort()
+                .each(function (d, j) {
+                  select.append('<option value="' + d + '">' + d + "</option>");
+                });
+            }
+          });
+      },
+    });
+  }
 }
 
 /* Business days start at 0, i.e. a workorder opened and closed

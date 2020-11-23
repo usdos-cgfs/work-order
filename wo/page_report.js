@@ -1,7 +1,7 @@
 var Workorder = window.Workorder || {};
 Workorder.Report = Workorder.Report || {};
 
-function initReportPage() {
+function initAppPage() {
   Workorder.Report.Report = new Workorder.Report.NewReportPage();
   Workorder.Report.Report.setInitialState();
   //$(".ui.checkbox").checkbox();

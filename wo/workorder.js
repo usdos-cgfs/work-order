@@ -1421,19 +1421,25 @@ function initUIComponents() {
   makeDataTable("#wo-closed-orders");
   makeDataTable("#wo-cancelled-orders");
 
-  $(".ui.checkbox").checkbox();
-  $(".ui.accordion").accordion();
+  if ($(".ui.checkbox").length) {
+    $(".ui.checkbox").checkbox();
+  }
+  if ($(".ui.accordion").length) {
+    $(".ui.accordion").accordion();
+  }
   // $(".view-action-office").popup({
   //   popup: ".ui.list-action-office.popup",
   //   on: "click",
   // });
-  $(".menu .item").tab();
-  $(".top.menu .item").tab({
-    onVisible: function () {
-      vm.tab(this.id);
-    },
-  });
-  $(".ui.secondary.menu").find(".item").tab("change tab", "my-open-orders");
+  if ($(".menu .item").length) {
+    $(".menu .item").tab();
+    $(".top.menu .item").tab({
+      onVisible: function () {
+        vm.tab(this.id);
+      },
+    });
+    $(".ui.secondary.menu").find(".item").tab("change tab", "my-open-orders");
+  }
   //$(".ui.top.menu").find(".item").tab("change tab", "my-orders");
 }
 

@@ -14,6 +14,10 @@
   rel="stylesheet"
   href="../SiteAssets/workorder/vendor/Semantic-UI-CSS-master/semantic.min.css"
 />
+<link
+  rel="stylesheet"
+  href="../SiteAssets/workorder/wo/workorder_reports.css"
+/>
 
 <!-- ko if: typeof vm._report != 'undefined' -->
 <div id="pageReport">
@@ -163,10 +167,11 @@
   <!-- /ko -->
 </div>
 <!-- /ko -->
-<!-- 
+
 <script src="../SiteAssets/workorder/vendor/jquery/jquery-3.3.1.min.js"></script>
+<script src="../SiteAssets/workorder/vendor/knockout/knockout-3.5.0.js"></script>
 <script src="../SiteAssets/workorder/common/common.js"></script>
 <script src="../SiteAssets/workorder/common/sal.js"></script>
 <script src="../SiteAssets/workorder/wo/viewmodels.js"></script>
-<script src="../SiteAssets/workorder/wo/workorder.js"></script> -->
+<script src="../SiteAssets/workorder/wo/workorder.js"></script>
 <script src="../SiteAssets/workorder/wo/page_report.js"></script>
