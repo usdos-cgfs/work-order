@@ -45,8 +45,17 @@ loadTester = function () {
       if (field.koMap != "empty" && field.koMap != "requestID") {
         switch (field.type) {
           case "Text":
-            console.log("text ", field);
-            vm[field.koMap](randString(4));
+            if (vm[field.koMap + "Opts"]) {
+              var obs = vm[field.koMap + "Opts"];
+              var opt = Math.floor(Math.random() * obs().length);
+              vm[field.koMap](obs()[opt]);
+              console.log(
+                `text opt ${field.koMap} ${vm[field.koMap + "Opts"]()[opt]}`
+              );
+            } else {
+              console.log("text ", field);
+              vm[field.koMap](randString(4));
+            }
             break;
 
           case "Number":
