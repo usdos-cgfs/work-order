@@ -93,7 +93,6 @@ function makeDataTable(id) {
                   "dataTableSelect" +
                   $(column.header()).html().replace(/\s+/g, "");
               }
-              debugger;
               //var columnValues = [];
               //var columnTitle = $(column.header()).html();
               // $(column.header()).append("<br>");
@@ -122,6 +121,17 @@ function makeDataTable(id) {
       },
     });
   }
+}
+
+function randString(length) {
+  var result = "";
+  var characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  var charactersLength = characters.length;
+  for (var i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
 }
 
 /* Business days start at 0, i.e. a workorder opened and closed

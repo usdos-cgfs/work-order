@@ -98,6 +98,7 @@
                   <th>Requestor</th>
                   <th>Submitted Date</th>
                   <th>Est. Completion Date<span class="ui blue">*</span></th>
+                  <th>Submission Delta</th>
                 </tr>
               </thead>
               <tbody data-bind="foreach: allOpenOrders">
@@ -110,7 +111,10 @@
                   <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
                   <td data-bind="text: RequestorName"></td>
                   <td data-bind="text: Created.format('yyyy-MM-dd')"></td>
-                  <td data-bind="text: $root.estimateClosingDate($data)"></td>
+                  <td
+                    data-bind="text: EstClosedDate ? EstClosedDate.format('yyyy-MM-dd') : 'N/A'"
+                  ></td>
+                  <td data-bind="text: $root.daysToCloseDate($data)"></td>
                 </tr>
               </tbody>
               <tfoot>
@@ -121,6 +125,7 @@
                   <td>Requestor</td>
                   <td>Submitted Date</td>
                   <td>Est. Completion Date<span class="ui blue">*</span></td>
+                  <th>Submission Delta</th>
                 </tr>
               </tfoot>
             </table>
@@ -963,6 +968,7 @@
 
 <script src="../SiteAssets/workorder/common/sal.js"></script>
 <script src="../SiteAssets/workorder/common/common.js"></script>
+<script src="../SiteAssets/workorder/common/test.js"></script>
 <script src="../SiteAssets/workorder/common/notifications.js"></script>
 <script src="../SiteAssets/workorder/common/deployment.js"></script>
 

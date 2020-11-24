@@ -764,6 +764,14 @@ function koviewmodel() {
     return closeDate.format("yyyy-MM-dd");
   };
 
+  self.daysToCloseDate = function request(request) {
+    if (request.EstClosedDate && request.RequestSubmitted) {
+      return businessDays(request.RequestSubmitted, request.EstClosedDate);
+    } else {
+      return "N/A";
+    }
+  };
+
   self.tableRequestTitle = ko.observable();
   self.tableRequestAssignments = ko.observableArray();
 
