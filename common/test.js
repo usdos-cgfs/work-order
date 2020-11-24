@@ -54,7 +54,7 @@ loadTester = function () {
               );
             } else {
               console.log("text ", field);
-              vm[field.koMap](randString(4));
+              vm[field.koMap](randString());
             }
             break;
 
@@ -65,6 +65,8 @@ loadTester = function () {
         }
       }
     });
+
+    vm.requestDescriptionHTML(randString());
 
     saveWorkOrder();
   }
@@ -83,7 +85,10 @@ loadTester = function () {
     }, 5000);
   }
 
-  function randString(length) {
+  function randString(length = null) {
+    if (!length) {
+      length = Math.floor(Math.random() * 200);
+    }
     var result = "";
     var characters =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
