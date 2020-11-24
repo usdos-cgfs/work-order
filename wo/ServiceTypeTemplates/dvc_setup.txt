@@ -43,9 +43,9 @@
   vm.dvcDuration = ko.observable();
   vm.dvcFarPOC = ko.observable();
   vm.dvcConnectionType = ko.observable();
-  vm.dvcConnectionTypes = ko.observableArray(["OpenNet", "ISDN", "IP"]);
+  vm.dvcConnectionTypeOpts = ko.observableArray(["OpenNet", "ISDN", "IP"]);
   vm.dvcCallType = ko.observable();
-  vm.dvcCallTypes = ko.observableArray(["Incoming", "Outgoing"]);
+  vm.dvcCallTypeOpts = ko.observableArray(["Incoming", "Outgoing"]);
   vm.dvcDialInNum = ko.observable();
 
   vm.dvcDateStr = ko.pureComputed({
@@ -101,7 +101,7 @@
           class="editable-field"
           type="text"
           data-bind="disable: currentView() == 'view',
-          options: dvcConnectionTypes, optionsCaption: 'Select...',
+          options: dvcConnectionTypeOpts, optionsCaption: 'Select...',
           value: dvcConnectionType"
         ></select>
       </div>
@@ -113,7 +113,7 @@
           class="editable-field"
           type="text"
           data-bind="disable: currentView() == 'view',
-            options: dvcCallTypes, optionsCaption: 'Select...',
+            options: dvcCallTypeOpts, optionsCaption: 'Select...',
             value: dvcCallType"
         ></select>
       </div>

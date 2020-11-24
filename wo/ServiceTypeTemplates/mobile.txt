@@ -25,15 +25,15 @@
    ***************************************************************/
   vm.phoneUser = ko.observable();
   vm.phoneEmployeeType = ko.observable();
-  vm.phoneEmployeeTypes = ko.observableArray(["FTE", "Contractor"]);
+  vm.phoneEmployeeTypeOpts = ko.observableArray(["FTE", "Contractor"]);
   vm.phoneRequestType = ko.observable();
-  vm.phoneRequestTypes = ko.observable([
+  vm.phoneRequestTypeOpts = ko.observable([
     "New",
     "Broken/Lost/Stolen",
     "Accessories",
   ]);
   vm.phonePlanType = ko.observable();
-  vm.phonePlanTypes = ko.observable(["Domestic", "Global"]);
+  vm.phonePlanTypeOpts = ko.observable(["Domestic", "Global"]);
 </script>
 
 <script type="text/html" id="tmpl_mobile">
@@ -52,7 +52,7 @@
           class="editable-field"
           type="text"
           data-bind="disable: currentView() == 'view',
-              options: phoneEmployeeTypes, optionsCaption: 'Select...', value: phoneEmployeeType"
+              options: phoneEmployeeTypeOpts, optionsCaption: 'Select...', value: phoneEmployeeType"
         ></select>
         </div>
     </div>
@@ -63,7 +63,7 @@
           class="editable-field"
           type="text"
           data-bind="disable: currentView() == 'view',
-              options: phoneRequestTypes, optionsCaption: 'Select...', value: phoneRequestType"
+              options: phoneRequestTypeOpts, optionsCaption: 'Select...', value: phoneRequestType"
         ></select>
       </div>
       <div class="field">
@@ -72,7 +72,7 @@
           class="editable-field"
           type="text"
           data-bind="disable: currentView() == 'view',
-              options: phonePlanTypes, optionsCaption: 'Select...', value: phonePlanType"
+              options: phonePlanTypeOpts, optionsCaption: 'Select...', value: phonePlanType"
         ></select>
         </div>
     </div>

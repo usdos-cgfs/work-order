@@ -47,7 +47,7 @@
     vm.requestShowDescription(isOverPrice == "Yes" ? false : true)
   );
 
-  vm.uncategorizedYesNo = ko.observableArray(["Yes", "No"]);
+  vm.uncategorizedYesNoOpts = ko.observableArray(["Yes", "No"]);
 </script>
 
 <script type="text/html" id="tmpl_uncategorized">
@@ -60,7 +60,7 @@
           <select
             class="editable-field"
             type="text"
-            data-bind="disable: currentView() == 'view', options: uncategorizedYesNo, optionsCaption: 'Select...', value: uncategorizedIsOfficeSupply"
+            data-bind="disable: currentView() == 'view', options: uncategorizedYesNoOpts, optionsCaption: 'Select...', value: uncategorizedIsOfficeSupply"
           >
           </select>
         </div>
