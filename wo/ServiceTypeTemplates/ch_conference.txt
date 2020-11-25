@@ -33,6 +33,13 @@
     "Bldg. C Auditorium (C161)",
   ]);
 
+  var opts = {
+    minDate: new Date(),
+    minTimeGap: 15,
+  };
+  vm.conferenceDate = new DateField(opts);
+  vm.conferencePers = new PeopleField();
+  /*
   vm.conferenceDate = ko.observable();
   vm.conferenceDateStr = ko.pureComputed({
     read: function () {
@@ -42,6 +49,9 @@
       vm.conferenceDate(new Date(val));
     },
   });
+  */
+
+  //$("#conferenceDateElement").datepicker();
 </script>
 
 <script type="text/html" id="tmpl_ch_conference">
@@ -49,12 +59,17 @@
     <div class="two fields">
       <div class="field">
         <label>Presentation Date and Time:</label>
-        <input
-          class="editable-field"
-          type="datetime-local"
-          data-bind="disabled:
-      currentView() == 'view', value: conferenceDateStr"
-        />
+        <div class="ui calendar">
+          <div class="ui input left icon">
+            <i class="calendar icon"></i>
+            <input
+              class="editable-field"
+              type="text"
+              data-bind="disabled:
+      currentView() == 'view', dateField: conferenceDate"
+            />
+          </div>
+        </div>
       </div>
       <div class="field">
         <label>Duration:</label>

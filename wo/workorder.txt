@@ -22,10 +22,10 @@
 />
 <!--<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">-->
 <link rel="stylesheet" href="../SiteAssets/workorder/vendor/trix/trix.css" />
-<link
+<!-- <link
   rel="stylesheet"
   href="../SiteAssets/workorder/vendor/Semantic-UI-CSS-master/semantic.min.css"
-/>
+/> -->
 
 <link rel="stylesheet" href="../SiteAssets/workorder/wo/workorder.css" />
 <!-- common/RDT/app"  -->
@@ -928,6 +928,10 @@
     <!-- /ko -->
   </div>
 </div>
+<p>
+  Issues or Questions? Contact us here:
+  <a href="mailto:cgfssharepoint@state.gov">cgfssharepoint@state.gov</a>
+</p>
 <div id="service-type-templates"></div>
 
 <!--<script src="/_layouts/15/SP.Runtime.js"></script>
@@ -958,8 +962,13 @@
 <script src="../SiteAssets/workorder/vendor/DataTables/datatables.min.js"></script>
 <script src="../SiteAssets/workorder/vendor/knockout/knockout-3.5.0.js"></script>
 <script src="../SiteAssets/workorder/vendor/trix/trix.js"></script>
-<script src="../SiteAssets/workorder/vendor/Semantic-UI-CSS-master/semantic.min.js"></script>
-<!-- <script src="../SiteAssets/workorder/vendor/nicEdit/nicEdit.js"></script> -->
+<!-- <script src="../SiteAssets/workorder/vendor/Semantic-UI-CSS-master/semantic.min.js"></script> -->
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.7/dist/semantic.min.css"
+/>
+<script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.7/dist/semantic.min.js"></script>
 
 <script
   type="text/javascript"

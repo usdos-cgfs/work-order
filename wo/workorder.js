@@ -6,6 +6,8 @@ tabsEnum = {
   "#order-detail": 4,
 };
 
+var dialog = {};
+
 function initStaticListRefs() {
   vm.listRefWO(new sal.NewSPList(workOrderListDef));
   //vm.listRefpu10k(new SPList(pu10kListDef));
@@ -569,7 +571,11 @@ function getValuePairs(listDef) {
       // Based on the field type, do any casting or conversions here
       switch (obj.type) {
         case "DateTime":
-          fieldValue = observable().toISOString();
+          if (observable.date) {
+            fieldValue = observable.date().toISOString();
+          } else {
+            fieldValue = observable().toISOString();
+          }
           break;
         case "Person":
           fieldValue = observable.userId();
@@ -611,6 +617,13 @@ function setValuePairs(listDef, jObject) {
       case "Person":
         observable.userId(jObject[field]);
         break;
+      case "DateTime":
+        if (observable.date) {
+          observable.date(jObject[field]);
+        } else {
+          observable(jObject[field]);
+        }
+        break;
       default:
         observable(jObject[field]);
     }
@@ -625,6 +638,11 @@ function clearValuePairs(listDef) {
         case "Person":
           observable.user(new Object());
           break;
+        case "DateTime":
+          if (observable.date) {
+            observable.date(new Date());
+            break;
+          }
         default:
           observable("");
       }
@@ -1288,7 +1306,10 @@ function closeWorkOrder(reason = "Closed") {
  ************************************************************/
 /* initApp -> fetchXListData -> initServiceTypes -> initTemplates -> initComplete */
 function initApp() {
-  SP.UI.ModalDialog.showWaitScreenWithNoClose("Initializing", "Please Wait...");
+  dialog.init = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+    "Initializing",
+    "Please Wait..."
+  );
   $(".non-editable-field").prop("disabled", true);
 
   console.log("initialized listeners");
@@ -1412,7 +1433,8 @@ function initComplete() {
     InitReport();
   }
   */
-  SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+  dialog.init.close();
+  //SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
 
 function initUIComponents() {
@@ -1421,6 +1443,7 @@ function initUIComponents() {
   makeDataTable("#wo-closed-orders");
   makeDataTable("#wo-cancelled-orders");
 
+  //$("#example1").calendar();
   if ($(".ui.checkbox").length) {
     $(".ui.checkbox").checkbox();
   }

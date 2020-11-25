@@ -19,7 +19,10 @@
   /***************************************************************
    *    Declare Observables
    ***************************************************************/
-  vm.presentationDate = ko.observable();
+  vm.presentationDate = new DateField({
+    minDate: new Date(),
+    minTimeGap: 15,
+  });
 
   vm.presentationLocation = ko.observable();
   vm.presentationDuration = ko.observable();
@@ -39,12 +42,18 @@
   <div class="ui form">
     <div class="eight wide field">
       <label>Presentation Date and Time:</label>
-      <input
-        class="editable-field"
-        type="datetime-local"
-        data-bind="disabled:
-      currentView() == 'view', value: presentationDateStr"
-      />
+      <div class="ui calendar">
+        <div class="ui input left icon">
+          <i class="calendar icon"></i>
+          <input
+            class="editable-field"
+            type="text"
+            data-bind="disabled:
+              currentView() == 'view', 
+              dateField: diplomaticPassportExpiration"
+          />
+        </div>
+      </div>
     </div>
     <div class="two fields">
       <div class="eight wide field">

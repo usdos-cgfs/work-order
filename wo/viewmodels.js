@@ -288,6 +288,30 @@ function PeopleField() {
   this.lookupUser = ko.observable();
   this.ensuredUser = ko.observable();
 }
+
+function DateField(
+  newOpts = {
+    type: "date",
+  },
+  newDate = new Date()
+) {
+  var self = this;
+  this.opts = newOpts; // These are the options sent to the datepicker
+  this.format = "yyyy-MM-dd"; // This is how this will be
+  this.date = ko.observable(newDate);
+  this.dateFormat = ko.pureComputed({
+    read: function () {
+      return self.date().format(self.format);
+    },
+    write: function (val) {
+      self.date(new Date(val));
+    },
+  });
+  this.setDate = function (val) {
+    self.date(new Date(val));
+  };
+}
+
 /************************************************************
  * Set Knockout View Model
  ************************************************************/
@@ -1452,6 +1476,14 @@ function koviewmodel() {
       }
     },
   });
+
+  self.test = {};
+  self.test.dateField = new DateField({
+    onChange: function (date, text) {
+      debugger;
+      console.log("changing ", text);
+    },
+  });
 }
 /* Binding handlers */
 // ko.bindingHandlers.nicedit = {
@@ -1526,6 +1558,34 @@ ko.bindingHandlers.date = {
     var valueUnwrapped = ko.unwrap(value);
     var formattedDate = new Date(valueUnwrapped).format("yyyy-MM-dd");
     $(element).val(formattedDate);
+  },
+};
+
+ko.bindingHandlers.dateField = {
+  init: function (element, valueAccessor, allBindingsAccessor) {
+    var dateFieldObj = valueAccessor();
+    //if (dateFieldObj.type == )
+    dateFieldObj.opts.onSelect = function (date, text) {
+      var value = valueAccessor().date;
+      value(date);
+    };
+    dateFieldObj.opts.onChange = function (date, text) {
+      var value = valueAccessor().date;
+      value(date);
+    };
+    $(element).closest(".ui.calendar").calendar(dateFieldObj.opts);
+  },
+  update: function (
+    element,
+    valueAccessor,
+    allBindings,
+    viewModel,
+    bindingContext
+  ) {
+    var value = valueAccessor().date;
+    var valueUnwrapped = ko.unwrap(value);
+    var formattedDate = new Date(valueUnwrapped); //.format("yyy-MM-ddThh:mm"); //.format("yyyy-MM-dd");
+    $(element).val(valueUnwrapped);
   },
 };
 
