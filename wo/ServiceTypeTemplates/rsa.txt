@@ -9,7 +9,7 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      User: { type: "Text", koMap: "rsaUserName", required: false },
+      User: { type: "Person", koMap: "rsaUserName", required: false },
       EmployeeType: {
         type: "Text",
         koMap: "rsaEmployeeType",
@@ -20,7 +20,7 @@
         koMap: "rsaRequestType",
         required: false,
       },
-      Supervisor: { type: "Text", koMap: "rsaSupervisor", required: false },
+      Supervisor: { type: "Person", koMap: "rsaSupervisor", required: false },
     },
   });
 

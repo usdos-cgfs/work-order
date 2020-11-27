@@ -9,7 +9,7 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      UserName: { type: "Text", koMap: "ironkeyUserName", required: false },
+      UserName: { type: "Person", koMap: "ironkeyUserName", required: false },
       EmployeeType: {
         type: "Text",
         koMap: "ironkeyEmployeeType",
@@ -20,7 +20,11 @@
         koMap: "ironkeyRequestType",
         required: false,
       },
-      Supervisor: { type: "Text", koMap: "ironkeySupervisor", required: false },
+      Supervisor: {
+        type: "Person",
+        koMap: "ironkeySupervisor",
+        required: false,
+      },
     },
   });
 
