@@ -28,12 +28,12 @@
    *    Declare Observables
    ***************************************************************/
 
-  vm.rsaUserName = ko.observable();
+  vm.rsaUserName = new PeopleField();
   vm.rsaEmployeeType = ko.observable();
   vm.rsaEmployeeTypeOpts = ko.observableArray(["FTE", "Contractor"]);
   vm.rsaRequestType = ko.observable();
   vm.rsaRequestTypeOpts = ko.observableArray(["New", "Replacement"]);
-  vm.rsaSupervisor = ko.observable();
+  vm.rsaSupervisor = new PeopleField();
 </script>
 
 <script type="text/html" id="tmpl_rsa">
@@ -44,8 +44,15 @@
         <input
           class="editable-field"
           type="text"
-          data-bind="value: rsaUserName, disable: currentView() == 'view'"
+          disabled="true"
+          data-bind="value: rsaUserName.userName, visible: currentView() == 'view'"
         />
+        <div
+          id="peoplersaUserName"
+          class="editable-field"
+          data-bind="people: rsaUserName.user, 
+            visible: currentView() != 'view'"
+        ></div>
       </div>
       <div class="field">
         <label>Employee Type:</label>
@@ -63,8 +70,15 @@
         <input
           class="editable-field"
           type="text"
-          data-bind="value: rsaSupervisor, disable: currentView() == 'view'"
+          disabled="true"
+          data-bind="value: rsaSupervisor.userName, visible: currentView() == 'view'"
         />
+        <div
+          id="peoplersaSupervisor"
+          class="editable-field"
+          data-bind="people: rsaSupervisor.user, 
+            visible: currentView() != 'view'"
+        ></div>
       </div>
       <div class="field">
         <label>Request Type:</label>

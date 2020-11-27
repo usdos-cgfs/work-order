@@ -27,15 +27,6 @@
   vm.presentationLocation = ko.observable();
   vm.presentationDuration = ko.observable();
   vm.presentationPOC = ko.observable();
-
-  vm.presentationDateStr = ko.pureComputed({
-    read: function () {
-      return new Date(vm.presentationDate()).format("yyyy-MM-dd");
-    },
-    write: function (val) {
-      vm.presentationDate(new Date(val));
-    },
-  });
 </script>
 
 <script type="text/html" id="tmpl_presentation">

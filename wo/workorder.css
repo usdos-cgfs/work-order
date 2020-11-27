@@ -35,6 +35,10 @@
   padding-right: 30px;
 }
 
+input[id$="uploadLocation"] {
+  pointer-events: none;
+}
+
 .wo-id {
   color: blue;
   cursor: pointer;

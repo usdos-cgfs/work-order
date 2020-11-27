@@ -23,7 +23,7 @@
   /***************************************************************
    *    Declare Observables
    ***************************************************************/
-  vm.phoneUser = ko.observable();
+  vm.phoneUser = new PeopleField();
   vm.phoneEmployeeType = ko.observable();
   vm.phoneEmployeeTypeOpts = ko.observableArray(["FTE", "Contractor"]);
   vm.phoneRequestType = ko.observable();
@@ -43,18 +43,26 @@
         <label>User Name:</label>
         <input
           class="editable-field"
-          data-bind="value: phoneUser, disable: currentView() == 'view'"
-        ></input>
+          type="text"
+          disabled="true"
+          data-bind="value: phoneUser.userName, visible: currentView() == 'view'"
+        />
+        <div
+          id="peoplephoneUser"
+          class="editable-field"
+          data-bind="people: phoneUser.user, 
+            visible: currentView() != 'view'"
+        ></div>
       </div>
       <div class="field">
-          <label>Employee Type:</label>
-          <select
+        <label>Employee Type:</label>
+        <select
           class="editable-field"
           type="text"
           data-bind="disable: currentView() == 'view',
               options: phoneEmployeeTypeOpts, optionsCaption: 'Select...', value: phoneEmployeeType"
         ></select>
-        </div>
+      </div>
     </div>
     <div class="two fields">
       <div class="field">
@@ -67,14 +75,14 @@
         ></select>
       </div>
       <div class="field">
-          <label>Phone Plan Type:</label>
-          <select
+        <label>Phone Plan Type:</label>
+        <select
           class="editable-field"
           type="text"
           data-bind="disable: currentView() == 'view',
               options: phonePlanTypeOpts, optionsCaption: 'Select...', value: phonePlanType"
         ></select>
-        </div>
+      </div>
     </div>
   </div>
 </script>

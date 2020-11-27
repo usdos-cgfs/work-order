@@ -28,12 +28,12 @@
    *    Declare Observables
    ***************************************************************/
 
-  vm.ironkeyUserName = ko.observable();
+  vm.ironkeyUserName = new PeopleField();
   vm.ironkeyEmployeeType = ko.observable();
   vm.ironkeyEmployeeTypeOpts = ko.observableArray(["FTE", "Contractor"]);
   vm.ironkeyRequestType = ko.observable();
   vm.ironkeyRequestTypeOpts = ko.observableArray(["New", "Replacement"]);
-  vm.ironkeySupervisor = ko.observable();
+  vm.ironkeySupervisor = new PeopleField();
 </script>
 
 <script type="text/html" id="tmpl_ironkey">
@@ -44,8 +44,15 @@
         <input
           class="editable-field"
           type="text"
-          data-bind="disable: currentView() == 'view', value: ironkeyUserName"
+          disabled="true"
+          data-bind="value: ironkeyUserName.userName, visible: currentView() == 'view'"
         />
+        <div
+          id="peopleironkeyUserName"
+          class="editable-field"
+          data-bind="people: ironkeyUserName.user, 
+            visible: currentView() != 'view'"
+        ></div>
       </div>
       <div class="field">
         <label>Employee Type:</label>
@@ -63,8 +70,15 @@
         <input
           class="editable-field"
           type="text"
-          data-bind="disable: currentView() == 'view', value: ironkeySupervisor"
+          disabled="true"
+          data-bind="value: ironkeySupervisor.userName, visible: currentView() == 'view'"
         />
+        <div
+          id="peopleironkeySupervisor"
+          class="editable-field"
+          data-bind="people: ironkeySupervisor.user, 
+            visible: currentView() != 'view'"
+        ></div>
       </div>
       <div class="field">
         <label>Employee Type:</label>
