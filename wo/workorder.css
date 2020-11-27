@@ -126,6 +126,19 @@ input[id$="uploadLocation"] {
   color: red;
 }
 
+.hl-late {
+  background-color: #c32b33;
+  color: white;
+}
+
+.hl-warn {
+  background-color: #f07122;
+}
+
+.hl-info {
+  background-color: #f0b222;
+}
+
 .sticky {
   position: sticky;
   top: 0;

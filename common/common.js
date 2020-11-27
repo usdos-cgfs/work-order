@@ -157,14 +157,15 @@ function businessDaysFromDate(date, businessDays) {
 function businessDays(startDate, endDate) {
   var counter = 0;
   let temp = new Date(startDate);
+  var stepDir = Math.sign(endDate - startDate);
 
-  while (temp.getDate() != endDate.getDate()) {
+  while (temp.format("yyyy-MM-dd") != endDate.format("yyyy-MM-dd")) {
     if (isBusinessDay(temp) && !isConfigHoliday(temp)) {
       counter++;
     }
-    temp.setDate(temp.getDate() + 1);
+    temp.setDate(temp.getDate() + 1 * stepDir);
   }
-  return counter;
+  return counter * stepDir;
 }
 
 function isConfigHoliday(date) {

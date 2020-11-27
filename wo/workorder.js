@@ -7,6 +7,7 @@ tabsEnum = {
 };
 
 var dialog = {};
+var time = {};
 
 function initStaticListRefs() {
   vm.listRefWO(new sal.NewSPList(workOrderListDef));
@@ -1306,6 +1307,7 @@ function closeWorkOrder(reason = "Closed") {
  ************************************************************/
 /* initApp -> fetchXListData -> initServiceTypes -> initTemplates -> initComplete */
 function initApp() {
+  var initTime = new Date();
   dialog.init = SP.UI.ModalDialog.showWaitScreenWithNoClose(
     "Initializing",
     "Please Wait..."
@@ -1319,6 +1321,7 @@ function initApp() {
 
   // Initialize ViewModel
   vm = new koviewmodel();
+  vm.timers.init(initTime);
 
   /* Depending on our page, we may need additional info */
   /* Submitter/Action Office/Approval */
@@ -1434,6 +1437,7 @@ function initComplete() {
   }
   */
   dialog.init.close();
+  vm.timers.initComplete(new Date());
   //SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
 

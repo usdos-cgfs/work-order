@@ -312,11 +312,29 @@ function DateField(
   };
 }
 
+function timers() {
+  var self = this;
+  self.init = ko.observable();
+  self.initComplete = ko.observable();
+  self.initDelta = ko.pureComputed(function () {
+    return self.timerDelta(self.init(), self.initComplete());
+  });
+
+  self.timerDelta = function (start, end) {
+    if (start && end) {
+      return end - start;
+    } else {
+      return null;
+    }
+  };
+}
 /************************************************************
  * Set Knockout View Model
  ************************************************************/
 function koviewmodel() {
   var self = this;
+
+  self.timers = new timers();
 
   self.empty = ko.observable();
 
@@ -788,11 +806,24 @@ function koviewmodel() {
     return closeDate.format("yyyy-MM-dd");
   };
 
-  self.daysToCloseDate = function request(request) {
+  self.daysToCloseDate = function (request) {
     if (request.EstClosedDate && request.RequestSubmitted) {
-      return businessDays(request.RequestSubmitted, request.EstClosedDate);
+      return businessDays(new Date(), request.EstClosedDate);
     } else {
       return "N/A";
+    }
+  };
+
+  self.closeDateClass = function (request) {
+    var days = self.daysToCloseDate(request);
+    if (days == "N/A") {
+      return "";
+    } else if (days < 0) {
+      return "hl-late";
+    } else if (days < 2) {
+      return "hl-warn";
+    } else if (2 < days < 5) {
+      return "hl-info";
     }
   };
 
