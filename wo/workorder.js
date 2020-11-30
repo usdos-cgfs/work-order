@@ -6,6 +6,9 @@ tabsEnum = {
   "#order-detail": 4,
 };
 
+var dialog = {};
+var time = {};
+
 function initStaticListRefs() {
   vm.listRefWO(new sal.NewSPList(workOrderListDef));
   //vm.listRefpu10k(new SPList(pu10kListDef));
@@ -413,6 +416,11 @@ function createNewWorkorderItems() {
 
   calcNewWorkorderDates();
 
+  //Set the workorder request orgs.
+  vm.request.allPipelineOrgs().forEach(function (org) {
+    vm.requestOrgs.push(org);
+  });
+
   var valuePairs = getValuePairs(workOrderListDef.viewFields);
 
   console.log("vp", valuePairs);
@@ -564,7 +572,11 @@ function getValuePairs(listDef) {
       // Based on the field type, do any casting or conversions here
       switch (obj.type) {
         case "DateTime":
-          fieldValue = observable().toISOString();
+          if (observable.date) {
+            fieldValue = observable.date().toISOString();
+          } else {
+            fieldValue = observable().toISOString();
+          }
           break;
         case "Person":
           fieldValue = observable.userId();
@@ -606,6 +618,13 @@ function setValuePairs(listDef, jObject) {
       case "Person":
         observable.userId(jObject[field]);
         break;
+      case "DateTime":
+        if (observable.date) {
+          observable.date(jObject[field]);
+        } else {
+          observable(jObject[field]);
+        }
+        break;
       default:
         observable(jObject[field]);
     }
@@ -620,6 +639,11 @@ function clearValuePairs(listDef) {
         case "Person":
           observable.user(new Object());
           break;
+        case "DateTime":
+          if (observable.date) {
+            observable.date(new Date());
+            break;
+          }
         default:
           observable("");
       }
@@ -1283,7 +1307,11 @@ function closeWorkOrder(reason = "Closed") {
  ************************************************************/
 /* initApp -> fetchXListData -> initServiceTypes -> initTemplates -> initComplete */
 function initApp() {
-  SP.UI.ModalDialog.showWaitScreenWithNoClose("Initializing", "Please Wait...");
+  var initTime = new Date();
+  dialog.init = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+    "Initializing",
+    "Please Wait..."
+  );
   $(".non-editable-field").prop("disabled", true);
 
   console.log("initialized listeners");
@@ -1291,11 +1319,16 @@ function initApp() {
   // Initialize our SharePoint Access Layer
   var ini = initSal();
 
-  // Initialize our Notifications
-  InitNotifications();
-
   // Initialize ViewModel
   vm = new koviewmodel();
+  vm.timers.init(initTime);
+
+  /* Depending on our page, we may need additional info */
+  /* Submitter/Action Office/Approval */
+  if (typeof InitNotifications != "undefined") {
+    // Initialize our Notifications
+    InitNotifications();
+  }
 
   // Setup models for each of the config lists we may connect to
   initStaticListRefs();
@@ -1353,7 +1386,7 @@ function initComplete() {
 
   let tab = urlParams.get("tab");
   let id = urlParams.get("reqid");
-  let stypeId = urlParams.get("stype");
+  let service = urlParams.get("lookup");
   let stype = null;
 
   // if (id && tab == 'order-detail') {
@@ -1379,7 +1412,9 @@ function initComplete() {
   vm.applicationIsLoaded(true);
   ko.applyBindings(vm);
 
-  if (vm.page().toLocaleLowerCase() != "approval.aspx") {
+  if (
+    !["approval.aspx", "reports.aspx"].includes(vm.page().toLocaleLowerCase())
+  ) {
     $("#tabs").show();
     initUIComponents();
 
@@ -1396,7 +1431,14 @@ function initComplete() {
         vm.tab(tab);
     }
   }
-  SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+  /* Reports 
+  if (typeof InitReport != "undefined") {
+    InitReport();
+  }
+  */
+  dialog.init.close();
+  vm.timers.initComplete(new Date());
+  //SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
 
 function initUIComponents() {
@@ -1405,19 +1447,26 @@ function initUIComponents() {
   makeDataTable("#wo-closed-orders");
   makeDataTable("#wo-cancelled-orders");
 
-  $(".ui.checkbox").checkbox();
-  $(".ui.accordion").accordion();
+  //$("#example1").calendar();
+  if ($(".ui.checkbox").length) {
+    $(".ui.checkbox").checkbox();
+  }
+  if ($(".ui.accordion").length) {
+    $(".ui.accordion").accordion();
+  }
   // $(".view-action-office").popup({
   //   popup: ".ui.list-action-office.popup",
   //   on: "click",
   // });
-  $(".menu .item").tab();
-  $(".top.menu .item").tab({
-    onVisible: function () {
-      vm.tab(this.id);
-    },
-  });
-  $(".ui.secondary.menu").find(".item").tab("change tab", "my-open-orders");
+  if ($(".menu .item").length) {
+    $(".menu .item").tab();
+    $(".top.menu .item").tab({
+      onVisible: function () {
+        vm.tab(this.id);
+      },
+    });
+    $(".ui.secondary.menu").find(".item").tab("change tab", "my-open-orders");
+  }
   //$(".ui.top.menu").find(".item").tab("change tab", "my-orders");
 }
 

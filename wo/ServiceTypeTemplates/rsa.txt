@@ -9,7 +9,7 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      User: { type: "Text", koMap: "rsaUserName", required: false },
+      User: { type: "Person", koMap: "rsaUserName", required: false },
       EmployeeType: {
         type: "Text",
         koMap: "rsaEmployeeType",
@@ -20,7 +20,7 @@
         koMap: "rsaRequestType",
         required: false,
       },
-      Supervisor: { type: "Text", koMap: "rsaSupervisor", required: false },
+      Supervisor: { type: "Person", koMap: "rsaSupervisor", required: false },
     },
   });
 
@@ -28,12 +28,12 @@
    *    Declare Observables
    ***************************************************************/
 
-  vm.rsaUserName = ko.observable();
+  vm.rsaUserName = new PeopleField();
   vm.rsaEmployeeType = ko.observable();
-  vm.rsaEmployeeTypes = ko.observableArray(["FTE", "Contractor"]);
+  vm.rsaEmployeeTypeOpts = ko.observableArray(["FTE", "Contractor"]);
   vm.rsaRequestType = ko.observable();
-  vm.rsaRequestTypes = ko.observableArray(["New", "Replacement"]);
-  vm.rsaSupervisor = ko.observable();
+  vm.rsaRequestTypeOpts = ko.observableArray(["New", "Replacement"]);
+  vm.rsaSupervisor = new PeopleField();
 </script>
 
 <script type="text/html" id="tmpl_rsa">
@@ -44,8 +44,15 @@
         <input
           class="editable-field"
           type="text"
-          data-bind="value: rsaUserName, disable: currentView() == 'view'"
+          disabled="true"
+          data-bind="value: rsaUserName.userName, visible: currentView() == 'view'"
         />
+        <div
+          id="peoplersaUserName"
+          class="editable-field"
+          data-bind="people: rsaUserName.user, 
+            visible: currentView() != 'view'"
+        ></div>
       </div>
       <div class="field">
         <label>Employee Type:</label>
@@ -53,7 +60,7 @@
           class="editable-field"
           type="text"
           data-bind="disable: currentView() == 'view',
-              options: rsaEmployeeTypes, optionsCaption: 'Select...', value: rsaEmployeeType"
+              options: rsaEmployeeTypeOpts, optionsCaption: 'Select...', value: rsaEmployeeType"
         ></select>
       </div>
     </div>
@@ -63,8 +70,15 @@
         <input
           class="editable-field"
           type="text"
-          data-bind="value: rsaSupervisor, disable: currentView() == 'view'"
+          disabled="true"
+          data-bind="value: rsaSupervisor.userName, visible: currentView() == 'view'"
         />
+        <div
+          id="peoplersaSupervisor"
+          class="editable-field"
+          data-bind="people: rsaSupervisor.user, 
+            visible: currentView() != 'view'"
+        ></div>
       </div>
       <div class="field">
         <label>Request Type:</label>
@@ -72,7 +86,7 @@
           class="editable-field"
           type="text"
           data-bind="disable: currentView() == 'view',
-              options: rsaRequestTypes, optionsCaption: 'Select...', value: rsaRequestType"
+              options: rsaRequestTypeOpts, optionsCaption: 'Select...', value: rsaRequestType"
         ></select>
       </div>
     </div>

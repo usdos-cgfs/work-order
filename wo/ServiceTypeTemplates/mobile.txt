@@ -9,7 +9,7 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      User: { type: "Text", koMap: "phoneUser", required: false },
+      User: { type: "Person", koMap: "phoneUser", required: false },
       EmployeeType: {
         type: "Text",
         koMap: "phoneEmployeeType",
@@ -23,17 +23,17 @@
   /***************************************************************
    *    Declare Observables
    ***************************************************************/
-  vm.phoneUser = ko.observable();
+  vm.phoneUser = new PeopleField();
   vm.phoneEmployeeType = ko.observable();
-  vm.phoneEmployeeTypes = ko.observableArray(["FTE", "Contractor"]);
+  vm.phoneEmployeeTypeOpts = ko.observableArray(["FTE", "Contractor"]);
   vm.phoneRequestType = ko.observable();
-  vm.phoneRequestTypes = ko.observable([
+  vm.phoneRequestTypeOpts = ko.observable([
     "New",
     "Broken/Lost/Stolen",
     "Accessories",
   ]);
   vm.phonePlanType = ko.observable();
-  vm.phonePlanTypes = ko.observable(["Domestic", "Global"]);
+  vm.phonePlanTypeOpts = ko.observable(["Domestic", "Global"]);
 </script>
 
 <script type="text/html" id="tmpl_mobile">
@@ -43,18 +43,26 @@
         <label>User Name:</label>
         <input
           class="editable-field"
-          data-bind="value: phoneUser, disable: currentView() == 'view'"
-        ></input>
+          type="text"
+          disabled="true"
+          data-bind="value: phoneUser.userName, visible: currentView() == 'view'"
+        />
+        <div
+          id="peoplephoneUser"
+          class="editable-field"
+          data-bind="people: phoneUser.user, 
+            visible: currentView() != 'view'"
+        ></div>
       </div>
       <div class="field">
-          <label>Employee Type:</label>
-          <select
+        <label>Employee Type:</label>
+        <select
           class="editable-field"
           type="text"
           data-bind="disable: currentView() == 'view',
-              options: phoneEmployeeTypes, optionsCaption: 'Select...', value: phoneEmployeeType"
+              options: phoneEmployeeTypeOpts, optionsCaption: 'Select...', value: phoneEmployeeType"
         ></select>
-        </div>
+      </div>
     </div>
     <div class="two fields">
       <div class="field">
@@ -63,18 +71,18 @@
           class="editable-field"
           type="text"
           data-bind="disable: currentView() == 'view',
-              options: phoneRequestTypes, optionsCaption: 'Select...', value: phoneRequestType"
+              options: phoneRequestTypeOpts, optionsCaption: 'Select...', value: phoneRequestType"
         ></select>
       </div>
       <div class="field">
-          <label>Phone Plan Type:</label>
-          <select
+        <label>Phone Plan Type:</label>
+        <select
           class="editable-field"
           type="text"
           data-bind="disable: currentView() == 'view',
-              options: phonePlanTypes, optionsCaption: 'Select...', value: phonePlanType"
+              options: phonePlanTypeOpts, optionsCaption: 'Select...', value: phonePlanType"
         ></select>
-        </div>
+      </div>
     </div>
   </div>
 </script>

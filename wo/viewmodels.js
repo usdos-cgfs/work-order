@@ -233,6 +233,31 @@ var configServiceTypeListDef = {
   },
 };
 
+function Incremental(entry = 0, target = null, next = null) {
+  var self = this;
+  this.val = ko.observable(entry);
+  this.inc = function (incrementer = 1) {
+    self.val(self.val() + incrementer);
+  };
+  this.dec = function (decrementer = 1) {
+    self.val(self.val() - decrementer);
+  };
+  this.val.subscribe(function (val) {
+    if (target != null && val == target) {
+      typeof self.callback == "function"
+        ? self.callback()
+        : console.log("target reached: ", val);
+    }
+  });
+  this.callback = next;
+  this.set = function (val) {
+    self.val(val);
+  };
+  this.reset = function () {
+    self.val(entry);
+  };
+}
+
 function PeopleField() {
   this.user = ko.observable();
   this.userName = ko.pureComputed({
@@ -263,17 +288,60 @@ function PeopleField() {
   this.lookupUser = ko.observable();
   this.ensuredUser = ko.observable();
 }
+
+function DateField(
+  newOpts = {
+    type: "date",
+  },
+  newDate = new Date()
+) {
+  var self = this;
+  this.opts = newOpts; // These are the options sent to the datepicker
+  this.format = "yyyy-MM-dd"; // This is how this will be
+  this.date = ko.observable(newDate);
+  this.dateFormat = ko.pureComputed({
+    read: function () {
+      return self.date().format(self.format);
+    },
+    write: function (val) {
+      self.date(new Date(val));
+    },
+  });
+  this.setDate = function (val) {
+    self.date(new Date(val));
+  };
+}
+
+function timers() {
+  var self = this;
+  self.init = ko.observable();
+  self.initComplete = ko.observable();
+  self.initDelta = ko.pureComputed(function () {
+    return self.timerDelta(self.init(), self.initComplete());
+  });
+
+  self.timerDelta = function (start, end) {
+    if (start && end) {
+      return end - start;
+    } else {
+      return null;
+    }
+  };
+}
 /************************************************************
  * Set Knockout View Model
  ************************************************************/
 function koviewmodel() {
   var self = this;
 
+  self.timers = new timers();
+
   self.empty = ko.observable();
 
   self.applicationIsLoaded = ko.observable(false);
 
   self.applicationIsLoaded.subscribe(function (state) {
+    // Whatever page we're on, now is the time to init our local app
     if (state && typeof initAppPage === typeof Function) {
       initAppPage();
     }
@@ -282,7 +350,7 @@ function koviewmodel() {
   //self.serviceTypeAbbreviations = ko.observableArray(Object.keys(woViews));
   //self.serviceTypeViews = ko.observable(woViews);
 
-  self.userGroupMembership = ko.observable();
+  self.userGroupMembership = ko.observableArray();
 
   /************************************************************
    * ADMIN: Authorize Current user to take actions
@@ -313,6 +381,21 @@ function koviewmodel() {
   self.userActionOfficeOwnership = ko.pureComputed(() => {
     return self.userActionOfficeMembership().filter((uao) => {
       return uao.CanAssign;
+    });
+  });
+
+  self.user = {};
+
+  self.user.requestOrgMembership = ko.pureComputed(function () {
+    reqOrgIds = [
+      ...new Set(
+        self.configActionOffices().map(function (ao) {
+          return ao.RequestOrg.get_lookupId();
+        })
+      ),
+    ];
+    return self.configRequestOrgs().filter(function (reqOrg) {
+      return reqOrgIds.includes(reqOrg.ID);
     });
   });
 
@@ -723,6 +806,27 @@ function koviewmodel() {
     return closeDate.format("yyyy-MM-dd");
   };
 
+  self.daysToCloseDate = function (request) {
+    if (request.EstClosedDate && request.RequestSubmitted) {
+      return businessDays(new Date(), request.EstClosedDate);
+    } else {
+      return "N/A";
+    }
+  };
+
+  self.closeDateClass = function (request) {
+    var days = self.daysToCloseDate(request);
+    if (days == "N/A") {
+      return "";
+    } else if (days < 0) {
+      return "hl-late";
+    } else if (days < 2) {
+      return "hl-warn";
+    } else if (2 < days < 5) {
+      return "hl-info";
+    }
+  };
+
   self.tableRequestTitle = ko.observable();
   self.tableRequestAssignments = ko.observableArray();
 
@@ -1082,17 +1186,21 @@ function koviewmodel() {
    * Selected Work Order
    ************************************************************/
   self.requestLink = ko.pureComputed(() => {
-    return (
+    var link =
       _spPageContextInfo.webAbsoluteUrl +
-      `/Pages/app.aspx?tab=order-detail&reqid=${self.requestID()}`
-    );
+      "/Pages/app.aspx?tab=order-detail&reqid=";
+
+    var id = self.requestID() ? self.requestID() : "";
+    return link + id;
   });
 
   self.requestLinkAdmin = ko.pureComputed(() => {
-    return (
+    var link =
       _spPageContextInfo.webAbsoluteUrl +
-      `/Pages/admin.aspx?tab=order-detail&reqid=${self.requestID()}`
-    );
+      "/Pages/admin.aspx?tab=order-detail&reqid=";
+
+    var id = self.requestID() ? self.requestID() : "";
+    return link + id;
   });
 
   self.requestLinkAdminApprove = (id) => {
@@ -1178,6 +1286,21 @@ function koviewmodel() {
     });
     return folderPermissions;
   });
+
+  self.request = {};
+  self.request.allPipelineOrgs = ko.pureComputed(function () {
+    return self.selectedPipeline().map(function (stage) {
+      // first get the action office
+      let assignedOffice = self
+        .configActionOffices()
+        .find((ao) => ao.ID == stage.ActionOffice.get_lookupId());
+
+      return self
+        .configRequestOrgs()
+        .find((ro) => ro.ID == assignedOffice.RequestOrg.get_lookupId());
+    });
+  });
+
   /************************************************************
    * Observables for work order header
    ************************************************************/
@@ -1384,6 +1507,14 @@ function koviewmodel() {
       }
     },
   });
+
+  self.test = {};
+  self.test.dateField = new DateField({
+    onChange: function (date, text) {
+      debugger;
+      console.log("changing ", text);
+    },
+  });
 }
 /* Binding handlers */
 // ko.bindingHandlers.nicedit = {
@@ -1438,6 +1569,56 @@ ko.bindingHandlers.trix = {
 //     write: function (newValue) {},
 //   });
 // };
+
+ko.bindingHandlers.date = {
+  init: function (element, valueAccessor, allBindingsAccessor) {
+    $(element).change(function () {
+      var targDate = new Date($(element).val());
+      var value = valueAccessor();
+      value(targDate);
+    });
+  },
+  update: function (
+    element,
+    valueAccessor,
+    allBindings,
+    viewModel,
+    bindingContext
+  ) {
+    var value = valueAccessor();
+    var valueUnwrapped = ko.unwrap(value);
+    var formattedDate = new Date(valueUnwrapped).format("yyyy-MM-dd");
+    $(element).val(formattedDate);
+  },
+};
+
+ko.bindingHandlers.dateField = {
+  init: function (element, valueAccessor, allBindingsAccessor) {
+    var dateFieldObj = valueAccessor();
+    //if (dateFieldObj.type == )
+    dateFieldObj.opts.onSelect = function (date, text) {
+      var value = valueAccessor().date;
+      value(date);
+    };
+    dateFieldObj.opts.onChange = function (date, text) {
+      var value = valueAccessor().date;
+      value(date);
+    };
+    $(element).closest(".ui.calendar").calendar(dateFieldObj.opts);
+  },
+  update: function (
+    element,
+    valueAccessor,
+    allBindings,
+    viewModel,
+    bindingContext
+  ) {
+    var value = valueAccessor().date;
+    var valueUnwrapped = ko.unwrap(value);
+    var formattedDate = new Date(valueUnwrapped); //.format("yyy-MM-ddThh:mm"); //.format("yyyy-MM-dd");
+    $(element).val(valueUnwrapped);
+  },
+};
 
 ko.bindingHandlers.people = {
   init: function (element, valueAccessor, allBindingsAccessor) {
@@ -1499,6 +1680,45 @@ ko.bindingHandlers.people = {
       // Resolve the User
       pickerControl.AddUnresolvedUserFromEditor(true);
     }
+  },
+};
+
+ko.bindingHandlers.toggleClick = {
+  init: function (element, valueAccessor, allBindings) {
+    var value = valueAccessor();
+
+    ko.utils.registerEventHandler(element, "click", function () {
+      var classToToggle = allBindings.get("toggleClass");
+      var classContainer = allBindings.get("classContainer");
+      var containerType = allBindings.get("containerType");
+
+      if (containerType && containerType == "sibling") {
+        $(element)
+          .nextUntil(classContainer)
+          .each(function () {
+            $(this).toggleClass(classToToggle);
+          });
+      } else if (containerType && containerType == "doc") {
+        var curIcon = $(element).attr("src");
+        if (curIcon == "/_layouts/images/minus.gif")
+          $(element).attr("src", "/_layouts/images/plus.gif");
+        else $(element).attr("src", "/_layouts/images/minus.gif");
+
+        if ($(element).parent() && $(element).parent().parent()) {
+          $(element)
+            .parent()
+            .parent()
+            .nextUntil(classContainer)
+            .each(function () {
+              $(this).toggleClass(classToToggle);
+            });
+        }
+      } else if (containerType && containerType == "any") {
+        if ($("." + classToToggle).is(":visible"))
+          $("." + classToToggle).hide();
+        else $("." + classToToggle).show();
+      } else $(element).find(classContainer).toggleClass(classToToggle);
+    });
   },
 };
 

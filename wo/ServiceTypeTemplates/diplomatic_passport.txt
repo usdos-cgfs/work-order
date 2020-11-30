@@ -57,55 +57,19 @@
     },
   });
 
-  vm.diplomaticPassportIssued = ko.observable();
+  vm.diplomaticPassportIssued = new DateField({ type: "date" });
 
   vm.diplomaticPassportSelectedType = ko.observable();
   vm.diplomaticPassportGrade = ko.observable();
   vm.diplomaticPassportDestinationCity = ko.observable();
   vm.diplomaticPassportDestinationCountry = ko.observable();
-  vm.diplomaticPassportDeparture = ko.observable();
-  vm.diplomaticPassportReturn = ko.observable();
+  vm.diplomaticPassportDeparture = new DateField({ type: "date" });
+  vm.diplomaticPassportReturn = new DateField({ type: "date" });
   vm.diplomaticPassportPurpose = ko.observable();
   vm.diplomaticPassportBirthLocation = ko.observable();
   vm.diplomaticPassportExpiration = ko.observable();
 
-  vm.diplomaticPassportServiceTypes = ko.observableArray(["New", "Renewal"]);
-
-  vm.diplomaticPassportIssuedStr = ko.pureComputed({
-    read: function () {
-      return new Date(vm.diplomaticPassportIssued()).format("yyyy-MM-dd");
-    },
-    write: function (val) {
-      vm.diplomaticPassportIssued(new Date(val + "T00:00:00"));
-    },
-  });
-
-  vm.diplomaticPassportExpirationStr = ko.pureComputed({
-    read: function () {
-      return new Date(vm.diplomaticPassportExpiration()).format("yyyy-MM-dd");
-    },
-    write: function (val) {
-      vm.diplomaticPassportExpiration(new Date(val + "T00:00:00"));
-    },
-  });
-
-  vm.diplomaticPassportDepartureStr = ko.pureComputed({
-    read: function () {
-      return new Date(vm.diplomaticPassportDeparture()).format("yyyy-MM-dd");
-    },
-    write: function (val) {
-      vm.diplomaticPassportDeparture(new Date(val + "T00:00:00"));
-    },
-  });
-
-  vm.diplomaticPassportReturnStr = ko.pureComputed({
-    read: function () {
-      return new Date(vm.diplomaticPassportReturn()).format("yyyy-MM-dd");
-    },
-    write: function (val) {
-      vm.diplomaticPassportReturn(new Date(val + "T00:00:00"));
-    },
-  });
+  vm.diplomaticPassportServiceTypeOpts = ko.observableArray(["New", "Renewal"]);
 </script>
 
 <script type="text/html" id="tmpl_diplomatic_passport">
@@ -116,7 +80,7 @@
         class="editable-field"
         type="text"
         data-bind="disable: currentView() == 'view',
-            options: diplomaticPassportServiceTypes, optionsCaption: 'Select...', value: diplomaticPassportSelectedType"
+            options: diplomaticPassportServiceTypeOpts, optionsCaption: 'Select...', value: diplomaticPassportSelectedType"
       ></select>
     </div>
     <div data-bind="visible: diplomaticPassportSelectedType() != undefined">
@@ -158,7 +122,9 @@
         data-bind="visible: diplomaticPassportSelectedType() == 'Renewal'"
       >
         <div class="field">
-          <label> State/Country of Birth<span class="required">*</span>: </label>
+          <label>
+            State/Country of Birth<span class="required">*</span>:
+          </label>
           <input
             class="editable-field"
             type="text"
@@ -171,31 +137,51 @@
               >*</span
             >:
           </label>
-          <input
-            class="editable-field"
-            type="date"
-            placeholder="Passport Expiration Date"
-            data-bind="value: diplomaticPassportExpirationStr, disable: currentView() == 'view'"
-          />
+          <div class="ui calendar">
+            <div class="ui input left icon">
+              <i class="calendar icon"></i>
+              <input
+                class="editable-field"
+                type="text"
+                data-bind="disabled:
+                  currentView() == 'view', 
+                  dateField: diplomaticPassportExpiration"
+              />
+            </div>
+          </div>
         </div>
       </div>
       <h4 class="ui dividing header">Travel Dates</h4>
       <div class="two fields">
         <div class="field">
           <label> Departure<span class="required">*</span>: </label>
-          <input
-            class="editable-field"
-            type="date"
-            data-bind="value: diplomaticPassportDepartureStr, disable: currentView() == 'view'"
-          />
+          <div class="ui calendar">
+            <div class="ui input left icon">
+              <i class="calendar icon"></i>
+              <input
+                class="editable-field"
+                type="text"
+                data-bind="disabled:
+                  currentView() == 'view', 
+                  dateField: diplomaticPassportDeparture"
+              />
+            </div>
+          </div>
         </div>
         <div class="eight wide field">
           <label> Return<span class="required">*</span>: </label>
-          <input
-            class="editable-field"
-            type="date"
-            data-bind="value: diplomaticPassportReturnStr, disable: currentView() == 'view'"
-          />
+          <div class="ui calendar">
+            <div class="ui input left icon">
+              <i class="calendar icon"></i>
+              <input
+                class="editable-field"
+                type="text"
+                data-bind="disabled:
+                  currentView() == 'view', 
+                  dateField: diplomaticPassportReturn"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -22,10 +22,10 @@
 />
 <!--<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">-->
 <link rel="stylesheet" href="../SiteAssets/workorder/vendor/trix/trix.css" />
-<link
+<!-- <link
   rel="stylesheet"
   href="../SiteAssets/workorder/vendor/Semantic-UI-CSS-master/semantic.min.css"
-/>
+/> -->
 
 <link rel="stylesheet" href="../SiteAssets/workorder/wo/workorder.css" />
 <!-- common/RDT/app"  -->
@@ -38,6 +38,7 @@
 <!-- <script type="text/javascript" src="/_layouts/15/SP.UserProfiles.js"></script> -->
 
 <h1>WorkOrder System</h1>
+
 <div id="tabs" style="display: none">
   <div class="ui top attached tabular menu">
     <a class="item" data-tab="my-orders">My Orders</a>
@@ -110,7 +111,9 @@
                   <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
                   <td data-bind="text: RequestorName"></td>
                   <td data-bind="text: Created.format('yyyy-MM-dd')"></td>
-                  <td data-bind="text: $root.estimateClosingDate($data)"></td>
+                  <td
+                    data-bind="text: EstClosedDate ? EstClosedDate.format('yyyy-MM-dd') : 'N/A'"
+                  ></td>
                 </tr>
               </tbody>
               <tfoot>
@@ -922,7 +925,18 @@
     </div>
     <!-- /ko -->
   </div>
+  <!-- ko if: timers.initDelta() > 0-->
+  <p>
+    Application loaded in:
+    <span data-bind="text: timers.initDelta()/1000"></span> s
+  </p>
+  <!-- /ko -->
 </div>
+
+<p>
+  Issues or Questions? Contact us here:
+  <a href="mailto:cgfssharepoint@state.gov">cgfssharepoint@state.gov</a>
+</p>
 <div id="service-type-templates"></div>
 
 <!--<script src="/_layouts/15/SP.Runtime.js"></script>
@@ -953,8 +967,13 @@
 <script src="../SiteAssets/workorder/vendor/DataTables/datatables.min.js"></script>
 <script src="../SiteAssets/workorder/vendor/knockout/knockout-3.5.0.js"></script>
 <script src="../SiteAssets/workorder/vendor/trix/trix.js"></script>
-<script src="../SiteAssets/workorder/vendor/Semantic-UI-CSS-master/semantic.min.js"></script>
-<!-- <script src="../SiteAssets/workorder/vendor/nicEdit/nicEdit.js"></script> -->
+<!-- <script src="../SiteAssets/workorder/vendor/Semantic-UI-CSS-master/semantic.min.js"></script> -->
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.7/dist/semantic.min.css"
+/>
+<script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.7/dist/semantic.min.js"></script>
 
 <script
   type="text/javascript"
@@ -963,6 +982,7 @@
 
 <script src="../SiteAssets/workorder/common/sal.js"></script>
 <script src="../SiteAssets/workorder/common/common.js"></script>
+<script src="../SiteAssets/workorder/common/test.js"></script>
 <script src="../SiteAssets/workorder/common/notifications.js"></script>
 <script src="../SiteAssets/workorder/common/deployment.js"></script>
 

@@ -22,7 +22,7 @@
   /***************************************************************
    *    Declare Observables
    ***************************************************************/
-  vm.requisitionTypes = ko.observableArray([
+  vm.requisitionTypeOpts = ko.observableArray([
     "Requisition",
     "De-Obligation",
     "Re-Alignment",
@@ -39,7 +39,7 @@
       <label>Requisition Type:</label>
       <select
         class="editable-field"
-        data-bind="value: requisitionType, options: requisitionTypes, optionsCaption: 'Select...',
+        data-bind="value: requisitionType, options: requisitionTypeOpts, optionsCaption: 'Select...',
                      disable: currentView()=='view'"
       ></select>
     </div>

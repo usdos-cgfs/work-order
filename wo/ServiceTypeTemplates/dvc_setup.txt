@@ -38,35 +38,36 @@
   /***************************************************************
    *    Declare Observables
    ***************************************************************/
-  vm.dvcDate = ko.observable();
+  vm.dvcDate = new DateField({
+    minDate: new Date(),
+    minTimeGap: 15,
+  });
   vm.dvcLocation = ko.observable();
   vm.dvcDuration = ko.observable();
   vm.dvcFarPOC = ko.observable();
   vm.dvcConnectionType = ko.observable();
-  vm.dvcConnectionTypes = ko.observableArray(["OpenNet", "ISDN", "IP"]);
+  vm.dvcConnectionTypeOpts = ko.observableArray(["OpenNet", "ISDN", "IP"]);
   vm.dvcCallType = ko.observable();
-  vm.dvcCallTypes = ko.observableArray(["Incoming", "Outgoing"]);
+  vm.dvcCallTypeOpts = ko.observableArray(["Incoming", "Outgoing"]);
   vm.dvcDialInNum = ko.observable();
-
-  vm.dvcDateStr = ko.pureComputed({
-    read: function () {
-      return new Date(vm.dvcDate()).format("yyyy-MM-dd");
-    },
-    write: function (val) {
-      vm.dvcDate(new Date(val));
-    },
-  });
 </script>
 
 <script type="text/html" id="tmpl_dvc_setup">
   <div class="ui form">
     <div class="eight wide field">
       <label>Date of DVC</label>
-      <input
-        class="editable-field"
-        type="datetime-local"
-        data-bind="value: dvcDateStr, disable: currentView() == 'view'"
-      />
+      <div class="ui calendar">
+        <div class="ui input left icon">
+          <i class="calendar icon"></i>
+          <input
+            class="editable-field"
+            type="text"
+            data-bind="disabled:
+              currentView() == 'view', 
+              dateField: dvcDate"
+          />
+        </div>
+      </div>
     </div>
     <div class="two fields">
       <div class="eight wide field">
@@ -101,7 +102,7 @@
           class="editable-field"
           type="text"
           data-bind="disable: currentView() == 'view',
-          options: dvcConnectionTypes, optionsCaption: 'Select...',
+          options: dvcConnectionTypeOpts, optionsCaption: 'Select...',
           value: dvcConnectionType"
         ></select>
       </div>
@@ -113,7 +114,7 @@
           class="editable-field"
           type="text"
           data-bind="disable: currentView() == 'view',
-            options: dvcCallTypes, optionsCaption: 'Select...',
+            options: dvcCallTypeOpts, optionsCaption: 'Select...',
             value: dvcCallType"
         ></select>
       </div>

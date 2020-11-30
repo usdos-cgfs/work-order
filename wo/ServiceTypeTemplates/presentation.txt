@@ -19,32 +19,32 @@
   /***************************************************************
    *    Declare Observables
    ***************************************************************/
-  vm.presentationDate = ko.observable();
+  vm.presentationDate = new DateField({
+    minDate: new Date(),
+    minTimeGap: 15,
+  });
 
   vm.presentationLocation = ko.observable();
   vm.presentationDuration = ko.observable();
   vm.presentationPOC = ko.observable();
-
-  vm.presentationDateStr = ko.pureComputed({
-    read: function () {
-      return new Date(vm.presentationDate()).format("yyyy-MM-dd");
-    },
-    write: function (val) {
-      vm.presentationDate(new Date(val));
-    },
-  });
 </script>
 
 <script type="text/html" id="tmpl_presentation">
   <div class="ui form">
     <div class="eight wide field">
       <label>Presentation Date and Time:</label>
-      <input
-        class="editable-field"
-        type="datetime-local"
-        data-bind="disabled:
-      currentView() == 'view', value: presentationDateStr"
-      />
+      <div class="ui calendar">
+        <div class="ui input left icon">
+          <i class="calendar icon"></i>
+          <input
+            class="editable-field"
+            type="text"
+            data-bind="disabled:
+              currentView() == 'view', 
+              dateField: diplomaticPassportExpiration"
+          />
+        </div>
+      </div>
     </div>
     <div class="two fields">
       <div class="eight wide field">

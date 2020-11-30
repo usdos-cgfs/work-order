@@ -56,7 +56,7 @@
     <!-- ko if: allOfficeOrders().length >0 -->
     <div class="ui grid">
       <div class="two wide column">
-        <div class="ui secondary fluid vertical pointing menu">
+        <div class="ui secondary fluid vertical tabular menu">
           <a class="item active" data-tab="my-open-orders"> Open </a>
           <a class="item" data-tab="my-closed-orders"> Closed </a>
           <a class="item" data-tab="my-cancelled-orders"> Cancelled </a>
@@ -142,7 +142,9 @@
                     <!-- /ko -->
                   </td>
                   <td data-bind="text: Created.format('yyyy-MM-dd')"></td>
-                  <td data-bind="text: $root.estimateClosingDate($data)"></td>
+                  <td
+                    data-bind="class: $root.closeDateClass($data), text: $root.estimateClosingDate($data)"
+                  ></td>
                 </tr>
               </tbody>
               <tfoot>
@@ -1127,6 +1129,10 @@
     </div>
     <!-- /ko -->
   </div>
+  <p>
+    Application loaded in:
+    <span data-bind="text: timers.initDelta()/1000"></span> s
+  </p>
 </div>
 <div id="service-type-templates"></div>
 
