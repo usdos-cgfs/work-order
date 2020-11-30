@@ -17,8 +17,8 @@
   /***************************************************************
    *    Declare Observables
    ***************************************************************/
-  self.locksmithLocation = ko.observable();
-  self.locksmithLockType = ko.observable();
+  vm.locksmithLocation = ko.observable();
+  vm.locksmithLockType = ko.observable();
 </script>
 
 <script type="text/html" id="tmpl_locksmith">

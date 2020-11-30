@@ -15,7 +15,7 @@
         required: true,
       },
       BirthDate: {
-        type: "Text",
+        type: "DateTime",
         koMap: "diplomaticVisaBirthDate",
         required: true,
       },
@@ -25,12 +25,12 @@
         required: true,
       },
       Issued: {
-        type: "Text",
+        type: "DateTime",
         koMap: "diplomaticPassportIssued",
         required: false,
       },
       Expiration: {
-        type: "Text",
+        type: "DateTime",
         koMap: "diplomaticPassportExpiration",
         required: false,
       },
@@ -55,12 +55,12 @@
         required: false,
       },
       Departure: {
-        type: "Text",
+        type: "DateTime",
         koMap: "diplomaticPassportDeparture",
         required: false,
       },
       Return: {
-        type: "Text",
+        type: "DateTime",
         koMap: "diplomaticPassportReturn",
         required: false,
       },

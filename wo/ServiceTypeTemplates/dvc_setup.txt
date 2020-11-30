@@ -9,7 +9,7 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      DateOfDVC: { type: "Text", koMap: "dvcDate", required: false },
+      DateOfDVC: { type: "DateTime", koMap: "dvcDate", required: false },
       Location: {
         type: "Text",
         koMap: "dvcLocation",

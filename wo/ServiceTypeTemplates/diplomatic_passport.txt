@@ -67,7 +67,7 @@
   vm.diplomaticPassportReturn = new DateField({ type: "date" });
   vm.diplomaticPassportPurpose = ko.observable();
   vm.diplomaticPassportBirthLocation = ko.observable();
-  vm.diplomaticPassportExpiration = ko.observable();
+  vm.diplomaticPassportExpiration = new DateField({ type: "date" });
 
   vm.diplomaticPassportServiceTypeOpts = ko.observableArray(["New", "Renewal"]);
 </script>

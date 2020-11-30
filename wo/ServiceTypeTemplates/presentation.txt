@@ -9,7 +9,7 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty" },
       Title: { type: "Text", koMap: "requestID" },
-      PresentationDate: { type: "Text", koMap: "presentationDate" },
+      PresentationDate: { type: "DateTime", koMap: "presentationDate" },
       Location: { type: "Text", koMap: "presentationLocation" },
       Duration: { type: "Text", koMap: "presentationDuration" },
       POC: { type: "Text", koMap: "presentationPOC" },
