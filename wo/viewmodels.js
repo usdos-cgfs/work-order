@@ -167,6 +167,7 @@ var configRequestOrgsListDef = {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "empty" },
     UserGroup: { type: "Person", koMap: "empty" },
+    ContactInfo: { type: "Text", koMap: "empty" },
   },
 };
 
@@ -1510,10 +1511,11 @@ function koviewmodel() {
 
   self.test = {};
   self.test.dateField = new DateField({
-    onChange: function (date, text) {
-      debugger;
-      console.log("changing ", text);
-    },
+    type: "date",
+  });
+  self.test.datetimeField = new DateField({
+    minDate: new Date(),
+    minTimeGap: 15,
   });
 }
 /* Binding handlers */
@@ -1595,16 +1597,17 @@ ko.bindingHandlers.date = {
 ko.bindingHandlers.dateField = {
   init: function (element, valueAccessor, allBindingsAccessor) {
     var dateFieldObj = valueAccessor();
-    //if (dateFieldObj.type == )
-    dateFieldObj.opts.onSelect = function (date, text) {
-      var value = valueAccessor().date;
-      value(date);
-    };
-    dateFieldObj.opts.onChange = function (date, text) {
-      var value = valueAccessor().date;
-      value(date);
-    };
+    dateFieldObj.opts.selectAdjacentDays = true;
+
     $(element).closest(".ui.calendar").calendar(dateFieldObj.opts);
+    $(element)
+      .closest(".ui.calendar")
+      .focusout(function (event) {
+        console.log(this);
+        date = new Date($(element).val());
+        var value = valueAccessor().date;
+        value(date);
+      });
   },
   update: function (
     element,

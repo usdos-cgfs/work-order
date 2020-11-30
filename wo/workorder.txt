@@ -401,15 +401,33 @@
       <!-- /ko -->
     </div>
     <!-- /ko -->
+    <!-- ko if: selectedServiceType -->
     <div id="wo-description-modal" class="ui modal" style="display: none">
       <div
         class="header"
         data-bind="text: selectedServiceType() ? selectedServiceType().Title : 'Oops, something went wrong'"
       ></div>
       <div class="content">
+        <div>
+          For
+          <span data-bind="text: selectedServiceType().Title"></span> requests,
+          please complete the following Work Order Form. Please have prepared
+          the following information:
+        </div>
         <div
           data-bind="html: selectedServiceType() ? selectedServiceType().Description : ''"
         ></div>
+        <br />
+        <div
+          data-bind="html: selectedServiceType().AttachmentDescription"
+        ></div>
+        <div>
+          Once submitted, this request will be handled by a member of the
+          <span
+            data-bind="text: selectedServiceType().RequestOrgs[0].get_lookupValue()"
+          ></span>
+          team.
+        </div>
       </div>
       <div class="actions">
         <div class="actions">
@@ -426,6 +444,7 @@
         </div>
       </div>
     </div>
+    <!-- /ko -->
   </div>
   <div
     id="order-detail"
@@ -931,6 +950,39 @@
     <span data-bind="text: timers.initDelta()/1000"></span> s
   </p>
   <!-- /ko -->
+  <!-- <div class="ui form">
+    <div class="six wide field">
+      <div class="ui calendar">
+        <div class="ui input left icon">
+          <i class="calendar icon"></i>
+          <input
+            class="editable-field"
+            type="text"
+            data-bind="disabled:
+          currentView() == 'view', 
+          dateField: test.dateField"
+          />
+        </div>
+      </div>
+    </div>
+    <p data-bind="text: test.dateField.date"></p>
+
+    <div class="six wide field">
+      <div class="ui calendar">
+        <div class="ui input left icon">
+          <i class="calendar icon"></i>
+          <input
+            class="editable-field"
+            type="text"
+            data-bind="disabled:
+          currentView() == 'view', 
+          dateField: test.datetimeField"
+          />
+        </div>
+      </div>
+    </div>
+    <p data-bind="text: test.datetimeField.date"></p>
+  </div> -->
 </div>
 
 <p>
