@@ -85,7 +85,7 @@
         ></div>
       </div>
       <div class="field">
-        <label>Employee Type:</label>
+        <label>Request Type:</label>
         <select
           class="editable-field"
           type="text"
