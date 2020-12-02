@@ -423,9 +423,11 @@
         ></div>
         <div>
           Once submitted, this request will be handled by a member of the
+          <!-- ko if: selectedServiceType().RequestOrgs -->
           <span
             data-bind="text: selectedServiceType().RequestOrgs[0].get_lookupValue()"
           ></span>
+          <!-- /ko -->
           team.
         </div>
       </div>
