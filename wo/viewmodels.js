@@ -1474,6 +1474,8 @@ function koviewmodel() {
   self.requestorOfficeUserOpt = ko.pureComputed(function () {
     if (self.userRole() == "admin") {
       return self.configRequestingOffices();
+    } else if (self.userActionOfficeMembership().length > 0) {
+      return self.configRequestingOffices();
     } else {
       let groupIds = self.userGroupMembership().map((ug) => ug.ID);
       let activeFilteredRO = self
