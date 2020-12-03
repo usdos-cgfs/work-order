@@ -797,14 +797,17 @@ function koviewmodel() {
   self.estimateClosingDate = function (request) {
     // TODO: Add the holidays list in here somewhere
     console.log("est closing date", request);
+    if (!request.EstClosedDate) {
+      let daysOffset = self
+        .configServiceTypes()
+        .find((stype) => stype.ID == request.ServiceType.get_lookupId())
+        .DaysToCloseBusiness;
 
-    let daysOffset = self
-      .configServiceTypes()
-      .find((stype) => stype.ID == request.ServiceType.get_lookupId())
-      .DaysToCloseBusiness;
-
-    var closeDate = businessDaysFromDate(request.Created, daysOffset);
-    return closeDate.format("yyyy-MM-dd");
+      var closeDate = businessDaysFromDate(request.Created, daysOffset);
+      return closeDate.format("yyyy-MM-dd");
+    } else {
+      return request.EstClosedDate.format("yyyy-MM-dd");
+    }
   };
 
   self.daysToCloseDate = function (request) {

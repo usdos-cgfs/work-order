@@ -127,16 +127,16 @@ input[id$="uploadLocation"] {
 }
 
 .hl-late {
-  background-color: #c32b33;
-  color: white;
+  background-color: #c32b33 !important;
+  color: white !important;
 }
 
 .hl-warn {
-  background-color: #f07122;
+  background-color: #f07122 !important;
 }
 
 .hl-info {
-  background-color: #f0b222;
+  background-color: #f0b222 !important;
 }
 
 .sticky {
