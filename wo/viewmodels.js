@@ -1146,7 +1146,7 @@ function koviewmodel() {
 
   self.selectedServiceType.subscribe((stype) => {
     self.requestShowDescription(false);
-    if (stype.listDef) {
+    if (stype && stype.listDef) {
       clearValuePairs(stype.listDef.viewFields);
     }
   });
