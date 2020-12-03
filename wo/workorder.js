@@ -161,11 +161,13 @@ function viewWorkOrderItem(woID) {
     updateUrlParam("reqid", "");
     vm.tab("my-orders");
   } else {
+    vm.tab("order-detail");
+    vm.currentView("view");
     vm.requestID(woID);
 
     vm.requestHeader(request);
     console.log("workorder fetched - setting value pairs");
-    vm.selectedServiceType("");
+    //vm.selectedServiceType("");
     clearValuePairs(workOrderListDef.viewFields);
     setValuePairs(workOrderListDef.viewFields, vm.requestHeader());
 
@@ -397,7 +399,7 @@ function calcNewWorkorderDates() {
   vm.requestEstClosed(
     businessDaysFromDate(
       vm.requestSubmittedDate(),
-      vm.selectedServiceType().DaysToCloseDisp
+      vm.selectedServiceType().DaysToCloseBusiness
     )
   );
 
@@ -633,7 +635,7 @@ function setValuePairs(listDef, jObject) {
 
 function clearValuePairs(listDef) {
   $.each(listDef, function (field, obj) {
-    if (obj.koMap != "requestID") {
+    if (!["requestID", "ServiceType"].includes(obj.koMap)) {
       let observable = vm[obj.koMap];
       switch (obj.type) {
         case "Person":

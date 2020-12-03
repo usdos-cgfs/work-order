@@ -819,7 +819,7 @@ function koviewmodel() {
     var days = self.daysToCloseDate(request);
     if (days == "N/A") {
       return "";
-    } else if (days < 0) {
+    } else if (days <= 0) {
       return "hl-late";
     } else if (days < 2) {
       return "hl-warn";
@@ -1601,15 +1601,19 @@ ko.bindingHandlers.dateField = {
     var dateFieldObj = valueAccessor();
     dateFieldObj.opts.selectAdjacentDays = true;
 
-    $(element).closest(".ui.calendar").calendar(dateFieldObj.opts);
-    $(element)
-      .closest(".ui.calendar")
-      .focusout(function (event) {
-        console.log(this);
-        date = new Date($(element).val());
-        var value = valueAccessor().date;
-        value(date);
-      });
+    try {
+      $(element).closest(".ui.calendar").calendar(dateFieldObj.opts);
+      $(element)
+        .closest(".ui.calendar")
+        .focusout(function (event) {
+          console.log(this);
+          date = new Date($(element).val());
+          var value = valueAccessor().date;
+          value(date);
+        });
+    } catch (e) {
+      console.warn("error", e);
+    }
   },
   update: function (
     element,
