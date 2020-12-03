@@ -801,7 +801,7 @@ function koviewmodel() {
     let daysOffset = self
       .configServiceTypes()
       .find((stype) => stype.ID == request.ServiceType.get_lookupId())
-      .DaysToCloseDisp;
+      .DaysToCloseBusiness;
 
     var closeDate = businessDaysFromDate(request.Created, daysOffset);
     return closeDate.format("yyyy-MM-dd");
