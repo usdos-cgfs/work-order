@@ -9,14 +9,14 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      User: { type: "Person", koMap: "phoneUser", required: false },
+      User: { type: "Person", koMap: "phoneUser", required: true },
       EmployeeType: {
         type: "Text",
         koMap: "phoneEmployeeType",
-        required: false,
+        required: true,
       },
-      RequestType: { type: "Text", koMap: "phoneRequestType", required: false },
-      PlanType: { type: "Text", koMap: "phonePlanType", required: false },
+      RequestType: { type: "Text", koMap: "phoneRequestType", required: true },
+      PlanType: { type: "Text", koMap: "phonePlanType", required: true },
     },
   });
 
@@ -40,7 +40,7 @@
   <div class="ui form">
     <div class="two fields">
       <div class="field">
-        <label>User Name:</label>
+        <label>User Name<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="text"
@@ -55,7 +55,7 @@
         ></div>
       </div>
       <div class="field">
-        <label>Employee Type:</label>
+        <label>Employee Type<span class="required">*</span>:</label>
         <select
           class="editable-field"
           type="text"
@@ -66,7 +66,7 @@
     </div>
     <div class="two fields">
       <div class="field">
-        <label>Request Type:</label>
+        <label>Request Type<span class="required">*</span>:</label>
         <select
           class="editable-field"
           type="text"
@@ -75,7 +75,7 @@
         ></select>
       </div>
       <div class="field">
-        <label>Phone Plan Type:</label>
+        <label>Phone Plan Type<span class="required">*</span>:</label>
         <select
           class="editable-field"
           type="text"

@@ -12,10 +12,10 @@
       RequisitionType: {
         type: "Text",
         koMap: "requisitionType",
-        required: false,
+        required: true,
       },
-      Quantity: { type: "Text", koMap: "requisitionQuantity", required: false },
-      Comments: { type: "Text", koMap: "requisitionComments", required: false },
+      Quantity: { type: "Text", koMap: "requisitionQuantity", required: true },
+      Comments: { type: "Text", koMap: "requisitionComments", required: true },
     },
   });
 
@@ -36,7 +36,7 @@
 <script type="text/html" id="tmpl_requisition">
   <div class="ui form">
     <div class="eight wide field">
-      <label>Requisition Type:</label>
+      <label>Requisition Type<span class="required">*</span>:</label>
       <select
         class="editable-field"
         data-bind="value: requisitionType, options: requisitionTypeOpts, optionsCaption: 'Select...',

@@ -50,7 +50,7 @@
   vm.itSoftwarePOCName = ko.observable();
   vm.itSoftwareCost = ko.observable();
   vm.itSoftwareType = ko.observable();
-  vm.itSoftwareTypeOpts = ko.observableArray(["New", "Mainenance Renewal"]);
+  vm.itSoftwareTypeOpts = ko.observableArray(["New", "Maintenance Renewal"]);
 </script>
 
 <script type="text/html" id="tmpl_it_software">

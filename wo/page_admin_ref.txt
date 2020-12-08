@@ -731,14 +731,11 @@
                     <label data-bind="if: configRequestingOffices()">
                       Requestor Office<span class="required">*</span>:
                     </label>
-                    <select
-                      class="editable-field new"
+                    <input
+                      class="non-editable-field"
                       type="text"
-                      data-bind="value: requestorOffice, 
-                            options: requestorOfficeUserOpt, 
-                            optionsText: function(ro) {return ro.Title},
-                            disable: currentView() == 'view'"
-                    ></select>
+                      data-bind="value: requestorOffice() ? requestorOffice().Title : 'N/A'"
+                    />
                   </div>
                 </div>
                 <div class="two fields">

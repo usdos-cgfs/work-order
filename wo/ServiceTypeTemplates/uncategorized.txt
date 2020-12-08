@@ -12,13 +12,13 @@
       Name: {
         type: "Text",
         koMap: "uncategorizedName",
-        required: false,
+        required: true,
         displayName: "Item Name",
       },
       Quantity: {
         type: "Text",
         koMap: "uncategorizedQuantity",
-        required: false,
+        required: true,
         displayName: "Quantity",
       },
       Cost: {
@@ -57,7 +57,9 @@
       <div class="ui form">
         <!-- <div data-bind="currentView() == 'new'"> -->
         <div class="field">
-          <label>Is this an Office Supply?</label>
+          <label
+            >Is this an Office Supply?<span class="required">*</span></label
+          >
           <select
             class="editable-field"
             type="text"
@@ -68,7 +70,7 @@
           class="field"
           data-bind="visible: uncategorizedIsOfficeSupply() == 'No'"
         >
-          <label>Is this a Subscription?</label>
+          <label>Is this a Subscription?<span class="required">*</span></label>
           <select
             class="editable-field"
             type="text"
@@ -79,7 +81,7 @@
           class="field"
           data-bind="visible: uncategorizedIsSubscription() == 'No'"
         >
-          <label>Is this IT Hardware?</label>
+          <label>Is this IT Hardware?<span class="required">*</span></label>
           <select
             class="editable-field"
             type="text"
@@ -90,7 +92,7 @@
           class="field"
           data-bind="visible: uncategorizedIsITHardware() == 'No'"
         >
-          <label>Is this IT Software?</label>
+          <label>Is this IT Software?<span class="required">*</span></label>
           <select
             class="editable-field"
             type="text"
@@ -101,7 +103,7 @@
           class="field"
           data-bind="visible: uncategorizedIsITSoftware() == 'No'"
         >
-          <label>Is the cost over $3,500?</label>
+          <label>Is the cost over $3,500?<span class="required">*</span></label>
           <select
             class="editable-field"
             type="text"

@@ -9,10 +9,14 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty" },
       Title: { type: "Text", koMap: "requestID" },
-      PresentationDate: { type: "DateTime", koMap: "presentationDate" },
-      Location: { type: "Text", koMap: "presentationLocation" },
-      Duration: { type: "Text", koMap: "presentationDuration" },
-      POC: { type: "Text", koMap: "presentationPOC" },
+      PresentationDate: {
+        type: "DateTime",
+        koMap: "presentationDate",
+        required: true,
+      },
+      Location: { type: "Text", koMap: "presentationLocation", required: true },
+      Duration: { type: "Text", koMap: "presentationDuration", required: true },
+      POC: { type: "Text", koMap: "presentationPOC", required: true },
     },
   });
 
@@ -32,7 +36,7 @@
 <script type="text/html" id="tmpl_presentation">
   <div class="ui form">
     <div class="eight wide field">
-      <label>Presentation Date and Time:</label>
+      <label>Presentation Date and Time<span class="required">*</span>:</label>
       <div class="ui calendar">
         <div class="ui input left icon">
           <i class="calendar icon"></i>
@@ -48,7 +52,7 @@
     </div>
     <div class="two fields">
       <div class="eight wide field">
-        <label>Location:</label>
+        <label>Location<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="text"
@@ -57,7 +61,7 @@
         />
       </div>
       <div class="eight wide field">
-        <label>Duration:</label>
+        <label>Duration<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="text"
@@ -67,7 +71,7 @@
       </div>
     </div>
     <div class="eight wide field">
-      <label>POC</label>
+      <label>POC<span class="required">*</span>:</label>
       <input
         class="editable-field"
         type="text"

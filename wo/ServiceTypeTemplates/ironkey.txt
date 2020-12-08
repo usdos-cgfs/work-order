@@ -9,21 +9,21 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      UserName: { type: "Person", koMap: "ironkeyUserName", required: false },
+      UserName: { type: "Person", koMap: "ironkeyUserName", required: true },
       EmployeeType: {
         type: "Text",
         koMap: "ironkeyEmployeeType",
-        required: false,
+        required: true,
       },
       RequestType: {
         type: "Text",
         koMap: "ironkeyRequestType",
-        required: false,
+        required: true,
       },
       Supervisor: {
         type: "Person",
         koMap: "ironkeySupervisor",
-        required: false,
+        required: true,
       },
     },
   });
@@ -44,7 +44,7 @@
   <div class="ui form">
     <div class="two fields">
       <div class="field">
-        <label>User Name:</label>
+        <label>User Name<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="text"
@@ -59,7 +59,7 @@
         ></div>
       </div>
       <div class="field">
-        <label>Employee Type:</label>
+        <label>Employee Type<span class="required">*</span>:</label>
         <select
           class="editable-field"
           type="text"
@@ -70,7 +70,7 @@
     </div>
     <div class="two fields">
       <div class="field">
-        <label>COR/Supervisor:</label>
+        <label>COR/Supervisor<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="text"
@@ -85,7 +85,7 @@
         ></div>
       </div>
       <div class="field">
-        <label>Request Type:</label>
+        <label>Request Type<span class="required">*</span>:</label>
         <select
           class="editable-field"
           type="text"
