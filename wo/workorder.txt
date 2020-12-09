@@ -494,6 +494,20 @@
                 </p>
               </div>
             </div>
+            <!-- ko if: canSaveForm -->
+            <div class="ui row">
+              <div class="sixteen wide column">
+                <button
+                  type="button"
+                  class="editable-field ui right floated primary button"
+                  onclick="saveWorkOrder()"
+                  data-bind="enable: canSaveForm"
+                >
+                  Submit Request
+                </button>
+              </div>
+            </div>
+            <!-- /ko -->
           </div>
         </div>
       </div>
@@ -923,7 +937,7 @@
         onclick="saveWorkOrder()"
         data-bind="enable: canSaveForm, visible: canSaveForm"
       >
-        Save
+        Submit Request
       </button>
       <!-- <button
         id="edit-form"
