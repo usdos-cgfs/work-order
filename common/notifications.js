@@ -5,7 +5,42 @@ function InitNotifications() {
 }
 
 Workorder.NewNotifications = function () {
-  function newWorkorderEmails() {
+  function newWorkorderEmailUser() {
+    // 2. Send email to user, letting them know their request has been created
+    let toUser = [sal.globalConfig.currentUser];
+
+    let subject = `Work Order -New- ${
+      vm.selectedServiceType().Title
+    } - ${vm.requestID()}`;
+
+    let requestOrgs = vm.selectedServiceType().RequestOrgs.map(function (ro) {
+      return vm.configRequestOrgs().find(function (cro) {
+        return cro.ID == ro.get_lookupId();
+      });
+    });
+
+    let bodyUser =
+      `You're ${
+        vm.selectedServiceType().Title
+      } request  has been successfully submitted.</br></br>` +
+      `<a href="${vm.requestLink()}" target="blank">${vm.requestID()}</a> - ${
+        vm.selectedServiceType().Title
+      }<br><br>` +
+      "Estimated business days to close this request type: " +
+      vm.selectedServiceType().DaysToCloseBusiness +
+      "<br><br>" +
+      "This request will be serviced by: <br>" +
+      requestOrgs.map(function (ro) {
+        return ro.Title + " - <br>" + ro.ContactInfo + "<br><br>";
+      }) +
+      "To view the request, please click the link above, or copy and paste the below URL into your browser:" +
+      "<br><br>" +
+      `${vm.requestLink()}`;
+
+    createEmail(toUser, [], [], subject, bodyUser);
+  }
+
+  function newWorkorderEmailActionOffices() {
     // 1. Send emails to request orgs letting them know there's a new email.
     let to = vm
       .requestOrgs()
@@ -17,31 +52,21 @@ Workorder.NewNotifications = function () {
     } - ${vm.requestID()}`;
 
     let body =
-      `Greetings Colleagues,<br><br> A new service request has been opened requiring your attention:<br>` +
+      "Greetings Colleagues,<br><br> A new service request has been opened requiring your attention:<br>" +
       `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
         vm.selectedServiceType().Title
       }<br><br>` +
-      `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
-      `${vm.requestLinkAdmin()}`;
+      "Estimated business days to close this request type: " +
+      vm.selectedServiceType().DaysToCloseBusiness +
+      "<br><br>" +
+      "This request will be serviced by: " +
+      vm.selectedServiceType().RequestOrgs.get_lookupValue() +
+      "<br>" +
+      "To view the request, please click the link above, or copy and paste the below URL into your browser:" +
+      "<br><br>" +
+      vm.requestLinkAdmin();
 
     createEmail(to, [], [], subject, body);
-
-    // 2. Send email to user, letting them know their request has been created
-    let toUser = [sal.globalConfig.currentUser];
-
-    let subjectUser = subject;
-
-    let bodyUser =
-      `You're ${
-        vm.selectedServiceType().Title
-      } request  has been successfully submitted.</br></br>` +
-      `<a href="${vm.requestLink()}" target="blank">${vm.requestID()}</a> - ${
-        vm.selectedServiceType().Title
-      }<br><br>` +
-      `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
-      `${vm.requestLink()}`;
-
-    createEmail(toUser, [], [], subjectUser, bodyUser);
   }
 
   function workorderReminderEmails(id) {
@@ -109,17 +134,18 @@ Workorder.NewNotifications = function () {
 
     let addendum = new String();
 
-    if ((role = "Approver")) {
-      let valuePairs = getValuePairs(
-        vm.selectedServiceType().listDef.viewFields
-      );
-      addendum += "<br><br><ul>";
-      if (valuePairs.length) {
-        valuePairs.forEach((vp) => {
-          addendum += `<li>${vp[0]} - ${vp[1]}</li>`;
-        });
-      }
-      addendum += "</ul>";
+    let valuePairs = getValuePairsHuman(
+      vm.selectedServiceType().listDef.viewFields
+    );
+    addendum += "<br><br><ul>";
+    if (valuePairs.length) {
+      valuePairs.forEach((vp) => {
+        addendum += `<li>${vp[0]} - ${vp[1]}</li>`;
+      });
+    }
+    addendum += "</ul>";
+
+    if (role == "Approver") {
       addendum +=
         `<br>Click the link below to quick approve this request:<br>` +
         `<a href="${vm.requestLinkAdminApprove(
@@ -131,6 +157,7 @@ Workorder.NewNotifications = function () {
           id
         )}" target="blank">${vm.requestLinkAdminReject(id)}</a><br><br>`;
     }
+
     createEmail(to, [], [], subject, body + addendum);
   }
 
@@ -269,7 +296,8 @@ Workorder.NewNotifications = function () {
   }
 
   var publicMembers = {
-    newWorkorderEmails,
+    newWorkorderEmailUser,
+    newWorkorderEmailActionOffices,
     workorderReminderEmails,
     breakingPermissionsTimeout,
     newAssignmentNotification,

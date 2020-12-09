@@ -479,7 +479,7 @@
                   <button
                     type="button"
                     class="ui primary right attached button"
-                    onclick="createAssignment()"
+                    onclick="createAssignment('Action Resolver', true)"
                     data-bind="enable: assignActionOffice"
                   >
                     Assign

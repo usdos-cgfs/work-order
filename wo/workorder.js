@@ -161,9 +161,9 @@ function viewWorkOrderItem(woID) {
     updateUrlParam("reqid", "");
     vm.tab("my-orders");
   } else {
+    vm.requestID(woID);
     vm.tab("order-detail");
     vm.currentView("view");
-    vm.requestID(woID);
 
     vm.requestHeader(request);
     console.log("workorder fetched - setting value pairs");
@@ -455,10 +455,10 @@ function onSaveNewWorkOrderMaster(id) {
   console.log("callback val: ", id);
 
   // Create our New Work Order Email
-  Workorder.Notifications.newWorkorderEmails();
+  Workorder.Notifications.newWorkorderEmailUser();
 
   // Offload our reminder emails to a separate function
-  Workorder.Notifications.workorderReminderEmails(id);
+  // Workorder.Notifications.workorderReminderEmails(id);
 
   // Create our Action
   createAction(
@@ -555,6 +555,49 @@ function ensureAttachments() {
 /************************************************************
  * ValuePair Binding Getters and Setters
  ************************************************************/
+function getValuePairsHuman(listDef) {
+  var valuePairs = [];
+  $.each(listDef, function (field, obj) {
+    console.log(field, obj);
+
+    // For each mapped field in our List Def viewfields, push the bound
+    // KO object to it.
+    if (
+      !["ID", "ClosedDate", "Created"].includes(field) &&
+      obj.koMap != "empty"
+    ) {
+      let koMap = obj.koMap;
+      console.log(koMap);
+      let observable = vm[koMap];
+      //let fieldValue = !$.isEmptyObject(vm[koMap]()) ? vm[koMap]() : "";
+
+      // Based on the field type, do any casting or conversions here
+      switch (obj.type) {
+        case "DateTime":
+          if (observable.date) {
+            fieldValue = observable.date().format("yyyy-MM-dd");
+          } else {
+            fieldValue = observable().format("yyyy-MM-dd");
+          }
+          break;
+        case "Person":
+          fieldValue = observable.userName();
+          break;
+        default:
+          fieldValue = observable();
+      }
+      // Check if this field is required
+      // TODO: highlight the offending field
+      if (obj.required && !fieldValue) {
+        missingFields.push(field);
+        //vm.requestIsSaveable(false);
+      } else {
+        valuePairs.push([field, fieldValue]);
+      }
+    }
+  });
+  return valuePairs;
+}
 
 function getValuePairs(listDef) {
   console.log(listDef);
@@ -565,7 +608,10 @@ function getValuePairs(listDef) {
 
     // For each mapped field in our List Def viewfields, push the bound
     // KO object to it.
-    if (!["ID", "ClosedDate", "Created"].includes(field)) {
+    if (
+      !["ID", "ClosedDate", "Created"].includes(field) &&
+      obj.koMap != "empty"
+    ) {
       let koMap = obj.koMap;
       console.log(koMap);
       let observable = vm[koMap];
