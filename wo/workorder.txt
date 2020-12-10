@@ -523,17 +523,21 @@
     </div>
     <div class="ui info message">
       <i class="close icon"></i>
-      <div class="header">Was this what you wanted?</div>
-      <ul class="list">
-        <li>It's good to see you again.</li>
-        <li>Did you know it's been a while?</li>
-      </ul>
+      <div class="header">Need help with this request?</div>
+      <p>This service type is supported by:</p>
+      <div data-bind="foreach: requestOrgs">
+        <h5 class="ui header" data-bind="text: Title"></h5>
+        <div data-bind="html: ContactInfo"></div>
+      </div>
     </div>
     <div class="ui hidden divider"></div>
     <div class="ui left middle aligned grid">
       <div class="row">
         <div class="six wide column">
-          <h1 data-bind="text: selectedServiceType().Title"></h1>
+          <h1
+            class="ui header"
+            data-bind="text: selectedServiceType().Title"
+          ></h1>
         </div>
       </div>
     </div>

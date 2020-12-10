@@ -93,6 +93,22 @@ function newWorkOrder() {
   vm.requestIsActive(1);
   vm.requestStatus("Draft");
 
+  // vm.requestOrgIds(
+  //   vm.selectedServiceType().RequestOrgs.map(function (ro) {
+  //     return ro.get_lookupId();
+  //   })
+  // );
+  //Set the workorder request orgs.
+  vm.request.allPipelineOrgs().forEach(function (org) {
+    if (
+      !vm.requestOrgs().find(function (ro) {
+        return ro.ID == org.ID;
+      })
+    ) {
+      vm.requestOrgs.push(org);
+    }
+  });
+
   //Clear our requested fields.
   vm.requestHeader(new Object());
   vm.requestClosedDate(null);
@@ -404,7 +420,7 @@ function calcNewWorkorderDates() {
   );
 
   //Set the request orgs
-  vm.requestOrgIds(vm.selectedServiceType().RequestOrgs);
+  //vm.requestOrgIds(vm.selectedServiceType().RequestOrgs);
 
   //vm.requestStageNum(0);
   vm.requestStatus("Open");
@@ -417,11 +433,7 @@ function createNewWorkorderItems() {
   // at the folder level to prevent info spillage.
 
   calcNewWorkorderDates();
-
-  //Set the workorder request orgs.
-  vm.request.allPipelineOrgs().forEach(function (org) {
-    vm.requestOrgs.push(org);
-  });
+  vm.requestStatus("Open");
 
   var valuePairs = getValuePairs(workOrderListDef.viewFields);
 

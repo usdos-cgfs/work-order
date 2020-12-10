@@ -1392,7 +1392,6 @@ function koviewmodel() {
 
   self.requestOrgIds = ko.pureComputed({
     read: function () {
-      let offices = self.configActionOffices();
       let vps = new Array();
       self.requestOrgs().forEach((ao) => {
         vps.push(ao.ID);
@@ -1405,12 +1404,14 @@ function koviewmodel() {
       if (val.length > 0) {
         console.log("Action Office IDs: ", val[0].get_lookupValue());
         self.requestOrgs(
-          val.map((ao) => {
-            return { ID: ao.get_lookupId(), Title: ao.get_lookupValue() };
+          val.map(function (ro) {
+            return vm.configRequestOrgs().find(function (cro) {
+              return cro.ID == ro.get_lookupId();
+            });
           })
         );
       } else {
-        self.requestOrgs(new Array());
+        self.requestOrgs([]);
       }
     },
   });
