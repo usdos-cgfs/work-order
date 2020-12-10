@@ -162,6 +162,36 @@ input[id$="uploadLocation"] {
   background: rgb(0, 127, 255);
 }
 
+#progress-card #actions-bar {
+  padding-bottom: 0.25em;
+}
+
+.fbox {
+  display: flex;
+}
+
+.fbox.left {
+  /* display: flex; */
+  flex-direction: row;
+}
+
+.fbox.right {
+  flex-direction: row-reverse;
+}
+div [class*="left floated"] {
+  float: left;
+  margin-left: 0.25em;
+}
+
+div [class*="right floated"] {
+  float: right;
+  margin-right: 0.25em;
+}
+
+#progress-card .button {
+  /* float: right; */
+}
+
 .admin-action-zone {
   border-radius: 5px;
   border-width: 2px;

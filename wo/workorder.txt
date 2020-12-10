@@ -38,7 +38,16 @@
 <!-- <script type="text/javascript" src="/_layouts/15/SP.UserProfiles.js"></script> -->
 
 <h1>WorkOrder System</h1>
-
+<div class="ui warning message">
+  <div class="header">This system is currently in open beta testing</div>
+  <p>
+    Please report issues to:
+    <a href="mailto:cgfssharepoint@state.gov?subject='Workorder UAT Feedback'"
+      >cgfssharepoint@state.gov</a
+    >
+  </p>
+  <p>Your assistance is greatly appreciated.</p>
+</div>
 <div id="tabs" style="display: none">
   <div class="ui top attached tabular menu">
     <a class="item" data-tab="my-orders">My Orders</a>
@@ -511,6 +520,14 @@
           </div>
         </div>
       </div>
+    </div>
+    <div class="ui info message">
+      <i class="close icon"></i>
+      <div class="header">Was this what you wanted?</div>
+      <ul class="list">
+        <li>It's good to see you again.</li>
+        <li>Did you know it's been a while?</li>
+      </ul>
     </div>
     <div class="ui hidden divider"></div>
     <div class="ui left middle aligned grid">
@@ -1050,7 +1067,7 @@
 
 <script src="../SiteAssets/workorder/common/sal.js"></script>
 <script src="../SiteAssets/workorder/common/common.js"></script>
-<script src="../SiteAssets/workorder/common/test.js"></script>
+<script src="../SiteAssets/workorder/wo/page_test.js"></script>
 <script src="../SiteAssets/workorder/common/notifications.js"></script>
 <script src="../SiteAssets/workorder/common/deployment.js"></script>
 

@@ -898,6 +898,83 @@ sal.NewSPList = function (listDef) {
       Function.createDelegate(data, onFindItemFailed)
     );
   }
+  /*****************************************************************
+                            Get Item Permissions  
+    ******************************************************************/
+  /**
+   * Documentation - getItemPermissions
+   * @param {number} id Item identifier, obtain using getListItems above
+   * @param {Function} callback The callback function to execute after
+   *  obtaining permissions
+   */
+  function getItemPermissions(id, callback) {
+    var users = new Array();
+    var resolvedGroups = new Array();
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+
+    var oList = web.get_lists().getByTitle(self.config.def.title);
+
+    let oListItem = oList.getItemById(id);
+    var roles = oListItem.get_roleAssignments();
+
+    function onFindItemSucceeded() {
+      var currCtx = new SP.ClientContext.get_current();
+      var web = currCtx.get_web();
+      var principals = [];
+      var roleEnumerator = this.roles.getEnumerator();
+      // enumerate the roles
+      while (roleEnumerator.moveNext()) {
+        var role = roleEnumerator.get_current();
+        var principal = role.get_member();
+        // get the principal
+        currCtx.load(principal);
+        principals.push(principal);
+      }
+
+      currCtx.executeQueryAsync(
+        // success
+        function (sender, args) {
+          // alert the title
+          //alert(principal.get_title());
+          var logins = principals.map(function (principal) {
+            return principal.get_loginName();
+          });
+          callback(logins);
+        },
+        // failure
+        function (sender, args) {
+          alert(
+            "Request failed. " +
+              args.get_message() +
+              "\n" +
+              args.get_stackTrace()
+          );
+        }
+      );
+    }
+
+    function onFindItemFailed(sender, args) {
+      console.error(
+        "Failed to update permissions on item: " +
+          this.title +
+          args.get_message() +
+          "\n" +
+          args.get_stackTrace(),
+        false
+      );
+    }
+
+    let data = { id, oListItem, roles, callback };
+    //let data = { title: oListItem.get_item("Title"), oListItem: oListItem };
+
+    currCtx.load(oListItem);
+    currCtx.load(roles);
+    currCtx.executeQueryAsync(
+      Function.createDelegate(data, onFindItemSucceeded),
+      Function.createDelegate(data, onFindItemFailed)
+    );
+  }
 
   /*****************************************************************
                             getFolderContents          
@@ -1307,11 +1384,13 @@ sal.NewSPList = function (listDef) {
   }
 
   let publicMembers = {
+    config: this.config,
     createListItem,
     getListItems,
     updateListItem,
     deleteListItem,
     setItemPermissions,
+    getItemPermissions,
     getFolderContents,
     showModal,
     uploadNewDocument,

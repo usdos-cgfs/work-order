@@ -30,6 +30,16 @@
 <link rel="stylesheet" href="../SiteAssets/workorder/wo/workorder.css" />
 <!-- common/RDT/app"  -->
 <h1>WorkOrder System: Action Offices</h1>
+<div class="ui warning message">
+  <div class="header">This system is currently in open beta testing</div>
+  <p>
+    Please report issues to:
+    <a href="mailto:cgfssharepoint@state.gov?subject='Workorder UAT Feedback'"
+      >cgfssharepoint@state.gov</a
+    >
+  </p>
+  <p>Your assistance is greatly appreciated.</p>
+</div>
 <div id="tabs" style="display: none">
   <div class="ui top attached tabular menu">
     <a class="item" data-tab="my-orders">Office Orders</a>

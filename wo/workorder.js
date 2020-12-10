@@ -498,10 +498,10 @@ function createWorkorderFolders() {
   vm.foldersCreated(0);
 
   // Set all permissions up front
-  let folderPermissions = vm.requestFolderPerms();
+  var folderPermissions = vm.requestFolderPerms();
 
   //For each of our multi-item lists, create a new folder
-  let listRefs = [
+  var listRefs = [
     vm.listRefWO(),
     vm.listRefAction(),
     vm.listRefAssignment(),
@@ -514,7 +514,7 @@ function createWorkorderFolders() {
   }
 
   listRefs.forEach((listRef) =>
-    listRef.upsertListFolderPath(vm.requestFolderPath(), (folderId) => {
+    listRef.upsertListFolderPath(vm.requestFolderPath(), function (folderId) {
       // Update the permissions for the new folder
       if (folderId) {
         listRef.setItemPermissions(
@@ -542,7 +542,17 @@ function createWorkorderFolders() {
 }
 
 function ensureAttachments() {
-  if (vm.selectedServiceType().AttachmentRequired) {
+  if (vm.selectedServiceType().AttachmentsRequiredCnt) {
+    if (
+      vm.requestAttachments().length <
+      vm.selectedServiceType().AttachmentsRequiredCnt
+    ) {
+      vm.requestIsSaveable(false);
+      alert(
+        "This request has not been saved. It is missing the required attachments."
+      );
+    }
+  } else if (vm.selectedServiceType().AttachmentRequired) {
     if (vm.requestAttachments().length == 0) {
       vm.requestIsSaveable(false);
       alert(
@@ -1254,7 +1264,16 @@ function pipelineForward() {
       function () {
         console.log("pipeline moved to next stage.");
         buildPipelineElement();
-        pipelineAssignments();
+        if (vm.requestIsActive() && vm.requestStage()) {
+          pipelineAssignments();
+          /* let's create a new Action every time the item progresses */
+          createAction(
+            vm.requestStage().Title,
+            `${sal.globalConfig.currentUser.get_title()} has moved the request to stage ${
+              vm.requestStage().Step
+            }: ${vm.requestStage().Title}`
+          );
+        }
         SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
       }
     );
@@ -1262,52 +1281,49 @@ function pipelineForward() {
 }
 
 function pipelineAssignments() {
-  if (vm.requestIsActive() && vm.requestStage()) {
-    if (vm.requestStage().WildCardAssignee) {
-      let personName = vm.requestStage().WildCardAssignee;
-      // This should be a person field
-      try {
-        let personObservable = vm[personName];
-        vm.assignAssignee(personObservable);
-      } catch (err) {
-        console.error(
-          `Something went wrong fetching ${personName} from viewmodel:`,
-          err
-        );
-      }
+  if (vm.requestStage().WildCardAssignee) {
+    let personName = vm.requestStage().WildCardAssignee;
+    // This should be a person field
+    try {
+      let personObservable = vm[personName];
+      vm.assignAssignee(personObservable);
+    } catch (err) {
+      console.error(
+        `Something went wrong fetching ${personName} from viewmodel:`,
+        err
+      );
     }
+  }
 
-    // Add the current stages Request Org to requests RequestOrg column
-    // This is an off by one issue since stage 0 is editing but isn't
-    // in our pipeline.
+  // Add the current stages Request Org to requests RequestOrg column
+  // This is an off by one issue since stage 0 is editing but isn't
+  // in our pipeline.
 
-    if (vm.requestStageOrg()) {
-      vm.requestOrgs.push(vm.requestStageOrg());
-      valuePairs = [["RequestOrgs", vm.requestOrgIds()]];
-    }
+  if (vm.requestStageOrg()) {
+    vm.requestOrgs.push(vm.requestStageOrg());
+    valuePairs = [["RequestOrgs", vm.requestOrgIds()]];
+  }
 
-    switch (vm.requestStage().ActionType) {
-      case "Pending Approval":
-        // The assigned approver needs to check off
-        vm.assignActionOffice(vm.requestStageOffice());
-        createAssignment("Approver", true);
-        break;
-      case "Pending Action":
-        vm.assignActionOffice(vm.requestStageOffice());
-        createAssignment("Action Resolver");
-        break;
-      case "Notification":
-        pipelineNotifications();
-        pipelineForward();
-        break;
-      case "Pending Resolution":
-      case "Pending Assignment":
-      default:
-        pipelineNotifications();
-        break;
-    }
-  } else {
-    pipelineNotifications();
+  switch (vm.requestStage().ActionType) {
+    case "Pending Approval":
+      // The assigned approver needs to check off
+      vm.assignActionOffice(vm.requestStageOffice());
+      createAssignment("Approver", true);
+      break;
+    case "Pending Action":
+      vm.assignActionOffice(vm.requestStageOffice());
+      createAssignment("Action Resolver");
+      break;
+    case "Notification":
+      pipelineNotifications();
+      pipelineForward();
+      createAction("Notification");
+      break;
+    case "Pending Resolution":
+    case "Pending Assignment":
+    default:
+      pipelineNotifications();
+      break;
   }
 }
 
@@ -1315,12 +1331,6 @@ function pipelineNotifications(addendum = null) {
   Workorder.Notifications.pipelineStageNotification();
 
   // Create the action
-  createAction(
-    vm.requestStage().Title == "Closed" ? "Closed" : "Progressed",
-    `${sal.globalConfig.currentUser.get_title()} has moved the request to stage ${
-      vm.requestStage().Step
-    }: ${vm.requestStage().Title}`
-  );
 }
 
 function cancelWorkOrder() {
@@ -1345,8 +1355,59 @@ function closeWorkOrder(reason = "Closed") {
       reason,
       `${sal.globalConfig.currentUser.get_title()} has ${reason} the request`
     );
+    lockRequest(vm.requestID());
+  });
+}
+
+function lockRequest(woID) {
+  // Put the request into read only mode
+  let listRefs = [
+    vm.listRefWO(),
+    vm.listRefAction(),
+    vm.listRefAssignment(),
+    vm.listRefWOEmails(),
+  ];
+
+  if (vm.requestSvcTypeListBool()) {
+    // Also create a folder for the service type
+    listRefs.push(vm.selectedServiceType().listRef);
+  }
+
+  var incrementer = new Incremental(0, listRefs.length, function () {
     SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
     refreshWorkOrderItem(vm.requestID());
+  });
+
+  var camlq =
+    '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
+    '<FieldRef Name="FSObjType"/><Value Type="int">1</Value>' +
+    "</Eq><Eq>" +
+    '<FieldRef Name="Title"/><Value Type="Text">' +
+    woID +
+    "</Value>" +
+    "</Eq></And></Where></Query><RowLimit>1</RowLimit></View>";
+
+  listRefs.forEach(function (list) {
+    list.getListItems(camlq, function (items) {
+      let item = items[0];
+      list.getItemPermissions(item.ID, function (logins) {
+        console.log("success", logins);
+        var vp = logins.map(function (login) {
+          return [login, "Restricted Read"];
+        });
+        list.setItemPermissions(
+          item.ID,
+          vp,
+          function () {
+            console.log(
+              `Updated item perms ${list.config.def.name} ${incrementer.val()}`
+            );
+            incrementer.inc();
+          },
+          true
+        );
+      });
+    });
   });
 }
 

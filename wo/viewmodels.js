@@ -218,6 +218,7 @@ var configServiceTypeListDef = {
     Active: { type: "Text", koMap: "empty" },
     ActionOffices: { type: "Lookup", koMap: "empty" },
     AttachmentRequired: { type: "Text", koMap: "empty" },
+    AttachmentsRequiredCnt: { type: "Text", koMap: "empty" },
     AttachmentDescription: { type: "Text", koMap: "empty" },
     Description: { type: "Text", koMap: "empty" },
     DescriptionRequired: { type: "Bool", koMap: "empty" },
