@@ -162,12 +162,16 @@ input[id$="uploadLocation"] {
   background: rgb(0, 127, 255);
 }
 
-#progress-card #actions-bar {
-  padding-bottom: 0.25em;
+#actions-bar {
+  padding: 0.25em 15px;
 }
 
 .fbox {
   display: flex;
+}
+
+.fbox.fluid {
+  justify-content: space-between;
 }
 
 .fbox.left {
