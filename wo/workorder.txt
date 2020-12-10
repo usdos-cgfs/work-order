@@ -474,52 +474,37 @@
     </div>
     <!-- /ko -->
     <!-- ko if: selectedServiceType -->
-    <div class="sticky">
-      <div class="ui fluid card">
-        <div class="content">
-          <div class="ui left middle aligned grid">
-            <div class="row">
-              <div class="sixteen wide column">
-                <div id="wo-progress-pipeline"></div>
-                <p>
-                  <span>
-                    <a
-                      title="View this link on the admin dash"
-                      target="blank"
-                      class="fas fa-user-shield"
-                      data-bind="attr: { href: requestLinkAdmin }, "
-                    >
-                    </a>
-                  </span>
-                  <span
-                    title="Refresh this request"
-                    class="fas fa-sync pointer"
-                    onclick="refreshWorkOrderItem(vm.requestID())"
-                  ></span>
-                  Loaded:
-                  <span
-                    data-bind="text: requestLoaded().toLocaleString()"
-                  ></span>
-                </p>
-              </div>
-            </div>
-            <!-- ko if: canSaveForm -->
-            <div class="ui row">
-              <div class="sixteen wide column">
-                <button
-                  type="button"
-                  class="editable-field ui right floated primary button"
-                  onclick="saveWorkOrder()"
-                  data-bind="enable: canSaveForm"
-                >
-                  Submit Request
-                </button>
-              </div>
-            </div>
-            <!-- /ko -->
-          </div>
-        </div>
+    <div id="actions-bar" class="ui sticky fluid fbox message">
+      <div class="actions-left">
+        <span>
+          <a
+            title="View this link on the admin dash"
+            target="blank"
+            class="fas fa-user-shield"
+            data-bind="attr: { href: requestLinkAdmin }, "
+          >
+          </a>
+        </span>
+        <span
+          title="Refresh this request"
+          class="fas fa-sync pointer"
+          onclick="refreshWorkOrderItem(vm.requestID())"
+        ></span>
+        Loaded:
+        <span data-bind="text: requestLoaded().toLocaleString()"></span>
       </div>
+      <!-- ko if: canSaveForm -->
+      <div class="">
+        <button
+          type="button"
+          class="editable-field ui primary button"
+          onclick="saveWorkOrder()"
+          data-bind="enable: canSaveForm"
+        >
+          Submit Request <span class="fas fa-caret-right"></span>
+        </button>
+      </div>
+      <!-- /ko -->
     </div>
     <div class="ui info message">
       <i class="close icon"></i>
@@ -541,6 +526,7 @@
         </div>
       </div>
     </div>
+    <div id="wo-progress-pipeline" class="fluid"></div>
     <div class="ui hidden divider"></div>
     <div id="wo-form">
       <div class="ui grid">

@@ -164,10 +164,19 @@ input[id$="uploadLocation"] {
 
 #actions-bar {
   padding: 0.25em 15px;
+  margin: 0.25em 0px;
+  background-color: white;
+}
+
+#actions-bar .actions-left {
+  margin: auto 0px;
+}
+#actions-bar .actions-left span {
+  padding-right: 0.25em;
 }
 
 .fbox {
-  display: flex;
+  display: flex !important;
 }
 
 .fbox.fluid {
