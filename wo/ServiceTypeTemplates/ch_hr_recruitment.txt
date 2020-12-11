@@ -42,7 +42,7 @@
   <div class="ui form">
     <div class="two fields">
       <div class="field">
-        <label>Position:</label>
+        <label>Position<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="text"
@@ -51,7 +51,7 @@
         />
       </div>
       <div class="field">
-        <label>Hiring Manager: </label>
+        <label>Hiring Manager<span class="required">*</span>: </label>
         <input
           class="editable-field"
           type="text"
@@ -68,7 +68,7 @@
     </div>
     <div class="two fields">
       <div class="field">
-        <label>Number of Positions:</label>
+        <label>Number of Positions<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="text"
@@ -77,7 +77,7 @@
         />
       </div>
       <div class="field">
-        <label>Method of Recruitment:</label>
+        <label>Method of Recruitment<span class="required">*</span>:</label>
         <select
           class="editable-field"
           type="text"

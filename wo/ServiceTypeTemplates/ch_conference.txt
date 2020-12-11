@@ -9,10 +9,10 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty" },
       Title: { type: "Text", koMap: "requestID" },
-      Date: { type: "DateTime", koMap: "conferenceDate" },
-      Room: { type: "Text", koMap: "conferenceRoom" },
-      Duration: { type: "Text", koMap: "conferenceDuration" },
-      AVRequired: { type: "Bool", koMap: "conferenceAV" },
+      Date: { type: "DateTime", koMap: "conferenceDate", required: true },
+      Room: { type: "Text", koMap: "conferenceRoom", required: true },
+      Duration: { type: "Text", koMap: "conferenceDuration", required: true },
+      AVRequired: { type: "Bool", koMap: "conferenceAV", required: true },
     },
   });
 
@@ -38,7 +38,6 @@
     minTimeGap: 15,
   };
   vm.conferenceDate = new DateField(opts);
-  vm.conferencePers = new PeopleField();
   /*
   vm.conferenceDate = ko.observable();
   vm.conferenceDateStr = ko.pureComputed({
@@ -58,21 +57,23 @@
   <div class="ui form">
     <div class="two fields">
       <div class="field">
-        <label>Presentation Date and Time:</label>
+        <label
+          >Presentation Date and Time<span class="required">*</span>:</label
+        >
         <div class="ui calendar">
           <div class="ui input left icon">
             <i class="calendar icon"></i>
             <input
               class="editable-field"
               type="text"
-              data-bind="disabled:
+              data-bind="disable:
       currentView() == 'view', dateField: conferenceDate"
             />
           </div>
         </div>
       </div>
       <div class="field">
-        <label>Duration:</label>
+        <label>Duration<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="text"
@@ -83,7 +84,7 @@
     </div>
     <div class="two fields">
       <div class="eight wide field">
-        <label>Conference Room:</label>
+        <label>Conference Room<span class="required">*</span>:</label>
         <select
           class="editable-field"
           type="text"
@@ -93,7 +94,7 @@
         ></select>
       </div>
       <div class="eight wide field">
-        <label>A/V Needs:</label>
+        <label>A/V Needs<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="checkbox"

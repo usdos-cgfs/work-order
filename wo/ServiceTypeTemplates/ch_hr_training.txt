@@ -12,12 +12,12 @@
       EmployeeType: {
         type: "Text",
         koMap: "trainingEmployeeType",
-        required: false,
+        required: true,
       },
-      Vendor: { type: "Text", koMap: "trainingVendor", required: false },
-      Location: { type: "Text", koMap: "trainingLocation", required: false },
-      Dates: { type: "Text", koMap: "trainingDates", required: false },
-      Cost: { type: "Text", koMap: "trainingCost", required: false },
+      Vendor: { type: "Text", koMap: "trainingVendor", required: true },
+      Location: { type: "Text", koMap: "trainingLocation", required: true },
+      Dates: { type: "Text", koMap: "trainingDates", required: true },
+      Cost: { type: "Text", koMap: "trainingCost", required: true },
     },
   });
 
@@ -39,7 +39,7 @@
   <div class="ui form">
     <div class="two fields">
       <div class="field">
-        <label>Training Provider/Vendor: </label>
+        <label>Training Provider/Vendor<span class="required">*</span>: </label>
         <input
           class="editable-field"
           type="text"
@@ -60,7 +60,7 @@
     </div>
     <div class="two fields">
       <div class="field">
-        <label>Location: </label>
+        <label>Location<span class="required">*</span>: </label>
         <input
           class="editable-field"
           type="text"
@@ -68,7 +68,7 @@
         />
       </div>
       <div class="field">
-        <label>Training Dates: </label>
+        <label>Training Dates<span class="required">*</span>: </label>
         <input
           class="editable-field"
           type="text"
@@ -77,7 +77,7 @@
       </div>
     </div>
     <div class="eight wide field">
-      <label>Training Cost: </label>
+      <label>Training Cost<span class="required">*</span>: </label>
       <input
         class="editable-field"
         type="text"

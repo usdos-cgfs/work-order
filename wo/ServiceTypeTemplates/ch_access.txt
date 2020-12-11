@@ -9,18 +9,18 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      AccessType: { type: "Text", koMap: "accessType", required: false },
+      AccessType: { type: "Text", koMap: "accessType", required: true },
       EmployeeType: {
         type: "Text",
         koMap: "accessEmployeeType",
-        required: false,
+        required: true,
       },
-      FullName: { type: "Text", koMap: "accessFullName", required: false },
-      BadgeNum: { type: "Text", koMap: "accessBadgeNum", required: false },
+      FullName: { type: "Text", koMap: "accessFullName", required: true },
+      BadgeNum: { type: "Text", koMap: "accessBadgeNum", required: true },
       Locations: {
         type: "Text",
         koMap: "accessLocations",
-        required: false,
+        required: true,
       },
     },
   });

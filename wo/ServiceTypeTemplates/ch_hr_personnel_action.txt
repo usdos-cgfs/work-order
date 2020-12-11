@@ -23,7 +23,7 @@
         required: true,
       },
       EffectiveDate: {
-        type: "Date",
+        type: "DateTime",
         koMap: "hrActionEffectiveDate",
         required: true,
       },
@@ -38,19 +38,20 @@
   vm.hrActionSeries = ko.observable();
   vm.hrActionGrade = ko.observable();
   vm.hrActionSupervisor = new PeopleField();
-  vm.hrActionEffectiveDate = ko.observable();
+  vm.hrActionEffectiveDate = new DateField();
 </script>
 
 <script type="text/html" id="tmpl_ch_hr_personnel_action">
   <div class="ui form">
     <div class="two fields">
       <div class="field">
-        <label>Employee: </label>
+        <label>Employee<span class="required">*</span>: </label>
         <input
           class="editable-field"
           type="text"
           disabled="true"
-          data-bind="value: hrActionEmployee.userName, visible: currentView() == 'view'"
+          data-bind="value: hrActionEmployee.userName, 
+          visible: currentView() == 'view'"
         />
         <div
           id="peoplehrActionEmployee"
@@ -60,18 +61,23 @@
         ></div>
       </div>
       <div class="field">
-        <label>Effective Date:</label>
-        <input
-          class="editable-field"
-          type="Date"
-          data-bind="disable: currentView() == 'view',
-              value: hrActionEffectiveDate"
-        />
+        <label>Effective Date<span class="required">*</span>:</label>
+        <div class="ui calendar">
+          <div class="ui input left icon">
+            <i class="calendar icon"></i>
+            <input
+              class="editable-field"
+              type="text"
+              data-bind="disable: currentView() == 'view', 
+                dateField: hrActionEffectiveDate"
+            />
+          </div>
+        </div>
       </div>
     </div>
     <div class="two fields">
       <div class="field">
-        <label>Job Title:</label>
+        <label>Job Title<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="text"
@@ -80,7 +86,7 @@
         />
       </div>
       <div class="field">
-        <label>Series:</label>
+        <label>Series<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="text"
@@ -91,7 +97,7 @@
     </div>
     <div class="two fields">
       <div class="field">
-        <label>Grade:</label>
+        <label>Grade<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="text"
@@ -100,7 +106,7 @@
         />
       </div>
       <div class="field">
-        <label>Direct Supervisor: </label>
+        <label>Direct Supervisor<span class="required">*</span>: </label>
         <input
           class="editable-field"
           type="text"

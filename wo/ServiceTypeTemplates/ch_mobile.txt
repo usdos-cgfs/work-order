@@ -10,7 +10,7 @@
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
       Supervisor: { type: "Person", koMap: "mobileSupervisor", required: true },
-      PhoneNum: { type: "Text", koMap: "mobilePhone", required: true },
+      PhoneNum: { type: "Text", koMap: "mobilePhone", required: false },
       ServiceType: { type: "Text", koMap: "mobileType", required: true },
     },
   });
@@ -33,7 +33,7 @@
   <div class="ui form">
     <div class="two fields">
       <div class="field">
-        <label>Supervisor: </label>
+        <label>Supervisor<span class="required">*</span>: </label>
         <input
           class="editable-field"
           type="text"
@@ -58,7 +58,7 @@
       </div>
     </div>
     <div class="eight wide field">
-      <label>Service Type:</label>
+      <label>Service Type<span class="required">*</span>:</label>
       <select
         class="editable-field"
         type="text"

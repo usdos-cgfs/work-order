@@ -58,7 +58,7 @@
   <div class="ui form">
     <div class="two fields">
       <div class="field">
-        <label>Job Title:</label>
+        <label>Job Title<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="text"
@@ -67,7 +67,7 @@
         />
       </div>
       <div class="field">
-        <label>Series:</label>
+        <label>Series<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="text"
@@ -78,7 +78,7 @@
     </div>
     <div class="two fields">
       <div class="field">
-        <label>Grade:</label>
+        <label>Grade<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="text"
@@ -87,7 +87,7 @@
         />
       </div>
       <div class="field">
-        <label>Direct Supervisor: </label>
+        <label>Direct Supervisor<span class="required">*</span>: </label>
         <input
           class="editable-field"
           type="text"
@@ -103,7 +103,7 @@
       </div>
     </div>
     <div class="eight wide field">
-      <label>Classification Type:</label>
+      <label>Classification Type<span class="required">*</span>:</label>
       <select
         class="editable-field"
         type="text"
@@ -115,7 +115,7 @@
     <!-- ko if: userRole() == 'admin' -->
     <div class="two fields">
       <div class="field">
-        <label>HRCC Case #:</label>
+        <label>HRCC Case #<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="text"
@@ -124,7 +124,7 @@
         />
       </div>
       <div class="field">
-        <label>Date Created:</label>
+        <label>Date Created<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="date"

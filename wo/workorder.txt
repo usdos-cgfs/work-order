@@ -52,9 +52,12 @@
   <div class="ui top attached tabular menu">
     <a class="item" data-tab="my-orders">My Orders</a>
     <a class="item" data-tab="order-new">New Order</a>
-    <!-- ko if: selectedServiceType -->
-    <a class="item" data-tab="order-detail">Detail View</a>
-    <!-- /ko -->
+    <a
+      class="item"
+      data-tab="order-detail"
+      data-bind="disable: !selectedServiceType"
+      >Detail View</a
+    >
   </div>
   <div
     id="my-orders"
@@ -467,8 +470,9 @@
       <div class="content">
         <h3>
           Please select an open request from the
-          <a href="./app.aspx?tab=my-orders">Open Orders</a> Tab or
-          <a href="./app.aspx?tab=order-new"> Create a New Order</a>
+          <a data-bind="click: vm.tab('my-orders')">Open Orders</a>
+          Tab or
+          <a data-bind="click: vm.tab('order-new')"> Create a New Order</a>
         </h3>
       </div>
     </div>
@@ -510,9 +514,11 @@
       <i class="close icon"></i>
       <div class="header">Need help with this request?</div>
       <p>This service type is supported by:</p>
-      <div data-bind="foreach: requestOrgs">
-        <h5 class="ui header" data-bind="text: Title"></h5>
-        <div data-bind="html: ContactInfo"></div>
+      <div class="fbox" data-bind="foreach: requestOrgs">
+        <div class="container">
+          <h5 class="ui header" data-bind="text: Title"></h5>
+          <div data-bind="html: ContactInfo"></div>
+        </div>
       </div>
     </div>
     <div class="ui hidden divider"></div>

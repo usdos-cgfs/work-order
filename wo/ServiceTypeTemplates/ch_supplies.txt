@@ -12,15 +12,15 @@
       Supervisor: {
         type: "Person",
         koMap: "suppliesSupervisor",
-        required: false,
+        required: true,
       },
       Vendor: {
         type: "Text",
         koMap: "suppliesVendor",
-        required: false,
+        required: true,
       },
-      ItemNum: { type: "Text", koMap: "suppliesItemNum", required: false },
-      Quantity: { type: "Text", koMap: "suppliesQuantity", required: false },
+      ItemNum: { type: "Text", koMap: "suppliesItemNum", required: true },
+      Quantity: { type: "Text", koMap: "suppliesQuantity", required: true },
       InStock: {
         type: "Bool",
         koMap: "suppliesInStock",
@@ -62,7 +62,7 @@
         ></div>
       </div>
       <div class="field">
-        <label>Supplies Vendor: </label>
+        <label>Supplies Vendor<span class="required">*</span>: </label>
         <input
           class="editable-field"
           type="text"
@@ -80,7 +80,7 @@
         />
       </div>
       <div class="field">
-        <label>Quantity: </label>
+        <label>Quantity<span class="required">*</span>: </label>
         <input
           class="editable-field"
           type="text"

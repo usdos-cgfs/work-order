@@ -9,8 +9,8 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      Location: { type: "Text", koMap: "reconfigLoc", required: false },
-      RecconfigType: { type: "Text", koMap: "reconfigType", required: false },
+      Location: { type: "Text", koMap: "reconfigLoc", required: true },
+      RecconfigType: { type: "Text", koMap: "reconfigType", required: true },
     },
   });
 
@@ -31,7 +31,7 @@
   <div class="ui form">
     <div class="two fields">
       <div class="field">
-        <label>Location: </label>
+        <label>Location<span class="required">*</span>: </label>
         <input
           class="editable-field"
           type="text"
@@ -39,7 +39,7 @@
         />
       </div>
       <div class="field">
-        <label> Service Type<span class="required">*</span>: </label>
+        <label>Service Type<span class="required">*</span>: </label>
         <select
           class="editable-field new"
           type="select"

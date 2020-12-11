@@ -44,9 +44,7 @@
   <div class="ui top attached tabular menu">
     <a class="item" data-tab="my-orders">Office Orders</a>
     <a class="item" data-tab="assigned-orders">Assigned Orders</a>
-    <!-- ko if: selectedServiceType -->
     <a class="item" data-tab="order-detail">Detail View</a>
-    <!-- /ko -->
   </div>
   <div
     id="my-orders"
@@ -448,7 +446,8 @@
       <div class="content">
         <h3>
           Please select an open request from the
-          <a href="./admin.aspx?tab=assigned-orders">Assigned Orders</a> Tab
+          <a data-bind="click: vm.tab('assigned-orders')">Assigned Orders</a>
+          Tab
         </h3>
       </div>
     </div>

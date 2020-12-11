@@ -726,6 +726,8 @@ function koviewmodel() {
       if (newPage == "order-detail") {
         console.log("Activate Accordion");
         $(".ui.accordion").accordion();
+        var elmnt = document.getElementById("tabs");
+        elmnt.scrollIntoView({ behavior: 'smooth'});
       }
     } catch (e) {
       console.warn("Error setting tab, are we on a page that supports it?", e);
@@ -1466,13 +1468,23 @@ function koviewmodel() {
     write: function (val) {
       if (val.length > 0) {
         console.log("Action Office IDs: ", val[0].get_lookupValue());
-        var orgs = val
-          .map(function (ro) {
-            return vm.configRequestOrgs().find(function (cro) {
-              return cro.ID == ro.get_lookupId();
-            });
-          })
-          .self.requestOrgs(orgs);
+        var orgs = val.map(function (ro) {
+          return vm.configRequestOrgs().find(function (cro) {
+            return cro.ID == ro.get_lookupId();
+          });
+        });
+        // Now add each org to our requestOrgs if if isn't already
+        // in the array
+        orgs.forEach(function (newOrg) {
+          if (
+            !self.requestOrgs().find(function (existingOrg) {
+              return existingOrg.ID == newOrg.ID;
+            })
+          ) {
+            self.requestOrgs.push(newOrg);
+          }
+        });
+        //self.requestOrgs(orgs);
       } else {
         self.requestOrgs([]);
       }

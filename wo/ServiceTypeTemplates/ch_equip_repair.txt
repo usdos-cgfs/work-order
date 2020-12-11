@@ -35,7 +35,7 @@
 <script type="text/html" id="tmpl_ch_equip_repair">
   <div class="ui form">
     <div class="eight wide field">
-      <label>Supervisor: </label>
+      <label>Supervisor<span class="required">*</span>: </label>
       <input
         class="editable-field"
         type="text"
@@ -51,7 +51,7 @@
     </div>
     <div class="two fields">
       <div class="field">
-        <label>Location:</label>
+        <label>Location<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="text"
@@ -60,7 +60,7 @@
         />
       </div>
       <div class="field">
-        <label>Type:</label>
+        <label>Type<span class="required">*</span>:</label>
         <select
           class="editable-field"
           type="text"
