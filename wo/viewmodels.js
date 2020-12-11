@@ -666,12 +666,13 @@ function koviewmodel() {
       } else {
         // Finally, check if we're listed as an assignee
         var actionOpts = configPipelinesListDef.viewFields.ActionType.opts;
-        var roleOpts = configPipelinesListDef.viewFields.Role.opts;
+        var roleOpts = assignmentListDef.viewFields.Role.opts;
 
         var isAdvanceable = false;
         switch (vm.requestStage().ActionType) {
           case actionOpts.Action:
           case actionOpts.Approval:
+          case actionOpts.Resolution:
             var allCompleted = true;
             var userAssignmentCnt = 0;
             // Is the user listed as an action office in the assignments?
@@ -688,7 +689,7 @@ function koviewmodel() {
                 ) {
                   userAssignmentCnt += 1;
                   if (assignment.IsActive) {
-                    allCompleted == false;
+                    allCompleted = false;
                   }
                 }
               }
