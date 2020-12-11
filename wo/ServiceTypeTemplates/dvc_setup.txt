@@ -62,8 +62,7 @@
           <input
             class="editable-field"
             type="text"
-            data-bind="disabled:
-              currentView() == 'view', 
+            data-bind="disable: currentView() == 'view', 
               dateField: dvcDate"
           />
         </div>

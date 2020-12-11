@@ -1451,7 +1451,7 @@ function koviewmodel() {
   self.requestorEmail = ko.observable();
   self.requestorManager = new PeopleField();
 
-  self.requestOrgs = ko.observableArray(new Array());
+  self.requestOrgs = ko.observableArray([]);
 
   self.requestOrgIds = ko.pureComputed({
     read: function () {
@@ -1466,13 +1466,13 @@ function koviewmodel() {
     write: function (val) {
       if (val.length > 0) {
         console.log("Action Office IDs: ", val[0].get_lookupValue());
-        self.requestOrgs(
-          val.map(function (ro) {
+        var orgs = val
+          .map(function (ro) {
             return vm.configRequestOrgs().find(function (cro) {
               return cro.ID == ro.get_lookupId();
             });
           })
-        );
+          .self.requestOrgs(orgs);
       } else {
         self.requestOrgs([]);
       }
