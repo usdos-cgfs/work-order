@@ -95,7 +95,16 @@ var assignmentListDef = {
     CanDelegate: { type: "Bool" },
     Comment: { type: "Text", koMap: "empty" },
     IsActive: { type: "Bool", koMap: "empty" },
-    Role: { type: "Text", koMap: "empty" },
+    Role: {
+      type: "Text",
+      opts: {
+        Resolver: "Action Resolver",
+        Approver: "Approver",
+        Viewer: "Viewer",
+        Subscriber: "Subscriber",
+      },
+      koMap: "empty",
+    },
     Status: { type: "Text", koMap: "empty" },
     Author: { type: "Text", koMap: "empty" },
     Created: { type: "Text", koMap: "empty" },
@@ -190,7 +199,18 @@ var configPipelinesListDef = {
     Title: { type: "Text", koMap: "empty" },
     ServiceType: { type: "Text", koMap: "empty" },
     Step: { type: "Text", koMap: "empty" },
-    ActionType: { type: "Text", koMap: "empty" },
+    ActionType: {
+      type: "Text",
+      opts: {
+        Editing: "Editing",
+        Action: "Pending Action",
+        Approval: "Pending Approval",
+        Assignment: "Pending Assignment",
+        Resolution: "Pending Resolution",
+        Closed: "Closed",
+      },
+      koMap: "empty",
+    },
     ActionOffice: { type: "Lookup", koMap: "empty" },
     RequestOrg: { type: "Lookup", koMap: "empty" },
     WildCardAssignee: { type: "Text", koMap: "empty" },
@@ -330,6 +350,11 @@ function timers() {
     }
   };
 }
+
+/************************************************************
+ * Enums
+ ************************************************************/
+
 /************************************************************
  * Set Knockout View Model
  ************************************************************/
@@ -421,6 +446,9 @@ function koviewmodel() {
    ************************************************************/
   self.requestCurUserAssign = ko.pureComputed(function () {
     if (self.requestStage() && self.requestStage().Title != "Closed") {
+      if (self.userIsSysAdmin()) {
+        return true;
+      }
       // does the current user have CanAssign to any offices?
       let uao = self
         .userActionOfficeOwnership()
@@ -592,10 +620,12 @@ function koviewmodel() {
   };
 
   self.assignmentCurUserCanRemove = function (assignment) {
-    return self
-      .assignCurUserAssignees()
-      .map((assignee) => assignee.ID)
-      .includes(assignment.actionOffice.ID);
+    return (
+      self
+        .assignCurUserAssignees()
+        .map((assignee) => assignee.ID)
+        .includes(assignment.actionOffice.ID) || self.userIsSysAdmin()
+    );
   };
 
   self.assignmentRemove = function (assignment) {
@@ -625,18 +655,50 @@ function koviewmodel() {
    ************************************************************/
   self.requestCurUserAdvance = ko.pureComputed(function () {
     if (self.requestStage() && self.requestStage().Title != "Closed") {
-      if (vm.userIsSysAdmin()) {
+      if (self.userIsSysAdmin()) {
+        // First check if we're a sysadmin
+        return true;
+      } else if (self.requestCurUserAssign()) {
+        // Check if we're an office assignor.
+        //TODO: Check if we've assigned anyone or otherwise met the reqs
+        // for this stage.
         return true;
       } else {
-        // which offices is the current user a member of?
-        let uao = self
-          .userActionOfficeMembership()
-          .map((uao) => uao.RequestOrg.get_lookupValue());
+        // Finally, check if we're listed as an assignee
+        var actionOpts = configPipelinesListDef.viewFields.ActionType.opts;
+        var roleOpts = configPipelinesListDef.viewFields.Role.opts;
 
-        // Check if we are part of the action office assigned to this request,
-        return uao.includes(
-          self.requestStageOrg() ? self.requestStageOrg().Title : null
-        );
+        var isAdvanceable = false;
+        switch (vm.requestStage().ActionType) {
+          case actionOpts.Action:
+          case actionOpts.Approval:
+            var allCompleted = true;
+            var userAssignmentCnt = 0;
+            // Is the user listed as an action office in the assignments?
+            self.requestAssignments().forEach(function (assignment) {
+              var user = self.requestAssignmentUser(assignment);
+              if (
+                user &&
+                user.get_lookupId() == sal.globalConfig.currentUser.get_id()
+              ) {
+                // we are the user assigned to this assignment
+                if (
+                  assignment.Role == roleOpts.Resolver ||
+                  assignment.Role == roleOpts.Approver
+                ) {
+                  userAssignmentCnt += 1;
+                  if (assignment.IsActive) {
+                    allCompleted == false;
+                  }
+                }
+              }
+            });
+            isAdvanceable = userAssignmentCnt && allCompleted;
+            break;
+          default:
+        }
+        // which offices is the current user a member of?
+        return isAdvanceable;
       }
     }
   });
@@ -1439,18 +1501,27 @@ function koviewmodel() {
   });
 
   self.requestAssignmentsUsers = ko.pureComputed(function () {
+    // Return an array of SP.FieldUser values
     let userArr = new Array();
     self.requestAssignments().map(function (assignment) {
-      if (assignment.Assignee) {
-        // This was a wildcard assignment
-        userArr.push(assignment.Assignee);
-      } else if (assignment.actionOffice) {
-        //There's an action office here,
-        userArr.push(assignment.actionOffice.UserAddress);
+      var assignee = self.requestAssignmentUser(assignment);
+      if (assignee) {
+        userArr.push(assignment);
       }
     });
     return userArr;
   });
+
+  self.requestAssignmentUser = function (assignment) {
+    // Given an assignment, return the user for that assignment
+    if (assignment.Assignee) {
+      // This was a wildcard assignment
+      return assignment.Assignee;
+    } else if (assignment.actionOffice) {
+      //There's an action office here,
+      return assignment.actionOffice.UserAddress;
+    }
+  };
 
   // JSON Object for the requesting office
   self.requestorOffice = ko.observable();

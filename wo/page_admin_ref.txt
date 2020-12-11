@@ -454,84 +454,57 @@
     </div>
     <!-- /ko -->
     <!-- ko if: selectedServiceType -->
-    <div class="sticky">
-      <div class="ui fluid card">
-        <div class="content">
-          <div class="ui left middle aligned grid">
-            <div class="row">
-              <div class="sixteen wide column">
-                <div id="wo-progress-pipeline"></div>
-                <p>
-                  <span
-                    style="cursor: pointer"
-                    class="fas fa-sync"
-                    onclick="refreshWorkOrderItem(vm.requestID())"
-                  ></span>
-                  Loaded:
-                  <span
-                    data-bind="text: requestLoaded().toLocaleString()"
-                  ></span>
-                </p>
-              </div>
-            </div>
-            <!-- ko if: requestCurUserAssign() || requestCurUserAdvance() -->
-            <div class="row">
-              <div class="four wide column">
-                <!-- ko if: requestCurUserAssign() -->
-                <div class="ui compact menu" data-bind="">
-                  <select
-                    class="ui search dropdown"
-                    data-bind=" value: assignActionOffice,
+    <div id="actions-bar" class="ui sticky fluid fbox message">
+      <div class="actions-left">
+        <span
+          title="Refresh this request"
+          class="fas fa-sync pointer"
+          onclick="refreshWorkOrderItem(vm.requestID())"
+        ></span>
+        Loaded:
+        <span data-bind="text: requestLoaded().toLocaleString()"></span>
+      </div>
+      <!-- ko if: requestCurUserAssign() || requestCurUserAdvance() -->
+      <div class="">
+        <!-- ko if: requestCurUserAssign() -->
+        <div class="ui compact menu" data-bind="">
+          <select
+            class="ui search dropdown"
+            data-bind=" value: assignActionOffice,
                         options: assignCurUserAssignees, 
                         optionsText: (AO) => {return AO.Title}, 
                         optionsCaption: 'Select...'"
-                  ></select>
-                  <button
-                    type="button"
-                    class="ui primary right attached button"
-                    onclick="createAssignment('Action Resolver', true)"
-                    data-bind="enable: assignActionOffice"
-                  >
-                    Assign
-                  </button>
-                  <!-- <button
-                      type="button"
-                      class="ui primary button"
-                      onclick="newAssignment()"
-                      data-bind=""
-                    >
-                      New Assignment
-                    </button> -->
-                </div>
-                <!-- /ko -->
-              </div>
-              <div class="four wide column">
-                <button
-                  type="button"
-                  class="ui fluid green button"
-                  data-bind="visible: requestCurUserApprove()"
-                  onclick="approveRequest()"
-                >
-                  Approve
-                </button>
-              </div>
-              <div class="four wide column"></div>
-              <div class="four wide column">
-                <button
-                  type="button"
-                  class="ui fluid green button"
-                  data-bind="visible: requestCurUserAdvance()"
-                  onclick="actionComplete()"
-                >
-                  Next Step <span class="fa fa-chevron-right"></span>
-                </button>
-              </div>
-            </div>
-            <!-- /ko -->
-          </div>
+          ></select>
+          <button
+            type="button"
+            class="ui primary right attached button"
+            onclick="createAssignment('Action Resolver', true)"
+            data-bind="enable: assignActionOffice"
+          >
+            Assign
+          </button>
         </div>
+        <!-- /ko -->
+        <button
+          type="button"
+          class="ui green button"
+          data-bind="visible: requestCurUserApprove()"
+          onclick="approveRequest()"
+        >
+          Approve
+        </button>
+        <button
+          type="button"
+          class="ui green button"
+          data-bind="visible: requestCurUserAdvance()"
+          onclick="actionComplete()"
+        >
+          Next Stage <span class="fa fa-chevron-right"></span>
+        </button>
       </div>
+      <!-- /ko -->
     </div>
+
     <div class="ui hidden divider"></div>
     <div class="ui left middle aligned grid">
       <div class="row">
@@ -540,6 +513,7 @@
         </div>
       </div>
     </div>
+    <div id="wo-progress-pipeline" class="fluid"></div>
     <div class="ui hidden divider"></div>
     <!-- ko if: showRouting -->
     <div class="ui modal" id="assignment-reject-modal" style="display: none">
@@ -625,23 +599,32 @@
                     </td>
                     <td>
                       <!-- ko if: $root.assignmentCurUserCanComplete($data) -->
-                      <i
+                      <div
                         title="Complete"
-                        class="fas fa-check pointer"
+                        class="ui green button"
                         data-bind="click: $root.assignmentComplete.bind($data)"
-                      ></i>
+                      >
+                        Complete
+                      </div>
                       <!-- /ko -->
                       <!-- ko if:  $root.assignmentCurUserCanApprove($data) -->
-                      <i
-                        title="Approve"
-                        class="green fas fa-check pointer"
-                        data-bind="click: $root.assignmentApprove.bind($data)"
-                      ></i>
-                      <i
-                        title="Reject"
-                        class="red fas fa-times-circle pointer"
-                        data-bind="click: $root.assignmentReject.bind($data)"
-                      ></i>
+                      <div class="mini ui buttons">
+                        <div
+                          title="Approve"
+                          class="mini ui green button"
+                          data-bind="click: $root.assignmentApprove.bind($data)"
+                        >
+                          Approve
+                        </div>
+                        <div class="or"></div>
+                        <div
+                          title="Reject"
+                          class="mini ui red button"
+                          data-bind="click: $root.assignmentReject.bind($data)"
+                        >
+                          Reject
+                        </div>
+                      </div>
                       <!-- /ko -->
                     </td>
                     <td>
@@ -662,9 +645,9 @@
                 </tbody>
               </table>
             </div>
-            <!-- ko if: userIsSysAdmin -->
             <div class="four wide column">
               <h3>Offices Assigned</h3>
+              <!-- ko if: userIsSysAdmin -->
               <div class="ui compact menu">
                 <select
                   class="ui search dropdown"
@@ -682,19 +665,21 @@
                   Assign
                 </button>
               </div>
+              <!-- /ko -->
               <table>
                 <tbody data-bind="foreach: requestOrgs">
                   <tr>
                     <td data-bind="text: Title"></td>
+                    <!-- ko if: $root.userIsSysAdmin -->
                     <td
                       class="fa fa-trash pointer"
                       data-bind="click: $root.assignOfficeRemove"
                     ></td>
+                    <!-- /ko -->
                   </tr>
                 </tbody>
               </table>
             </div>
-            <!-- /ko -->
           </div>
         </div>
       </div>

@@ -867,6 +867,7 @@ function createAssignment(role = "Action Resolver", notify = false) {
     let vp = [
       ["Title", vm.requestID()],
       ["Role", role],
+      ["IsActive", true],
     ];
     if (vm.assignActionOffice()) {
       vp.push(["ActionOffice", vm.assignActionOffice().ID]);
