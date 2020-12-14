@@ -12,7 +12,7 @@
       Date: { type: "DateTime", koMap: "conferenceDate", required: true },
       Room: { type: "Text", koMap: "conferenceRoom", required: true },
       Duration: { type: "Text", koMap: "conferenceDuration", required: true },
-      AVRequired: { type: "Bool", koMap: "conferenceAV", required: true },
+      AVRequired: { type: "Bool", koMap: "conferenceAV", required: false },
       Supervisor: {
         type: "Person",
         koMap: "conferenceSupervisor",

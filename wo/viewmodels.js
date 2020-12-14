@@ -46,6 +46,7 @@ var workOrderListDef = {
     RequestorName: { type: "Text", koMap: "requestorName" },
     RequestorOffice: { type: "Text", koMap: "requestorOfficeLookupId" },
     RequestorPhone: { type: "Text", koMap: "requestorTelephone" },
+    RequestorSupervisor: { type: "Person", koMap: "requestorSupervisor" },
     RequestStage: { type: "Text", koMap: "requestStageNum" },
     RequestStatus: { type: "Text", koMap: "requestStatus" },
     RequestSubject: { type: "Text", koMap: "requestSubject" },
@@ -727,7 +728,7 @@ function koviewmodel() {
         console.log("Activate Accordion");
         $(".ui.accordion").accordion();
         var elmnt = document.getElementById("tabs");
-        elmnt.scrollIntoView({ behavior: 'smooth'});
+        elmnt.scrollIntoView({ behavior: "smooth" });
       }
     } catch (e) {
       console.warn("Error setting tab, are we on a page that supports it?", e);
@@ -1452,6 +1453,7 @@ function koviewmodel() {
   self.requestorTelephone = ko.observable();
   self.requestorEmail = ko.observable();
   self.requestorManager = new PeopleField();
+  self.requestorSupervisor = new PeopleField();
 
   self.requestOrgs = ko.observableArray([]);
 

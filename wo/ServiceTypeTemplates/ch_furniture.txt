@@ -30,6 +30,22 @@
 
 <script type="text/html" id="tmpl_ch_furniture">
   <div class="ui form">
+    <div class="eight wide field">
+      <label>Supervisor<span class="required">*</span>: </label>
+      <input
+        class="editable-field"
+        type="text"
+        disabled="true"
+        data-bind="value: requestorSupervisor.userName, 
+          visible: currentView() == 'view'"
+      />
+      <div
+        id="peoplerequestorSupervisor"
+        class="editable-field"
+        data-bind="people: requestorSupervisor.user, 
+          visible: currentView() != 'view'"
+      ></div>
+    </div>
     <div class="two fields">
       <div class="field">
         <label>Location<span class="required">*</span>:</label>
