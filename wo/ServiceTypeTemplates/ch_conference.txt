@@ -13,6 +13,11 @@
       Room: { type: "Text", koMap: "conferenceRoom", required: true },
       Duration: { type: "Text", koMap: "conferenceDuration", required: true },
       AVRequired: { type: "Bool", koMap: "conferenceAV", required: true },
+      Supervisor: {
+        type: "Person",
+        koMap: "conferenceSupervisor",
+        required: true,
+      },
     },
   });
 
@@ -38,6 +43,7 @@
     minTimeGap: 15,
   };
   vm.conferenceDate = new DateField(opts);
+  vm.conferenceSupervisor = new PeopleField();
   /*
   vm.conferenceDate = ko.observable();
   vm.conferenceDateStr = ko.pureComputed({
@@ -55,6 +61,21 @@
 
 <script type="text/html" id="tmpl_ch_conference">
   <div class="ui form">
+    <div class="eight wide field">
+      <label>Supervisor<span class="required">*</span>: </label>
+      <input
+        class="editable-field"
+        type="text"
+        disabled="true"
+        data-bind="value: conferenceSupervisor.userName, visible: currentView() == 'view'"
+      />
+      <div
+        id="peopleconferenceSupervisor"
+        class="editable-field"
+        data-bind="people: conferenceSupervisor.user, 
+          visible: currentView() != 'view'"
+      ></div>
+    </div>
     <div class="two fields">
       <div class="field">
         <label

@@ -88,7 +88,8 @@
           class="editable-field"
           type="text"
           disabled="true"
-          data-bind="value: overtimeManagerDept.userName, visible: currentView() == 'view'"
+          data-bind="value: overtimeManagerDept.userName, 
+          visible: currentView() == 'view'"
         />
         <div
           id="peopleovertimeManagerDept"
@@ -130,7 +131,7 @@
         <input
           class="editable-field"
           type="text"
-          data-bind="disabled:
+          data-bind="disable:
               currentView() == 'view', value: overtimeLaborCategory"
         />
       </div>
@@ -143,7 +144,7 @@
         <input
           class="editable-field"
           type="text"
-          data-bind="disabled:
+          data-bind="disable:
               currentView() == 'view', value: overtimeRequisitionOrder"
         />
       </div>
@@ -164,7 +165,7 @@
         <input
           class="editable-field"
           type="text"
-          data-bind="disabled:
+          data-bind="disable:
               currentView() == 'view', value: overtimeDates"
         />
       </div>

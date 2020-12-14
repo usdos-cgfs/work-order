@@ -12,13 +12,13 @@
       Employee: {
         type: "Person",
         koMap: "voicemailEmployeeName",
-        required: false,
+        required: true,
       },
-      Phone: { type: "Text", koMap: "voicemailPhone", required: false },
+      Phone: { type: "Text", koMap: "voicemailPhone", required: true },
       Location: {
         type: "Text",
         koMap: "voicemailLocation",
-        required: false,
+        required: true,
       },
     },
   });
