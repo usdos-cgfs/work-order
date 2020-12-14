@@ -251,6 +251,7 @@ var configServiceTypeListDef = {
     Icon: { type: "Text", koMap: "empty" },
     RequestOrgs: { type: "Lookup", koMap: "empty" },
     st_list: { type: "Text", koMap: "empty" },
+    SupervisorRequired: { type: "Bool", koMap: "empty" },
     TemplateName: { type: "Lookup", koMap: "empty" },
     UID: { type: "Text", koMap: "empty" },
   },

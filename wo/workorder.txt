@@ -553,7 +553,7 @@
                     />
                   </div>
                   <div class="field" data-bind="visible: requestClosedDate">
-                    <label> Closed Date Date: </label>
+                    <label> Closed Date: </label>
                     <input
                       class="non-editable-field"
                       type="text"
@@ -593,7 +593,25 @@
                       data-bind="value: requestorName"
                     />
                   </div>
-
+                  <!-- ko if: selectedServiceType().SupervisorRequired -->
+                  <div class="field">
+                    <label
+                      >Request Supervisor<span class="required">*</span>:
+                    </label>
+                    <input
+                      class="editable-field"
+                      type="text"
+                      disabled="true"
+                      data-bind="value: requestorSupervisor.userName, visible: currentView() == 'view'"
+                    />
+                    <div
+                      id="peoplerequestorSupervisor"
+                      class="editable-field"
+                      data-bind="people: requestorSupervisor.user, 
+                      visible: currentView() != 'view'"
+                    ></div>
+                  </div>
+                  <!-- /ko -->
                   <!-- <div class="field">
                     <label>Request Manager: </label>
                     <input

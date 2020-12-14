@@ -341,7 +341,7 @@ function saveWorkOrder() {
   );
 
   vm.requestIsSaveable(true);
-  ensureAttachments();
+  validateRequest();
 
   // Need to get the value of the trix editor.
   vm.requestDescriptionHTML($("#trix-request-description").html());
@@ -574,6 +574,20 @@ function ensureAttachments() {
   }
 }
 
+function validateRequest() {
+  if (vm.selectedServiceType().SupervisorRequired) {
+    // Check if we have a supervisor
+    var supervisor = vm.requestorSupervisor.user() ? true : false;
+    vm.requestIsSaveable(supervisor);
+    if (!supervisor) {
+      alert(
+        "This request has not been saved. Requestor Supervisor is required."
+      );
+    }
+  }
+  ensureAttachments();
+}
+
 /************************************************************
  * ValuePair Binding Getters and Setters
  ************************************************************/
@@ -622,6 +636,7 @@ function getValuePairsHuman(listDef) {
 }
 
 function getValuePairs(listDef) {
+  //Get value pairs and validate
   console.log(listDef);
   var valuePairs = [];
   let missingFields = new Array();
