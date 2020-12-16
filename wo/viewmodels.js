@@ -1231,11 +1231,72 @@ function koviewmodel() {
     }
   });
 
+  self.selectedPipelineElement = ko.pureComputed(function () {
+    if (!self.selectedServiceType()) return "<div>No Service Selected</div>";
+    // TODO: Fix all this for the current pipeline.
+    //Based off the currently selected record and record type, show a pipeline of where we're at in the process at the top of the page.
+    var pipeline = '<div class="ui mini ordered steps">';
+
+    // First step is editing, this is always checked
+    var inDraft = self.requestStatus() == "Draft" ? "active" : "completed";
+
+    pipeline +=
+      '<div class="step completed"><div class="conent"><i class="fa fa-4x ' +
+      self.selectedServiceType().Icon +
+      '"/></div></div>';
+
+    pipeline +=
+      '<div class="step ' +
+      inDraft +
+      '">' +
+      '<div class="content">' +
+      '<div class="title">Editing</div>' +
+      '<div class="description">New Request</div>' +
+      "</div></div>";
+
+    var status = "disabled";
+    var curStage = parseInt(self.requestStageNum());
+    $.each(self.selectedPipeline(), function (item, stage) {
+      status = "disabled";
+      if (stage.Step < curStage) {
+        status = "completed";
+      } else if (stage.Step == curStage) {
+        status = "active";
+      }
+
+      pipeline +=
+        '<div class="step ' +
+        status +
+        '">' +
+        '<div class="content">' +
+        '<div class="title">' +
+        stage.ActionType +
+        "</div>" +
+        '<div class="description">' +
+        stage.Title +
+        "</div>" +
+        "</div></div>";
+    });
+
+    let completeStatus = status == "completed" ? status : "disabled";
+    // Replace status with Request closed status?
+    pipeline +=
+      '<div class="step ' +
+      completeStatus +
+      '">' +
+      '<div class="content">' +
+      '<div class="title">Closed</div>' +
+      '<div class="description">Request Closed</div>' +
+      "</div></div></div>";
+
+    return pipeline;
+  });
+
   function selectPipelineById(stypeId) {
     // Should we sort here?
-    return self
-      .configPipelines()
-      .filter((pipeline) => pipeline.ServiceType.get_lookupId() == stypeId);
+    return self.configPipelines().filter(function (pipeline) {
+      return pipeline.ServiceType.get_lookupId() == stypeId;
+    });
   }
 
   // Track the number of loaded list items for initialization process

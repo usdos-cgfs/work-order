@@ -120,8 +120,6 @@ function newWorkOrder() {
   //vm.requestAssignees([]);
   vm.requestAssignments([]);
   vm.requestComments([]);
-
-  buildPipelineElement();
 }
 
 function refreshWorkOrderItem(woID, callback = null) {
@@ -206,7 +204,6 @@ function viewWorkOrderItem(woID) {
       console.log("comments fetched");
     });
 
-    buildPipelineElement();
     /* Fetch the associated service type items */
     if (vm.selectedServiceType().listDef) {
       viewServiceTypeItem();
@@ -246,68 +243,6 @@ function onViewWorkOrderItemComplete() {
   vm.tab("order-detail");
   vm.currentView("view");
   SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
-}
-
-function buildPipelineElement() {
-  if (!vm.selectedServiceType()) return;
-  // TODO: Fix all this for the current pipeline.
-  //Based off the currently selected record and record type, show a pipeline of where we're at in the process at the top of the page.
-  var pipeline = '<div class="ui mini ordered steps">';
-
-  // First step is editing, this is always checked
-  var inDraft = vm.requestStatus() == "Draft" ? "active" : "completed";
-
-  pipeline +=
-    '<div class="step completed"><div class="conent"><i class="fa fa-4x ' +
-    vm.selectedServiceType().Icon +
-    '"/></div></div>';
-
-  pipeline +=
-    '<div class="step ' +
-    inDraft +
-    '">' +
-    '<div class="content">' +
-    '<div class="title">Editing</div>' +
-    '<div class="description">New Request</div>' +
-    "</div></div>";
-
-  var status = "disabled";
-  var curStage = parseInt(vm.requestStageNum());
-  $.each(vm.selectedPipeline(), function (item, stage) {
-    status = "disabled";
-    if (stage.Step < curStage) {
-      status = "completed";
-    } else if (stage.Step == curStage) {
-      status = "active";
-    }
-
-    pipeline +=
-      '<div class="step ' +
-      status +
-      '">' +
-      '<div class="content">' +
-      '<div class="title">' +
-      stage.ActionType +
-      "</div>" +
-      '<div class="description">' +
-      stage.Title +
-      "</div>" +
-      "</div></div>";
-  });
-
-  let completeStatus = status == "completed" ? status : "disabled";
-  // Replace status with Request closed status?
-  pipeline +=
-    '<div class="step ' +
-    completeStatus +
-    '">' +
-    '<div class="content">' +
-    '<div class="title">Closed</div>' +
-    '<div class="description">Request Closed</div>' +
-    "</div></div></div>";
-
-  $("#wo-progress-pipeline").html(pipeline);
-  //console.log("building pipeline", vm.selectedServiceType().Title);
 }
 
 function actionComplete() {
@@ -1291,7 +1226,6 @@ function pipelineForward() {
       valuePairs,
       function () {
         console.log("pipeline moved to next stage.");
-        buildPipelineElement();
         if (vm.requestIsActive() && vm.requestStage()) {
           pipelineAssignments();
           /* let's create a new Action every time the item progresses */

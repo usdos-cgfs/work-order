@@ -532,7 +532,8 @@
         </div>
       </div>
     </div>
-    <div id="wo-progress-pipeline" class="fluid"></div>
+    <!-- <div id="wo-progress-pipeline" class="fluid"></div> -->
+    <div data-bind="html: selectedPipelineElement"></div>
     <div class="ui hidden divider"></div>
     <div id="wo-form">
       <div class="ui grid">
