@@ -4,7 +4,7 @@ Workorder.Deployment = Workorder.Deployment || new Object();
 // Set up our lists/libraries default states etc.
 
 Workorder.Deployment.NewPermissions = function () {
-  let debug = true;
+  var debug = true;
   /*************************************************** */
   //1. Validate Permission roles exist on site.
   /*************************************************** */
@@ -18,19 +18,21 @@ Workorder.Deployment.NewPermissions = function () {
   /*************************************************** */
   function validateRequestingOffices() {
     console.log("Validating Requesting Offices Exist");
-    let siteGroupArr = sal.globalConfig.siteGroups.map(function (group) {
+    var siteGroupArr = sal.globalConfig.siteGroups.map(function (group) {
       return group.title;
     });
     vm.configRequestingOffices().forEach(function (ro) {
       // If the group column hasn't been set, let's check for it and add if not found
       if (!ro.ROGroup) {
-        let roTitle = "RO_" + ro.Title;
+        var roTitle = "RO_" + ro.Title;
 
         // Check we're in the sitegroups first
         if (!siteGroupArr.includes(roTitle)) {
           // Group doesn't exist on site, let's attempt to create.
           console.log(
-            `Looks like ${roTitle} isn't in the sitegroups, attempting to create.`
+            "Looks like " +
+              roTitle +
+              " isn't in the sitegroups, attempting to create."
           );
           sal.utilities.createSiteGroup(roTitle, [
             sal.config.siteRoles.roles.RestrictedContribute,
@@ -55,7 +57,7 @@ Workorder.Deployment.NewPermissions = function () {
   function buildROFoldersServiceTypes() {
     // Build a folder for each Requesting Office in each of our lists
     window.alert = function () {};
-    vm.configServiceTypes().forEach((stype) => {
+    vm.configServiceTypes().forEach(function (stype) {
       if (stype.listRef) {
         console.log("Creating ", stype.Title);
         buildROFolders(stype.listRef);
@@ -77,17 +79,19 @@ Workorder.Deployment.NewPermissions = function () {
     // Build a folder for each Requesting Office in each of our lists
     window.alert = function () {};
 
-    let requestOrgs = [
-      ...new Set(
-        vm.configRequestOrgs().map((ro) => ro.UserGroup.get_lookupValue())
-      ),
-    ];
+    var requestOrgs = new Set(
+      vm.configRequestOrgs().map(function (ro) {
+        return ro.UserGroup.get_lookupValue();
+      })
+    ).map(function (item) {
+      return item;
+    });
 
-    vm.configRequestingOffices().forEach((ro) => {
-      let vp = [[]];
-      listRef.upsertListFolderPath(ro.Title, (id) => {
-        console.log(`Create Folder Success:  ${ro.Title} id: ${id}`);
-        let vp = [
+    vm.configRequestingOffices().forEach(function (ro) {
+      var vp = [[]];
+      listRef.upsertListFolderPath(ro.Title, function (id) {
+        console.log("Create Folder Success:  " + ro.Title + " id: " + id);
+        var vp = [
           [
             ro.ROGroup.get_lookupValue(),
             sal.config.siteRoles.roles.InitialCreate,
@@ -105,18 +109,21 @@ Workorder.Deployment.NewPermissions = function () {
           sal.config.siteGroups.groups.RestrictedReaders,
           sal.config.siteRoles.roles.RestrictedContribute,
         ]);
-        requestOrgs.forEach((ro) =>
-          vp.push([ro, sal.config.siteRoles.roles.RestrictedContribute])
-        );
+        requestOrgs.forEach(function (ro) {
+          vp.push([ro, sal.config.siteRoles.roles.RestrictedContribute]);
+        });
         listRef.setItemPermissions(id, vp);
-        console.log(`Setting ${listRef.title} - ${ro.Title} Permissions:`, vp);
+        console.log(
+          "Setting " + listRef.title + " - " + ro.Title + " Permissions:",
+          vp
+        );
       });
     });
   }
 
   function createROGroups() {
     // Create a group for each RO and assign the restricted read role.
-    vm.configRequestingOffices().forEach((ro) => {
+    vm.configRequestingOffices().forEach(function (ro) {
       sal.utilities.createSiteGroup("RO_" + ro.Title, [
         sal.config.siteRoles.roles.RestrictedContribute,
       ]);
@@ -155,12 +162,17 @@ Workorder.Deployment.NewPermissions = function () {
     vm.configActionOffices().forEach(function (ao) {
       if (ao.UserAddress) {
         console.log(
-          `finding ${ao.ID}: ${ao.Title} - ${ao.UserAddress.get_lookupValue()}`
+          "finding " +
+            ao.ID +
+            ": " +
+            ao.Title +
+            " - " +
+            ao.UserAddress.get_lookupValue()
         );
         //Get the request org group
-        let reqOrg = vm
-          .configRequestOrgs()
-          .find((ro) => ro.ID == ao.RequestOrg.get_lookupId());
+        var reqOrg = vm.configRequestOrgs().find(function (ro) {
+          return ro.ID == ao.RequestOrg.get_lookupId();
+        });
 
         //Add the users to the group
         if (reqOrg) {
@@ -181,18 +193,18 @@ Workorder.Deployment.NewPermissions = function () {
   }
 
   var publicMembers = {
-    validatePermissionRoles,
-    validateRequestingOffices,
-    validateRequestOrgs,
-    validateActionOffices,
-    validateAll,
+    validatePermissionRoles: validatePermissionRoles,
+    validateRequestingOffices: validateRequestingOffices,
+    validateRequestOrgs: validateRequestOrgs,
+    validateActionOffices: validateActionOffices,
+    validateAll: validateAll,
   };
 
   return publicMembers;
 };
 
 Workorder.Deployment.NewPipelinesCharleston = function () {
-  let pipelineDefs = new Object();
+  var pipelineDefs = new Object();
   pipelineDefs.ch_equip_repair = [
     [
       ["Step", 1],
@@ -303,8 +315,8 @@ Workorder.Deployment.NewPipelinesCharleston = function () {
       "ch_hr_classification",
       "ch_hr_personnel_action",
       "ch_hr_training",
-    ].forEach((type) => {
-      pipelineDefs[type].forEach((stage) => {
+    ].forEach(function (type) {
+      pipelineDefs[type].forEach(function (stage) {
         vm.listRefConfigPipelines().createListItem(stage, function (id) {
           console.log("Created");
         });
@@ -313,15 +325,15 @@ Workorder.Deployment.NewPipelinesCharleston = function () {
   }
 
   function buildServicePipeline(serviceUID) {
-    pipelineDefs[serviceUID].forEach((stage) => {
+    pipelineDefs[serviceUID].forEach(function (stage) {
       vm.listRefConfigPipelines().createListItem(stage, function (id) {
         console.log("Created");
       });
     });
   }
-  let publicMembers = {
-    buildServicePipeline,
-    buildAllPipelines,
+  var publicMembers = {
+    buildServicePipeline: buildServicePipeline,
+    buildAllPipelines: buildAllPipelines,
   };
   return publicMembers;
 };

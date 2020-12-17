@@ -512,7 +512,8 @@
         </div>
       </div>
     </div>
-    <div id="wo-progress-pipeline" class="fluid"></div>
+    <!-- <div id="wo-progress-pipeline" class="fluid"></div> -->
+    <div data-bind="html: selectedPipelineElement"></div>
     <div class="ui hidden divider"></div>
     <!-- ko if: showRouting -->
     <div class="ui modal" id="assignment-reject-modal" style="display: none">

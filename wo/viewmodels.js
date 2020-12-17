@@ -257,14 +257,20 @@ var configServiceTypeListDef = {
   },
 };
 
-function Incremental(entry = 0, target = null, next = null) {
+function Incremental(entry, target, next) {
+  var entry = entry === undefined ? 0 : entry;
+  var target = target === undefined ? null : target;
+  var next = next === undefined ? null : next;
+
   var self = this;
   this.val = ko.observable(entry);
-  this.inc = function (incrementer = 1) {
-    self.val(self.val() + incrementer);
+  this.inc = function (increment) {
+    var incrementAmt = increment === undefined ? 1 : increment;
+    self.val(self.val() + incrementAmt);
   };
-  this.dec = function (decrementer = 1) {
-    self.val(self.val() - decrementer);
+  this.dec = function (decrement) {
+    var decrementAmt = decrement === undefined ? 1 : decrement;
+    self.val(self.val() - decrementAmt);
   };
   this.val.subscribe(function (val) {
     if (target != null && val == target) {
@@ -283,27 +289,28 @@ function Incremental(entry = 0, target = null, next = null) {
 }
 
 function PeopleField() {
+  var self = this;
   this.user = ko.observable();
   this.userName = ko.pureComputed({
-    read: () => {
-      return this.user() ? this.user().userName : "";
+    read: function () {
+      return self.user() ? self.user().userName : "";
     },
   });
   this.userId = ko.pureComputed(
     {
-      read: () => {
-        if (this.user()) {
-          return this.user().ID;
+      read: function () {
+        if (self.user()) {
+          return self.user().ID;
         }
       },
-      write: (value) => {
+      write: function (value) {
         if (value) {
-          let user = new Object();
+          var user = new Object();
           user.ID = value.get_lookupId();
           user.userName = value.get_lookupValue();
           user.isEnsured = false;
-          this.user(user);
-          this.lookupUser(value);
+          self.user(user);
+          self.lookupUser(value);
         }
       },
     },
@@ -313,12 +320,15 @@ function PeopleField() {
   this.ensuredUser = ko.observable();
 }
 
-function DateField(
-  newOpts = {
-    type: "date",
-  },
-  newDate = new Date()
-) {
+function DateField(newOpts, newDate) {
+  newOpts =
+    newOpts === undefined
+      ? {
+          type: "date",
+        }
+      : newOpts;
+  newDate = newDate === undefined ? new Date() : newDate;
+
   var self = this;
   this.opts = newOpts; // These are the options sent to the datepicker
   this.format = "yyyy-MM-dd"; // This is how this will be
@@ -387,18 +397,21 @@ function koviewmodel() {
   self.userRole = ko.observable(); // Determine whether the user is in the admin group or not.
   self.userRecordRole = ko.observable(); // Determine how the user is associated to the selected record.
 
-  self.userActionOfficeMembership = ko.pureComputed(() => {
+  self.userActionOfficeMembership = ko.pureComputed(function () {
     // Return the configActionOffice offices this user is a part of
-    return self.configActionOffices().filter((ao) => {
+    return self.configActionOffices().filter(function (ao) {
       if (ao.UserAddress) {
-        let isAO =
+        var isAO =
           ao.UserAddress.get_lookupId() ==
           sal.globalConfig.currentUser.get_id();
 
-        let isGroup = self
-          .userGroupMembership()
-          .map((group) => group.Title)
-          .includes(ao.UserAddress.get_lookupValue());
+        var isGroup =
+          self
+            .userGroupMembership()
+            .map(function (group) {
+              return group.Title;
+            })
+            .indexOf(ao.UserAddress.get_lookupValue()) >= 0;
 
         return isAO || isGroup;
       } else {
@@ -407,8 +420,8 @@ function koviewmodel() {
     });
   });
 
-  self.userActionOfficeOwnership = ko.pureComputed(() => {
-    return self.userActionOfficeMembership().filter((uao) => {
+  self.userActionOfficeOwnership = ko.pureComputed(function () {
+    return self.userActionOfficeMembership().filter(function (uao) {
       return uao.CanAssign;
     });
   });
@@ -416,25 +429,27 @@ function koviewmodel() {
   self.user = {};
 
   self.user.requestOrgMembership = ko.pureComputed(function () {
-    reqOrgIds = [
-      ...new Set(
-        self.configActionOffices().map(function (ao) {
-          return ao.RequestOrg.get_lookupId();
-        })
-      ),
-    ];
+    reqOrgIds = new Set(
+      self.configActionOffices().map(function (ao) {
+        return ao.RequestOrg.get_lookupId();
+      })
+    ).map(function (item) {
+      return item;
+    });
     return self.configRequestOrgs().filter(function (reqOrg) {
-      return reqOrgIds.includes(reqOrg.ID);
+      return reqOrgIds.indexOf(reqOrg.ID) >= 0;
     });
   });
 
-  self.userIsSysAdmin = ko.pureComputed(() => {
-    return self.userActionOfficeMembership().find((uao) => uao.SysAdmin)
+  self.userIsSysAdmin = ko.pureComputed(function () {
+    return self.userActionOfficeMembership().find(function (uao) {
+      return uao.SysAdmin;
+    })
       ? true
       : false;
   });
 
-  self.assignmentCurUserActions = ko.pureComputed(() => {
+  self.assignmentCurUserActions = ko.pureComputed(function () {
     return self.request;
   });
 
@@ -452,40 +467,52 @@ function koviewmodel() {
         return true;
       }
       // does the current user have CanAssign to any offices?
-      let uao = self
-        .userActionOfficeOwnership()
-        .map((uao) => uao.RequestOrg.get_lookupValue());
+      var uao = self.userActionOfficeOwnership().map(function (uao) {
+        return uao.RequestOrg.get_lookupValue();
+      });
 
       // Check if this has been assigned to an entire office.
-      return uao.includes(
-        self.requestStageOrg() ? self.requestStageOrg().Title : null
+      return (
+        uao.indexOf(
+          self.requestStageOrg() ? self.requestStageOrg().Title : null
+        ) >= 0
       );
     }
   });
 
   self.assignCurUserAssignees = ko.pureComputed(function () {
     //Who can the current user assign to?
-    let uao = self.userActionOfficeOwnership().filter((uao) => {
+    var uao = self.userActionOfficeOwnership().filter(function (uao) {
       return uao.CanAssign;
     });
 
     if (!uao) {
       // This person isn't an action office, how did we get here?
       return [];
-    } else if (uao.map((uao) => uao.SysAdmin).includes(true)) {
+    } else if (
+      uao
+        .map(function (uao) {
+          return uao.SysAdmin;
+        })
+        .indexOf(true) >= 0
+    ) {
       // User is sysadmin, return all action offices
       return self.configActionOffices();
     } else {
-      return self.configActionOffices().filter((aos) => {
-        return uao
-          .map((userAO) => userAO.RequestOrg.get_lookupValue())
-          .includes(aos.RequestOrg.get_lookupValue());
+      return self.configActionOffices().filter(function (aos) {
+        return (
+          uao
+            .map(function (userAO) {
+              return userAO.RequestOrg.get_lookupValue();
+            })
+            .indexOf(aos.RequestOrg.get_lookupValue()) >= 0
+        );
       });
     }
   });
 
   self.assignmentShowAssignment = function (assignment) {
-    let args = { id: assignment.ID };
+    var args = { id: assignment.ID };
     self
       .listRefAssignment()
       .showModal("DispForm.aspx", assignment.Title, args, function () {
@@ -494,8 +521,8 @@ function koviewmodel() {
   };
 
   self.assignmentCurUserIsAOorAssignee = function (assignment) {
-    let isAssignee = false;
-    let isAO = false;
+    var isAssignee = false;
+    var isAO = false;
     if (self.userIsSysAdmin()) {
       return true;
     }
@@ -504,18 +531,21 @@ function koviewmodel() {
         assignment.Assignee.get_lookupId() ==
         sal.globalConfig.currentUser.get_id();
     } else if (assignment.ActionOffice) {
-      isAO = self
-        .userActionOfficeMembership()
-        .map((ao) => ao.ID)
-        .includes(assignment.ActionOffice.get_lookupId());
+      isAO =
+        self
+          .userActionOfficeMembership()
+          .map(function (ao) {
+            return ao.ID;
+          })
+          .indexOf(assignment.ActionOffice.get_lookupId()) >= 0;
     }
     return isAO || isAssignee;
   };
 
   // Assignment Level: Action Item
   self.assignmentCurUserCanComplete = function (assignment) {
-    let isStatus = assignment.Status == "In Progress";
-    let isType = assignment.Role == "Action Resolver";
+    var isStatus = assignment.Status == "In Progress";
+    var isType = assignment.Role == "Action Resolver";
     if (isType && isStatus) {
       // This is the most intensive check, so let's only perform if the easy
       // ones are true
@@ -525,27 +555,28 @@ function koviewmodel() {
     }
   };
 
-  self.assignmentComplete = function (assignment, advance = false) {
+  self.assignmentComplete = function (assignment, advance) {
+    advance = advance === undefined ? false : advance;
     // Update this assignment with our approval
-    let vp = [
+    var vp = [
       ["IsActive", 0],
       ["CompletionDate", new Date()],
       ["Status", "Completed"],
     ];
 
-    self.listRefAssignment().updateListItem(assignment.ID, vp, () => {
+    self.listRefAssignment().updateListItem(assignment.ID, vp, function () {
       timedNotification(assignment.actionOffice.Title + " Completed", 2000);
       // Create a new action
-      createAction("Completed", `The assignment has been completed.`);
+      createAction("Completed", "The assignment has been completed.");
 
       fetchRequestAssignments();
     });
   };
 
   // Request Level: Can the current user approve the record?
-  self.requestCurUserApprove = ko.pureComputed(() => {
-    let flag = false;
-    self.requestAssignments().forEach((assignment) => {
+  self.requestCurUserApprove = ko.pureComputed(function () {
+    var flag = false;
+    self.requestAssignments().forEach(function (assignment) {
       if (self.assignmentCurUserCanApprove(assignment)) {
         flag = true;
       }
@@ -555,8 +586,8 @@ function koviewmodel() {
 
   // Assignment Level: Can the current user approve this assignment
   self.assignmentCurUserCanApprove = function (assignment) {
-    let isStatus = assignment.Status == "In Progress";
-    let isType = assignment.Role == "Approver";
+    var isStatus = assignment.Status == "In Progress";
+    var isType = assignment.Role == "Approver";
 
     if (isType && isStatus) {
       // This is the most intensive check, so let's only perform if the easy
@@ -567,18 +598,19 @@ function koviewmodel() {
     }
   };
 
-  self.assignmentApprove = function (assignment, advance = false) {
+  self.assignmentApprove = function (assignment, advance) {
+    advance = advance === undefined ? false : advance;
     // Update this assignment with our approval
-    let vp = [
+    var vp = [
       ["IsActive", 0],
       ["CompletionDate", new Date()],
       ["Status", "Approved"],
     ];
 
-    self.listRefAssignment().updateListItem(assignment.ID, vp, () => {
+    self.listRefAssignment().updateListItem(assignment.ID, vp, function () {
       timedNotification(assignment.actionOffice.Title + " Approved", 2000);
       // Create a new action
-      createAction("Approved", `The request has been approved.`);
+      createAction("Approved", "The request has been approved.");
 
       fetchRequestAssignments(self.requestID(), function (assignment) {
         if (advance) {
@@ -597,7 +629,7 @@ function koviewmodel() {
 
   self.assignmentRejectSubmit = function () {
     // Update this assignment with our approval
-    let vp = [
+    var vp = [
       ["IsActive", 0],
       ["CompletionDate", new Date()],
       ["Status", "Rejected"],
@@ -606,7 +638,7 @@ function koviewmodel() {
 
     self
       .listRefAssignment()
-      .updateListItem(self.assignmentRejectAssignment().ID, vp, () => {
+      .updateListItem(self.assignmentRejectAssignment().ID, vp, function () {
         timedNotification(
           self.assignmentRejectAssignment().actionOffice.Title + " Approved",
           2000
@@ -614,8 +646,8 @@ function koviewmodel() {
         // Create a new action
         createAction(
           "Rejected",
-          `The request has been rejected with the following comment:\n` +
-            `${self.assignmentRejectComment()}`
+          "The request has been rejected with the following comment:\n" +
+            self.assignmentRejectComment()
         );
         fetchRequestAssignments();
       });
@@ -625,26 +657,32 @@ function koviewmodel() {
     return (
       self
         .assignCurUserAssignees()
-        .map((assignee) => assignee.ID)
-        .includes(assignment.actionOffice.ID) || self.userIsSysAdmin()
+        .map(function (assignee) {
+          return assignee.ID;
+        })
+        .indexOf(assignment.actionOffice.ID) >= 0 || self.userIsSysAdmin()
     );
   };
 
   self.assignmentRemove = function (assignment) {
     console.log("deleting assignee", assignment);
-    self.listRefAssignment().deleteListItem(assignment.ID, () => {
+    self.listRefAssignment().deleteListItem(assignment.ID, function () {
       timedNotification(assignment.actionOffice.Title + " Removed", 2000);
       self.allAssignments(
-        self
-          .allAssignments()
-          .filter((allAssignment) => allAssignment.ID != assignment.ID)
+        self.allAssignments().filter(function (allAssignment) {
+          return allAssignment.ID != assignment.ID;
+        })
       );
       fetchRequestAssignments();
     });
   };
 
   self.assignOfficeRemove = function (assignment) {
-    self.requestOrgs(self.requestOrgs().filter((ao) => ao.ID != assignment.ID));
+    self.requestOrgs(
+      self.requestOrgs().filter(function (ao) {
+        return ao.ID != assignment.ID;
+      })
+    );
   };
 
   self.assignActionOffice = ko.observable();
@@ -709,7 +747,7 @@ function koviewmodel() {
   /************************************************************
    * ADMIN: Approvals/Actions Table
    ************************************************************/
-  self.showActionsTable = ko.pureComputed(() => {
+  self.showActionsTable = ko.pureComputed(function () {
     return true;
   });
 
@@ -777,12 +815,14 @@ function koviewmodel() {
   self.lookupOrders = ko.observableArray();
 
   self.allRequestAssignmentsMap = ko.pureComputed({
-    read: () => {
-      let orders = new Object();
-      self.allOrders().forEach((order) => {
+    read: function () {
+      var orders = new Object();
+      self.allOrders().forEach(function (order) {
         orders[order.Title] = self
           .allAssignments()
-          .filter((assignment) => assignment.Title == order.Title);
+          .filter(function (assignment) {
+            return assignment.Title == order.Title;
+          });
       });
       return orders;
     },
@@ -795,24 +835,24 @@ function koviewmodel() {
   self.showRequestAssignments = ko.observable(true);
 
   self.readRequestAssignments = function (req) {
-    return ko.computed(() =>
-      req
+    return ko.computed(function () {
+      return req
         ? self.allRequestAssignmentsMap()[req.Title]
-        : self.allRequestAssignmentsMap()[self.requestID()]
-    );
+        : self.allRequestAssignmentsMap()[self.requestID()];
+    });
   };
 
-  self.allOfficeOrders = ko.pureComputed(() => {
-    let orgs = self
-      .userActionOfficeMembership()
-      .map((ao) => ao.RequestOrg.get_lookupValue());
+  self.allOfficeOrders = ko.pureComputed(function () {
+    var orgs = self.userActionOfficeMembership().map(function (ao) {
+      return ao.RequestOrg.get_lookupValue();
+    });
     // Get the types of orders we're responsible for based on the ConfigServiceType
 
     if (!self.adminAllOrdersBool()) {
-      let officeOrders = self.allOrders().filter((order) => {
-        return order.RequestOrgs.find((ro) =>
-          orgs.includes(ro.get_lookupValue())
-        );
+      var officeOrders = self.allOrders().filter(function (order) {
+        return order.RequestOrgs.find(function (ro) {
+          return orgs.indexOf(ro.get_lookupValue()) >= 0;
+        });
       });
 
       return officeOrders;
@@ -821,31 +861,43 @@ function koviewmodel() {
     }
   });
 
-  self.allOpenOrders = ko.pureComputed(() =>
-    self.allOrders().filter((req) => req.RequestStatus == "Open")
-  );
+  self.allOpenOrders = ko.pureComputed(function () {
+    return self.allOrders().filter(function (req) {
+      return req.RequestStatus == "Open";
+    });
+  });
 
-  self.allClosedOrders = ko.pureComputed(() =>
-    self.allOrders().filter((req) => req.RequestStatus == "Closed")
-  );
+  self.allClosedOrders = ko.pureComputed(function () {
+    return self.allOrders().filter(function (req) {
+      return req.RequestStatus == "Closed";
+    });
+  });
 
-  self.allCancelledOrders = ko.pureComputed(() =>
-    self.allOrders().filter((req) => req.RequestStatus == "Cancelled")
-  );
+  self.allCancelledOrders = ko.pureComputed(function () {
+    return self.allOrders().filter(function (req) {
+      return req.RequestStatus == "Cancelled";
+    });
+  });
 
   // For the admin dash, we'll need to limit these to the current
   // users office + in addition too, as well as which they're assigned.
-  self.officeAllOpenOrders = ko.pureComputed(() =>
-    self.allOfficeOrders().filter((req) => req.RequestStatus == "Open")
-  );
+  self.officeAllOpenOrders = ko.pureComputed(function () {
+    return self.allOfficeOrders().filter(function (req) {
+      return req.RequestStatus == "Open";
+    });
+  });
 
-  self.officeAllClosedOrders = ko.pureComputed(() =>
-    self.allOfficeOrders().filter((req) => req.RequestStatus == "Closed")
-  );
+  self.officeAllClosedOrders = ko.pureComputed(function () {
+    return self.allOfficeOrders().filter(function (req) {
+      return req.RequestStatus == "Closed";
+    });
+  });
 
-  self.officeAllCancelledOrders = ko.pureComputed(() =>
-    self.allOfficeOrders().filter((req) => req.RequestStatus == "Cancelled")
-  );
+  self.officeAllCancelledOrders = ko.pureComputed(function () {
+    return self.allOfficeOrders().filter(function (req) {
+      return req.RequestStatus == "Cancelled";
+    });
+  });
 
   /************************************************************
    * allOpenOrders Table Handlers
@@ -858,7 +910,9 @@ function koviewmodel() {
   self.getRequestStage = function (request) {
     const curStage = selectPipelineById(
       request.ServiceType.get_lookupId()
-    ).find((step) => step.Step == request.RequestStage);
+    ).find(function (step) {
+      return step.Step == request.RequestStage;
+    });
     return curStage ? curStage.Title : "Closed";
   };
 
@@ -866,10 +920,9 @@ function koviewmodel() {
     // TODO: Add the holidays list in here somewhere
     console.log("est closing date", request);
     if (!request.EstClosedDate) {
-      let daysOffset = self
-        .configServiceTypes()
-        .find((stype) => stype.ID == request.ServiceType.get_lookupId())
-        .DaysToCloseBusiness;
+      var daysOffset = self.configServiceTypes().find(function (stype) {
+        return stype.ID == request.ServiceType.get_lookupId();
+      }).DaysToCloseBusiness;
 
       var closeDate = businessDaysFromDate(request.Created, daysOffset);
       return closeDate.format("yyyy-MM-dd");
@@ -908,34 +961,39 @@ function koviewmodel() {
   self.lookupServiceType = ko.observable();
   self.lookupInactiveBool = ko.observable(false);
 
-  self.lookupServiceTypeOptions = ko.pureComputed(() => {
+  self.lookupServiceTypeOptions = ko.pureComputed(function () {
     // return only the options that are available
-    let unique = [
-      ...new Set(
-        self.allOrders().map((order) => order.ServiceType.get_lookupValue())
-      ),
-    ];
-    return self
-      .configServiceTypes()
-      .filter((stype) => unique.includes(stype.Title));
+    var uniqueSet = new Set(
+      self.allOrders().map(function (order) {
+        return order.ServiceType.get_lookupValue();
+      })
+    );
+
+    var unique = [];
+    uniqueSet.forEach(function (item) {
+      unique.push(item);
+    });
+    return self.configServiceTypes().filter(function (stype) {
+      return unique.indexOf(stype.Title) >= 0;
+    });
   });
 
   self.lookupTables = ko.observableArray();
 
   self.lookupTableCol = ko.observableArray([]);
 
-  self.lookupServiceType.subscribe((stype) => {
+  self.lookupServiceType.subscribe(function (stype) {
     // First verify we have a valid servicetype that hasn't already been
     // looked up.
     if (
       stype != undefined &&
-      !self.lookupTables().find((tstype) => {
+      !self.lookupTables().find(function (tstype) {
         return tstype.stype.UID == stype.UID;
       })
     ) {
       self.lookupTableCol([]);
 
-      let newServiceTable = new Object();
+      var newServiceTable = new Object();
       newServiceTable.id = stype.UID + "-lookup-table";
       newServiceTable.stype = stype;
 
@@ -943,16 +1001,18 @@ function koviewmodel() {
       newServiceTable.requests = new Array();
 
       if (stype.listDef) {
-        let lookupKeys = Object.keys(stype.listDef.viewFields).filter(
-          (col) => col != "ID" && col != "Title"
-        );
+        var lookupKeys = Object.keys(stype.listDef.viewFields).filter(function (
+          col
+        ) {
+          col != "ID" && col != "Title";
+        });
 
         //self.lookupTableCol(lookupKeys);
         newServiceTable.cols = lookupKeys;
         newServiceTable.viewFields = stype.listDef.viewFields;
       }
 
-      let camlq =
+      var camlq =
         '<View Scope="RecursiveAll"><Query><Where><Eq>' +
         '<FieldRef Name="ServiceType" LookupId="TRUE"/>' +
         '<Value Type="Lookup">' +
@@ -960,13 +1020,13 @@ function koviewmodel() {
         "</Value>" +
         "</Eq></Where></Query></View>";
 
-      self.listRefWO().getListItems(camlq, (lookupOrdersTemp) => {
+      self.listRefWO().getListItems(camlq, function (lookupOrdersTemp) {
         if (stype.listDef) {
           // If this request type has related orders, let's query those
-          let count = lookupOrdersTemp.length - 1;
-          let i = 0;
-          lookupOrdersTemp.forEach((order) => {
-            let camlq =
+          var count = lookupOrdersTemp.length - 1;
+          var i = 0;
+          lookupOrdersTemp.forEach(function (order) {
+            var camlq =
               '<View Scope="RecursiveAll"><Query><Where><Eq>' +
               '<FieldRef Name="Title"/>' +
               '<Value Type="Text">' +
@@ -998,7 +1058,7 @@ function koviewmodel() {
     }
   });
 
-  self.lookupServiceTypeListDef = ko.pureComputed(() => {
+  self.lookupServiceTypeListDef = ko.pureComputed(function () {
     return self.lookupServiceType().listDef;
   });
 
@@ -1025,43 +1085,58 @@ function koviewmodel() {
   /************************************************************
    * Assigned Orders Tab
    ************************************************************/
-  self.myAssignments = ko.pureComputed(() => {
-    let myAOIDs = self.userActionOfficeMembership().map((ao) => ao.ID);
-    return self
-      .allAssignments()
-      .filter((asg) =>
-        asg.actionOffice
-          ? myAOIDs.includes(asg.actionOffice.ID)
-          : asg.Assignee.get_lookupId == sal.globalConfig.currentUser.get_id()
-      );
+  self.myAssignments = ko.pureComputed(function () {
+    var myAOIDs = self.userActionOfficeMembership().map(function (ao) {
+      return ao.ID;
+    });
+    return self.allAssignments().filter(function (asg) {
+      return asg.actionOffice
+        ? myAOIDs.indexOf(asg.actionOffice.ID) >= 0
+        : asg.Assignee.get_lookupId == sal.globalConfig.currentUser.get_id();
+    });
   });
 
-  self.assignedOpenOrders = ko.pureComputed(() => {
-    let myAssignedIds = [
-      ...new Set(self.myAssignments().map((asg) => asg.Title)),
-    ];
+  self.assignedOpenOrders = ko.pureComputed(function () {
+    var myAssignedIds = [];
 
-    return self
-      .allOpenOrders()
-      .filter((order) => myAssignedIds.includes(order.Title));
+    self.myAssignments().map(function (asg) {
+      if (myAssignedIds.indexOf(asg.Title) < 0) {
+        myAssignedIds.push(asg.Title);
+      }
+    });
+
+    return self.allOpenOrders().filter(function (order) {
+      return myAssignedIds.indexOf(order.Title) >= 0;
+    });
   });
 
   self.assignmentStatus = function (asgTitle) {
-    return ko.computed(() => {
-      let asgs = self.myAssignments().filter((masg) => masg.Title == asgTitle);
+    return ko.computed(function () {
+      var asgs = self.myAssignments().filter(function (masg) {
+        return masg.Title == asgTitle;
+      });
       if (asgs.length > 1) {
-        let statuses = new Array();
+        var statuses = new Array();
         statuses.push("<ul>");
-        let states = [...new Set(asgs.map((asg) => asg.Status))];
-        states.forEach((status) =>
+        var states = new Set(
+          asgs.map(function (asg) {
+            return asg.Status;
+          })
+        ).map(function (item) {
+          return item;
+        });
+
+        states.forEach(function (status) {
           statuses.push(
             "<li>" +
               status +
               ": " +
-              asgs.filter((asg) => asg.Status == status).length +
+              asgs.filter(function (asg) {
+                return asg.Status == status;
+              }).length +
               "</li>"
-          )
-        );
+          );
+        });
         statuses.push("</ul>");
         return statuses.join("");
       } else {
@@ -1075,11 +1150,11 @@ function koviewmodel() {
   // The available service types (we'll set this from a json array)
 
   self.currentView = ko.observable();
-  // self.currentView.subscribe((val) => {
+  // self.currentView.subscribe(function(val)  {
   //   self.setFieldState();
   // });
 
-  self.setFieldState = ko.computed(() => {
+  self.setFieldState = ko.computed(function () {
     //Based off our current observables, set the abledness
     if (self.tab() == "order-detail") {
       switch (self.currentView()) {
@@ -1139,9 +1214,9 @@ function koviewmodel() {
       .libRefWODocs()
       .showModal(
         "DispForm.aspx",
-        `View ${attachment.Title}`,
+        "View " + attachment.Title,
         { id: attachment.ID },
-        () => {
+        function () {
           fetchAttachments;
         }
       );
@@ -1151,9 +1226,9 @@ function koviewmodel() {
     console.log("removing attachment");
     self
       .libRefWODocs()
-      .updateListItem(attachment.ID, [["IsActive", 0]], () =>
-        fetchAttachments()
-      );
+      .updateListItem(attachment.ID, [["IsActive", 0]], function () {
+        return fetchAttachments();
+      });
   };
 
   /************************************************************
@@ -1201,9 +1276,9 @@ function koviewmodel() {
   };
 
   self.setServiceTypeByUID = function (uid) {
-    let newServiceType = self
-      .configServiceTypes()
-      .find((stype) => stype.UID == uid);
+    var newServiceType = self.configServiceTypes().find(function (stype) {
+      return stype.UID == uid;
+    });
     if (newServiceType) {
       self.selectedServiceType(newServiceType);
     } else {
@@ -1212,10 +1287,12 @@ function koviewmodel() {
   };
 
   self.getServiceTypeByUID = function (uid) {
-    return self.configServiceTypes().find((stype) => stype.UID == uid);
+    return self.configServiceTypes().find(function (stype) {
+      return stype.UID == uid;
+    });
   };
 
-  self.selectedServiceType.subscribe((stype) => {
+  self.selectedServiceType.subscribe(function (stype) {
     self.requestShowDescription(false);
     if (stype && stype.listDef) {
       clearValuePairs(stype.listDef.viewFields);
@@ -1225,7 +1302,10 @@ function koviewmodel() {
   // return the selected service type pipeline
   self.selectedPipeline = ko.pureComputed(function () {
     if (self.selectedServiceType()) {
-      return selectPipelineById(self.selectedServiceType().ID).sort((a, b) => {
+      return selectPipelineById(self.selectedServiceType().ID).sort(function (
+        a,
+        b
+      ) {
         return a.Step - b.Step;
       });
     }
@@ -1278,7 +1358,7 @@ function koviewmodel() {
         "</div></div>";
     });
 
-    let completeStatus = status == "completed" ? status : "disabled";
+    var completeStatus = status == "completed" ? status : "disabled";
     // Replace status with Request closed status?
     pipeline +=
       '<div class="step ' +
@@ -1307,9 +1387,9 @@ function koviewmodel() {
   };
 
   self.loadedListItemLists.subscribe(function (val) {
-    let NUM_CONFIG_LISTS = 6;
-    let NUM_PREFETCH_LISTS = 2;
-    let TOTAL_LISTS_TO_LOAD = NUM_CONFIG_LISTS + NUM_PREFETCH_LISTS;
+    var NUM_CONFIG_LISTS = 6;
+    var NUM_PREFETCH_LISTS = 2;
+    var TOTAL_LISTS_TO_LOAD = NUM_CONFIG_LISTS + NUM_PREFETCH_LISTS;
     if (val == TOTAL_LISTS_TO_LOAD) {
       initServiceTypes();
     }
@@ -1318,7 +1398,7 @@ function koviewmodel() {
   /************************************************************
    * Selected Work Order
    ************************************************************/
-  self.requestLink = ko.pureComputed(() => {
+  self.requestLink = ko.pureComputed(function () {
     var link =
       _spPageContextInfo.webAbsoluteUrl +
       "/Pages/app.aspx?tab=order-detail&reqid=";
@@ -1327,7 +1407,7 @@ function koviewmodel() {
     return link + id;
   });
 
-  self.requestLinkAdmin = ko.pureComputed(() => {
+  self.requestLinkAdmin = ko.pureComputed(function () {
     var link =
       _spPageContextInfo.webAbsoluteUrl +
       "/Pages/admin.aspx?tab=order-detail&reqid=";
@@ -1336,32 +1416,32 @@ function koviewmodel() {
     return link + id;
   });
 
-  self.requestLinkAdminApprove = (id) => {
+  self.requestLinkAdminApprove = function (id) {
     return (
       _spPageContextInfo.webAbsoluteUrl +
-      `/Pages/approval.aspx?assignment=` +
+      "/Pages/approval.aspx?assignment=" +
       id +
-      `&reqid=` +
+      "&reqid=" +
       self.requestID()
     );
   };
 
-  self.requestLinkAdminReject = (id) => {
+  self.requestLinkAdminReject = function (id) {
     return (
       _spPageContextInfo.webAbsoluteUrl +
-      `/Pages/approval.aspx?assignment=` +
+      "/Pages/approval.aspx?assignment=" +
       id +
-      `&reqid=` +
+      "&reqid=" +
       self.requestID() +
-      `&reject=true`
+      "&reject=true"
     );
   };
 
   /************************************************************
    * Observables for work order Folders
    ************************************************************/
-  self.requestFolderPath = ko.pureComputed(() => {
-    return `${self.requestorOffice().Title}/${self.requestID()}`;
+  self.requestFolderPath = ko.pureComputed(function () {
+    return self.requestorOffice().Title + "/" + self.requestID();
   });
 
   self.foldersToCreate = ko.observable();
@@ -1369,16 +1449,16 @@ function koviewmodel() {
   self.foldersCreatedInc = function () {
     self.foldersCreated(self.foldersCreated() + 1);
   };
-  self.foldersCreated.subscribe((numCreated) => {
+  self.foldersCreated.subscribe(function (numCreated) {
     // We'll create the attachments folder when they click upload.
     // We'll create the comments folder when they click submit.
     // Otherwise, we'll pre-create the following:
     // Workorder, Action, Assignment, Emails
-    let NUM_LIST_FOLDERS = 4;
-    let NUM_LIB_FOLDERS = 0;
-    let NUM_ST_FOLDERS = self.requestSvcTypeListBool() ? 1 : 0;
+    var NUM_LIST_FOLDERS = 4;
+    var NUM_LIB_FOLDERS = 0;
+    var NUM_ST_FOLDERS = self.requestSvcTypeListBool() ? 1 : 0;
 
-    let TOTAL_FOLDERS_TO_CREATE =
+    var TOTAL_FOLDERS_TO_CREATE =
       NUM_LIB_FOLDERS + NUM_LIST_FOLDERS + NUM_ST_FOLDERS;
 
     if (numCreated == TOTAL_FOLDERS_TO_CREATE) {
@@ -1386,21 +1466,21 @@ function koviewmodel() {
     }
   });
 
-  self.requestFolderPerms = ko.pureComputed(() => {
-    let folderPermissions = [
+  self.requestFolderPerms = ko.pureComputed(function () {
+    var folderPermissions = [
       [sal.globalConfig.currentUser.get_loginName(), "Restricted Contribute"],
       ["workorder Owners", "Full Control"],
       ["Restricted Readers", "Restricted Read"],
     ];
 
-    self.selectedPipeline().forEach((stage) => {
+    self.selectedPipeline().forEach(function (stage) {
       // first get the action office
-      let assignedOffice = self
-        .configActionOffices()
-        .find((ao) => ao.ID == stage.ActionOffice.get_lookupId());
-      let assignedOrg = self
-        .configRequestOrgs()
-        .find((ro) => ro.ID == assignedOffice.RequestOrg.get_lookupId());
+      var assignedOffice = self.configActionOffices().find(function (ao) {
+        return ao.ID == stage.ActionOffice.get_lookupId();
+      });
+      var assignedOrg = self.configRequestOrgs().find(function (ro) {
+        return ro.ID == assignedOffice.RequestOrg.get_lookupId();
+      });
       folderPermissions.push([
         assignedOrg.UserGroup.get_lookupValue(),
         "Restricted Contribute",
@@ -1408,7 +1488,7 @@ function koviewmodel() {
 
       //If there's a wildcard assignee, get them too
       if (stage.WildCardAssignee) {
-        let user = self[stage.WildCardAssignee].userName();
+        var user = self[stage.WildCardAssignee].userName();
         if (user) {
           folderPermissions.push([
             self[stage.WildCardAssignee].userName(),
@@ -1424,24 +1504,24 @@ function koviewmodel() {
   self.request.allPipelineOrgs = ko.pureComputed(function () {
     return self.selectedPipeline().map(function (stage) {
       // first get the action office
-      let assignedOffice = self
-        .configActionOffices()
-        .find((ao) => ao.ID == stage.ActionOffice.get_lookupId());
+      var assignedOffice = self.configActionOffices().find(function (ao) {
+        return ao.ID == stage.ActionOffice.get_lookupId();
+      });
 
-      return self
-        .configRequestOrgs()
-        .find((ro) => ro.ID == assignedOffice.RequestOrg.get_lookupId());
+      return self.configRequestOrgs().find(function (ro) {
+        return ro.ID == assignedOffice.RequestOrg.get_lookupId();
+      });
     });
   });
 
   /************************************************************
    * Observables for work order header
    ************************************************************/
-  self.requestSvcTypeListBool = ko.pureComputed(() => {
+  self.requestSvcTypeListBool = ko.pureComputed(function () {
     return self.requestSvcTypeListDef() ? true : false;
   });
 
-  self.requestSvcTypeListDef = ko.pureComputed(() => {
+  self.requestSvcTypeListDef = ko.pureComputed(function () {
     return self.selectedServiceType()
       ? self.selectedServiceType().listDef
         ? self.selectedServiceType().listDef
@@ -1449,7 +1529,7 @@ function koviewmodel() {
       : null;
   });
 
-  self.requestSvcTypeListViewFields = ko.pureComputed(() => {
+  self.requestSvcTypeListViewFields = ko.pureComputed(function () {
     return self.requestSvcTypeListDef()
       ? self.requestSvcTypeListDef().viewFields
       : null;
@@ -1472,9 +1552,9 @@ function koviewmodel() {
 
   self.requestStage = ko.pureComputed(function () {
     if (self.selectedServiceType() && self.requestStageNum()) {
-      let stage = self
-        .selectedPipeline()
-        .find((stage) => stage.Step == self.requestStageNum());
+      var stage = self.selectedPipeline().find(function (stage) {
+        return stage.Step == self.requestStageNum();
+      });
 
       return stage ? stage : { Step: self.requestStageNum(), Title: "Closed" };
     } else {
@@ -1482,29 +1562,27 @@ function koviewmodel() {
     }
   });
 
-  self.requestStageOrg = ko.pureComputed(() => {
+  self.requestStageOrg = ko.pureComputed(function () {
     if (!self.requestStage() || !self.requestIsActive()) {
       return null;
     } else if (self.requestStage().RequestOrg) {
-      return self
-        .configRequestOrgs()
-        .find((ro) => ro.ID == self.requestStage().RequestOrg.get_lookupId());
+      return self.configRequestOrgs().find(function (ro) {
+        return ro.ID == self.requestStage().RequestOrg.get_lookupId();
+      });
     } else if (self.requestStageOffice()) {
-      return self
-        .configRequestOrgs()
-        .find(
-          (ro) => ro.ID == self.requestStageOffice().RequestOrg.get_lookupId()
-        );
+      return self.configRequestOrgs().find(function (ro) {
+        return ro.ID == self.requestStageOffice().RequestOrg.get_lookupId();
+      });
     } else {
       return null;
     }
   });
 
-  self.requestStageOffice = ko.pureComputed(() => {
+  self.requestStageOffice = ko.pureComputed(function () {
     if (self.requestStage() && self.requestStage().ActionOffice) {
-      return self
-        .configActionOffices()
-        .find((ao) => ao.ID == self.requestStage().ActionOffice.get_lookupId());
+      return self.configActionOffices().find(function (ao) {
+        return ao.ID == self.requestStage().ActionOffice.get_lookupId();
+      });
     } else {
       return null;
     }
@@ -1521,8 +1599,8 @@ function koviewmodel() {
 
   self.requestOrgIds = ko.pureComputed({
     read: function () {
-      let vps = new Array();
-      self.requestOrgs().forEach((ao) => {
+      var vps = new Array();
+      self.requestOrgs().forEach(function (ao) {
         vps.push(ao.ID);
         vps.push(ao.Title);
       });
@@ -1559,9 +1637,9 @@ function koviewmodel() {
 
   self.requestAssignmentIds = ko.pureComputed({
     read: function () {
-      let aoffices = self.configActionOffices();
-      let vps = new Array();
-      self.requestAssignments().forEach((ao) => {
+      var aoffices = self.configActionOffices();
+      var vps = new Array();
+      self.requestAssignments().forEach(function (ao) {
         vps.push(ao.ID);
         vps.push(ao.Title);
       });
@@ -1579,7 +1657,7 @@ function koviewmodel() {
 
   self.requestAssignmentsUsers = ko.pureComputed(function () {
     // Return an array of SP.FieldUser values
-    let userArr = new Array();
+    var userArr = new Array();
     self.requestAssignments().map(function (assignment) {
       var assignee = self.requestAssignmentUser(assignment);
       if (assignee) {
@@ -1614,9 +1692,9 @@ function koviewmodel() {
     write: function (value) {
       if (value) {
         self.requestorOffice(
-          self
-            .configRequestingOffices()
-            .find((ro) => ro.ID == value.get_lookupId())
+          self.configRequestingOffices().find(function (ro) {
+            return ro.ID == value.get_lookupId();
+          })
         );
       } else {
         self.requestorOffice("");
@@ -1630,11 +1708,17 @@ function koviewmodel() {
     } else if (self.userActionOfficeMembership().length > 0) {
       return self.configRequestingOffices();
     } else {
-      let groupIds = self.userGroupMembership().map((ug) => ug.ID);
-      let activeFilteredRO = self
+      var groupIds = self.userGroupMembership().map(function (ug) {
+        return ug.ID;
+      });
+      var activeFilteredRO = self
         .configRequestingOffices()
-        .filter((ro) => ro.Active) //Check if we're active
-        .filter((ro) => groupIds.includes(ro.ROGroup.get_lookupId()));
+        .filter(function (ro) {
+          return ro.Active;
+        }) //Check if we're active
+        .filter(function (ro) {
+          return groupIds.indexOf(ro.ROGroup.get_lookupId()) >= 0;
+        });
 
       return activeFilteredRO;
     }
@@ -1656,9 +1740,9 @@ function koviewmodel() {
     write: function (value) {
       if (value) {
         self.selectedServiceType(
-          self
-            .configServiceTypes()
-            .find((stype) => stype.ID == value.get_lookupId())
+          self.configServiceTypes().find(function (stype) {
+            return stype.ID == value.get_lookupId();
+          })
         );
       }
     },
@@ -1721,7 +1805,7 @@ ko.bindingHandlers.trix = {
 };
 
 // ko.extenders.peopleField = function (target, associated) {
-//   let result = ko.pureComputed({
+//   var result = ko.pureComputed({
 //     read: target,
 //     write: function (newValue) {},
 //   });
@@ -1799,8 +1883,8 @@ ko.bindingHandlers.people = {
       var observable = valueAccessor();
       var userJSObject = pickerElement.GetControlValueAsJSObject()[0];
       if (userJSObject) {
-        ensureUser(userJSObject.Key, (user) => {
-          let userObj = new Object();
+        ensureUser(userJSObject.Key, function (user) {
+          var userObj = new Object();
           userObj["ID"] = user.get_id();
           userObj["userName"] = user.get_loginName();
           userObj["isEnsured"] = true;
@@ -1889,7 +1973,8 @@ var callback = function (items) {
   console.log(items);
 };
 
-ko.unapplyBindings = function ($node, remove = false) {
+ko.unapplyBindings = function ($node, remove) {
+  remove = remove === undefined ? false : remove;
   // unbind events
   $node.find("*").each(function () {
     $(this).unbind();

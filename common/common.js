@@ -43,19 +43,29 @@ function convertModelToViewfield(model) {
   return vf;
 }
 
-function updateUrlParam(param, val) {
-  const queryString = window.location.search;
-  const urlParams = new URLSearchParams(queryString);
+function updateUrlParam(param, newval) {
+  var search = window.location.search;
+  //var urlParams = new URLSearchParams(queryString);
 
-  urlParams.set(param, val);
+  var regex = new RegExp("([?;&])" + param + "[^&;]*[;&]?");
+  var query = search.replace(regex, "$1").replace(/&$/, "");
 
-  window.history.pushState({}, "", "?" + urlParams.toString());
+  urlParams =
+    (query.length > 2 ? query + "&" : "?") +
+    (newval ? param + "=" + newval : "");
+
+  window.history.pushState({}, "", urlParams.toString());
 }
 
 function getUrlParam(param) {
-  const queryString = window.location.search;
-  const urlParams = new URLSearchParams(queryString);
-  return urlParams.get(param);
+  var results = new RegExp("[?&]" + name + "=([^&#]*)").exec(
+    window.location.href
+  );
+  if (results == null) {
+    return null;
+  } else {
+    return decodeURI(results[1]) || 0;
+  }
 }
 
 var pageViewModel = ["Title", "ViewArea", "ViewBody"];
@@ -85,7 +95,8 @@ function makeDataTable(id) {
             // colum filtering from https://datatables.net/examples/api/multi_filter_select.html
             var column = this;
             if (
-              !["Assignees", "Description"].includes($(column.header()).html())
+              ["Assignees", "Description"].indexOf($(column.header()).html()) <
+              0
             ) {
               var className = "";
               if ($(column.header()).html()) {
@@ -140,9 +151,9 @@ function randString(length) {
 function businessDaysFromDate(date, businessDays) {
   var counter = 0,
     tmp = new Date(date);
-  let dayCnt = Math.abs(businessDays);
+  var dayCnt = Math.abs(businessDays);
 
-  let sign = Math.sign(businessDays);
+  var sign = Math.sign(businessDays);
 
   while (dayCnt >= 0) {
     tmp.setTime(date.getTime() + sign * counter * 86400000);
@@ -156,7 +167,7 @@ function businessDaysFromDate(date, businessDays) {
 
 function businessDays(startDate, endDate) {
   var counter = 0;
-  let temp = new Date(startDate);
+  var temp = new Date(startDate);
   var stepDir = Math.sign(endDate - startDate);
 
   while (temp.format("yyyy-MM-dd") != endDate.format("yyyy-MM-dd")) {
@@ -169,10 +180,10 @@ function businessDays(startDate, endDate) {
 }
 
 function isConfigHoliday(date) {
-  let isHoliday = vm.configHolidays().find((hol) => {
-    let day = hol.Date.getUTCDate() == date.getUTCDate();
-    let month = hol.Date.getUTCMonth() == date.getUTCMonth();
-    let year = hol.Date.getUTCFullYear() == date.getUTCFullYear();
+  var isHoliday = vm.configHolidays().find(function (hol) {
+    var day = hol.Date.getUTCDate() == date.getUTCDate();
+    var month = hol.Date.getUTCMonth() == date.getUTCMonth();
+    var year = hol.Date.getUTCFullYear() == date.getUTCFullYear();
 
     if (hol.Repeating) {
       year = true;
@@ -243,28 +254,31 @@ function isBusinessDay(date) {
   return true;
 }
 
-function timedNotification(message, timeout = 2000) {
-  let notifyId = SP.UI.Notify.addNotification(message, true);
+function timedNotification(message, timeout) {
+  timeout = timeout === undefined ? 2000 : timeout;
 
-  window.setTimeout(() => {
+  var notifyId = SP.UI.Notify.addNotification(message, true);
+
+  window.setTimeout(function () {
     SP.UI.Notify.removeNotification(notifyId);
   }, timeout);
 }
 
 //For Each open request, get the servicetyp
 function fetchServiceTypesfromRequest() {
-  vm.allOpenOrders().forEach((req) => {
+  vm.allOpenOrders().forEach(function (req) {
     vm.listRefConfigServiceType().getListItems(
       '<View><Query><Where><Eq><FieldRef Name="Title"/><Value Type="Text">' +
         req.ServiceType.get_lookupValue() +
         "</Value></Eq></Where></Query></View>",
-      (val) =>
+      function (val) {
         console.log(
           "Found Match: " +
             req.ServiceType.get_lookupValue() +
             " == " +
             val[0].Title
-        )
+        );
+      }
     );
   });
 }
@@ -286,7 +300,15 @@ function sortByTitle(a, b) {
 function intersect(a, b) {
   var setA = new Set(a);
   var setB = new Set(b);
-  var intersection = new Set([...setA].filter((x) => setB.has(x)));
+  var intersection = new Set(
+    setA
+      .map(function (y) {
+        return y;
+      })
+      .filter(function (x) {
+        return setB.has(x);
+      })
+  );
   return Array.from(intersection);
 }
 
