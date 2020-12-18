@@ -1083,7 +1083,7 @@
 
 <script src="../SiteAssets/workorder/common/sal.js"></script>
 <script src="../SiteAssets/workorder/common/common.js"></script>
-<script src="../SiteAssets/workorder/wo/page_test.js"></script>
+<!-- <script src="../SiteAssets/workorder/wo/page_test.js"></script> -->
 <script src="../SiteAssets/workorder/common/notifications.js"></script>
 <script src="../SiteAssets/workorder/common/deployment.js"></script>
 
