@@ -19,12 +19,12 @@
       SanitizerWipes: {
         type: "Bool",
         koMap: "covidSanitizerWipes",
-        required: true,
+        required: false,
       },
       SanitizerLiquid: {
         type: "Bool",
         koMap: "covidSanitizerLiquid",
-        required: true,
+        required: false,
       },
     },
   });
