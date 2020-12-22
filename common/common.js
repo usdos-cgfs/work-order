@@ -58,7 +58,7 @@ function updateUrlParam(param, newval) {
 }
 
 function getUrlParam(param) {
-  var results = new RegExp("[?&]" + name + "=([^&#]*)").exec(
+  var results = new RegExp("[?&]" + param + "=([^&#]*)").exec(
     window.location.href
   );
   if (results == null) {

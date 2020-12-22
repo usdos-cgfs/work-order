@@ -564,7 +564,7 @@ sal.NewSPList = function (listDef) {
     self.config.currentContext.executeQueryAsync(
       function () {
         self.config.guid = self.config.listRef.get_id().toString();
-        console.log("calling callback guid");
+        //console.log("calling callback guid");
         self.callbackGUID(self.config.guid);
         //console.log('item count: ', self.config.itemCount)
       }.bind(this),
@@ -665,7 +665,7 @@ sal.NewSPList = function (listDef) {
         Obtain all list items that match the querystring passed by caml.
         */
     //self.updateConfig();
-    console.log("context loaded", self.config);
+    //console.log("context loaded", self.config);
     var camlQuery = new SP.CamlQuery.createAllItemsQuery();
 
     camlQuery.set_viewXml(caml);
@@ -680,7 +680,7 @@ sal.NewSPList = function (listDef) {
       var self = this;
       var listItemEnumerator = self.collListItem.getEnumerator();
       self.focusedItems = [];
-      console.log("Get list succeeded");
+      //console.log("Get list succeeded");
       var keys = [];
       $.each(this.def.viewFields, function (field, obj) {
         keys.push(field);
@@ -713,7 +713,7 @@ sal.NewSPList = function (listDef) {
         self.focusedItems.push(listObj);
       }
       //this.setState({ focusedItems })
-      console.log("calling callback get list");
+      //console.log("calling callback get list");
       callback(self.focusedItems);
     }
 

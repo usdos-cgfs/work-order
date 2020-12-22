@@ -211,16 +211,9 @@ Workorder.NewNotifications = function () {
 
   function workorderClosedEmail(reason) {
     var to = [vm.requestHeader().Author];
-    var cc = vm
-      .requestOrgs()
-      .map(function (ao) {
-        vm.configRequestOrgs().find(function (aoid) {
-          return aoid.ID == ao.ID;
-        });
-      })
-      .map(function (aoids) {
-        return aoids.UserGroup;
-      });
+    var cc = vm.requestOrgs().map(function (requestOrg) {
+      return requestOrg.UserGroup;
+    });
 
     cc.concat(vm.requestAssignmentsUsers());
 
@@ -285,7 +278,7 @@ Workorder.NewNotifications = function () {
       }
     }
 
-    var cc = new Array();
+    var cc = [];
     if (vm.requestStageOrg()) {
       cc.push(vm.requestStageOrg().UserGroup);
     }

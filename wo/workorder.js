@@ -101,7 +101,7 @@ function newWorkOrder() {
   //   })
   // );
   //Set the workorder request orgs.
-  vm.request.allPipelineOrgs().forEach(function (org) {
+  vm.request.pipeline.allRequestOrgs().forEach(function (org) {
     if (
       !vm.requestOrgs().find(function (ro) {
         return ro.ID == org.ID;
@@ -884,7 +884,7 @@ function createAssignment(role, notify) {
         }
         //Update the request with a new assignment:
         // Create Action
-        var actionText = new String();
+        var actionText = "";
         if (vm.assignAssignee()) {
           actionText =
             "The following Individual has been assigned to this request: " +
@@ -894,7 +894,7 @@ function createAssignment(role, notify) {
         } else if (vm.assignActionOffice()) {
           actionText =
             "The following Action Office has been assigned to this request: " +
-            vm.assignAssignee().lookupUser().get_lookupValue() +
+            vm.assignActionOffice().Title +
             " - " +
             role;
         }
@@ -1514,7 +1514,7 @@ function initComplete() {
   var href = window.location.href.toLowerCase();
   var hash = window.location.hash.replace("#", "");
 
-  const queryString = window.location.search;
+  var queryString = window.location.search;
   //const urlParams = new URLSearchParams(queryString);
 
   var tab = getUrlParam("tab");

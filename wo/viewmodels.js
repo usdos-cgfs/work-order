@@ -908,11 +908,11 @@ function koviewmodel() {
   };
 
   self.getRequestStage = function (request) {
-    const curStage = selectPipelineById(
-      request.ServiceType.get_lookupId()
-    ).find(function (step) {
-      return step.Step == request.RequestStage;
-    });
+    var curStage = selectPipelineById(request.ServiceType.get_lookupId()).find(
+      function (step) {
+        return step.Step == request.RequestStage;
+      }
+    );
     return curStage ? curStage.Title : "Closed";
   };
 
@@ -1501,13 +1501,44 @@ function koviewmodel() {
   });
 
   self.request = {};
-  self.request.allPipelineOrgs = ko.pureComputed(function () {
-    return self.selectedPipeline().map(function (stage) {
+  self.request.pipeline = {};
+
+  // TODO: Come back here and fix this
+  self.request.pipeline.allAssignees = ko.pureComputed(function () {
+    // Return the Wild Card Assignees and Action Offices for each
+    // stage.
+    var addressBook = [];
+    self.selectedPipeline().map(function (stage) {
       // first get the action office
       var assignedOffice = self.configActionOffices().find(function (ao) {
         return ao.ID == stage.ActionOffice.get_lookupId();
       });
 
+      addressBook.push(assignedOffice.UserAddress);
+
+      if (
+        stage.WildCardAssignee &&
+        self[stage.WildCardAssignee]().lookupUser()
+      ) {
+        addressBook.push(self[stage.WildCardAssignee]().lookupUser());
+      }
+    });
+
+    return addressBook;
+  });
+
+  self.request.pipeline.allActionOffices = ko.pureComputed(function () {
+    // Return all the action offices associated with this request.
+    return self.selectedPipeline().map(function (stage) {
+      // Find the corresponding Action office for each stage
+      return self.configActionOffices().find(function (ao) {
+        return ao.ID == stage.ActionOffice.get_lookupId();
+      });
+    });
+  });
+
+  self.request.pipeline.allRequestOrgs = ko.pureComputed(function () {
+    return self.request.pipeline.allOffices.map(function (assignedOffice) {
       return self.configRequestOrgs().find(function (ro) {
         return ro.ID == assignedOffice.RequestOrg.get_lookupId();
       });
