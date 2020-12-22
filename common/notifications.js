@@ -8,6 +8,8 @@ Workorder.NewNotifications = function () {
   function newWorkorderEmailUser() {
     // 2. Send email to user, letting them know their request has been created
     var toUser = [sal.globalConfig.currentUser];
+    var toString = [];
+    var ccString = [];
 
     var subject =
       "Work Order -New- " +
@@ -43,7 +45,7 @@ Workorder.NewNotifications = function () {
       "<br><br>" +
       vm.requestLink();
 
-    createEmail(toUser, [], [], subject, bodyUser);
+    createEmail(toUser, toString, [], ccString, [], subject, bodyUser);
   }
 
   function newWorkorderEmailActionOffices() {
@@ -58,6 +60,9 @@ Workorder.NewNotifications = function () {
       .map(function (aoids) {
         return aoids.UserGroup;
       });
+
+    var toString = [];
+    var ccString = [];
 
     var subject =
       "Work Order -New- " +
@@ -84,7 +89,7 @@ Workorder.NewNotifications = function () {
       "<br><br>" +
       vm.requestLinkAdmin();
 
-    createEmail(to, [], [], subject, body);
+    createEmail(to, toString, [], ccString, [], subject, body);
   }
 
   function workorderReminderEmails(id) {
@@ -100,6 +105,9 @@ Workorder.NewNotifications = function () {
         .map(function (aoids) {
           return aoids.UserGroup;
         });
+
+      var toString = [];
+      var ccString = [];
 
       var days = vm.selectedServiceType().ReminderDays.split(",");
 
@@ -137,7 +145,17 @@ Workorder.NewNotifications = function () {
             " or copy and paste the below URL into your browser: <br> " +
             vm.requestLinkAdmin();
 
-          createEmail(to, [], [], subject, body, sendDate, id);
+          createEmail(
+            to,
+            toString,
+            [],
+            ccString,
+            [],
+            subject,
+            body,
+            sendDate,
+            id
+          );
         }
       });
     }
@@ -154,6 +172,9 @@ Workorder.NewNotifications = function () {
     } else if (vm.assignActionOffice() && vm.assignActionOffice().UserAddress) {
       to.push(vm.assignActionOffice().UserAddress);
     }
+
+    var toString = [];
+    var ccString = [];
 
     var subject =
       "Work Order -" +
@@ -206,16 +227,47 @@ Workorder.NewNotifications = function () {
         "</a><br><br>";
     }
 
-    createEmail(to, [], [], subject, body + addendum);
+    createEmail(to, toString, [], ccString, [], subject, body + addendum);
+  }
+
+  function workorderPipelineAssignees() {
+    // Get all the action offices and wild cards assigned to this request.
+    var users = [];
+    var addresses = [];
+
+    vm.request.pipeline.allActionOffices.forEach(function (actionOffice) {
+      // Check if we have a wildcard user and they were ensured
+      if (actionOffice.WildCardAssignee) {
+        try {
+          var personObservable = vm[actionOffice.WildCardAssignee];
+          users.push(personObservable.lookupUser());
+        } catch (err) {
+          console.error(
+            "Something went wrong fetching " + personName + " from viewmodel: ",
+            err
+          );
+        }
+        //users.push(self[actionOffice.WildCardAssignee]().lookupUser());
+      }
+
+      if (actionOffice.PreferredEmail) {
+        addresses.push(actionOffice.PreferredEmail);
+      } else {
+        users.push(actionOffice.UserAddress);
+      }
+    });
+
+    return { users: users, addresses: addresses };
   }
 
   function workorderClosedEmail(reason) {
     var to = [vm.requestHeader().Author];
-    var cc = vm.requestOrgs().map(function (requestOrg) {
-      return requestOrg.UserGroup;
-    });
+    var toString = [];
 
-    cc.concat(vm.requestAssignmentsUsers());
+    var cc = workorderPipelineAssignees.users;
+    var ccString = workorderPipelineAssignees.addressess;
+
+    //TODO: add other assignees here.
 
     var subject =
       "Work Order -" +
@@ -226,9 +278,9 @@ Workorder.NewNotifications = function () {
       vm.requestID();
 
     // Let's switch verbiage
-    if (reason == "Closed") {
-      reason = "Fulfilled";
-    }
+    // if (reason == "Closed") {
+    //   reason = "Fulfilled";
+    // }
 
     var body =
       "Greetings Colleagues,<br><br> The following service request has been " +
@@ -257,13 +309,19 @@ Workorder.NewNotifications = function () {
       "<b>Note:</b> This request cannot be reactivated. " +
       "To reinitiate, please create a new service request.<br><br>";
 
-    createEmail(to, cc, [], subject, body);
+    createEmail(to, toString, cc, ccString, [], subject, body);
   }
 
   function pipelineStageNotification() {
-    var to = [
-      vm.requestStageOffice() ? vm.requestStageOffice().UserAddress : null,
-    ];
+    var to = [];
+    var toString = [];
+    if (!vm.requestStageOffice()) {
+    } else if (vm.requestStageOffice().PreferredEmail) {
+      toString.push(vm.requestStageOffice().PreferredEmail);
+    } else if (vm.requestStageOffice().UserAddress) {
+      to.push(vm.requestStageOffice().UserAddress);
+    }
+
     if (vm.requestStage().WildCardAssignee) {
       var personName = vm.requestStage().WildCardAssignee;
       // This should be a person field
@@ -279,6 +337,7 @@ Workorder.NewNotifications = function () {
     }
 
     var cc = [];
+    var ccString = [];
     if (vm.requestStageOrg()) {
       cc.push(vm.requestStageOrg().UserGroup);
     }
@@ -304,10 +363,20 @@ Workorder.NewNotifications = function () {
        or copy and paste the below URL into your browser: <br> " +
       +vm.requestLinkAdmin();
 
-    createEmail(to, cc, [], subject, body);
+    createEmail(to, toString, cc, ccString, [], subject, body);
   }
 
-  function createEmail(to, cc, bcc, subject, body, sendDate, id) {
+  function createEmail(
+    to,
+    toString,
+    cc,
+    ccString,
+    bcc,
+    subject,
+    body,
+    sendDate,
+    id
+  ) {
     sendDate = sendDate === undefined ? null : sendDate;
     id = id === undefined ? vm.requestHeader().ID : id;
 
@@ -317,7 +386,9 @@ Workorder.NewNotifications = function () {
 
     var vp = [
       ["To", toArr],
+      ["ToString", toString.join(";")],
       ["CC", ccArr],
+      ["CCString", ccString.join(";")],
       ["BCC", bccArr],
       ["Title", subject],
       ["Body", body],
