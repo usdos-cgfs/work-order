@@ -454,17 +454,20 @@
     <!-- /ko -->
     <!-- ko if: selectedServiceType -->
     <div id="actions-bar" class="ui sticky fluid fbox message">
-      <div class="actions-left">
+      <div class="actions left">
+        <span
+          ><h4>Request: <span data-bind="text: requestID"></span></h4>
+        </span>
+        Loaded:
+        <span data-bind="text: requestLoaded().toLocaleString()"></span>
         <span
           title="Refresh this request"
           class="fas fa-sync pointer"
           onclick="refreshWorkOrderItem(vm.requestID())"
         ></span>
-        Loaded:
-        <span data-bind="text: requestLoaded().toLocaleString()"></span>
       </div>
-      <!-- ko if: requestCurUserAssign() || requestCurUserAdvance() -->
-      <div class="">
+      <div style="min-width: 250px" class="actions">
+        <!-- ko if: requestCurUserAssign() || requestCurUserAdvance() -->
         <!-- ko if: requestCurUserAssign() -->
         <div class="ui compact menu" data-bind="">
           <select
@@ -500,8 +503,8 @@
         >
           Next Stage <span class="fa fa-chevron-right"></span>
         </button>
+        <!-- /ko -->
       </div>
-      <!-- /ko -->
     </div>
 
     <div class="ui hidden divider"></div>

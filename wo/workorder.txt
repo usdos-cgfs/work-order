@@ -479,7 +479,11 @@
     <!-- /ko -->
     <!-- ko if: selectedServiceType -->
     <div id="actions-bar" class="ui sticky fluid fbox message">
-      <div class="actions-left">
+      <div class="actions left">
+        <span
+          ><h3>Request: <span data-bind="text: requestID"></span></h3>
+        </span>
+        <!-- ko if: vm.userActionOfficeMembership().length > 0 -->
         <span>
           <a
             title="View this link on the admin dash"
@@ -489,16 +493,17 @@
           >
           </a>
         </span>
+        <!-- /ko -->
+        Loaded:
+        <span data-bind="text: requestLoaded().toLocaleString()"></span>
         <span
           title="Refresh this request"
           class="fas fa-sync pointer"
           onclick="refreshWorkOrderItem(vm.requestID())"
         ></span>
-        Loaded:
-        <span data-bind="text: requestLoaded().toLocaleString()"></span>
       </div>
-      <!-- ko if: canSaveForm -->
-      <div class="">
+      <div style="width: 250px" class="actions">
+        <!-- ko if: canSaveForm -->
         <button
           type="button"
           class="editable-field ui primary button"
@@ -507,8 +512,8 @@
         >
           Submit Request <span class="fas fa-caret-right"></span>
         </button>
+        <!-- /ko -->
       </div>
-      <!-- /ko -->
     </div>
     <div class="ui info message">
       <i class="close icon"></i>

@@ -168,10 +168,10 @@ input[id$="uploadLocation"] {
   background-color: white;
 }
 
-#actions-bar .actions-left {
+#actions-bar .actions {
   margin: auto 0px;
 }
-#actions-bar .actions-left span {
+#actions-bar .actions.left span {
   padding-right: 0.25em;
 }
 
