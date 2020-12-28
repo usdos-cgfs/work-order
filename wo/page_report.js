@@ -38,7 +38,7 @@ Workorder.Report.NewReportPage = function () {
 
     self.filterOffice = ko.observable();
     self.filterOfficeOpts = ko.pureComputed(function () {
-      return vm.assignCurUserAssignees().filter(function (assignee) {
+      return vm.request.assignments.assigneeOpts().filter(function (assignee) {
         return assignee.RequestOrg.get_lookupId() == self.requestOrg().ID;
       });
     });

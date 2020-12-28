@@ -468,25 +468,7 @@
       </div>
       <div style="min-width: 250px" class="actions">
         <!-- ko if: requestCurUserAssign() || requestCurUserAdvance() -->
-        <!-- ko if: requestCurUserAssign() -->
-        <div class="ui compact menu" data-bind="">
-          <select
-            class="ui search dropdown"
-            data-bind=" value: assignActionOffice,
-                        options: assignCurUserAssignees, 
-                        optionsText: (AO) => {return AO.Title}, 
-                        optionsCaption: 'Select...'"
-          ></select>
-          <button
-            type="button"
-            class="ui primary right attached button"
-            onclick="createAssignment('Action Resolver', true)"
-            data-bind="enable: assignActionOffice"
-          >
-            Assign
-          </button>
-        </div>
-        <!-- /ko -->
+
         <button
           type="button"
           class="ui green button"
@@ -570,6 +552,7 @@
                     <th>Role</th>
                     <th>Assignment Date</th>
                     <th>Status</th>
+                    <th>Action Taker</th>
                     <th>Actions</th>
                     <th>Admin Actions</th>
                   </tr>
@@ -599,6 +582,11 @@
                     </td>
                     <td>
                       <p data-bind="text: Status"></p>
+                    </td>
+                    <td>
+                      <p
+                        data-bind="text: ActionTaker ? ActionTaker.get_lookupValue() : 'N/A'"
+                      ></p>
                     </td>
                     <td>
                       <!-- ko if: $root.assignmentCurUserCanComplete($data) -->
@@ -647,6 +635,32 @@
                   </tr>
                 </tbody>
               </table>
+              <!-- ko if: requestCurUserAssign() -->
+              <h3>New Assignment:</h3>
+              <div class="ui compact menu" data-bind="">
+                <select
+                  class="ui search dropdown"
+                  data-bind=" value: assignments.new.actionOffice,
+                        options: assignments.assigneeOpts, 
+                        optionsText: (AO) => {return AO.Title}, 
+                        optionsCaption: 'Select...'"
+                ></select>
+                <select
+                  class="ui search dropdown"
+                  data-bind=" value: assignments.new.role,
+                        options: assignments.roleOpts(), 
+                        optionsCaption: 'Select...'"
+                ></select>
+                <button
+                  type="button"
+                  class="ui primary right attached button"
+                  data-bind="click: assignments.new.create,
+                  enable: assignments.new.actionOffice && assignments.new.role"
+                >
+                  Assign
+                </button>
+              </div>
+              <!-- /ko -->
             </div>
             <div class="four wide column">
               <h3>Offices Assigned</h3>

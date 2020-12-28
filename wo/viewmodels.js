@@ -93,16 +93,26 @@ var assignmentListDef = {
     Title: { type: "Text", koMap: "empty" },
     Assignee: { type: "Text", koMap: "empty" },
     ActionOffice: { type: "Lookup", koMap: "empty" },
+    ActionTaker: { type: "Person", koMap: "empty" },
     CanDelegate: { type: "Bool" },
     Comment: { type: "Text", koMap: "empty" },
     IsActive: { type: "Bool", koMap: "empty" },
     Role: {
       type: "Text",
       opts: {
-        Resolver: "Action Resolver",
-        Approver: "Approver",
-        Viewer: "Viewer",
-        Subscriber: "Subscriber",
+        Resolver: {
+          Name: "Action Resolver",
+          Desc: "This role can complete actions.",
+        },
+        Approver: {
+          Name: "Approver",
+          Desc: "This role can approve or reject a request",
+        },
+        Viewer: {
+          Name: "Viewer",
+          Desc:
+            "This role grants access to the request, but cannot make updates.",
+        },
       },
       koMap: "empty",
     },
@@ -394,6 +404,9 @@ function koviewmodel() {
 
   self.userGroupMembership = ko.observableArray();
 
+  self.request = {};
+  self.request.pipeline = {};
+
   /************************************************************
    * ADMIN: Authorize Current user to take actions
    ************************************************************/
@@ -483,7 +496,12 @@ function koviewmodel() {
     }
   });
 
-  self.assignCurUserAssignees = ko.pureComputed(function () {
+  self.assignments = {};
+  self.assignments.new = {
+    actionOffice: ko.observable(),
+    role: ko.observable(),
+  }; // Hold the details for our new assignment
+  self.assignments.assigneeOpts = ko.pureComputed(function () {
     //Who can the current user assign to?
     var uao = self.userActionOfficeOwnership().filter(function (uao) {
       return uao.CanAssign;
@@ -513,6 +531,28 @@ function koviewmodel() {
       });
     }
   });
+
+  self.assignments.roleOpts = function () {
+    var opts = assignmentListDef.viewFields.Role.opts;
+
+    return Object.keys(opts).map(function (role) {
+      return opts[role].Name;
+    });
+  };
+
+  self.assignments.new.create = function () {
+    // Create a new assignment based off our assignments.new object
+    if (!self.assignments.new.role()) {
+      alert("Role missing");
+    } else if (!self.assignments.new.actionOffice()) {
+      alert("Action Office missing");
+    } else {
+      self.assignActionOffice(self.assignments.new.actionOffice());
+      createAssignment(self.assignments.new.role(), true);
+      self.assignments.new.actionOffice(null);
+      self.assignments.new.role(null);
+    }
+  };
 
   self.assignmentShowAssignment = function (assignment) {
     var args = { id: assignment.ID };
@@ -565,6 +605,7 @@ function koviewmodel() {
       ["IsActive", 0],
       ["CompletionDate", new Date()],
       ["Status", "Completed"],
+      ["ActionTaker", sal.globalConfig.currentUser.get_id()],
     ];
 
     self.listRefAssignment().updateListItem(assignment.ID, vp, function () {
@@ -608,6 +649,7 @@ function koviewmodel() {
       ["IsActive", 0],
       ["CompletionDate", new Date()],
       ["Status", "Approved"],
+      ["ActionTaker", sal.globalConfig.currentUser.get_id()],
     ];
 
     self.listRefAssignment().updateListItem(assignment.ID, vp, function () {
@@ -617,7 +659,14 @@ function koviewmodel() {
 
       fetchRequestAssignments(self.requestID(), function (assignment) {
         if (advance) {
-          actionComplete();
+          // Check if there aren't any active assignments
+          if (
+            self.requestAssignments().every(function (assignment) {
+              return !assignment.IsActive;
+            })
+          ) {
+            actionComplete();
+          }
         }
       });
     });
@@ -658,8 +707,8 @@ function koviewmodel() {
 
   self.assignmentCurUserCanRemove = function (assignment) {
     return (
-      self
-        .assignCurUserAssignees()
+      self.assignments
+        .assigneeOpts()
         .map(function (assignee) {
           return assignee.ID;
         })
@@ -727,8 +776,8 @@ function koviewmodel() {
               ) {
                 // we are the user assigned to this assignment
                 if (
-                  assignment.Role == roleOpts.Resolver ||
-                  assignment.Role == roleOpts.Approver
+                  assignment.Role == roleOpts.Resolver.Name ||
+                  assignment.Role == roleOpts.Approver.Name
                 ) {
                   userAssignmentCnt += 1;
                   if (assignment.IsActive) {
@@ -1121,13 +1170,16 @@ function koviewmodel() {
       if (asgs.length > 1) {
         var statuses = new Array();
         statuses.push("<ul>");
-        var states = new Set(
-          asgs.map(function (asg) {
-            return asg.Status;
-          })
-        ).map(function (item) {
-          return item;
+        var states = [];
+        // Get all the unique statusi
+        asgs.map(function (asg) {
+          if (states.indexOf(asg.Status) < 0) {
+            states.push(asg.Status);
+          }
         });
+        // states.map(function (item) {
+        //   return item;
+        // });
 
         states.forEach(function (status) {
           statuses.push(
@@ -1502,9 +1554,6 @@ function koviewmodel() {
     });
     return folderPermissions;
   });
-
-  self.request = {};
-  self.request.pipeline = {};
 
   self.request.pipeline.allActionOffices = ko.pureComputed(function () {
     // Return all the action offices associated with this request.

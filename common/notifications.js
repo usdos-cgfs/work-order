@@ -411,21 +411,22 @@ Workorder.NewNotifications = function () {
   function createEmailAddressee(arr) {
     var vps = new Array();
 
-    arr.forEach(function (ao) {
-      switch (ao.constructor.getName()) {
-        case "SP.FieldUserValue":
-          vps.push(ao.get_lookupId());
-          vps.push(ao.get_lookupValue());
-          break;
-        case "SP.User":
-          vps.push(ao.get_id());
-          vps.push(ao.get_loginName());
-          break;
-        default:
-      }
-    });
-
-    return vps.join(";#");
+    if (arr) {
+      arr.forEach(function (ao) {
+        switch (ao.constructor.getName()) {
+          case "SP.FieldUserValue":
+            vps.push(ao.get_lookupId());
+            vps.push(ao.get_lookupValue());
+            break;
+          case "SP.User":
+            vps.push(ao.get_id());
+            vps.push(ao.get_loginName());
+            break;
+          default:
+        }
+      });
+      return vps.join(";#");
+    }
   }
   function newEmailCallback(result, value) {
     console.log("Email created successfully");
