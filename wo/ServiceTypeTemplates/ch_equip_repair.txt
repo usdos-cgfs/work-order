@@ -9,7 +9,11 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      Supervisor: { type: "Person", koMap: "repairSupervisor", required: true },
+      Supervisor: {
+        type: "Person",
+        koMap: "repairSupervisor",
+        required: false,
+      },
       Location: { type: "Text", koMap: "repairLocation", required: true },
       RepairType: { type: "Type", koMap: "repairType", required: true },
     },
@@ -34,7 +38,7 @@
 
 <script type="text/html" id="tmpl_ch_equip_repair">
   <div class="ui form">
-    <div class="eight wide field">
+    <!-- <div class="eight wide field">
       <label>Supervisor<span class="required">*</span>: </label>
       <input
         class="editable-field"
@@ -48,7 +52,7 @@
         data-bind="people: repairSupervisor.user, 
           visible: currentView() != 'view'"
       ></div>
-    </div>
+    </div> -->
     <div class="two fields">
       <div class="field">
         <label>Location<span class="required">*</span>:</label>

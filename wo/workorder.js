@@ -850,7 +850,6 @@ function createAssignment(role, notify) {
     var vp = [
       ["Title", vm.requestID()],
       ["Role", role],
-      ["IsActive", true],
     ];
     if (vm.assignActionOffice()) {
       vp.push(["ActionOffice", vm.assignActionOffice().ID]);
@@ -864,6 +863,15 @@ function createAssignment(role, notify) {
     if (vm.assignAssignee()) {
       vp.push(["Assignee", vm.assignAssignee().userId()]);
     }
+
+    // Check if this is a type of Assignment that needs to be completed
+    var roleOpts = assignmentListDef.viewFields.Role.opts;
+    if (role == roleOpts.Approver.Name || role == roleOpts.Resolver.Name) {
+      vp.push(["IsActive", true]);
+    } else {
+      vp.push(["IsActive", true]);
+    }
+
     vm.listRefAssignment().createListItem(
       vp,
       function (id) {

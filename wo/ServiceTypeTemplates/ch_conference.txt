@@ -16,7 +16,7 @@
       Supervisor: {
         type: "Person",
         koMap: "conferenceSupervisor",
-        required: true,
+        required: false,
       },
     },
   });
@@ -61,21 +61,6 @@
 
 <script type="text/html" id="tmpl_ch_conference">
   <div class="ui form">
-    <div class="eight wide field">
-      <label>Supervisor<span class="required">*</span>: </label>
-      <input
-        class="editable-field"
-        type="text"
-        disabled="true"
-        data-bind="value: conferenceSupervisor.userName, visible: currentView() == 'view'"
-      />
-      <div
-        id="peopleconferenceSupervisor"
-        class="editable-field"
-        data-bind="people: conferenceSupervisor.user, 
-          visible: currentView() != 'view'"
-      ></div>
-    </div>
     <div class="two fields">
       <div class="field">
         <label
