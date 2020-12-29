@@ -1341,7 +1341,7 @@ sal.NewSPList = function (listDef) {
     createFolderInternal(list.get_rootFolder(), folderUrl, success);
   }
 
-  function setLibFolderPermissions(path, valuePairs, callback) {
+  function setLibFolderPermissions(path, valuePairs, callback, reset) {
     reset = reset === undefined ? false : reset;
     var users = new Array();
     var resolvedGroups = new Array();

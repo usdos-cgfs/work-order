@@ -359,9 +359,9 @@ Workorder.NewNotifications = function () {
       "</a> - " +
       vm.selectedServiceType().Title +
       "<br><br>" +
-      "To view the request, please click the link above, \
-       or copy and paste the below URL into your browser: <br> " +
-      +vm.requestLinkAdmin();
+      "To view the request, please click the link above, " +
+      "or copy and paste the below URL into your browser: <br> " +
+      vm.requestLinkAdmin();
 
     createEmail(to, toString, cc, ccString, [], subject, body);
   }
