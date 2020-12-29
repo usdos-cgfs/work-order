@@ -338,9 +338,9 @@ Workorder.NewNotifications = function () {
 
     var cc = [];
     var ccString = [];
-    if (vm.requestStageOrg()) {
-      cc.push(vm.requestStageOrg().UserGroup);
-    }
+    // if (vm.requestStageOrg()) {
+    //   cc.push(vm.requestStageOrg().UserGroup);
+    // }
 
     var subject =
       "Work Order -" +
