@@ -42,6 +42,7 @@ var workOrderListDef = {
     //RequestAssignments: { type: "Text", koMap: "requestAssignmentIds" },
     RequestDescription: { type: "Text", koMap: "requestDescriptionHTML" },
     RequestOrgs: { type: "Lookup", koMap: "requestOrgIds" },
+    Requestor: { type: "Person", koMap: "requestor" },
     RequestorEmail: { type: "Text", koMap: "requestorEmail" },
     RequestorName: { type: "Text", koMap: "requestorName" },
     RequestorOffice: { type: "Text", koMap: "requestorOfficeLookupId" },
@@ -318,12 +319,26 @@ function PeopleField() {
       },
       write: function (value) {
         if (value) {
-          var user = new Object();
-          user.ID = value.get_lookupId();
-          user.userName = value.get_lookupValue();
-          user.isEnsured = false;
-          self.user(user);
-          self.lookupUser(value);
+          var user = {};
+          switch (value.constructor.getName()) {
+            case "SP.FieldUserValue":
+              user.ID = value.get_lookupId();
+              user.userName = value.get_lookupValue();
+              user.title = "";
+              break;
+            case "SP.User":
+              user.ID = value.get_id();
+              user.userName = value.get_loginName();
+              user.title = value.get_title();
+              break;
+            default:
+              break;
+          }
+          if (!$.isEmptyObject(user)) {
+            user.isEnsured = false;
+            self.user(user);
+            self.lookupUser(value);
+          }
         }
       },
     },
@@ -1650,6 +1665,7 @@ function koviewmodel() {
   });
 
   // Requestor/Header Info
+  self.requestor = new PeopleField();
   self.requestorName = ko.observable();
   self.requestorTelephone = ko.observable();
   self.requestorEmail = ko.observable();
@@ -1950,6 +1966,7 @@ ko.bindingHandlers.people = {
           userObj["userName"] = user.get_loginName();
           userObj["isEnsured"] = true;
           userObj["ensuredUser"] = user;
+          userObj["title"] = user.get_title();
           observable(userObj);
         });
       }

@@ -78,7 +78,8 @@ function newWorkOrder() {
   vm.requestID(new Date().getTime());
   updateUrlParam("reqid", vm.requestID());
 
-  vm.requestorName(sal.globalConfig.currentUser.get_title());
+  //vm.requestorName(sal.globalConfig.currentUser.get_title());
+  vm.requestor.userId(sal.globalConfig.currentUser);
   if (sal.globalConfig.currentUserProfile) {
     vm.requestorTelephone(
       sal.globalConfig.currentUserProfile.UserProfileProperties.results.find(
@@ -289,11 +290,14 @@ function saveWorkOrder() {
     "Please wait..."
   );
 
-  vm.requestIsSaveable(true);
-  validateRequest();
-
   // Need to get the value of the trix editor.
   vm.requestDescriptionHTML($("#trix-request-description").html());
+
+  //Get the requestors name
+  //vm.requestorName(vm.requestor.user()["title"]);
+
+  vm.requestIsSaveable(true);
+  validateRequest();
 
   // If all of our required fields are present.
   if (vm.requestIsSaveable()) {

@@ -337,3 +337,12 @@ Workorder.Deployment.NewPipelinesCharleston = function () {
   };
   return publicMembers;
 };
+
+Workorder.Deployment.UpdateAllRequestors = function () {
+  vm.allOrders().forEach(function (order) {
+    ensureUser(order.RequestorName, function (user) {
+      var vp = [["Requestor", user.get_id()]];
+      vm.listRefWO().updateListItem(order.ID, vp, () => {});
+    });
+  });
+};

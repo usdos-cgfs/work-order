@@ -137,7 +137,9 @@
                   ></td>
                   <td data-bind="text: ServiceType.get_lookupValue()"></td>
                   <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
-                  <td data-bind="text: RequestorName"></td>
+                  <td
+                    data-bind="text: Requestor ? Requestor.get_lookupValue() : ''"
+                  ></td>
                   <td>
                     <!-- ko if: vm.showRequestAssignments() -->
                     <ul
@@ -216,7 +218,9 @@
                   ></td>
                   <td data-bind="text: ServiceType.get_lookupValue()"></td>
                   <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
-                  <td data-bind="text: RequestorName"></td>
+                  <td
+                    data-bind="text: Requestor ? Requestor.get_lookupValue() : ''"
+                  ></td>
                   <td data-bind="text: Created.format('yyyy-MM-dd')"></td>
                   <td data-bind="text: ClosedDate"></td>
                 </tr>
@@ -273,7 +277,9 @@
                   ></td>
                   <td data-bind="text: ServiceType.get_lookupValue()"></td>
                   <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
-                  <td data-bind="text: RequestorName"></td>
+                  <td
+                    data-bind="text: Requestor ? Requestor.get_lookupValue() : ''"
+                  ></td>
                   <td data-bind="text: Created.format('yyyy-MM-dd')"></td>
                   <td data-bind="text: ClosedDate.format('yyyy-MM-dd')"></td>
                 </tr>
@@ -351,7 +357,9 @@
                     <td
                       data-bind="text: order.RequestorOffice.get_lookupValue()"
                     ></td>
-                    <td data-bind="text: order.RequestorName"></td>
+                    <td
+                      data-bind="text: order.Requestor ? order.Requestor.get_lookupValue() : ''"
+                    ></td>
                     <td data-bind="text: order.RequestStatus"></td>
                     <td data-bind="text: $(RequestDescription).text()"></td>
                     <!-- ko if: stypeTable.cols.length -->
@@ -418,7 +426,9 @@
             ></td>
             <td data-bind="text: ServiceType.get_lookupValue()"></td>
             <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
-            <td data-bind="text: RequestorName"></td>
+            <td
+              data-bind="text: Requestor ? Requestor.get_lookupValue() : ''"
+            ></td>
             <td data-bind="text: RequestStatus"></td>
             <td data-bind="html: $root.assignmentStatus(Title)()"></td>
           </tr>
@@ -752,12 +762,20 @@
                 </div>
                 <div class="two fields">
                   <div class="field">
-                    <label> Requestor Name: </label>
+                    <label>Requestor<span class="required">*</span>: </label>
                     <input
-                      class="non-editable-field"
+                      class="editable-field"
                       type="text"
-                      data-bind="value: requestorName"
+                      disabled="true"
+                      data-bind="value: requestor.user() ? requestor.user()['title'] :'',
+                       visible: currentView() == 'view'"
                     />
+                    <div
+                      id="peoplerequestor"
+                      class="editable-field"
+                      data-bind="people: requestor.user, 
+                      visible: currentView() != 'view'"
+                    ></div>
                   </div>
                   <!-- ko if: selectedServiceType().SupervisorRequired -->
                   <div class="field">
