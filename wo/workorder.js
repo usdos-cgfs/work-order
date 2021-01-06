@@ -79,7 +79,9 @@ function newWorkOrder() {
   updateUrlParam("reqid", vm.requestID());
 
   //vm.requestorName(sal.globalConfig.currentUser.get_title());
-  vm.requestor.userId(sal.globalConfig.currentUser);
+  if ($.isEmptyObject(vm.requestor.user())) {
+    vm.requestor.userId(sal.globalConfig.currentUser);
+  }
   if (sal.globalConfig.currentUserProfile) {
     vm.requestorTelephone(
       sal.globalConfig.currentUserProfile.UserProfileProperties.results.find(

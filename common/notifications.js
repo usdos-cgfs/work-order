@@ -235,7 +235,7 @@ Workorder.NewNotifications = function () {
     var users = [];
     var addresses = [];
 
-    vm.request.pipeline.allActionOffices.forEach(function (actionOffice) {
+    vm.request.pipeline.allActionOffices().forEach(function (actionOffice) {
       // Check if we have a wildcard user and they were ensured
       if (actionOffice.WildCardAssignee) {
         try {
@@ -264,8 +264,10 @@ Workorder.NewNotifications = function () {
     var to = [vm.requestHeader().Author];
     var toString = [];
 
-    var cc = workorderPipelineAssignees.users;
-    var ccString = workorderPipelineAssignees.addressess;
+    var pipelineAssignees = workorderPipelineAssignees();
+
+    var cc = pipelineAssignees.users;
+    var ccString = pipelineAssignees.addresses;
 
     //TODO: add other assignees here.
 
