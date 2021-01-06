@@ -342,7 +342,7 @@ Workorder.Deployment.UpdateAllRequestors = function () {
   vm.allOrders().forEach(function (order) {
     ensureUser(order.RequestorName, function (user) {
       var vp = [["Requestor", user.get_id()]];
-      vm.listRefWO().updateListItem(order.ID, vp, () => {});
+      vm.listRefWO().updateListItem(order.ID, vp, function () {});
     });
   });
 };
