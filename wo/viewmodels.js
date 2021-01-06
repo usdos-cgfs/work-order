@@ -1537,11 +1537,21 @@ function koviewmodel() {
   });
 
   self.requestFolderPerms = ko.pureComputed(function () {
+    //These offices do not share info among all members
+    var restrictedRequestingOffices = ["CGFS"];
+
     var folderPermissions = [
-      [sal.globalConfig.currentUser.get_loginName(), "Restricted Contribute"],
+      [vm.requestor.user().userName, "Restricted Contribute"],
       ["workorder Owners", "Full Control"],
       ["Restricted Readers", "Restricted Read"],
     ];
+
+    if (restrictedRequestingOffices.indexOf(vm.requestorOffice().Title) < 0) {
+      folderPermissions.push([
+        vm.requestorOffice().ROGroup.get_lookupValue(),
+        "Restricted Contribute",
+      ]);
+    }
 
     self.selectedPipeline().forEach(function (stage) {
       // first get the action office
