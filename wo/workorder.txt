@@ -149,18 +149,6 @@
                 a guarantee of completion.
               </p>
             </div>
-            <div
-              id="wo-est-completion-modal"
-              class="ui modal"
-              style="display: none"
-            >
-              <div class="content">
-                <h2 class="ui header">Esimated Completion Date</h2>
-              </div>
-              <div class="content">
-                <p>How is</p>
-              </div>
-            </div>
           </div>
         </div>
         <div

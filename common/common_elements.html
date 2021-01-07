@@ -1,3 +1,35 @@
 <script type="text/html" id="tmpl_pipeline">
   <div></div>
 </script>
+
+<script type="text/html" id="template_dateranges">
+  <div>
+    <div data-bind="text: foo">
+      <div class="ui form">
+        <div class="two fields">
+          <div class="field">
+            <label>Start date</label>
+            <div class="ui calendar" id="rangestart">
+              <div class="ui input left icon">
+                <i class="calendar icon"></i>
+                <input type="text" placeholder="Start" />
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <label>End date</label>
+            <div class="ui calendar" id="rangeend">
+              <div class="ui input left icon">
+                <i class="calendar icon"></i>
+                <input type="text" placeholder="End" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button type="button" class="ui primary button" onclick="newDateRange()">
+        Save
+      </button>
+    </div>
+  </div>
+</script>

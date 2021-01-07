@@ -135,6 +135,17 @@ var commentListDef = {
   },
 };
 
+var dateRangesListDef = {
+  name: "DateRanges",
+  title: "DateRanges",
+  viewFields: {
+    ID: { type: "Text", koMap: "empty" },
+    Title: { type: "Text", koMap: "empty" },
+    StartDateTime: { type: "Text", koMap: "empty" },
+    EndDateTime: { type: "Text", koMap: "empty" },
+  },
+};
+
 var workOrderEmailsListDef = {
   name: "WorkOrderEmails",
   title: "WorkOrderEmails",
@@ -259,6 +270,7 @@ var configServiceTypeListDef = {
     DescriptionRequired: { type: "Bool", koMap: "empty" },
     DescriptionTitle: { type: "Bool", koMap: "empty" },
     DaysToCloseBusiness: { type: "Text", koMap: "empty" },
+    HasDateRanges: { type: "Bool", koMap: "empty" },
     ReminderDays: { type: "Text", koMap: "empty" },
     KPIThresholdYellow: { type: "Text", koMap: "empty" },
     KPIThresholdGreen: { type: "Text", koMap: "empty" },
@@ -374,6 +386,14 @@ function DateField(newOpts, newDate) {
   };
 }
 
+function DateRange(field, label) {
+  var opts = { minTimeGap: 15 };
+  this.field = ko.observable(field);
+  this.label = ko.observable(label);
+  this.start = new DateField(opts);
+  this.end = new DateField(opts);
+}
+
 function timers() {
   var self = this;
   self.init = ko.observable();
@@ -419,8 +439,39 @@ function koviewmodel() {
 
   self.userGroupMembership = ko.observableArray();
 
-  self.request = {};
-  self.request.pipeline = {};
+  self.request = {
+    header: {},
+    body: {},
+    dateRanges: {
+      all: ko.observableArray(),
+      createNew: function (dateRange) {
+        var vp = [
+          ["Title", self.requestID()],
+          ["StartDateTime", dateRange.start.date()],
+          ["EndDateTime", dateRange.end.date()],
+          ["Label", dateRange.label()],
+          ["Field", dateRange.field()],
+        ];
+        self.listRefDateRanges().createListItem(vp, function () {
+          self.request.dateRanges.fetch();
+        });
+      },
+      fetch: function () {
+        var camlq =
+          '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
+          '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
+          '</Eq><Eq><FieldRef Name="Title"/><Value Type="Text">' +
+          vm.requestID() +
+          "</Value></Eq></And></Where></Query></View>";
+        self.listRefDateRanges().getListItems(camlq, function (items) {
+          self.request.dateRanges.all(items);
+        });
+      },
+    },
+    pipeline: {},
+  };
+  // self.request.body = {};
+  // self.request.pipeline = {};
 
   /************************************************************
    * ADMIN: Authorize Current user to take actions
@@ -854,6 +905,7 @@ function koviewmodel() {
   self.listRefAction = ko.observable();
   self.listRefApproval = ko.observable();
   self.listRefAssignment = ko.observable();
+  self.listRefDateRanges = ko.observable();
   self.listRefComment = ko.observable();
   self.listRefWOEmails = ko.observable();
 

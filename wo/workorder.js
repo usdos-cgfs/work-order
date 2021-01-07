@@ -15,6 +15,7 @@ function initStaticListRefs() {
 
   vm.listRefApproval(new sal.NewSPList(approvalListDef));
   vm.listRefAction(new sal.NewSPList(actionListDef));
+  vm.listRefDateRanges(new sal.NewSPList(dateRangesListDef));
   vm.libRefWODocs(new sal.NewSPList(workOrderDocDef));
   vm.listRefAssignment(new sal.NewSPList(assignmentListDef));
   vm.listRefComment(new sal.NewSPList(commentListDef));
@@ -250,7 +251,18 @@ function viewServiceTypeItem() {
       } else {
         timedNotification("Warning: couldn't find Service Type Info");
       }
-      onViewWorkOrderItemComplete();
+      if (vm.selectedServiceType().HasDateRanges) {
+        // This utilizes the date ranges list, we'll need to query that as well.
+        vm.listRefDateRanges().getListItems(
+          serviceTypeCaml,
+          function (dateRanges) {
+            vm.request.dateRanges(dateRanges);
+            onViewWorkOrderItemComplete();
+          }
+        );
+      } else {
+        onViewWorkOrderItemComplete();
+      }
     }
   );
 }
