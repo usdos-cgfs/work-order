@@ -19,7 +19,7 @@
         koMap: "suppliesVendor",
         required: true,
       },
-      ItemNum: { type: "Text", koMap: "suppliesItemNum", required: true },
+      ItemNum: { type: "Text", koMap: "suppliesItemNum", required: false },
       Quantity: { type: "Text", koMap: "suppliesQuantity", required: true },
       InStock: {
         type: "Bool",
@@ -62,7 +62,7 @@
         ></div>
       </div> -->
       <div class="field">
-        <label>Supplies Vendor<span class="required">*</span>: </label>
+        <label>Supplies Requested<span class="required">*</span>: </label>
         <input
           class="editable-field"
           type="text"
@@ -72,7 +72,7 @@
     </div>
     <div class="two fields">
       <div class="field">
-        <label>Item/Product Num<span class="required">*</span>: </label>
+        <label>Item/Product Num: </label>
         <input
           class="editable-field"
           type="text"

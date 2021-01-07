@@ -1386,6 +1386,7 @@ function lockRequest(woID) {
     vm.listRefAction(),
     vm.listRefAssignment(),
     vm.listRefWOEmails(),
+    vm.listRefComment(),
   ];
 
   if (vm.requestSvcTypeListBool()) {

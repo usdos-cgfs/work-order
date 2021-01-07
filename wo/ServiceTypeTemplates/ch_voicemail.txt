@@ -18,7 +18,7 @@
       Location: {
         type: "Text",
         koMap: "voicemailLocation",
-        required: true,
+        required: false,
       },
     },
   });
@@ -61,7 +61,7 @@
       </div>
     </div>
     <div class="eight wide field">
-      <label>Location<span class="required">*</span>: </label>
+      <label>Location: </label>
       <input
         class="editable-field"
         type="text"

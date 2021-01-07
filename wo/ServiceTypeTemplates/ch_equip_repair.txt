@@ -9,11 +9,6 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      Supervisor: {
-        type: "Person",
-        koMap: "repairSupervisor",
-        required: false,
-      },
       Location: { type: "Text", koMap: "repairLocation", required: true },
       RepairType: { type: "Type", koMap: "repairType", required: true },
     },

@@ -809,25 +809,36 @@
           <!-- Capture any attachments below -->
           <div id="wo-attachments" class="ui fluid card" data-bind="">
             <div class="content">
-              <h2 class="ui header">Attachments</h2>
+              <h2 class="ui header">
+                Attachments
+                <span
+                  data-bind="visible: selectedServiceType().AttachmentsRequiredCnt"
+                  >Required<span class="required">*</span></span
+                >
+              </h2>
             </div>
             <div class="content">
               <div
-                data-bind="visible: selectedServiceType().AttachmentRequired"
+                data-bind="class: selectedServiceType().AttachmentsRequiredCnt ? 
+                 'warning' : 'info'"
+                class="ui message"
               >
-                <h3>
-                  This service type has required attachments:<span
-                    class="required"
-                    >*</span
-                  >
-                </h3>
+                <div>
+                  This service type has
+                  <span
+                    data-bind="visible: selectedServiceType().AttachmentsRequiredCnt, 
+                    text: 
+                     selectedServiceType().AttachmentsRequiredCnt >= 0 ?
+                     ' ' + selectedServiceType().AttachmentsRequiredCnt  + ' ':
+                     ''"
+                  ></span>
+                  required attachments.
+                </div>
               </div>
               <div
                 id="instr-attachments"
                 data-bind="html: selectedServiceType().AttachmentDescription"
-              >
-                Instructions for uploading attachments.
-              </div>
+              ></div>
               <table
                 id="table-attachments"
                 class="ui very basic celled table"
@@ -863,16 +874,17 @@
                 </tbody>
               </table>
             </div>
+            <!-- ko if: requestIsActive -->
             <div class="content aligned right">
               <button
                 type="button"
                 class="ui primary button"
                 onclick="newAttachment()"
-                data-bind="enable: requestIsActive"
               >
                 New Attachment
               </button>
             </div>
+            <!-- /ko -->
           </div>
         </div>
         <div class="ten wide column" data-bind="visible: showActionsTable">
@@ -932,10 +944,9 @@
           <h2 class="ui header">Comments</h2>
         </div>
         <div class="content">
-          <p>
-            Leave additional comments/instructions here. Note: Anyone with
-            access to this record will be able to view them.
-          </p>
+          <div class="ui warning message">
+            Note: Anyone with access to this record is able to view comments.
+          </div>
           <table
             id="table-comments"
             class="ui celled very basic table"
@@ -963,9 +974,10 @@
             </tbody>
           </table>
         </div>
-
+        <!-- ko if: requestIsActive() -->
         <div class="content">
           <div class="ui form">
+            <p>Provide additional comments/instructions here:</p>
             <div class="field">
               <textarea
                 placeholder="Enter a new comment..."
@@ -981,6 +993,7 @@
             </button>
           </div>
         </div>
+        <!-- /ko -->
       </div>
     </div>
     <br />
