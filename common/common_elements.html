@@ -4,32 +4,78 @@
 
 <script type="text/html" id="template_dateranges">
   <div>
-    <div data-bind="text: foo">
-      <div class="ui form">
-        <div class="two fields">
-          <div class="field">
-            <label>Start date</label>
-            <div class="ui calendar" id="rangestart">
-              <div class="ui input left icon">
-                <i class="calendar icon"></i>
-                <input type="text" placeholder="Start" />
+    <h3 data-bind="text: name"></h3>
+    <table class="ui very basic table">
+      <thead>
+        <tr>
+          <th>Start</th>
+          <th>End</th>
+          <th>Label</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody data-bind="">
+        <!-- ko foreach: $data.dateRanges -->
+        <tr>
+          <td data-bind="text: StartDateTime.toLocaleString()"></td>
+          <td data-bind="text: EndDateTime.toLocaleString()"></td>
+          <td data-bind="text: Label"></td>
+          <td data-bind="click: deleteDateRange.bind($data)">
+            <span class="fas fa-trash pointer"></span>
+          </td>
+        </tr>
+        <!-- /ko -->
+        <!-- ko if: $root.currentView != 'view' -->
+        <tr>
+          <td>
+            <div class="field">
+              <div class="ui calendar" id="rangestart">
+                <div class="ui input left icon">
+                  <i class="calendar icon"></i>
+                  <input
+                    type="text"
+                    placeholder="Start"
+                    data-bind="dateField: $data.new.start"
+                  />
+                </div>
               </div>
             </div>
-          </div>
-          <div class="field">
-            <label>End date</label>
-            <div class="ui calendar" id="rangeend">
-              <div class="ui input left icon">
-                <i class="calendar icon"></i>
-                <input type="text" placeholder="End" />
+          </td>
+          <td>
+            <div class="field">
+              <div class="ui calendar" id="rangeend">
+                <div class="ui input left icon">
+                  <i class="calendar icon"></i>
+                  <input
+                    type="text"
+                    placeholder="End"
+                    data-bind="dateField: $data.new.end"
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-      <button type="button" class="ui primary button" onclick="newDateRange()">
-        Save
-      </button>
-    </div>
+          </td>
+          <td>
+            <div class="ui field">
+              <input
+                type="text"
+                placeholder="Label (optional)..."
+                data-bind="value: $data.new.label"
+              />
+            </div>
+          </td>
+          <td>
+            <button
+              type="button"
+              class="ui primary button"
+              data-bind="click: $data.new.save"
+            >
+              Save
+            </button>
+          </td>
+        </tr>
+        <!-- /ko -->
+      </tbody>
+    </table>
   </div>
 </script>

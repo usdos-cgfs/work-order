@@ -1242,6 +1242,45 @@ function fetchComments(callback) {
 }
 
 /************************************************************
+ * DateRange
+ ************************************************************/
+function createDateRange(dateRange) {
+  var vp = [
+    ["Title", vm.requestID()],
+    ["TableName", dateRange.name()],
+    ["StartDateTime", dateRange.start.date()],
+    ["EndDateTime", dateRange.end.date()],
+    ["Label", dateRange.label()],
+  ];
+  vm.listRefDateRanges().createListItem(vp, function () {
+    console.log("Inserted");
+    dateRange.label("");
+
+    fetchDateRanges(function () {});
+  });
+}
+
+function fetchDateRanges(callback) {
+  var callback = callback === undefined ? function () {} : callback;
+  var camlq =
+    '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
+    '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
+    '</Eq><Eq><FieldRef Name="Title"/><Value Type="Text">' +
+    vm.requestID() +
+    "</Value></Eq></And></Where></Query></View>";
+  vm.listRefDateRanges().getListItems(camlq, function (dateRanges) {
+    vm.request.dateRanges.all(dateRanges);
+    callback();
+  });
+}
+
+function deleteDateRange(dateRange) {
+  vm.listRefDateRanges().deleteListItem(dateRange.ID, function () {
+    fetchDateRanges();
+  });
+}
+
+/************************************************************
  * Pipeline
  ************************************************************/
 /**
@@ -1467,6 +1506,8 @@ function initApp() {
   // Initialize ViewModel
   vm = new koviewmodel();
   vm.timers.init(initTime);
+
+  //InitCommon();
 
   /* Depending on our page, we may need additional info */
   /* Submitter/Action Office/Approval */

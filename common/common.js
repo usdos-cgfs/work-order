@@ -30,7 +30,21 @@ function InitCommon() {
   Workorder.Common.Utilities = new Workorder.Common.NewUtilities();
 }
 
-Workorder.Common.NewUtilities = function () {};
+Workorder.Common.NewUtilities = function () {
+  var queries = {};
+  queries.itemsById =
+    '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
+    '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
+    '</Eq><Eq><FieldRef Name="Title"/><Value Type="Text">' +
+    vm.requestID() +
+    "</Value></Eq></And></Where></Query></View>";
+
+  publicMembers = {
+    queries: queries,
+  };
+
+  return publicMembers;
+};
 
 function convertModelToViewfield(model) {
   vf = "<ViewFields>";

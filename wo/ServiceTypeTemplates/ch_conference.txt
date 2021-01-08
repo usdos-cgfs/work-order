@@ -45,14 +45,7 @@
   vm.conferenceDate = new DateField(opts);
   vm.conferenceSupervisor = new PeopleField();
 
-  vm.conferencePresentationDates = {
-    table: "Presentations",
-    dateRanges: ko.pureComputed(function () {
-      return this.request.dateRanges.all();
-    }, vm),
-    dateRangeNew: new DateRange(this.table, ""),
-    foo: "bar",
-  };
+  vm.conferencePresentationDates = new DateRangeTable("presentations");
   /*
   vm.conferenceDate = ko.observable();
   vm.conferenceDateStr = ko.pureComputed({
@@ -70,7 +63,9 @@
 
 <script type="text/html" id="tmpl_ch_conference">
   <div
-    data-bind="template: {name: 'template_dateranges', data: conference }"
+    data-bind="template: 
+    {name: 'template_dateranges', 
+    data: conferencePresentationDates }"
   ></div>
   <div class="ui form">
     <div class="two fields">

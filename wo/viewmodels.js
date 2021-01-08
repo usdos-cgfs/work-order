@@ -141,8 +141,10 @@ var dateRangesListDef = {
   viewFields: {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "empty" },
-    StartDateTime: { type: "Text", koMap: "empty" },
-    EndDateTime: { type: "Text", koMap: "empty" },
+    StartDateTime: { type: "DateTime", koMap: "empty" },
+    EndDateTime: { type: "DateTime", koMap: "empty" },
+    Label: { type: "Text", koMap: "empty" },
+    TableName: { type: "Text", koMap: "empty" },
   },
 };
 
@@ -386,12 +388,37 @@ function DateField(newOpts, newDate) {
   };
 }
 
-function DateRange(field, label) {
+function DateRange(name) {
   var opts = { minTimeGap: 15 };
-  this.field = ko.observable(field);
-  this.label = ko.observable(label);
+  var self = this;
+  this.name = ko.observable(name);
+  this.label = ko.observable();
   this.start = new DateField(opts);
   this.end = new DateField(opts);
+  this.save = function () {
+    createDateRange(self);
+  };
+  var publicMembers = {
+    name: this.name,
+    label: this.label,
+    save: this.save,
+    start: this.start,
+    end: this.end,
+  };
+  return publicMembers;
+}
+
+function DateRangeTable(name) {
+  var self = this;
+  this.testDate = new DateField();
+  this.name = name;
+  this.dateRanges = ko.pureComputed(function () {
+    // Filter this requests date ranges to return ones saved
+    return vm.request.dateRanges.all().filter(function (dateRange) {
+      return (dateRange.name = self.name);
+    });
+  });
+  self.new = new DateRange(self.name);
 }
 
 function timers() {
@@ -420,6 +447,8 @@ function timers() {
  ************************************************************/
 function koviewmodel() {
   var self = this;
+
+  self.testDateRange = new DateRange("test");
 
   self.timers = new timers();
 
@@ -1066,7 +1095,7 @@ function koviewmodel() {
       return "hl-late";
     } else if (days < 2) {
       return "hl-warn";
-    } else if (2 < days < 5) {
+    } else if (days < 5) {
       return "hl-info";
     }
   };
