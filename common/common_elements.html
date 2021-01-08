@@ -21,7 +21,9 @@
           <td data-bind="text: EndDateTime.toLocaleString()"></td>
           <td data-bind="text: Label"></td>
           <td data-bind="click: deleteDateRange.bind($data)">
+            <!-- ko if: $root.currentView != 'view' -->
             <span class="fas fa-trash pointer"></span>
+            <!-- /ko -->
           </td>
         </tr>
         <!-- /ko -->
