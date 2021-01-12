@@ -38,7 +38,7 @@
 <!-- <script type="text/javascript" src="/_layouts/15/SP.UserProfiles.js"></script> -->
 
 <h1>WorkOrder System</h1>
-<div class="ui warning message">
+<div style="display: none" class="ui warning message">
   <div class="header">This system is currently in open beta testing</div>
   <p>
     Please report issues to:

@@ -540,13 +540,14 @@ function koviewmodel() {
   self.user = {};
 
   self.user.requestOrgMembership = ko.pureComputed(function () {
-    reqOrgIds = new Set(
-      self.configActionOffices().map(function (ao) {
-        return ao.RequestOrg.get_lookupId();
-      })
-    ).map(function (item) {
-      return item;
+    // Determine which request orgs the current user is a member of
+    var reqOrgIds = [];
+    self.userActionOfficeMembership().forEach(function (ao) {
+      if (reqOrgIds.indexOf(ao.RequestOrg.get_lookupId()) < 0) {
+        reqOrgIds.push(ao.RequestOrg.get_lookupId());
+      }
     });
+
     return self.configRequestOrgs().filter(function (reqOrg) {
       return reqOrgIds.indexOf(reqOrg.ID) >= 0;
     });
