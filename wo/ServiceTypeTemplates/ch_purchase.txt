@@ -1,0 +1,106 @@
+<script>
+  /************************************************************
+   *    List Def:
+   ************************************************************/
+  vm.listDefs.push({
+    uid: "ch_purchase",
+    name: "st_purchase",
+    title: "st_purchase",
+    viewFields: {
+      ID: { type: "Text", koMap: "empty", required: false },
+      Title: { type: "Text", koMap: "requestID", required: false },
+      ControlNum: { type: "Text", koMap: "purchaseControlNum", required: true },
+      EstExpense: { type: "Text", koMap: "purchaseEstExpense", required: true },
+      Vendor: { type: "Text", koMap: "purchaseVendor", required: true },
+      Phone: { type: "Text", koMap: "purchasePhone", required: true },
+      Email: { type: "Text", koMap: "purchaseEmail", required: true },
+      ARIBA: { type: "Text", koMap: "purchaseAriba", required: true },
+      ActualExpense: { type: "Text", koMap: "purchaseActual", required: true },
+    },
+  });
+
+  /***************************************************************
+   *    Declare Observables
+   ***************************************************************/
+  vm.purchaseControlNum = ko.observable();
+  vm.purchaseEstExpense = ko.observable();
+  vm.purchaseVendor = ko.observable();
+  vm.purchasePhone = ko.observable();
+  vm.purchaseEmail = ko.observable();
+  vm.purchaseAriba = ko.observable();
+  vm.purchaseActual = ko.observable();
+</script>
+
+<script type="text/html" id="tmpl_ch_purchase">
+  <div class="ui form">
+    <div class="two fields">
+      <div class="field">
+        <label>Purchase Control Num<span class="required">*</span>:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+                value: purchaseControlNum"
+        />
+      </div>
+      <div class="field">
+        <label>Estimated Expense<span class="required">*</span>:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+                value: purchaseEstExpense"
+        />
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label>Vendor/Company<span class="required">*</span>:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+                value: purchaseVendor"
+        />
+      </div>
+      <div class="field">
+        <label>Phone #<span class="required">*</span>:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+                value: purchasePhone"
+        />
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label>Email/Website<span class="required">*</span>:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+                value: purchaseEmail"
+        />
+      </div>
+      <div class="field">
+        <label>ARIBA/PR Number<span class="required">*</span>:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+                value: purchaseAriba"
+        />
+      </div>
+    </div>
+    <div class="eight wide field">
+      <label>Actual Amount<span class="required">*</span>:</label>
+      <input
+        class="editable-field"
+        type="text"
+        data-bind="disable: currentView() == 'view',
+              value: purchaseActual"
+      />
+    </div>
+  </div>
+</script>

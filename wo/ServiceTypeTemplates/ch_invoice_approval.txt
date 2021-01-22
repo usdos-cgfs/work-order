@@ -1,0 +1,177 @@
+<script>
+  /************************************************************
+   *    List Def:
+   ************************************************************/
+  vm.listDefs.push({
+    uid: "ch_invoice_approval",
+    name: "st_ch_invoice_approval",
+    title: "st_ch_invoice_approval",
+    viewFields: {
+      ID: { type: "Text", koMap: "empty", required: false },
+      Title: { type: "Text", koMap: "requestID", required: false },
+      Vendor: { type: "Text", koMap: "invoice_approvalVendor", required: true },
+      InvoiceNum: {
+        type: "Text",
+        koMap: "invoice_approvalInvoiceNum",
+        required: true,
+      },
+      InvoiceDate: {
+        type: "DateTime",
+        koMap: "invoice_approvalInvoiceDate",
+        required: true,
+      },
+      InvoiceAmount: {
+        type: "Text",
+        koMap: "invoice_approvalInvoiceAmount",
+        required: true,
+      },
+      Acknowledge: {
+        type: "Bool",
+        koMap: "invoice_approvalAcknowledge",
+        required: false,
+      },
+      AcknowledgeDate: {
+        type: "DateTime",
+        koMap: "invoice_approvalAcknowledgeDate",
+        required: true,
+      },
+      Allotment: {
+        type: "Text",
+        koMap: "invoice_approvalAllotment",
+        required: true,
+      },
+      ActualAmount: {
+        type: "Text",
+        koMap: "invoice_approvalActualAmount",
+        required: true,
+      },
+    },
+  });
+
+  /***************************************************************
+   *    Declare Observables
+   ***************************************************************/
+  vm.invoice_approvalVendor = ko.observable();
+  vm.invoice_approvalInvoiceNum = ko.observable();
+  vm.invoice_approvalInvoiceDate = new DateField();
+  vm.invoice_approvalInvoiceAmount = ko.observable();
+  vm.invoice_approvalAcknowledge = ko.observable();
+  vm.invoice_approvalAcknowledgeDate = new DateField();
+  vm.invoice_approvalAllotment = ko.observable();
+  vm.invoice_approvalActualAmount = ko.observable();
+</script>
+
+<script type="text/html" id="tmpl_ch_invoice_approval">
+  <div class="ui form">
+    <div class="two fields">
+      <div class="field">
+        <label>Invoice Num<span class="required">*</span>:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+                value: invoice_approvalInvoiceNum"
+        />
+      </div>
+      <div class="field">
+        <label>Invoice Amount<span class="required">*</span>:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+                value: invoice_approvalInvoiceAmount"
+        />
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label>Vendor/Company<span class="required">*</span>:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+                value: invoice_approvalVendor"
+        />
+      </div>
+      <div class="field">
+        <label>Invoice Date<span class="required">*</span>:</label>
+        <!-- ko if: currentView() == 'view' -->
+        <input
+          type="text"
+          data-bind="value: invoice_approvalInvoiceDate.dateFormat(),
+        disable: true"
+        />
+        <!-- /ko -->
+        <!-- ko if: currentView() != 'view' -->
+        <div class="ui calendar">
+          <div class="ui fill input left icon">
+            <i class="calendar icon"></i>
+            <input
+              type="text"
+              placeholder="End"
+              data-bind="dateField: invoice_approvalInvoiceDate"
+            />
+          </div>
+        </div>
+        <!-- /ko -->
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label
+          >Acknowledgement of Receipt of Supplies/Services<span class="required"
+            >*</span
+          >:</label
+        >
+        <input
+          class="editable-field"
+          type="checkbox"
+          data-bind="disable: currentView() == 'view',
+                value: invoice_approvalAcknowledge"
+        />
+      </div>
+      <div class="field">
+        <label>Acknowledgement Date<span class="required">*</span>:</label>
+        <!-- ko if: currentView() == 'view' -->
+        <input
+          type="text"
+          data-bind="value: invoice_approvalAcknowledgeDate.dateFormat(),
+        disable: true"
+        />
+        <!-- /ko -->
+        <!-- ko if: currentView() != 'view' -->
+        <div class="ui calendar">
+          <div class="ui fill input left icon">
+            <i class="calendar icon"></i>
+            <input
+              type="text"
+              placeholder="End"
+              data-bind="dateField: invoice_approvalAcknowledgeDate"
+            />
+          </div>
+        </div>
+        <!-- /ko -->
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label>Allotment/Obligation<span class="required">*</span>:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+                value: invoice_approvalAllotment"
+        />
+      </div>
+      <div class="field">
+        <label>Actual Amount Approved<span class="required">*</span>:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+              value: invoice_approvalActualAmount"
+        />
+      </div>
+    </div>
+  </div>
+</script>
