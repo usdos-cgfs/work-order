@@ -1383,6 +1383,20 @@ function koviewmodel() {
       });
   };
 
+  self.attachmentMessage = ko.pureComputed(function () {
+    var attachmentCnt = self.selectedServiceType().AttachmentsRequiredCnt;
+
+    if (!attachmentCnt) {
+      return "This service type has no required attachments.";
+    } else if (attachmentCnt > 0) {
+      return (
+        "This service type has " + attachmentCnt + " required attachments."
+      );
+    } else {
+      return "This service type has required attachments.";
+    }
+  });
+
   /************************************************************
    * Many to One - Comments
    ************************************************************/

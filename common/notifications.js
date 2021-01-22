@@ -261,7 +261,7 @@ Workorder.NewNotifications = function () {
   }
 
   function workorderClosedEmail(reason) {
-    var to = [vm.requestHeader().Author];
+    var to = [vm.requestHeader().Author, vm.requestor.lookupUser()];
     var toString = [];
 
     var pipelineAssignees = workorderPipelineAssignees();

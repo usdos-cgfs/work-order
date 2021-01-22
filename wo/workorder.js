@@ -123,6 +123,7 @@ function newWorkOrder() {
   vm.requestActions([]);
   vm.requestApprovals([]);
   vm.requestAttachments([]);
+  vm.request.dateRanges.all([]);
   //vm.requestAssignees([]);
   vm.requestAssignments([]);
   vm.requestComments([]);
@@ -218,6 +219,9 @@ function viewWorkOrderItem(woID) {
     fetchComments(function () {
       console.log("comments fetched");
     });
+
+    /* Check if we have DateRanges */
+    fetchDateRanges(function () {});
 
     /* Fetch the associated service type items */
     if (vm.selectedServiceType().listDef) {
@@ -547,13 +551,17 @@ function ensureAttachments() {
 function validateRequest() {
   if (vm.selectedServiceType().SupervisorRequired) {
     // Check if we have a supervisor
-    var supervisor = vm.requestorSupervisor.user() ? true : false;
-    vm.requestIsSaveable(supervisor);
-    if (!supervisor) {
+    var supervisorAttached = vm.requestorSupervisor.user() ? true : false;
+    vm.requestIsSaveable(supervisorAttached);
+    if (!supervisorAttached) {
       alert(
         "This request has not been saved. Requestor Supervisor is required."
       );
     }
+  }
+
+  if (vm.selectedServiceType().validate) {
+    vm.selectedServiceType().validate();
   }
   ensureAttachments();
 }

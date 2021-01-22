@@ -4,10 +4,10 @@
 
 <script type="text/html" id="template_dateranges">
   <div>
-    <h3 data-bind="text: name"></h3>
     <table class="ui very basic table">
       <thead>
         <tr>
+          <th>#</th>
           <th>Start</th>
           <th>End</th>
           <th>Label</th>
@@ -17,22 +17,24 @@
       <tbody data-bind="">
         <!-- ko foreach: $data.dateRanges -->
         <tr>
+          <td data-bind="text: $index"></td>
           <td data-bind="text: StartDateTime.toLocaleString()"></td>
           <td data-bind="text: EndDateTime.toLocaleString()"></td>
           <td data-bind="text: Label"></td>
           <td data-bind="click: deleteDateRange.bind($data)">
-            <!-- ko if: $root.currentView != 'view' -->
+            <!-- ko if: $root.currentView() != 'view' -->
             <span class="fas fa-trash pointer"></span>
             <!-- /ko -->
           </td>
         </tr>
         <!-- /ko -->
-        <!-- ko if: $root.currentView != 'view' -->
+        <!-- ko if: $root.currentView() != 'view' -->
         <tr>
+          <td></td>
           <td>
             <div class="field">
               <div class="ui calendar">
-                <div class="ui  input left icon">
+                <div class="ui fill input left icon">
                   <i class="calendar icon"></i>
                   <input
                     type="text"
@@ -46,7 +48,7 @@
           <td>
             <div class="field">
               <div class="ui calendar">
-                <div class="ui  input left icon">
+                <div class="ui fill input left icon">
                   <i class="calendar icon"></i>
                   <input
                     type="text"
@@ -58,8 +60,9 @@
             </div>
           </td>
           <td>
-            <div class="ui field">
+            <div class="ui input fill field">
               <input
+                class="ui input fill"
                 type="text"
                 placeholder="Label (optional)..."
                 data-bind="value: $data.new.label"
@@ -69,10 +72,10 @@
           <td>
             <button
               type="button"
-              class="ui primary button"
+              class="ui green button"
               data-bind="click: $data.new.save"
             >
-              Save
+              Add <i class="fas fa-plus"></i>
             </button>
           </td>
         </tr>

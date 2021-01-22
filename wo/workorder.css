@@ -255,3 +255,7 @@ textarea {
 .ui.form {
   padding-top: 5px;
 }
+
+.ui.input.fill {
+  min-width: 100%;
+}

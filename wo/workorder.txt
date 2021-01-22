@@ -811,17 +811,7 @@
                  'warning' : 'info'"
                 class="ui message"
               >
-                <div>
-                  This service type has
-                  <span
-                    data-bind="visible: selectedServiceType().AttachmentsRequiredCnt, 
-                    text: 
-                     selectedServiceType().AttachmentsRequiredCnt >= 0 ?
-                     ' ' + selectedServiceType().AttachmentsRequiredCnt  + ' ':
-                     ''"
-                  ></span>
-                  required attachments.
-                </div>
+                <div data-bind="text: attachmentMessage"></div>
               </div>
               <div
                 id="instr-attachments"
