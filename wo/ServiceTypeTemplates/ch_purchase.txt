@@ -4,8 +4,8 @@
    ************************************************************/
   vm.listDefs.push({
     uid: "ch_purchase",
-    name: "st_purchase",
-    title: "st_purchase",
+    name: "st_ch_purchase",
+    title: "st_ch_purchase",
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },

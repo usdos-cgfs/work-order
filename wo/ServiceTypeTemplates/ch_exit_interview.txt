@@ -4,8 +4,8 @@
    ************************************************************/
   vm.listDefs.push({
     uid: "ch_exit_interview",
-    name: "st_exit_interview",
-    title: "st_exit_interview",
+    name: "st_ch_exit_interview",
+    title: "st_ch_exit_interview",
     viewFields: {
       ID: { type: "Text", koMap: "empty" },
       Title: { type: "Text", koMap: "requestID" },
