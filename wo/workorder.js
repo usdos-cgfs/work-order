@@ -255,18 +255,15 @@ function viewServiceTypeItem() {
       } else {
         timedNotification("Warning: couldn't find Service Type Info");
       }
-      if (vm.selectedServiceType().HasDateRanges) {
-        // This utilizes the date ranges list, we'll need to query that as well.
-        vm.listRefDateRanges().getListItems(
-          serviceTypeCaml,
-          function (dateRanges) {
-            vm.request.dateRanges(dateRanges);
-            onViewWorkOrderItemComplete();
-          }
-        );
-      } else {
-        onViewWorkOrderItemComplete();
-      }
+
+      // This utilizes the date ranges list, we'll need to query that as well.
+      vm.listRefDateRanges().getListItems(
+        serviceTypeCaml,
+        function (dateRanges) {
+          vm.request.dateRanges(dateRanges);
+          onViewWorkOrderItemComplete();
+        }
+      );
     }
   );
 }
@@ -278,17 +275,25 @@ function onViewWorkOrderItemComplete() {
   SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
 
-function actionComplete() {
-  // Progress to the next stage
-  SP.UI.ModalDialog.showWaitScreenWithNoClose(
-    "Progressing to Next Stage",
-    "Please wait..."
-  );
-  // TODO: Anything that needs to be closed out before we enter the next stage
-
-  // Enter the next stage, close if necessary.
-  pipelineForward();
+function showAdvancePrompt() {
+  $("#prompt-advance").modal("show");
 }
+
+function dismissAdvancePrompt() {
+  $("#prompt-advance").modal("hide");
+}
+
+// function advanceRequest() {
+//   // Progress to the next stage
+//   SP.UI.ModalDialog.showWaitScreenWithNoClose(
+//     "Progressing to Next Stage",
+//     "Please wait..."
+//   );
+//   // TODO: Anything that needs to be closed out before we enter the next stage
+
+//   // Enter the next stage, close if necessary.
+//   pipelineForward();
+// }
 
 function editWorkOrder() {
   //make the editable fields editable.
@@ -1298,6 +1303,13 @@ function deleteDateRange(dateRange) {
  * new ConfigPipeline stage.
  */
 function pipelineForward() {
+  dismissAdvancePrompt();
+
+  SP.UI.ModalDialog.showWaitScreenWithNoClose(
+    "Progressing to Next Stage",
+    "Please wait..."
+  );
+
   var valuePairs = new Array();
 
   /* Increment the current request stage num */

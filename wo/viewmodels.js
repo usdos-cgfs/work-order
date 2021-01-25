@@ -272,7 +272,6 @@ var configServiceTypeListDef = {
     DescriptionRequired: { type: "Bool", koMap: "empty" },
     DescriptionTitle: { type: "Bool", koMap: "empty" },
     DaysToCloseBusiness: { type: "Text", koMap: "empty" },
-    HasDateRanges: { type: "Bool", koMap: "empty" },
     ReminderDays: { type: "Text", koMap: "empty" },
     KPIThresholdYellow: { type: "Text", koMap: "empty" },
     KPIThresholdGreen: { type: "Text", koMap: "empty" },
@@ -761,7 +760,7 @@ function koviewmodel() {
               return !assignment.IsActive;
             })
           ) {
-            actionComplete();
+            showAdvancePrompt();
           }
         }
       });
@@ -841,6 +840,28 @@ function koviewmodel() {
   /************************************************************
    * ADMIN: Advance
    ************************************************************/
+
+  self.promptAdvanceMessage = ko.pureComputed(function () {
+    // Check if we have any open assignments or if we can just
+    // advance.
+    var openAssignments = self
+      .requestAssignments()
+      .filter(function (assignment) {
+        return assignment.IsActive;
+      });
+
+    if (openAssignments.length > 0) {
+      return (
+        "This request still has " +
+        openAssignments.length +
+        " open assignments.\n" +
+        "Are you sure you wish to continue?"
+      );
+    } else {
+      return "This request has no open assignments. \n";
+    }
+  });
+
   self.requestCurUserAdvance = ko.pureComputed(function () {
     if (self.requestStage() && self.requestStage().Title != "Closed") {
       if (self.userIsSysAdmin()) {
