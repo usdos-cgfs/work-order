@@ -854,7 +854,7 @@ function koviewmodel() {
       return (
         "This request still has " +
         openAssignments.length +
-        " open assignments.\n" +
+        " open assignments.\n\n" +
         "Are you sure you wish to continue?"
       );
     } else {
