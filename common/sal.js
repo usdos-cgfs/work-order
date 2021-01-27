@@ -292,6 +292,27 @@ function ensureUser(userName, callback) {
   );
 }
 
+function ensureUserById(userId, callback) {
+  var context = new SP.ClientContext.get_current();
+  var user = context.get_web().getUserById(userId);
+
+  function onRequestSuccess() {
+    callback(user);
+    var loginName = user.get_loginName();
+  }
+
+  function onRequestFail(sender, args) {
+    alert("error msg");
+  }
+  data = { user: user, callback: callback };
+
+  context.load(user);
+  context.executeQueryAsync(
+    Function.createDelegate(data, onRequestSuccess),
+    Function.createDelegate(data, onRequestFail)
+  );
+}
+
 ensureUserRest = function (userName) {
   userName = userName === undefined ? "i:0#.w|cgfs\backlundpf" : userName;
 

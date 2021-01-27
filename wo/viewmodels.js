@@ -335,22 +335,25 @@ function PeopleField() {
           var user = {};
           switch (value.constructor.getName()) {
             case "SP.FieldUserValue":
-              user.ID = value.get_lookupId();
-              user.userName = value.get_lookupValue();
-              user.title = "";
+              ensureUserById(value.get_lookupId(), function (ensuredUser) {
+                user.ID = ensuredUser.get_id();
+                user.userName = ensuredUser.get_loginName();
+                user.title = ensuredUser.get_title();
+                user.isEnsured = true;
+                self.user(user);
+                self.lookupUser(value);
+              });
               break;
             case "SP.User":
               user.ID = value.get_id();
               user.userName = value.get_loginName();
               user.title = value.get_title();
+              user.isEnsured = false;
+              self.user(user);
+              self.lookupUser(value);
               break;
             default:
               break;
-          }
-          if (!$.isEmptyObject(user)) {
-            user.isEnsured = false;
-            self.user(user);
-            self.lookupUser(value);
           }
         }
       },
@@ -2098,7 +2101,7 @@ ko.bindingHandlers.people = {
         });
       }
       //observable(pickerElement.GetControlValueAsJSObject()[0]);
-      console.log(JSON.stringify(pickerElement.GetControlValueAsJSObject()[0]));
+      //console.log(JSON.stringify(pickerElement.GetControlValueAsJSObject()[0]));
     };
 
     //  TODO: You can provide schema settings as options

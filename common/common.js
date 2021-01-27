@@ -32,15 +32,45 @@ function InitCommon() {
 
 Workorder.Common.NewUtilities = function () {
   var queries = {};
-  queries.itemsById =
-    '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
-    '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
-    '</Eq><Eq><FieldRef Name="Title"/><Value Type="Text">' +
-    vm.requestID() +
-    "</Value></Eq></And></Where></Query></View>";
+  queries.itemsByTitle = function (title) {
+    return (
+      '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
+      '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
+      '</Eq><Eq><FieldRef Name="Title"/><Value Type="Text">' +
+      title +
+      "</Value></Eq></And></Where></Query></View>"
+    );
+  };
+
+  function peoplePickerIsEmpty(id) {
+    var pickerControl =
+      SPClientPeoplePicker.SPClientPeoplePickerDict[id + "_TopSpan"];
+    var editId = "#" + pickerControl.EditorElementId;
+    jQuery(editId).val(userName);
+
+    // Resolve the User
+    return pickerControl.HasResolvedUsers();
+  }
+
+  function setPeoplePicker(id, userName) {
+    var pickerControl =
+      SPClientPeoplePicker.SPClientPeoplePickerDict[id + "_TopSpan"];
+
+    // Check if this has been set, if so, remove
+    if (pickerControl.HasResolvedUsers()) {
+      pickerControl.DeleteProcessedUser();
+    }
+    var editId = "#" + pickerControl.EditorElementId;
+    jQuery(editId).val(userName);
+
+    // Resolve the User
+    pickerControl.AddUnresolvedUserFromEditor(true);
+  }
 
   publicMembers = {
     queries: queries,
+    peoplePickerIsEmpty: peoplePickerIsEmpty,
+    setPeoplePicker: setPeoplePicker,
   };
 
   return publicMembers;

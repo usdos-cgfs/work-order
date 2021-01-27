@@ -6,7 +6,12 @@ tabsEnum = {
   "#order-detail": 4,
 };
 
-var dialog = {};
+var dialog = {
+  close: function (dialog) {
+    dialog.close();
+    $(".ms-dlgOverlay").hide();
+  },
+};
 var time = {};
 
 function initStaticListRefs() {
@@ -79,10 +84,13 @@ function newWorkOrder() {
   vm.requestID(new Date().getTime());
   updateUrlParam("reqid", vm.requestID());
 
-  //vm.requestorName(sal.globalConfig.currentUser.get_title());
-  if ($.isEmptyObject(vm.requestor.user())) {
-    vm.requestor.userId(sal.globalConfig.currentUser);
-  }
+  // Check if we have a current requestor
+  Workorder.Common.Utilities.setPeoplePicker(
+    "peoplerequestor",
+    sal.globalConfig.currentUser.get_loginName()
+  );
+
+  //Get the current users phone
   if (sal.globalConfig.currentUserProfile) {
     vm.requestorTelephone(
       sal.globalConfig.currentUserProfile.UserProfileProperties.results.find(
@@ -131,7 +139,9 @@ function newWorkOrder() {
 
 function refreshWorkOrderItem(woID, callback) {
   callback = callback === undefined ? null : callback;
-  SP.UI.ModalDialog.showWaitScreenWithNoClose("Refreshing Work Order...");
+  dialog.refresh = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+    "Refreshing Work Order..."
+  );
   var camlq =
     '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
     '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
@@ -171,12 +181,19 @@ function refreshWorkOrderItem(woID, callback) {
         if (callback) {
           callback();
         }
+        dialog.close(dialog.refresh);
       });
+    } else {
+      dialog.close(dialog.refresh);
     }
   });
 }
 
 function viewWorkOrderItem(woID) {
+  dialog.view = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+    "Viewing Request...",
+    "ID: " + woID
+  );
   // Set the tab to detail view
   //$('.ui.menu').find('.item').tab('change tab', 'order-detail');
 
@@ -190,6 +207,7 @@ function viewWorkOrderItem(woID) {
     // Clear urlparam
     updateUrlParam("reqid", "");
     vm.tab("my-orders");
+    dialog.close(dialog.view);
   } else {
     vm.requestID(woID);
     vm.tab("order-detail");
@@ -260,7 +278,7 @@ function viewServiceTypeItem() {
       vm.listRefDateRanges().getListItems(
         serviceTypeCaml,
         function (dateRanges) {
-          vm.request.dateRanges(dateRanges);
+          vm.request.dateRanges.all(dateRanges);
           onViewWorkOrderItemComplete();
         }
       );
@@ -272,7 +290,7 @@ function onViewWorkOrderItemComplete() {
   vm.requestLoaded(new Date());
   vm.tab("order-detail");
   vm.currentView("view");
-  SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+  dialog.close(dialog.view);
 }
 
 function showAdvancePrompt() {
@@ -308,7 +326,7 @@ function saveWorkOrder() {
         Saving edits to an already existing document
         Saving a new document
     */
-  SP.UI.ModalDialog.showWaitScreenWithNoClose(
+  dialog.save = SP.UI.ModalDialog.showWaitScreenWithNoClose(
     "Saving Work Order...",
     "Please wait..."
   );
@@ -369,7 +387,7 @@ function saveWorkOrder() {
         break;
     }
   } else {
-    SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+    dialog.close(dialog.save);
   }
 }
 
@@ -461,13 +479,13 @@ function onSaveNewWorkOrderMaster(id) {
   refreshWorkOrderItem(vm.requestID(), function () {
     pipelineForward();
   });
-  SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+  dialog.close(dialog.save);
 }
 
 function onSaveEditWorkOrderCallback(val) {
   console.log("callback val: ", val);
   refreshWorkOrderItem(vm.requestID());
-  SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+  dialog.close(dialog.save);
 }
 
 function breakingPermissionsTimeoutFunc() {
@@ -478,7 +496,7 @@ function breakingPermissionsTimeoutFunc() {
       "report it to cgfssharepoint@state.gov."
   );
   Workorder.Notifications.breakingPermissionsTimeout();
-  SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+  dialog.close(dialog.save);
 }
 
 function createWorkorderFolders() {
@@ -1098,7 +1116,9 @@ function fetchApprovals(callback) {
 function newApprovalCallback(result, value) {
   console.log("approval callback: " + result, value);
   if (result === SP.UI.DialogResult.OK) {
-    SP.UI.ModalDialog.showWaitScreenWithNoClose("Saving Work Order...");
+    dialog.approve = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+      "Approving Work Order..."
+    );
     $(".admin-action-zone").hide();
     console.log(value);
     fetchApprovals(function () {
@@ -1118,7 +1138,7 @@ function newApprovalCallback(result, value) {
           //Something went wrong
           alert(":(");
       }
-      SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+      dialog.close(dialog.approve);
     });
   }
 }
@@ -1168,11 +1188,13 @@ function fetchActions(callback) {
 function newActionCallback(result, value) {
   console.log("Action callback: " + result, value);
   if (result === SP.UI.DialogResult.OK) {
-    SP.UI.ModalDialog.showWaitScreenWithNoClose("Refreshing Actions List...");
+    dialog.newAction = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+      "Refreshing Actions List..."
+    );
     //$(".admin-action-zone").hide();
     console.log(value);
     fetchActions(function () {
-      SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+      dialog.close(dialog.newAction);
       // Let's branch based on whether the last approval was approve or reject.
       console.log("actions fetched");
     });
@@ -1198,7 +1220,7 @@ function newCommentCallback(result, value) {
     $(".admin-action-zone").hide();
     console.log(value);
     fetchComments(function () {
-      SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+      dialog.close(dialog.newComment);
       // Let's branch based on whether the last approval was approve or reject.
       console.log("comments fetched");
     });
@@ -1207,7 +1229,9 @@ function newCommentCallback(result, value) {
 
 function submitComment() {
   if (vm.commentNew()) {
-    SP.UI.ModalDialog.showWaitScreenWithNoClose("Submitting Comment...");
+    dialog.newComment = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+      "Submitting Comment..."
+    );
     vm.listRefComment().upsertListFolderPath(
       vm.requestFolderPath(),
       function (folderId) {
@@ -1305,7 +1329,7 @@ function deleteDateRange(dateRange) {
 function pipelineForward() {
   dismissAdvancePrompt();
 
-  SP.UI.ModalDialog.showWaitScreenWithNoClose(
+  dialog.pipeline = SP.UI.ModalDialog.showWaitScreenWithNoClose(
     "Progressing to Next Stage",
     "Please wait..."
   );
@@ -1360,7 +1384,7 @@ function pipelineForward() {
               vm.requestStage().Title
           );
         }
-        SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+        dialog.close(dialog.pipeline);
       }
     );
   }
@@ -1420,13 +1444,18 @@ function pipelineNotifications() {
 }
 
 function cancelWorkOrder() {
-  SP.UI.ModalDialog.showWaitScreenWithNoClose("Cancelling Request...");
   closeWorkOrder("Cancelled");
 }
 
 function closeWorkOrder(reason) {
   var statusClosed = configPipelinesListDef.viewFields.ActionType.opts.Closed;
   var reason = reason === undefined ? statusClosed : reason;
+
+  dialog.closing = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+    "Closing Request...",
+    reason
+  );
+
   var vp = [
     ["RequestStatus", reason],
     ["RequestStage", "10"],
@@ -1446,11 +1475,15 @@ function closeWorkOrder(reason) {
         reason +
         " the request"
     );
+    dialog.close(dialog.closing);
     lockRequest(vm.requestID());
   });
 }
 
 function lockRequest(woID) {
+  dialog.lock = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+    "Locking Request..."
+  );
   // Put the request into read only mode
   var listRefs = [
     vm.listRefWO(),
@@ -1466,7 +1499,7 @@ function lockRequest(woID) {
   }
 
   var incrementer = new Incremental(0, listRefs.length, function () {
-    SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+    dialog.close(dialog.lock);
     refreshWorkOrderItem(vm.requestID());
   });
 
@@ -1481,27 +1514,31 @@ function lockRequest(woID) {
 
   listRefs.forEach(function (list) {
     list.getListItems(camlq, function (items) {
-      var item = items[0];
-      list.getItemPermissions(item.ID, function (logins) {
-        console.log("success", logins);
-        var vp = logins.map(function (login) {
-          return [login, "Restricted Read"];
+      if (items[0]) {
+        var item = items[0];
+        list.getItemPermissions(item.ID, function (logins) {
+          console.log("success", logins);
+          var vp = logins.map(function (login) {
+            return [login, "Restricted Read"];
+          });
+          list.setItemPermissions(
+            item.ID,
+            vp,
+            function () {
+              console.log(
+                "Updated item perms " +
+                  list.config.def.name +
+                  " " +
+                  incrementer.val()
+              );
+              incrementer.inc();
+            },
+            true
+          );
         });
-        list.setItemPermissions(
-          item.ID,
-          vp,
-          function () {
-            console.log(
-              "Updated item perms " +
-                list.config.def.name +
-                " " +
-                incrementer.val()
-            );
-            incrementer.inc();
-          },
-          true
-        );
-      });
+      } else {
+        incrementer.inc();
+      }
     });
   });
 }
@@ -1522,6 +1559,9 @@ function initApp() {
 
   // Initialize our SharePoint Access Layer
   var ini = initSal();
+
+  //init our common utilities
+  InitCommon();
 
   // Initialize ViewModel
   vm = new koviewmodel();
@@ -1657,7 +1697,7 @@ function initComplete() {
     InitReport();
   }
   */
-  dialog.init.close();
+  dialog.close(dialog.init);
   vm.timers.initComplete(new Date());
   //SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
