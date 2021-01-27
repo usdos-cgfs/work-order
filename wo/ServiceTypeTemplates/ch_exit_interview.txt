@@ -21,7 +21,7 @@
       },
       Reason: { type: "Text", koMap: "exit_interviewReason", required: false },
       PreferredDate: {
-        type: "Text",
+        type: "DateTime",
         koMap: "exit_interviewPreferredDate",
         required: true,
       },
@@ -52,7 +52,7 @@
     "Retirement",
   ]);
 
-  vm.exit_interviewPreferredDate = ko.observable();
+  vm.exit_interviewPreferredDate = new DateField({ minTimeGap: 15 });
 
   vm.exit_interviewLastDay = new DateField();
 
@@ -101,12 +101,25 @@
     <div class="two fields">
       <div class="eight wide field">
         <label>Preferred Date/Time<span class="required">*</span>:</label>
+        <!-- ko if: currentView() == 'view' -->
         <input
-          class="editable-field"
           type="text"
-          data-bind="disable: currentView() == 'view',
-                value: exit_interviewPreferredDate"
+          data-bind="value: exit_interviewPreferredDate.dateFormat(),
+        disable: true"
         />
+        <!-- /ko -->
+        <!-- ko if: currentView() != 'view' -->
+        <div class="ui calendar">
+          <div class="ui fill input left icon">
+            <i class="calendar icon"></i>
+            <input
+              type="text"
+              placeholder="End"
+              data-bind="dateField: exit_interviewPreferredDate"
+            />
+          </div>
+        </div>
+        <!-- /ko -->
       </div>
       <div class="eight wide field">
         <label>Last Day<span class="required">*</span>:</label>

@@ -1341,6 +1341,7 @@ function pipelineForward() {
   if (t > vm.selectedPipeline().length) {
     // vm.requestStatus("Closed");
     // valuePairs.push(["RequestStatus", "Closed"]);
+    dialog.close(dialog.pipeline);
     closeWorkOrder();
   } else {
     /*
