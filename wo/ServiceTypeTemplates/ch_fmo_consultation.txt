@@ -70,93 +70,93 @@
               value: fmo_consultationPosition"
         />
       </div>
-      <div class="two fields">
-        <div class="field">
-          <label>CGFS Office Provider<span class="required">*</span>:</label>
-          <select
-            class="editable-field"
-            type="text"
-            data-bind="disable: currentView() == 'view',
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label>CGFS Office Provider<span class="required">*</span>:</label>
+        <select
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
               value: fmo_consultationOfficeType,
               options: fmo_consultationOfficeTypeOpts, optionsCaption: 'Select...',"
-          ></select>
-        </div>
-        <div class="field">
-          <label>Time Zone<span class="required">*</span>:</label>
-          <input
-            class="editable-field"
-            type="text"
-            data-bind="disable: currentView() == 'view',
+        ></select>
+      </div>
+      <div class="field">
+        <label>Time Zone<span class="required">*</span>:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
               value: fmo_consultationTimeZone"
+        />
+      </div>
+    </div>
+    <div class="eight wide field">
+      <label>Requested Date (1)<span class="required">*</span>:</label>
+      <!-- ko if: currentView() == 'view' -->
+      <input
+        type="text"
+        data-bind="value: fmo_consultationReqDate1.dateFormat(),
+          disable: true"
+      />
+      <!-- /ko -->
+      <!-- ko if: currentView() != 'view' -->
+      <div class="ui calendar">
+        <div class="ui fill input left icon">
+          <i class="calendar icon"></i>
+          <input
+            type="text"
+            placeholder="Date 1"
+            data-bind="dateField: fmo_consultationReqDate1"
           />
         </div>
       </div>
-      <div class="eight wide field">
-        <label>Requested Date (1)<span class="required">*</span>:</label>
-        <!-- ko if: currentView() == 'view' -->
-        <input
-          type="text"
-          data-bind="value: fmo_consultationReqDate1.dateFormat(),
+      <!-- /ko -->
+    </div>
+    <div class="eight wide field">
+      <label>Requested Date (2)<span class="required">*</span>:</label>
+      <!-- ko if: currentView() == 'view' -->
+      <input
+        type="text"
+        data-bind="value: fmo_consultationReqDate2.dateFormat(),
           disable: true"
-        />
-        <!-- /ko -->
-        <!-- ko if: currentView() != 'view' -->
-        <div class="ui calendar">
-          <div class="ui fill input left icon">
-            <i class="calendar icon"></i>
-            <input
-              type="text"
-              placeholder="End"
-              data-bind="dateField: fmo_consultationReqDate1"
-            />
-          </div>
+      />
+      <!-- /ko -->
+      <!-- ko if: currentView() != 'view' -->
+      <div class="ui calendar">
+        <div class="ui fill input left icon">
+          <i class="calendar icon"></i>
+          <input
+            type="text"
+            placeholder="Date 2"
+            data-bind="dateField: fmo_consultationReqDate2"
+          />
         </div>
-        <!-- /ko -->
       </div>
-      <div class="eight wide field">
-        <label>Requested Date (2)<span class="required">*</span>:</label>
-        <!-- ko if: currentView() == 'view' -->
-        <input
-          type="text"
-          data-bind="value: fmo_consultationReqDate2.dateFormat(),
+      <!-- /ko -->
+    </div>
+    <div class="eight wide field">
+      <label>Requested Date (3)<span class="required">*</span>:</label>
+      <!-- ko if: currentView() == 'view' -->
+      <input
+        type="text"
+        data-bind="value: fmo_consultationReqDate3.dateFormat(),
           disable: true"
-        />
-        <!-- /ko -->
-        <!-- ko if: currentView() != 'view' -->
-        <div class="ui calendar">
-          <div class="ui fill input left icon">
-            <i class="calendar icon"></i>
-            <input
-              type="text"
-              placeholder="End"
-              data-bind="dateField: fmo_consultationReqDate2"
-            />
-          </div>
+      />
+      <!-- /ko -->
+      <!-- ko if: currentView() != 'view' -->
+      <div class="ui calendar">
+        <div class="ui fill input left icon">
+          <i class="calendar icon"></i>
+          <input
+            type="text"
+            placeholder="Date 3"
+            data-bind="dateField: fmo_consultationReqDate3"
+          />
         </div>
-        <!-- /ko -->
       </div>
-      <div class="eight wide field">
-        <label>Requested Date (3)<span class="required">*</span>:</label>
-        <!-- ko if: currentView() == 'view' -->
-        <input
-          type="text"
-          data-bind="value: fmo_consultationReqDate3.dateFormat(),
-          disable: true"
-        />
-        <!-- /ko -->
-        <!-- ko if: currentView() != 'view' -->
-        <div class="ui calendar">
-          <div class="ui fill input left icon">
-            <i class="calendar icon"></i>
-            <input
-              type="text"
-              placeholder="End"
-              data-bind="dateField: fmo_consultationReqDate3"
-            />
-          </div>
-        </div>
-        <!-- /ko -->
-      </div>
+      <!-- /ko -->
     </div>
   </div>
 </script>

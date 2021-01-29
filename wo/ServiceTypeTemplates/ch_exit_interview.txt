@@ -104,7 +104,7 @@
         <!-- ko if: currentView() == 'view' -->
         <input
           type="text"
-          data-bind="value: exit_interviewPreferredDate.dateFormat(),
+          data-bind="value: exit_interviewPreferredDate.date().toLocaleString(),
         disable: true"
         />
         <!-- /ko -->
@@ -126,7 +126,7 @@
         <!-- ko if: currentView() == 'view' -->
         <input
           type="text"
-          data-bind="value: exit_interviewLastDay.dateFormat(),
+          data-bind="value: exit_interviewLastDay.date().toLocaleDateString(),
         disable: true"
         />
         <!-- /ko -->

@@ -376,6 +376,7 @@ function DateField(newOpts, newDate) {
   var self = this;
   this.opts = newOpts; // These are the options sent to the datepicker
   this.format = "yyyy-MM-dd"; // This is how this will be
+
   this.date = ko.observable(newDate);
   this.dateFormat = ko.pureComputed({
     read: function () {
