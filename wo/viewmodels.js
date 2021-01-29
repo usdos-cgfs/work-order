@@ -856,13 +856,16 @@ function koviewmodel() {
 
     if (openAssignments.length > 0) {
       return (
-        "This request still has " +
+        "<p>This request still has " +
         openAssignments.length +
-        " open assignments.\n\n" +
-        "Are you sure you wish to continue?"
+        " open assignments.</p>" +
+        "<p>Are you sure you wish to continue?</p>"
       );
     } else {
-      return "This request has no open assignments. \n";
+      return (
+        "<p>All the required actions have been completed for current stage.</p>" +
+        "<p> This request is ready to be advanced.</p>"
+      );
     }
   });
 

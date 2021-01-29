@@ -499,22 +499,22 @@
       </div>
     </div>
     <div id="prompt-advance" class="ui modal" style="display: none">
-      <div class="header">Request is Ready to Advance</div>
+      <div class="header">Advance Request to Next Stage</div>
       <div class="content">
-        <p data-bind="text: promptAdvanceMessage">
+        <div data-bind="html: promptAdvanceMessage">
           All required actions completed for this stage.
-        </p>
-        <div class="actions">
-          <div class="ui red deny button" onclick="dismissAdvancePrompt()">
-            Cancel
-          </div>
-          <div
-            class="ui positive right labeled icon button"
-            onclick="newWorkOrder()"
-          >
-            Advance
-            <i class="icon angle right"></i>
-          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <div class="ui red deny button" onclick="dismissAdvancePrompt()">
+          Cancel
+        </div>
+        <div
+          class="ui positive right labeled icon button"
+          onclick="pipelinForward()"
+        >
+          Advance
+          <i class="icon angle right"></i>
         </div>
       </div>
     </div>
