@@ -284,6 +284,19 @@ var configServiceTypeListDef = {
   },
 };
 
+var appBusyStates = {
+  init: "Initializing the Application",
+  save: "Saving Request...",
+  view: "Viewing Request...",
+  refresh: "Refreshing Request...",
+  lock: "Locking Request...",
+  closing: "Closing Request...",
+  pipeline: "Progressing to Next Stage...",
+  newComment: "Refreshing Comments...",
+  newAction: "Refreshing Actions...",
+  approve: "Approving Request...",
+};
+
 function Incremental(entry, target, next) {
   var entry = entry === undefined ? 0 : entry;
   var target = target === undefined ? null : target;
@@ -463,6 +476,114 @@ function koviewmodel() {
     // Whatever page we're on, now is the time to init our local app
     if (state && typeof initAppPage === typeof Function) {
       initAppPage();
+    }
+  });
+
+  // todo fix me this is going to break
+
+  //
+  self.busy = {};
+  self.busy.addTask = function (task) {
+    newTask = {
+      id: Math.floor(Math.random() * 100000 + 1),
+      task: task,
+      active: ko.observable(true),
+    };
+
+    newTask.timeout = window.setTimeout(function () {
+      console.error("this task is aging:", newTask);
+      alert(
+        "Something seems to have gone wrong performing the following action: " +
+          newTask.task
+      );
+    }, 5000);
+    vm.busy.tasks.push(newTask);
+  };
+  self.busy.finishTask = function (task) {
+    let activeTask = vm.busy.tasks().find(function (taskItem) {
+      return taskItem.task == task && taskItem.active();
+    });
+    if (activeTask) {
+      window.clearTimeout(activeTask.timeout);
+      activeTask.active(false);
+      window.setTimeout(function () {
+        vm.busy.removeTask(activeTask);
+      }, 1000);
+    }
+  };
+  self.busy.removeTask = function (taskToRemove) {
+    self.busy.tasks(
+      self.busy.tasks().filter(function (task) {
+        return task.id != taskToRemove.id;
+      })
+    );
+  };
+  self.busy.tasks = ko.observableArray();
+
+  self.busy.tasks.subscribe(function (tasks) {
+    // debugger;
+  });
+  //   console.log("task subscriber ", tasks);
+  //   if (tasks.length === 0 && self.busy.dialog.isActive()) {
+  //     vm.busy.dialog.modal().close();
+  //     vm.busy.dialog.isActive(false);
+  //   } else if (tasks.length > 0) {
+  //     var e = document.getElementById("busy-message");
+  //     var options = {
+  //       title: "My Dialog Title",
+  //       width: 400,
+  //       height: 300,
+  //       html: e,
+  //     };
+  //     vm.busy.dialog.modal(SP.UI.ModalDialog.showModalDialog(options));
+  //     vm.busy.dialog.isActive(true);
+  //   }
+  // });
+
+  self.busy.dialog = {
+    modal: ko.observable(),
+    isActive: ko.observable(),
+  };
+  self.busy.timeout = ko.observable();
+
+  self.busy.message = ko.observable();
+
+  self.busy.message.subscribe(function (newVal) {
+    // Always set the html
+    var element = $("#busy-message");
+    element.html(newVal);
+
+    if (!newVal) {
+      // if html is cleared, start timeout for message
+      vm.busy.timeout(
+        window.setTimeout(function () {
+          // Dismiss our message
+          vm.busy.dialog().close();
+          $(".ms-dlgOverlay").hide();
+          vm.busy.dialogIsActive(false);
+        }, 2000)
+      );
+    } else if (vm.busy.dialogIsActive()) {
+      window.clearTimeout(vm.busy.timeout());
+      var element = $("#busy-message");
+      if (!element.html()) {
+        $("#busy-message").html(message);
+      }
+    } else {
+      var e = document.getElementById("busy-message");
+      var options = {
+        title: "My Dialog Title",
+        width: 400,
+        height: 300,
+        html: e,
+      };
+      SP.UI.ModalDialog.showModalDialog(options);
+      vm.busy.dialog(
+        SP.UI.ModalDialog.showWaitScreenWithNoClose(
+          "Saving Work Order...",
+          newVal
+        )
+      );
     }
   });
 
@@ -1638,37 +1759,22 @@ function koviewmodel() {
     return self.requestorOffice().Title + "/" + self.requestID();
   });
 
-  self.foldersToCreate = ko.observable();
-  self.foldersCreated = ko.observable();
-  self.foldersCreatedInc = function () {
-    self.foldersCreated(self.foldersCreated() + 1);
-  };
-  self.foldersCreated.subscribe(function (numCreated) {
-    // We'll create the attachments folder when they click upload.
-    // We'll create the comments folder when they click submit.
-    // Otherwise, we'll pre-create the following:
-    // Workorder, Action, Assignment, Emails
-    var NUM_LIST_FOLDERS = 4;
-    var NUM_LIB_FOLDERS = 0;
-    var NUM_ST_FOLDERS = self.requestSvcTypeListBool() ? 1 : 0;
-
-    var TOTAL_FOLDERS_TO_CREATE =
-      NUM_LIB_FOLDERS + NUM_LIST_FOLDERS + NUM_ST_FOLDERS;
-
-    if (numCreated == TOTAL_FOLDERS_TO_CREATE) {
-      createNewWorkorderItems();
-    }
-  });
-
   self.requestFolderPerms = ko.pureComputed(function () {
     //These offices do not share info among all members
     var restrictedRequestingOffices = ["CGFS"];
 
     var folderPermissions = [
-      [vm.requestor.user().userName, "Restricted Contribute"],
       ["workorder Owners", "Full Control"],
       ["Restricted Readers", "Restricted Read"],
     ];
+
+    if (vm.requestor.user()) {
+      folderPermissions.push([
+        vm.requestor.user().userName,
+        "Restricted Contribute",
+      ]);
+    }
+    //TODO: Maybe validate based off the author.
 
     if (restrictedRequestingOffices.indexOf(vm.requestorOffice().Title) < 0) {
       folderPermissions.push([
@@ -1694,10 +1800,7 @@ function koviewmodel() {
       if (stage.WildCardAssignee) {
         var user = self[stage.WildCardAssignee].userName();
         if (user) {
-          folderPermissions.push([
-            self[stage.WildCardAssignee].userName(),
-            "Restricted Contribute",
-          ]);
+          folderPermissions.push([user, "Restricted Contribute"]);
         }
       }
     });

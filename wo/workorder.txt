@@ -1001,6 +1001,24 @@
 </p>
 <div id="service-type-templates"></div>
 
+<div
+  class="ui page dimmer"
+  data-bind="class: busy.tasks().length ? 'active' : ''"
+>
+  <div class="ui text loader">
+    <table class="ui very compact basic inverted fixed table" id="busy-message">
+      <tbody>
+        <!-- ko foreach: busy.tasks -->
+        <tr>
+          <td class="ui right floated" data-bind="text: task"></td>
+          <td data-bind="text: active() ? '' : 'Done'"></td>
+        </tr>
+        <!-- /ko -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
 <!--<script src="/_layouts/15/SP.Runtime.js"></script>
 <script src="/_layouts/15/SP.js"></script>
 <script src="/_layouts/15/SP.UserProfiles.js"></script>-->

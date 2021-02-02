@@ -198,10 +198,12 @@ Workorder.NewNotifications = function () {
       vm.requestLinkAdmin();
 
     var addendum = new String();
-
-    var valuePairs = getValuePairsHuman(
-      vm.selectedServiceType().listDef.viewFields
-    );
+    var valuePairs = [];
+    if (vm.selectedServiceType().listDef) {
+      valuePairs = getValuePairsHuman(
+        vm.selectedServiceType().listDef.viewFields
+      );
+    }
     addendum += "<br><br><ul>";
     if (valuePairs.length) {
       valuePairs.forEach(function (vp) {
@@ -415,16 +417,18 @@ Workorder.NewNotifications = function () {
 
     if (arr) {
       arr.forEach(function (ao) {
-        switch (ao.constructor.getName()) {
-          case "SP.FieldUserValue":
-            vps.push(ao.get_lookupId());
-            vps.push(ao.get_lookupValue());
-            break;
-          case "SP.User":
-            vps.push(ao.get_id());
-            vps.push(ao.get_loginName());
-            break;
-          default:
+        if (ao) {
+          switch (ao.constructor.getName()) {
+            case "SP.FieldUserValue":
+              vps.push(ao.get_lookupId());
+              vps.push(ao.get_lookupValue());
+              break;
+            case "SP.User":
+              vps.push(ao.get_id());
+              vps.push(ao.get_loginName());
+              break;
+            default:
+          }
         }
       });
       return vps.join(";#");

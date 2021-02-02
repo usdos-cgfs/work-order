@@ -6,13 +6,8 @@ tabsEnum = {
   "#order-detail": 4,
 };
 
-var dialog = {
-  close: function (dialog) {
-    dialog.close();
-    $(".ms-dlgOverlay").hide();
-  },
-};
 var time = {};
+var dialog = {};
 
 function initStaticListRefs() {
   vm.listRefWO(new sal.NewSPList(workOrderListDef));
@@ -139,9 +134,10 @@ function newWorkOrder() {
 
 function refreshWorkOrderItem(woID, callback) {
   callback = callback === undefined ? null : callback;
-  dialog.refresh = SP.UI.ModalDialog.showWaitScreenWithNoClose(
-    "Refreshing Work Order..."
-  );
+  // dialog.refresh = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+  //   "Refreshing Work Order..."
+  // );
+  vm.busy.addTask(appBusyStates.refresh);
   var camlq =
     '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
     '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
@@ -181,19 +177,23 @@ function refreshWorkOrderItem(woID, callback) {
         if (callback) {
           callback();
         }
-        dialog.close(dialog.refresh);
+        vm.busy.finishTask(appBusyStates.refresh);
+        // dialog.close(dialog.refresh);
       });
     } else {
-      dialog.close(dialog.refresh);
+      vm.busy.finishTask(appBusyStates.refresh);
+      // dialog.close(dialog.refresh);
     }
   });
 }
 
 function viewWorkOrderItem(woID) {
-  dialog.view = SP.UI.ModalDialog.showWaitScreenWithNoClose(
-    "Viewing Request...",
-    "ID: " + woID
-  );
+  vm.busy.addTask(appBusyStates.view);
+
+  // dialog.view = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+  //   "Viewing Request...",
+  //   "ID: " + woID
+  // );
   // Set the tab to detail view
   //$('.ui.menu').find('.item').tab('change tab', 'order-detail');
 
@@ -207,7 +207,8 @@ function viewWorkOrderItem(woID) {
     // Clear urlparam
     updateUrlParam("reqid", "");
     vm.tab("my-orders");
-    dialog.close(dialog.view);
+    vm.busy.finishTask(appBusyStates.view);
+    // dialog.close(dialog.view);
   } else {
     vm.requestID(woID);
     vm.tab("order-detail");
@@ -290,7 +291,8 @@ function onViewWorkOrderItemComplete() {
   vm.requestLoaded(new Date());
   vm.tab("order-detail");
   vm.currentView("view");
-  dialog.close(dialog.view);
+  vm.busy.finishTask(appBusyStates.view);
+  // dialog.close(dialog.view);
 }
 
 function showAdvancePrompt() {
@@ -326,10 +328,11 @@ function saveWorkOrder() {
         Saving edits to an already existing document
         Saving a new document
     */
-  dialog.save = SP.UI.ModalDialog.showWaitScreenWithNoClose(
-    "Saving Work Order...",
-    "Please wait..."
-  );
+  // dialog.save = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+  //   "Saving Work Order...",
+  //   "Please wait..."
+  // );
+  vm.busy.addTask(appBusyStates.save);
 
   // Need to get the value of the trix editor.
   vm.requestDescriptionHTML($("#trix-request-description").html());
@@ -387,7 +390,8 @@ function saveWorkOrder() {
         break;
     }
   } else {
-    dialog.close(dialog.save);
+    vm.busy.finishTask(appBusyStates.save);
+    // dialog.close(dialog.save);
   }
 }
 
@@ -479,13 +483,15 @@ function onSaveNewWorkOrderMaster(id) {
   refreshWorkOrderItem(vm.requestID(), function () {
     pipelineForward();
   });
-  dialog.close(dialog.save);
+  vm.busy.finishTask(appBusyStates.save);
+  // dialog.close(dialog.save);
 }
 
 function onSaveEditWorkOrderCallback(val) {
   console.log("callback val: ", val);
   refreshWorkOrderItem(vm.requestID());
-  dialog.close(dialog.save);
+  vm.busy.finishTask(appBusyStates.save);
+  // dialog.close(dialog.save);
 }
 
 function breakingPermissionsTimeoutFunc() {
@@ -496,7 +502,8 @@ function breakingPermissionsTimeoutFunc() {
       "report it to cgfssharepoint@state.gov."
   );
   Workorder.Notifications.breakingPermissionsTimeout();
-  dialog.close(dialog.save);
+  vm.busy.finishTask(appBusyStates.save);
+  // dialog.close(dialog.save);
 }
 
 function createWorkorderFolders() {
@@ -504,7 +511,7 @@ function createWorkorderFolders() {
     breakingPermissionsTimeoutFunc,
     5000
   );
-  vm.foldersCreated(0);
+  //vm.foldersCreated(0);
 
   // Set all permissions up front
   var folderPermissions = vm.requestFolderPerms();
@@ -522,6 +529,12 @@ function createWorkorderFolders() {
     listRefs.push(vm.selectedServiceType().listRef);
   }
 
+  var folderIncrementer = new Incremental(
+    0,
+    listRefs.length,
+    createNewWorkorderItems
+  );
+
   listRefs.forEach(function (listRef) {
     listRef.upsertListFolderPath(vm.requestFolderPath(), function (folderId) {
       // Update the permissions for the new folder
@@ -530,7 +543,8 @@ function createWorkorderFolders() {
           folderId,
           folderPermissions,
           function () {
-            vm.foldersCreatedInc();
+            //vm.foldersCreatedInc();
+            folderIncrementer.inc();
           },
           true
         );
@@ -594,6 +608,8 @@ function validateRequest() {
  ************************************************************/
 function getValuePairsHuman(listDef) {
   var valuePairs = [];
+  var missingFields = [];
+
   $.each(listDef, function (field, obj) {
     console.log(field, obj);
 
@@ -640,7 +656,7 @@ function getValuePairs(listDef) {
   //Get value pairs and validate
   console.log(listDef);
   var valuePairs = [];
-  var missingFields = new Array();
+  var missingFields = [];
   $.each(listDef, function (field, obj) {
     console.log(field, obj);
 
@@ -982,7 +998,7 @@ function fetchAllAssignments(callback) {
     vm.allAssignments(assignments);
 
     var end = new Date();
-    console.log("assignments mapped in " + end - start + " ms");
+    console.log("assignments mapped in " + (end - start) + " ms");
     if (callback) {
       callback(assignments);
     }
@@ -1116,9 +1132,10 @@ function fetchApprovals(callback) {
 function newApprovalCallback(result, value) {
   console.log("approval callback: " + result, value);
   if (result === SP.UI.DialogResult.OK) {
-    dialog.approve = SP.UI.ModalDialog.showWaitScreenWithNoClose(
-      "Approving Work Order..."
-    );
+    vm.busy.addTask(appBusyStates.approve);
+    //     dialog.approve = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+    //   "Approving Work Order..."
+    // );
     $(".admin-action-zone").hide();
     console.log(value);
     fetchApprovals(function () {
@@ -1138,7 +1155,8 @@ function newApprovalCallback(result, value) {
           //Something went wrong
           alert(":(");
       }
-      dialog.close(dialog.approve);
+      vm.busy.finishTask(appBusyStates.approve);
+      // dialog.close(dialog.approve);
     });
   }
 }
@@ -1188,13 +1206,15 @@ function fetchActions(callback) {
 function newActionCallback(result, value) {
   console.log("Action callback: " + result, value);
   if (result === SP.UI.DialogResult.OK) {
-    dialog.newAction = SP.UI.ModalDialog.showWaitScreenWithNoClose(
-      "Refreshing Actions List..."
-    );
+    vm.busy.addTask(appBusyStates.newAction);
+    //     dialog.newAction = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+    //   "Refreshing Actions List..."
+    // );
     //$(".admin-action-zone").hide();
     console.log(value);
     fetchActions(function () {
-      dialog.close(dialog.newAction);
+      vm.busy.finishTask(appBusyStates.newAction);
+      // dialog.close(dialog.newAction);
       // Let's branch based on whether the last approval was approve or reject.
       console.log("actions fetched");
     });
@@ -1220,7 +1240,8 @@ function newCommentCallback(result, value) {
     $(".admin-action-zone").hide();
     console.log(value);
     fetchComments(function () {
-      dialog.close(dialog.newComment);
+      vm.busy.finishTask(appBusyStates.newComment);
+      // dialog.close(dialog.newComment);
       // Let's branch based on whether the last approval was approve or reject.
       console.log("comments fetched");
     });
@@ -1229,9 +1250,10 @@ function newCommentCallback(result, value) {
 
 function submitComment() {
   if (vm.commentNew()) {
-    dialog.newComment = SP.UI.ModalDialog.showWaitScreenWithNoClose(
-      "Submitting Comment..."
-    );
+    vm.busy.addTask(appBusyStates.newComment);
+    //     dialog.newComment = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+    //   "Submitting Comment..."
+    // );
     vm.listRefComment().upsertListFolderPath(
       vm.requestFolderPath(),
       function (folderId) {
@@ -1261,7 +1283,9 @@ function submitComment() {
 function submitCommentCallback(id) {
   vm.commentNew("");
   fetchComments(function () {
-    SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+    vm.busy.finishTask(appBusyStates.newComment);
+
+    // SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
   });
 }
 
@@ -1329,10 +1353,12 @@ function deleteDateRange(dateRange) {
 function pipelineForward() {
   dismissAdvancePrompt();
 
-  dialog.pipeline = SP.UI.ModalDialog.showWaitScreenWithNoClose(
-    "Progressing to Next Stage",
-    "Please wait..."
-  );
+  vm.busy.addTask(appBusyStates.pipeline);
+
+  // dialog.pipeline = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+  //   "Progressing to Next Stage",
+  //   "Please wait..."
+  // );
 
   var valuePairs = new Array();
 
@@ -1341,7 +1367,8 @@ function pipelineForward() {
   if (t > vm.selectedPipeline().length) {
     // vm.requestStatus("Closed");
     // valuePairs.push(["RequestStatus", "Closed"]);
-    dialog.close(dialog.pipeline);
+    vm.busy.finishTask(appBusyStates.pipeline);
+    // dialog.close(dialog.pipeline);
     closeWorkOrder();
   } else {
     /*
@@ -1385,7 +1412,8 @@ function pipelineForward() {
               vm.requestStage().Title
           );
         }
-        dialog.close(dialog.pipeline);
+        vm.busy.finishTask(appBusyStates.pipeline);
+        // dialog.close(dialog.pipeline);
       }
     );
   }
@@ -1452,10 +1480,11 @@ function closeWorkOrder(reason) {
   var statusClosed = configPipelinesListDef.viewFields.ActionType.opts.Closed;
   var reason = reason === undefined ? statusClosed : reason;
 
-  dialog.closing = SP.UI.ModalDialog.showWaitScreenWithNoClose(
-    "Closing Request...",
-    reason
-  );
+  vm.busy.addTask(appBusyStates.closing);
+  // dialog.closing = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+  //   "Closing Request...",
+  //   reason
+  // );
 
   var vp = [
     ["RequestStatus", reason],
@@ -1476,15 +1505,17 @@ function closeWorkOrder(reason) {
         reason +
         " the request"
     );
-    dialog.close(dialog.closing);
+    vm.busy.finishTask(appBusyStates.closing);
+    // dialog.close(dialog.closing);
     lockRequest(vm.requestID());
   });
 }
 
 function lockRequest(woID) {
-  dialog.lock = SP.UI.ModalDialog.showWaitScreenWithNoClose(
-    "Locking Request..."
-  );
+  vm.busy.addTask(appBusyStates.lock);
+  //       dialog.lock = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+  //   "Locking Request..."
+  // );
   // Put the request into read only mode
   var listRefs = [
     vm.listRefWO(),
@@ -1500,7 +1531,8 @@ function lockRequest(woID) {
   }
 
   var incrementer = new Incremental(0, listRefs.length, function () {
-    dialog.close(dialog.lock);
+    vm.busy.finishTask(appBusyStates.lock);
+    // dialog.close(dialog.lock);
     refreshWorkOrderItem(vm.requestID());
   });
 
@@ -1549,7 +1581,10 @@ function lockRequest(woID) {
  ************************************************************/
 /* initApp -> fetchXListData -> initServiceTypes -> initTemplates -> initComplete */
 function initApp() {
+  // Initialize ViewModel
+  vm = new koviewmodel();
   var initTime = new Date();
+  //vm.busy.addTask(appBusyStates.init);
   dialog.init = SP.UI.ModalDialog.showWaitScreenWithNoClose(
     "Initializing",
     "Please Wait..."
@@ -1564,8 +1599,6 @@ function initApp() {
   //init our common utilities
   InitCommon();
 
-  // Initialize ViewModel
-  vm = new koviewmodel();
   vm.timers.init(initTime);
 
   //InitCommon();
@@ -1698,7 +1731,8 @@ function initComplete() {
     InitReport();
   }
   */
-  dialog.close(dialog.init);
+  // vm.busy.finishTask(appBusyStates.init);
+  dialog.init.close();
   vm.timers.initComplete(new Date());
   //SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
