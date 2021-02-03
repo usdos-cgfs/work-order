@@ -981,7 +981,7 @@
         </div>
         <div class="ten wide column" data-bind="visible: showActionsTable">
           <!-- Approvals here -->
-          <div id="wo-approvals" class="ui styled fluid accordion"></div>
+          <div data-bind="template: {name: 'template_actions'}"></div>
         </div>
       </div>
       <br />

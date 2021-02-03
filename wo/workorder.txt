@@ -790,54 +790,7 @@
         </div>
         <div class="ten wide column" data-bind="visible: showActionsTable">
           <!-- Approvals here -->
-          <div id="wo-approvals" class="ui styled fluid accordion">
-            <div class="title">
-              <h2 class="ui header">
-                <i class="dropdown icon"></i>
-                Approvals and Actions Log
-              </h2>
-            </div>
-            <div class="content">
-              <!--<div class="admin-action-zone" data-bind="visible: pu10kShowAdmin">
-                                <h3>Administrative Action Zone</h3>
-                                <p>This purchase request requires your approval:</p>
-                                <button type="button" href="javascript:void(0)" onclick="newApproval()">Approve/Reject</button>
-                            </div>
-                            <div data-bind="visible: requestApprovals().length == 0">
-                                <p>This request has not been approved yet, check back later.</p>
-                            </div>-->
-              <table
-                id="table-actions"
-                class="ui celled very basic table"
-                data-bind="visible: requestActions().length > 0"
-              >
-                <thead>
-                  <tr>
-                    <th>Action Taker</th>
-                    <th>Action Type</th>
-                    <th>Description</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody data-bind="foreach: requestActions">
-                  <tr>
-                    <td class="collapsing">
-                      <p data-bind="text: Author.get_lookupValue()"></p>
-                    </td>
-                    <td class="collapsing">
-                      <p data-bind="text: ActionType"></p>
-                    </td>
-                    <td>
-                      <p data-bind="text: Description"></p>
-                    </td>
-                    <td class="right aligned collapsing">
-                      <p data-bind="text: Created.toLocaleString()"></p>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <div data-bind="template: {name: 'template_actions'}"></div>
         </div>
       </div>
       <br />
