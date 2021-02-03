@@ -986,182 +986,15 @@
       <div class="ui grid">
         <div class="six wide column" data-bind="if: selectedServiceType">
           <!-- Capture any attachments below -->
-          <div id="wo-attachments" class="ui fluid card" data-bind="">
-            <div class="content">
-              <h2 class="ui header">Attachments</h2>
-            </div>
-            <div class="content">
-              <div
-                data-bind="visible: selectedServiceType().AttachmentRequired"
-              >
-                <h3>
-                  This service type has required attachments:<span
-                    class="required"
-                    >*</span
-                  >
-                </h3>
-              </div>
-              <div
-                id="instr-attachments"
-                data-bind="html: selectedServiceType().AttachmentDescription"
-              >
-                Instructions for uploading attachments.
-              </div>
-              <table
-                id="table-attachments"
-                class="ui very basic celled table"
-                data-bind="visible: requestAttachments().length > 0"
-              >
-                <thead>
-                  <tr>
-                    <th>Title</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody
-                  data-bind="foreach: requestAttachments().filter((att) => att.IsActive)"
-                >
-                  <tr>
-                    <td>
-                      <a
-                        target="_blank"
-                        data-bind="attr: { href: FileRef }, text: Title"
-                      ></a>
-                    </td>
-                    <td>
-                      <i
-                        class="fas fa-search pointer"
-                        data-bind="click: $root.attachmentView"
-                      ></i>
-                      <i
-                        class="fas fa-trash pointer"
-                        data-bind="click: $root.attachmentRemove"
-                      ></i>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="content aligned right">
-              <button
-                type="button"
-                class="ui primary button"
-                onclick="newAttachment()"
-                data-bind="enable: requestIsActive"
-              >
-                New Attachment
-              </button>
-            </div>
-          </div>
+          <div data-bind="template: {name: 'template_attachments'}"></div>
         </div>
         <div class="ten wide column" data-bind="visible: showActionsTable">
           <!-- Approvals here -->
-          <div id="wo-approvals" class="ui styled fluid accordion">
-            <div class="title">
-              <h2 class="ui header">
-                <i class="dropdown icon"></i>
-                Approvals and Actions Log
-              </h2>
-            </div>
-            <div class="content">
-              <!--<div class="admin-action-zone" data-bind="visible: pu10kShowAdmin">
-                                <h3>Administrative Action Zone</h3>
-                                <p>This purchase request requires your approval:</p>
-                                <button type="button" href="javascript:void(0)" onclick="newApproval()">Approve/Reject</button>
-                            </div>
-                            <div data-bind="visible: requestApprovals().length == 0">
-                                <p>This request has not been approved yet, check back later.</p>
-                            </div>-->
-              <table
-                id="table-actions"
-                class="ui celled very basic table"
-                data-bind="visible: requestActions().length > 0"
-              >
-                <thead>
-                  <tr>
-                    <th>Action Taker</th>
-                    <th>Action Type</th>
-                    <th>Description</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody data-bind="foreach: requestActions">
-                  <tr>
-                    <td class="collapsing">
-                      <p data-bind="text: Author.get_lookupValue()"></p>
-                    </td>
-                    <td class="collapsing">
-                      <p data-bind="text: ActionType"></p>
-                    </td>
-                    <td>
-                      <p data-bind="text: Description"></p>
-                    </td>
-                    <td class="right aligned collapsing">
-                      <p data-bind="text: Created.toLocaleString()"></p>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <div id="wo-approvals" class="ui styled fluid accordion"></div>
         </div>
       </div>
-      <div id="wo-comments" class="ui fluid card service-type-detail">
-        <div class="content">
-          <h2 class="ui header">Comments</h2>
-        </div>
-        <div class="content">
-          <p>
-            Leave additional comments/instructions here. Note: Anyone with
-            access to this record will be able to view them.
-          </p>
-          <table
-            id="table-comments"
-            class="ui celled very basic table"
-            data-bind="visible: requestComments().length > 0"
-          >
-            <thead>
-              <tr>
-                <th>Author</th>
-                <th>Comment</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody data-bind="foreach: requestComments">
-              <tr>
-                <td class="collapsing">
-                  <p data-bind="text: Author.get_lookupValue()"></p>
-                </td>
-                <td>
-                  <p data-bind="text: Comment"></p>
-                </td>
-                <td class="right aligned collapsing">
-                  <p data-bind="text: Created.toLocaleString()"></p>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="content">
-          <div class="ui form">
-            <div class="field">
-              <textarea
-                placeholder="Enter a new comment..."
-                data-bind="value: commentNew"
-              ></textarea>
-            </div>
-            <button
-              type="button"
-              class="ui primary button"
-              onclick="submitComment()"
-              data-bind=""
-            >
-              Submit Comment
-            </button>
-          </div>
-        </div>
-      </div>
+      <br />
+      <div data-bind="template: {name: 'template_comments'}"></div>
     </div>
     <br />
     <div data-bind="visible: requestIsActive">
@@ -1199,6 +1032,7 @@
     <span data-bind="text: timers.initDelta()/1000"></span> s
   </p>
 </div>
+<div data-bind="template: { name: 'template_loader'}"></div>
 <div id="service-type-templates"></div>
 
 <!--<script src="/_layouts/15/SP.Runtime.js"></script>

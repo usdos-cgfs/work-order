@@ -479,8 +479,9 @@ function koviewmodel() {
     }
   });
 
-  // todo fix me this is going to break
-
+  /************
+   * Handle Application Busy States
+   */
   //
   self.busy = {};
   self.busy.addTask = function (task) {
@@ -519,73 +520,6 @@ function koviewmodel() {
     );
   };
   self.busy.tasks = ko.observableArray();
-
-  self.busy.tasks.subscribe(function (tasks) {
-    // debugger;
-  });
-  //   console.log("task subscriber ", tasks);
-  //   if (tasks.length === 0 && self.busy.dialog.isActive()) {
-  //     vm.busy.dialog.modal().close();
-  //     vm.busy.dialog.isActive(false);
-  //   } else if (tasks.length > 0) {
-  //     var e = document.getElementById("busy-message");
-  //     var options = {
-  //       title: "My Dialog Title",
-  //       width: 400,
-  //       height: 300,
-  //       html: e,
-  //     };
-  //     vm.busy.dialog.modal(SP.UI.ModalDialog.showModalDialog(options));
-  //     vm.busy.dialog.isActive(true);
-  //   }
-  // });
-
-  self.busy.dialog = {
-    modal: ko.observable(),
-    isActive: ko.observable(),
-  };
-  self.busy.timeout = ko.observable();
-
-  self.busy.message = ko.observable();
-
-  self.busy.message.subscribe(function (newVal) {
-    // Always set the html
-    var element = $("#busy-message");
-    element.html(newVal);
-
-    if (!newVal) {
-      // if html is cleared, start timeout for message
-      vm.busy.timeout(
-        window.setTimeout(function () {
-          // Dismiss our message
-          vm.busy.dialog().close();
-          $(".ms-dlgOverlay").hide();
-          vm.busy.dialogIsActive(false);
-        }, 2000)
-      );
-    } else if (vm.busy.dialogIsActive()) {
-      window.clearTimeout(vm.busy.timeout());
-      var element = $("#busy-message");
-      if (!element.html()) {
-        $("#busy-message").html(message);
-      }
-    } else {
-      var e = document.getElementById("busy-message");
-      var options = {
-        title: "My Dialog Title",
-        width: 400,
-        height: 300,
-        html: e,
-      };
-      SP.UI.ModalDialog.showModalDialog(options);
-      vm.busy.dialog(
-        SP.UI.ModalDialog.showWaitScreenWithNoClose(
-          "Saving Work Order...",
-          newVal
-        )
-      );
-    }
-  });
 
   //self.serviceTypeAbbreviations = ko.observableArray(Object.keys(woViews));
   //self.serviceTypeViews = ko.observable(woViews);

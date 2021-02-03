@@ -795,75 +795,7 @@
       <div class="ui grid">
         <div class="six wide column" data-bind="if: selectedServiceType">
           <!-- Capture any attachments below -->
-          <div id="wo-attachments" class="ui fluid card" data-bind="">
-            <div class="content">
-              <h2 class="ui header">
-                Attachments
-                <span
-                  data-bind="visible: selectedServiceType().AttachmentsRequiredCnt"
-                  >Required<span class="required">*</span></span
-                >
-              </h2>
-            </div>
-            <div class="content">
-              <div
-                data-bind="class: selectedServiceType().AttachmentsRequiredCnt ? 
-                 'warning' : 'info'"
-                class="ui message"
-              >
-                <div data-bind="text: attachmentMessage"></div>
-              </div>
-              <div
-                id="instr-attachments"
-                data-bind="html: selectedServiceType().AttachmentDescription"
-              ></div>
-              <table
-                id="table-attachments"
-                class="ui very basic celled table"
-                data-bind="visible: requestAttachments().length > 0"
-              >
-                <thead>
-                  <tr>
-                    <th>Title</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody
-                  data-bind="foreach: requestAttachments().filter(function(att) {return att.IsActive})"
-                >
-                  <tr>
-                    <td>
-                      <a
-                        target="_blank"
-                        data-bind="attr: { href: FileRef }, text: Title"
-                      ></a>
-                    </td>
-                    <td>
-                      <i
-                        class="fas fa-search pointer"
-                        data-bind="click: $root.attachmentView"
-                      ></i>
-                      <i
-                        class="fas fa-trash pointer"
-                        data-bind="click: $root.attachmentRemove"
-                      ></i>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <!-- ko if: requestIsActive -->
-            <div class="content aligned right">
-              <button
-                type="button"
-                class="ui primary button"
-                onclick="newAttachment()"
-              >
-                New Attachment
-              </button>
-            </div>
-            <!-- /ko -->
-          </div>
+          <div data-bind="template: {name: 'template_attachments'}"></div>
         </div>
         <div class="ten wide column" data-bind="visible: showActionsTable">
           <!-- Approvals here -->
@@ -917,62 +849,8 @@
           </div>
         </div>
       </div>
-      <div id="wo-comments" class="ui fluid card service-type-detail">
-        <div class="content">
-          <h2 class="ui header">Comments</h2>
-        </div>
-        <div class="content">
-          <div class="ui warning message">
-            Note: Anyone with access to this record is able to view comments.
-          </div>
-          <table
-            id="table-comments"
-            class="ui celled very basic table"
-            data-bind="visible: requestComments().length > 0"
-          >
-            <thead>
-              <tr>
-                <th>Author</th>
-                <th>Comment</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody data-bind="foreach: requestComments">
-              <tr>
-                <td class="collapsing">
-                  <p data-bind="text: Author.get_lookupValue()"></p>
-                </td>
-                <td>
-                  <p data-bind="text: Comment"></p>
-                </td>
-                <td class="right aligned collapsing">
-                  <p data-bind="text: Created.toLocaleString()"></p>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <!-- ko if: requestIsActive() -->
-        <div class="content">
-          <div class="ui form">
-            <p>Provide additional comments/instructions here:</p>
-            <div class="field">
-              <textarea
-                placeholder="Enter a new comment..."
-                data-bind="value: commentNew"
-              ></textarea>
-            </div>
-            <button
-              type="button"
-              class="ui primary button"
-              onclick="submitComment()"
-            >
-              Submit Comment
-            </button>
-          </div>
-        </div>
-        <!-- /ko -->
-      </div>
+      <br />
+      <div data-bind="template: {name: 'template_comments'}"></div>
     </div>
     <br />
     <div data-bind="visible: requestIsActive()">
@@ -1001,23 +879,7 @@
 </p>
 <div id="service-type-templates"></div>
 
-<div
-  class="ui page dimmer"
-  data-bind="class: busy.tasks().length ? 'active' : ''"
->
-  <div class="ui text loader">
-    <table class="ui very compact basic inverted fixed table" id="busy-message">
-      <tbody>
-        <!-- ko foreach: busy.tasks -->
-        <tr>
-          <td class="ui right floated" data-bind="text: task"></td>
-          <td data-bind="text: active() ? '' : 'Done'"></td>
-        </tr>
-        <!-- /ko -->
-      </tbody>
-    </table>
-  </div>
-</div>
+<div data-bind="template: { name: 'template_loader'}"></div>
 
 <!--<script src="/_layouts/15/SP.Runtime.js"></script>
 <script src="/_layouts/15/SP.js"></script>
