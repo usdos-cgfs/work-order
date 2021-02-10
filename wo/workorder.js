@@ -133,7 +133,10 @@ function newWorkOrder() {
 }
 
 function refreshWorkOrderItem(woID, callback) {
-  callback = callback === undefined ? null : callback;
+  /* 
+    Refresh the work order item in the vm.allOrders array.
+  */
+  callback = callback === undefined ? function () {} : callback;
   // dialog.refresh = SP.UI.ModalDialog.showWaitScreenWithNoClose(
   //   "Refreshing Work Order..."
   // );
@@ -146,14 +149,6 @@ function refreshWorkOrderItem(woID, callback) {
     woID +
     "</Value>" +
     "</Eq></And></Where></Query><RowLimit>1</RowLimit></View>";
-
-  var reqCamlq =
-    '<View Scope="RecursiveAll"><Query><Where><And>' +
-    '<Eq><FieldRef Name="FSObjType"/><Value Type="int">0</Value></Eq>' +
-    '<Eq><FieldRef Name="Title"/><Value Type="Text">' +
-    woID +
-    "</Value></Eq>" +
-    "</And></Where></Query><RowLimit>1</RowLimit></View>";
 
   vm.listRefWO().getListItems(camlq, function (items) {
     console.log("loading open orders", items);
@@ -173,10 +168,7 @@ function refreshWorkOrderItem(woID, callback) {
         vm.allOrders.push(req);
       }
       fetchRequestAssignments(woID, function () {
-        viewWorkOrderItem(woID);
-        if (callback) {
-          callback();
-        }
+        viewWorkOrderItem(woID, callback);
         vm.busy.finishTask(appBusyStates.refresh);
         // dialog.close(dialog.refresh);
       });
@@ -187,18 +179,11 @@ function refreshWorkOrderItem(woID, callback) {
   });
 }
 
-function viewWorkOrderItem(woID) {
+function viewWorkOrderItem(woID, callback) {
+  callback = callback === undefined ? function () {} : callback;
+
   vm.busy.addTask(appBusyStates.view);
 
-  // dialog.view = SP.UI.ModalDialog.showWaitScreenWithNoClose(
-  //   "Viewing Request...",
-  //   "ID: " + woID
-  // );
-  // Set the tab to detail view
-  //$('.ui.menu').find('.item').tab('change tab', 'order-detail');
-
-  //$.tab('change tab', '');
-  //$("#tabs").tabs({ active: tabsEnum['#order-detail'] });
   var request = vm.allOrders().find(function (order) {
     return order.Title == woID;
   });
@@ -221,7 +206,15 @@ function viewWorkOrderItem(woID) {
     setValuePairs(workOrderListDef.viewFields, vm.requestHeader());
 
     vm.requestAssignments(vm.allRequestAssignmentsMap()[woID]);
+
+    var hasItemDetail = vm.selectedServiceType().listDef ? true : false;
     /* Fetch all associated Items */
+    var queryCount = 4; // there are 4 lists we need to query
+    queryCount = hasItemDetail ? (queryCount += 1) : queryCount;
+
+    var queryInc = new Incremental(0, queryCount, function () {
+      onViewWorkOrderItemComplete(callback);
+    });
     //fetchRequestAssignments();
     fetchActions(function () {
       console.log("actions fetched");
@@ -230,29 +223,36 @@ function viewWorkOrderItem(woID) {
       } catch (e) {
         console.log("error showing accordion");
       }
+      queryInc.inc();
     });
     fetchApprovals(function () {
       console.log("approvals fetched");
+      queryInc.inc();
     });
     fetchAttachments();
     fetchComments(function () {
       console.log("comments fetched");
+      queryInc.inc();
     });
 
     /* Check if we have DateRanges */
-    fetchDateRanges(function () {});
+    fetchDateRanges(function () {
+      queryInc.inc();
+    });
 
     /* Fetch the associated service type items */
-    if (vm.selectedServiceType().listDef) {
-      viewServiceTypeItem();
-    } else {
-      onViewWorkOrderItemComplete();
+    if (hasItemDetail) {
+      viewServiceTypeItem(function () {
+        queryInc.inc();
+      });
     }
     //initUIComponents();
   }
 }
 
-function viewServiceTypeItem() {
+function viewServiceTypeItem(callback) {
+  callback = callback === undefined ? function () {} : callback;
+
   // Fetches the list item info from the currently selected service type and record.
   var serviceTypeCaml =
     '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
@@ -274,24 +274,28 @@ function viewServiceTypeItem() {
       } else {
         timedNotification("Warning: couldn't find Service Type Info");
       }
+      callback();
+      //onViewWorkOrderItemComplete(callback);
 
       // This utilizes the date ranges list, we'll need to query that as well.
-      vm.listRefDateRanges().getListItems(
-        serviceTypeCaml,
-        function (dateRanges) {
-          vm.request.dateRanges.all(dateRanges);
-          onViewWorkOrderItemComplete();
-        }
-      );
+      // vm.listRefDateRanges().getListItems(
+      //   serviceTypeCaml,
+      //   function (dateRanges) {
+      //     vm.request.dateRanges.all(dateRanges);
+      //
+      //   }
+      // );
     }
   );
 }
 
-function onViewWorkOrderItemComplete() {
+function onViewWorkOrderItemComplete(callback) {
+  callback = callback === undefined ? function () {} : callback;
   vm.requestLoaded(new Date());
   vm.tab("order-detail");
   vm.currentView("view");
   vm.busy.finishTask(appBusyStates.view);
+  callback();
   // dialog.close(dialog.view);
 }
 
@@ -302,18 +306,6 @@ function showAdvancePrompt() {
 function dismissAdvancePrompt() {
   $("#prompt-advance").modal("hide");
 }
-
-// function advanceRequest() {
-//   // Progress to the next stage
-//   SP.UI.ModalDialog.showWaitScreenWithNoClose(
-//     "Progressing to Next Stage",
-//     "Please wait..."
-//   );
-//   // TODO: Anything that needs to be closed out before we enter the next stage
-
-//   // Enter the next stage, close if necessary.
-//   pipelineForward();
-// }
 
 function editWorkOrder() {
   //make the editable fields editable.
@@ -328,10 +320,7 @@ function saveWorkOrder() {
         Saving edits to an already existing document
         Saving a new document
     */
-  // dialog.save = SP.UI.ModalDialog.showWaitScreenWithNoClose(
-  //   "Saving Work Order...",
-  //   "Please wait..."
-  // );
+
   vm.busy.addTask(appBusyStates.save);
 
   // Need to get the value of the trix editor.
@@ -479,7 +468,8 @@ function onSaveNewWorkOrderMaster(id) {
       vm.requestSubmittedDate().toDateString(),
     true
   );
-  //pipelineForward();
+
+  // Refresh the request
   refreshWorkOrderItem(vm.requestID(), function () {
     pipelineForward();
   });
@@ -1371,27 +1361,6 @@ function pipelineForward() {
     // dialog.close(dialog.pipeline);
     closeWorkOrder();
   } else {
-    /*
-        // Add the current stages Request Org to requests RequestOrg column
-    // This is an off by one issue since stage 0 is editing but isn't
-    // in our pipeline.
-    var nextStage = vm.selectedPipeline().find(function (stage) {
-      return stage.Step == t;
-    });
-    if (nextStage.ActionOffice) {
-      var actionOfficeId = nextStage.ActionOffice.get_lookupId();
-      var actionOffice = vm.configActionOffices().find(function (office) {
-        return office.ID == actionOfficeId;
-      });
-      var reqOrg = vm.configRequestOrgs().find(function (org) {
-        return org.ID == actionOffice.RequestOrg.get_lookupId();
-      });
-      if (reqOrg) {
-        vm.requestOrgs.push(reqOrg);
-        valuePairs.push(["RequestOrgs", vm.requestOrgIds()]);
-      }
-    }
-    */
     vm.requestStageNum(t);
     valuePairs.push(["RequestStage", vm.requestStageNum()]);
 
