@@ -234,8 +234,6 @@ function viewWorkOrderItem(woID, callback) {
       console.log("comments fetched");
       queryInc.inc();
     });
-
-    /* Check if we have DateRanges */
     fetchDateRanges(function () {
       queryInc.inc();
     });

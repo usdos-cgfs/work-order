@@ -1080,7 +1080,11 @@ function koviewmodel() {
     });
     // Get the types of orders we're responsible for based on the ConfigServiceType
 
-    if (!self.adminAllOrdersBool()) {
+    if (self.adminAllOrdersBool()) {
+      // All order option checked
+      return self.allOrders();
+    } else if (orgs.length > 0) {
+      // we're in an action office
       var officeOrders = self.allOrders().filter(function (order) {
         return order.RequestOrgs.find(function (ro) {
           return orgs.indexOf(ro.get_lookupValue()) >= 0;
@@ -1089,7 +1093,8 @@ function koviewmodel() {
 
       return officeOrders;
     } else {
-      return self.allOrders();
+      // We're some other approver, filter based off assignments
+      return self.assignedOrders();
     }
   });
 
@@ -1318,13 +1323,35 @@ function koviewmodel() {
    * Assigned Orders Tab
    ************************************************************/
   self.myAssignments = ko.pureComputed(function () {
+    //we have two types of assignments
+    // 1. Assigned to our action office
+    // 2. One we are listed as the Assignee one
     var myAOIDs = self.userActionOfficeMembership().map(function (ao) {
       return ao.ID;
     });
     return self.allAssignments().filter(function (asg) {
-      return asg.actionOffice
-        ? myAOIDs.indexOf(asg.actionOffice.ID) >= 0
-        : asg.Assignee.get_lookupId == sal.globalConfig.currentUser.get_id();
+      if (myAOIDs.indexOf(asg.actionOffice.ID) >= 0) {
+        return true;
+      } else if (asg.Assignee) {
+        return (
+          asg.Assignee.get_lookupId() == sal.globalConfig.currentUser.get_id()
+        );
+      }
+      return false;
+    });
+  });
+
+  self.assignedOrders = ko.pureComputed(function () {
+    var myAssignedIds = [];
+
+    self.myAssignments().map(function (asg) {
+      if (myAssignedIds.indexOf(asg.Title) < 0) {
+        myAssignedIds.push(asg.Title);
+      }
+    });
+
+    return self.allOrders().filter(function (order) {
+      return myAssignedIds.indexOf(order.Title) >= 0;
     });
   });
 
