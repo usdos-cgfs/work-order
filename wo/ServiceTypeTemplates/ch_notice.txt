@@ -14,7 +14,7 @@
         koMap: "noticeDistro",
         required: true,
       },
-      NoticeDates: { type: "Text", koMap: "noticeDates", required: false },
+      NoticeDates: { type: "Text", koMap: "noticeDates", required: true },
     },
   });
 

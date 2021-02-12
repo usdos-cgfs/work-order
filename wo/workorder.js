@@ -328,6 +328,10 @@ function saveWorkOrder() {
   //vm.requestorName(vm.requestor.user()["title"]);
 
   vm.requestIsSaveable(true);
+  var requestValuePairs = getValuePairs(workOrderListDef.viewFields);
+  if (vm.requestSvcTypeListBool()) {
+    var typeValuePairs = getValuePairs(vm.requestSvcTypeListViewFields());
+  }
   validateRequest();
 
   // If all of our required fields are present.
@@ -335,8 +339,6 @@ function saveWorkOrder() {
     // First, save or update the parent work order item.
     switch (vm.currentView()) {
       case "edit":
-        var requestValuePairs = getValuePairs(workOrderListDef.viewFields);
-
         // We are saving an edit form, get the id and update.
         vm.listRefWO().updateListItem(
           vm.requestHeader().ID,
@@ -349,7 +351,7 @@ function saveWorkOrder() {
           }
         );
         if (vm.requestSvcTypeListBool()) {
-          var typeValuePairs = getValuePairs(vm.requestSvcTypeListViewFields());
+          //var typeValuePairs = getValuePairs(vm.requestSvcTypeListViewFields());
 
           vm.selectedServiceType().listRef.updateListItem(
             vm.serviceTypeHeader().ID,
@@ -664,7 +666,7 @@ function getValuePairs(listDef) {
         case "DateTime":
           if (observable.date) {
             fieldValue = observable.date().toISOString();
-          } else {
+          } else if (typeof observable === "function" && observable()) {
             fieldValue = observable().toISOString();
           }
           break;
