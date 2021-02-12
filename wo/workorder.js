@@ -577,7 +577,7 @@ function validateRequest() {
   if (vm.selectedServiceType().SupervisorRequired) {
     // Check if we have a supervisor
     var supervisorAttached = vm.requestorSupervisor.user() ? true : false;
-    vm.requestIsSaveable(supervisorAttached);
+    vm.requestIsSaveable(vm.requestIsSaveable() && supervisorAttached);
     if (!supervisorAttached) {
       alert(
         "This request has not been saved. Requestor Supervisor is required."
