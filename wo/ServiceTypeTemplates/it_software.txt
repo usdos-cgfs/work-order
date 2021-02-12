@@ -12,13 +12,13 @@
       Name: {
         type: "Text",
         koMap: "itSoftwareName",
-        required: false,
+        required: true,
         displayName: "Software Name",
       },
       Quantity: {
         type: "Text",
         koMap: "itSoftwareQuantity",
-        required: false,
+        required: true,
         displayName: "Quantity",
       },
       POCName: {

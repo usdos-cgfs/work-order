@@ -12,13 +12,13 @@
       Name: {
         type: "Text",
         koMap: "itHardwareName",
-        required: false,
+        required: true,
         displayName: "Hardware Name",
       },
       Quantity: {
         type: "Text",
         koMap: "itHardwareQuantity",
-        required: false,
+        required: true,
         displayName: "Quantity",
       },
       POCName: {
@@ -47,45 +47,35 @@
 
 <script type="text/html" id="tmpl_it_hardware">
   <div class="ui form">
-      <div class="ui grid">
-          <div class="eight wide field">
-            <label>
-              Hardware Name<span class="required">*</span>:
-            </label>
-              <input
-                type="text"
-                data-bind="value: itHardwareName, disable: currentView()=='view'"
-              />
-          </div>
-          <div class="eight wide field">
-            <label>
-              Quantity<span class="required">*</span>:
-            </label>
-              <input
-                type="text"
-                data-bind="value: itHardwareQuantity, disable: currentView()=='view'"
-              />
-
-          </div>
-          <div class="eight wide field">
-            <label>
-              POC<span class="required">*</span>:
-            </label>
-              <input
-                type="text"
-                data-bind="value: itHardwarePOCName, disable: currentView()=='view'"
-              />
-
-          </div>
-          <div class="eight wide field">
-            <label>
-              Cost<span class="required">*</span>:
-            </label>
-              <input
-                type="text"
-                data-bind="value: itHardwareCost, disable: currentView()=='view'"
-              />
-          </div>
-        </div>
+    <div class="ui grid">
+      <div class="eight wide field">
+        <label> Hardware Name<span class="required">*</span>: </label>
+        <input
+          type="text"
+          data-bind="value: itHardwareName, disable: currentView()=='view'"
+        />
+      </div>
+      <div class="eight wide field">
+        <label> Quantity<span class="required">*</span>: </label>
+        <input
+          type="text"
+          data-bind="value: itHardwareQuantity, disable: currentView()=='view'"
+        />
+      </div>
+      <div class="eight wide field">
+        <label> POC<span class="required">*</span>: </label>
+        <input
+          type="text"
+          data-bind="value: itHardwarePOCName, disable: currentView()=='view'"
+        />
+      </div>
+      <div class="eight wide field">
+        <label> Cost<span class="required">*</span>: </label>
+        <input
+          type="text"
+          data-bind="value: itHardwareCost, disable: currentView()=='view'"
+        />
+      </div>
+    </div>
   </div>
 </script>

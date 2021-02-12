@@ -9,8 +9,8 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty" },
       Title: { type: "Text", koMap: "requestID", required: false },
-      Location: { type: "Text", koMap: "locksmithLocation", required: false },
-      LockType: { type: "Text", koMap: "locksmithLockType", required: false },
+      Location: { type: "Text", koMap: "locksmithLocation", required: true },
+      LockType: { type: "Text", koMap: "locksmithLockType", required: true },
     },
   });
 
