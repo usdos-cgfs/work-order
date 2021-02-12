@@ -678,7 +678,7 @@ function getValuePairs(listDef) {
       // TODO: highlight the offending field
       if (obj.required && !fieldValue) {
         missingFields.push(field);
-        //vm.requestIsSaveable(false);
+        vm.requestIsSaveable(false);
       } else {
         valuePairs.push([field, fieldValue]);
       }
