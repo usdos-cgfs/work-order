@@ -42,17 +42,17 @@
       Purpose: {
         type: "Text",
         koMap: "diplomaticPassportPurpose",
-        required: true,
+        required: false,
       },
       BirthLocation: {
         type: "Text",
         koMap: "diplomaticPassportBirthLocation",
-        required: true,
+        required: false,
       },
       Expiration: {
         type: "DateTime",
         koMap: "diplomaticPassportExpiration",
-        required: true,
+        required: false,
       },
     },
   });
@@ -70,6 +70,19 @@
   vm.diplomaticPassportExpiration = new DateField({ type: "date" });
 
   vm.diplomaticPassportServiceTypeOpts = ko.observableArray(["New", "Renewal"]);
+
+  var diplomatic_passport = vm.configServiceTypes().find(function (stype) {
+    return stype.UID == "diplomatic_passport";
+  });
+
+  diplomatic_passport.validate = function () {
+    if (vm.diplomaticPassportSelectedType() == "Renewal") {
+      if (!vm.diplomaticPassportBirthLocation()) {
+        alert("Provide a State/Country of Birth.");
+        vm.requestIsSaveable(false);
+      }
+    }
+  };
 </script>
 
 <script type="text/html" id="tmpl_diplomatic_passport">
