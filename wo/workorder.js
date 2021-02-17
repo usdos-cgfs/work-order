@@ -666,7 +666,7 @@ function getValuePairs(listDef) {
       // Based on the field type, do any casting or conversions here
       switch (obj.type) {
         case "DateTime":
-          if (observable.date) {
+          if (observable.date && !isNaN(observable.date())) {
             fieldValue = observable.date().toISOString();
           } else if (typeof observable === "function" && observable()) {
             fieldValue = observable().toISOString();
