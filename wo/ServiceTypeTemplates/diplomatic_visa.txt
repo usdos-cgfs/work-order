@@ -24,12 +24,12 @@
         koMap: "diplomaticVisaPassNum",
         required: true,
       },
-      Issued: {
+      PassportDateIssued: {
         type: "DateTime",
         koMap: "diplomaticPassportIssued",
         required: true,
       },
-      Expiration: {
+      PassportDateExpiration: {
         type: "DateTime",
         koMap: "diplomaticPassportExpiration",
         required: true,
