@@ -88,6 +88,14 @@
     <div class="two fields">
       <div class="field">
         <label> Expiration Date<span class="required">*</span>: </label>
+        <!-- ko if: currentView() == 'view' -->
+        <input
+          type="text"
+          data-bind="value: accessExpirationDate.date().toLocaleString(),
+   disable: true"
+        />
+        <!-- /ko -->
+        <!-- ko if: currentView() != 'view' -->
         <div class="ui calendar">
           <div class="ui input left icon">
             <i class="calendar icon"></i>
@@ -100,6 +108,7 @@
             />
           </div>
         </div>
+        <!-- /ko -->
       </div>
       <div class="field">
         <label> Locations<span class="required">*</span>: </label>

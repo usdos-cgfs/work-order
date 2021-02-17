@@ -138,6 +138,14 @@
         </div>
         <div class="eight wide field">
           <label>Date of Birth<span class="required">*</span>:</label>
+          <!-- ko if: currentView() == 'view' -->
+          <input
+            type="text"
+            data-bind="value: diplomaticVisaBirthDate.date().toLocaleString(),
+      disable: true"
+          />
+          <!-- /ko -->
+          <!-- ko if: currentView() != 'view' -->
           <div class="ui calendar">
             <div class="ui input left icon">
               <i class="calendar icon"></i>
@@ -150,6 +158,7 @@
               />
             </div>
           </div>
+          <!-- /ko -->
         </div>
       </div>
       <div class="fields">
@@ -208,6 +217,14 @@
                 >*</span
               >:
             </label>
+            <!-- ko if: currentView() == 'view' -->
+            <input
+              type="text"
+              data-bind="value: diplomaticPassportIssued.date().toLocaleString(),
+      disable: true"
+            />
+            <!-- /ko -->
+            <!-- ko if: currentView() != 'view' -->
             <div class="ui calendar">
               <div class="ui input left icon">
                 <i class="calendar icon"></i>
@@ -220,6 +237,7 @@
                 />
               </div>
             </div>
+            <!-- /ko -->
           </div>
           <div class="field">
             <label>
@@ -227,6 +245,14 @@
                 >*</span
               >:
             </label>
+            <!-- ko if: currentView() == 'view' -->
+            <input
+              type="text"
+              data-bind="value: diplomaticPassportExpiration.date().toLocaleString(),
+              disable: true"
+            />
+            <!-- /ko -->
+            <!-- ko if: currentView() != 'view' -->
             <div class="ui calendar">
               <div class="ui input left icon">
                 <i class="calendar icon"></i>
@@ -239,6 +265,7 @@
                 />
               </div>
             </div>
+            <!-- /ko -->
           </div>
         </div>
       </div>
@@ -246,6 +273,14 @@
       <div class="two fields">
         <div class="field">
           <label> Departure<span class="required">*</span>: </label>
+          <!-- ko if: currentView() == 'view' -->
+          <input
+            type="text"
+            data-bind="value: diplomaticPassportDeparture.date().toLocaleString(),
+            disable: true"
+          />
+          <!-- /ko -->
+          <!-- ko if: currentView() != 'view' -->
           <div class="ui calendar">
             <div class="ui input left icon">
               <i class="calendar icon"></i>
@@ -258,9 +293,18 @@
               />
             </div>
           </div>
+          <!-- /ko -->
         </div>
         <div class="eight wide field">
           <label> Return<span class="required">*</span>: </label>
+          <!-- ko if: currentView() == 'view' -->
+          <input
+            type="text"
+            data-bind="value: diplomaticPassportReturn.date().toLocaleString(),
+            disable: true"
+          />
+          <!-- /ko -->
+          <!-- ko if: currentView() != 'view' -->
           <div class="ui calendar">
             <div class="ui input left icon">
               <i class="calendar icon"></i>
@@ -273,6 +317,7 @@
               />
             </div>
           </div>
+          <!-- /ko -->
         </div>
       </div>
     </div>

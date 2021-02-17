@@ -150,6 +150,14 @@
               >*</span
             >:
           </label>
+          <!-- ko if: currentView() == 'view' -->
+          <input
+            type="text"
+            data-bind="value: diplomaticPassportExpiration.date().toLocaleString(),
+      disable: true"
+          />
+          <!-- /ko -->
+          <!-- ko if: currentView() != 'view' -->
           <div class="ui calendar">
             <div class="ui input left icon">
               <i class="calendar icon"></i>
@@ -162,12 +170,21 @@
               />
             </div>
           </div>
+          <!-- /ko -->
         </div>
       </div>
       <h4 class="ui dividing header">Travel Dates</h4>
       <div class="two fields">
         <div class="field">
           <label> Departure<span class="required">*</span>: </label>
+          <!-- ko if: currentView() == 'view' -->
+          <input
+            type="text"
+            data-bind="value: diplomaticPassportDeparture.date().toLocaleString(),
+      disable: true"
+          />
+          <!-- /ko -->
+          <!-- ko if: currentView() != 'view' -->
           <div class="ui calendar">
             <div class="ui input left icon">
               <i class="calendar icon"></i>
@@ -180,9 +197,18 @@
               />
             </div>
           </div>
+          <!-- /ko -->
         </div>
         <div class="eight wide field">
           <label> Return<span class="required">*</span>: </label>
+          <!-- ko if: currentView() == 'view' -->
+          <input
+            type="text"
+            data-bind="value: diplomaticPassportReturn.date().toLocaleString(),
+      disable: true"
+          />
+          <!-- /ko -->
+          <!-- ko if: currentView() != 'view' -->
           <div class="ui calendar">
             <div class="ui input left icon">
               <i class="calendar icon"></i>
@@ -195,6 +221,7 @@
               />
             </div>
           </div>
+          <!-- /ko -->
         </div>
       </div>
     </div>

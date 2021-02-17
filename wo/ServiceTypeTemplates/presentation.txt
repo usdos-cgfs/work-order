@@ -37,6 +37,14 @@
   <div class="ui form">
     <div class="eight wide field">
       <label>Presentation Date and Time<span class="required">*</span>:</label>
+      <!-- ko if: currentView() == 'view' -->
+      <input
+        type="text"
+        data-bind="value: presentationDate.date().toLocaleString(),
+ disable: true"
+      />
+      <!-- /ko -->
+      <!-- ko if: currentView() != 'view' -->
       <div class="ui calendar">
         <div class="ui input left icon">
           <i class="calendar icon"></i>
@@ -45,10 +53,11 @@
             type="text"
             data-bind="disabled:
               currentView() == 'view', 
-              dateField: diplomaticPassportExpiration"
+              dateField: presentationDate"
           />
         </div>
       </div>
+      <!-- /ko -->
     </div>
     <div class="two fields">
       <div class="eight wide field">
