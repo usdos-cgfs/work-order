@@ -12,47 +12,47 @@
       RequestType: {
         type: "Text",
         koMap: "diplomaticPassportSelectedType",
-        required: false,
+        required: tru,
       },
       Grade: {
         type: "Text",
         koMap: "diplomaticPassportGrade",
-        required: false,
+        required: true,
       },
       DestinationCity: {
         type: "Text",
         koMap: "diplomaticPassportDestinationCity",
-        required: false,
+        required: true,
       },
       DestinationCountry: {
         type: "Text",
         koMap: "diplomaticPassportDestinationCountry",
-        required: false,
+        required: true,
       },
       Departure: {
         type: "DateTime",
         koMap: "diplomaticPassportDeparture",
-        required: false,
+        required: true,
       },
       Return: {
         type: "DateTime",
         koMap: "diplomaticPassportReturn",
-        required: false,
+        required: true,
       },
       Purpose: {
         type: "Text",
         koMap: "diplomaticPassportPurpose",
-        required: false,
+        required: true,
       },
       BirthLocation: {
         type: "Text",
         koMap: "diplomaticPassportBirthLocation",
-        required: false,
+        required: true,
       },
       Expiration: {
         type: "DateTime",
         koMap: "diplomaticPassportExpiration",
-        required: false,
+        required: true,
       },
     },
   });
