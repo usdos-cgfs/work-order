@@ -12,7 +12,7 @@
       RequestType: {
         type: "Text",
         koMap: "diplomaticPassportSelectedType",
-        required: tru,
+        required: true,
       },
       Grade: {
         type: "Text",
