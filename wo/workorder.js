@@ -380,6 +380,8 @@ function saveWorkOrder() {
     }
   } else {
     vm.busy.finishTask(appBusyStates.save);
+    vm.busy.addTask(appBusyStates.cancelAction);
+    vm.busy.finishTask(appBusyStates.cancelAction);
     // dialog.close(dialog.save);
   }
 }

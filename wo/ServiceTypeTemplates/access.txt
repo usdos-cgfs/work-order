@@ -15,17 +15,17 @@
         koMap: "accessEmployeeType",
         required: false,
       },
-      FullName: { type: "Text", koMap: "accessFullName", required: false },
-      BadgeNum: { type: "Text", koMap: "accessBadgeNum", required: false },
+      FullName: { type: "Text", koMap: "accessFullName", required: true },
+      BadgeNum: { type: "Text", koMap: "accessBadgeNum", required: true },
       ExpirationDate: {
         type: "DateTime",
         koMap: "accessExpirationDate",
-        required: false,
+        required: true,
       },
       Locations: {
         type: "Text",
         koMap: "accessLocations",
-        required: false,
+        required: true,
       },
       Justification: {
         type: "Text",

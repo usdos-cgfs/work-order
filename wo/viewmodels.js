@@ -287,6 +287,7 @@ var configServiceTypeListDef = {
 var appBusyStates = {
   init: "Initializing the Application",
   save: "Saving Request...",
+  cancelAction: "Cancelling Action...",
   view: "Viewing Request...",
   refresh: "Refreshing Request...",
   lock: "Locking Request...",
@@ -499,6 +500,7 @@ function koviewmodel() {
       );
     }, 5000);
     vm.busy.tasks.push(newTask);
+    return newTask.id;
   };
   self.busy.finishTask = function (task) {
     let activeTask = vm.busy.tasks().find(function (taskItem) {
