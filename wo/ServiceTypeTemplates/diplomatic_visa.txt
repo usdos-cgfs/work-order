@@ -14,7 +14,7 @@
         koMap: "diplomaticVisaFullName",
         required: true,
       },
-      BirthDate: {
+      DateOfBirth: {
         type: "DateTime",
         koMap: "diplomaticVisaBirthDate",
         required: true,
