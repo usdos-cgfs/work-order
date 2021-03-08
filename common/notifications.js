@@ -309,6 +309,13 @@ Workorder.NewNotifications = function () {
         "This request has been cancelled with the following justification:<br>" +
         vm.assignmentRejectComment();
     }
+
+    if (!location.pathname.split("/").includes("wocharleston")) {
+      body +=
+        "Thank you for utilizing the CGFS/EX Work Order System. " +
+        "Please take a moment to complete the survey below and let us know how we did: " +
+        '<a href="https://www.surveymonkey.com/r/6LSSY3W">CGFS/EX Survey</a><br><br>';
+    }
     body +=
       "<b>Note:</b> This request cannot be reactivated. " +
       "To reinitiate, please create a new service request.<br><br>";
