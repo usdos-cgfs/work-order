@@ -53,9 +53,12 @@ Workorder.Report.NewReportPage = function () {
     self.requestOrgServiceTypesFiltered = ko.pureComputed(function () {
       return vm.configServiceTypes().filter(function (serviceType) {
         if (serviceType.RequestOrgs) {
-          return serviceType.RequestOrgs.map(function (reqOrg) {
-            return reqOrg.get_lookupId();
-          }).includes(self.requestOrg().ID);
+          return (
+            serviceType.RequestOrgs.map(function (reqOrg) {
+              return reqOrg.get_lookupId();
+            }).includes(self.requestOrg().ID) &&
+            serviceType.UID != "it_software"
+          );
         }
       });
     });
