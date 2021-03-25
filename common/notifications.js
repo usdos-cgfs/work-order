@@ -310,11 +310,12 @@ Workorder.NewNotifications = function () {
         vm.assignmentRejectComment();
     }
 
+    // TODO: Refactor these templates into a list item.
     if (!location.pathname.split("/").includes("wocharleston")) {
       body +=
-        "Thank you for utilizing the CGFS/EX Work Order System. " +
+        "<div style='color: red'>Thank you for utilizing the CGFS/EX Work Order System. " +
         "Please take a moment to complete the survey below and let us know how we did: " +
-        '<a href="https://www.surveymonkey.com/r/6LSSY3W">CGFS/EX Survey</a><br><br>';
+        '<a href="https://www.surveymonkey.com/r/6LSSY3W">CGFS/EX Survey</a><br><br></div>';
     }
     body +=
       "<b>Note:</b> This request cannot be reactivated. " +
