@@ -67,6 +67,11 @@ function dismissDescription() {
   $("#wo-description-modal").modal("hide");
 }
 
+function createNewRequestID() {
+  var ts = new Date();
+  return ts.format("yyMMdd") + "-" + (ts.getTime() % 100000);
+}
+
 function newWorkOrder() {
   dismissDescription();
   // Chained, requires vm.selectedServiceType to already be selected.
@@ -76,7 +81,7 @@ function newWorkOrder() {
   vm.currentView("new");
 
   // Set our VM fields
-  vm.requestID(new Date().getTime());
+  vm.requestID(createNewRequestID());
   updateUrlParam("reqid", vm.requestID());
 
   // Check if we have a current requestor
@@ -557,23 +562,15 @@ function createWorkorderFolders() {
 }
 
 function ensureAttachments() {
-  if (vm.selectedServiceType().AttachmentsRequiredCnt) {
-    if (
-      vm.requestAttachments().length <
+  if (
+    vm.selectedServiceType().AttachmentsRequiredCnt &&
+    vm.requestAttachments().length <
       vm.selectedServiceType().AttachmentsRequiredCnt
-    ) {
-      vm.requestIsSaveable(false);
-      alert(
-        "This request has not been saved. It is missing the required attachments."
-      );
-    }
-  } else if (vm.selectedServiceType().AttachmentRequired) {
-    if (vm.requestAttachments().length == 0) {
-      vm.requestIsSaveable(false);
-      alert(
-        "This request has not been saved. It is missing the required attachments."
-      );
-    }
+  ) {
+    vm.requestIsSaveable(false);
+    alert(
+      "This request has not been saved. It is missing the required attachments."
+    );
   }
 }
 

@@ -265,13 +265,13 @@ var configServiceTypeListDef = {
     Title: { type: "Text", koMap: "empty" },
     Active: { type: "Text", koMap: "empty" },
     ActionOffices: { type: "Lookup", koMap: "empty" },
-    AttachmentRequired: { type: "Text", koMap: "empty" },
     AttachmentsRequiredCnt: { type: "Text", koMap: "empty" },
     AttachmentDescription: { type: "Text", koMap: "empty" },
     Description: { type: "Text", koMap: "empty" },
     DescriptionRequired: { type: "Bool", koMap: "empty" },
     DescriptionTitle: { type: "Bool", koMap: "empty" },
     DaysToCloseBusiness: { type: "Text", koMap: "empty" },
+    EmailPipelineOnClose: { type: "Bool", koMap: "empty" },
     ReminderDays: { type: "Text", koMap: "empty" },
     KPIThresholdYellow: { type: "Text", koMap: "empty" },
     KPIThresholdGreen: { type: "Text", koMap: "empty" },
@@ -328,14 +328,23 @@ function Incremental(entry, target, next) {
     self.val(entry);
   };
 }
-
-function PeopleField() {
+function PeopleField(schemaOpts) {
   var self = this;
+  self.loading = ko.observable(false);
+  this.schemaOpts = schemaOpts || {};
   this.user = ko.observable();
   this.userName = ko.pureComputed({
     read: function () {
       return self.user() ? self.user().userName : "";
     },
+  });
+  this.title = ko.pureComputed(function () {
+    return self.user() ? self.user().title : "";
+  });
+  this.setItemFormat = ko.pureComputed(function () {
+    return self.user()
+      ? self.user().ID + ";#" + self.user().userName + ";#"
+      : "";
   });
   this.userId = ko.pureComputed(
     {
@@ -343,8 +352,10 @@ function PeopleField() {
         if (self.user()) {
           return self.user().ID;
         }
+        return "";
       },
       write: function (value) {
+        self.loading(true);
         if (value) {
           var user = {};
           switch (value.constructor.getName()) {
@@ -353,9 +364,10 @@ function PeopleField() {
                 user.ID = ensuredUser.get_id();
                 user.userName = ensuredUser.get_loginName();
                 user.title = ensuredUser.get_title();
-                user.isEnsured = true;
+                user.isEnsured = false;
                 self.user(user);
                 self.lookupUser(value);
+                self.loading(false);
               });
               break;
             case "SP.User":
@@ -365,10 +377,15 @@ function PeopleField() {
               user.isEnsured = false;
               self.user(user);
               self.lookupUser(value);
+              self.loading(false);
               break;
             default:
               break;
           }
+        } else {
+          self.user(null);
+          self.lookupUser(null);
+          self.loading(false);
         }
       },
     },
@@ -377,6 +394,59 @@ function PeopleField() {
   this.lookupUser = ko.observable();
   this.ensuredUser = ko.observable();
 }
+// function PeopleField() {
+//   var self = this;
+//   this.user = ko.observable();
+//   this.userName = ko.pureComputed({
+//     read: function () {
+//       return self.user() ? self.user().userName : "";
+//     },
+//   });
+//   this.userTitle = ko.pureComputed({
+//     read: function () {
+//       return self.user() ? self.user().title : "";
+//     },
+//   });
+//   this.userId = ko.pureComputed(
+//     {
+//       read: function () {
+//         if (self.user()) {
+//           return self.user().ID;
+//         }
+//       },
+//       write: function (value) {
+//         if (value) {
+//           var user = {};
+//           switch (value.constructor.getName()) {
+//             case "SP.FieldUserValue":
+//               ensureUserById(value.get_lookupId(), function (ensuredUser) {
+//                 user.ID = ensuredUser.get_id();
+//                 user.userName = ensuredUser.get_loginName();
+//                 user.title = ensuredUser.get_title();
+//                 user.isEnsured = true;
+//                 self.user(user);
+//                 self.lookupUser(value);
+//               });
+//               break;
+//             case "SP.User":
+//               user.ID = value.get_id();
+//               user.userName = value.get_loginName();
+//               user.title = value.get_title();
+//               user.isEnsured = false;
+//               self.user(user);
+//               self.lookupUser(value);
+//               break;
+//             default:
+//               break;
+//           }
+//         }
+//       },
+//     },
+//     this
+//   );
+//   this.lookupUser = ko.observable();
+//   this.ensuredUser = ko.observable();
+// }
 
 function DateField(newOpts, newDate) {
   newOpts =
@@ -862,6 +932,9 @@ function koviewmodel() {
   };
 
   self.assignmentCurUserCanRemove = function (assignment) {
+    if (!vm.requestIsActive()) {
+      return false;
+    }
     return (
       self.assignments
         .assigneeOpts()
@@ -2145,6 +2218,7 @@ ko.bindingHandlers.dateField = {
 
 ko.bindingHandlers.people = {
   init: function (element, valueAccessor, allBindingsAccessor) {
+    var obs = valueAccessor();
     var schema = {};
     schema["PrincipalAccountType"] = "User";
     schema["SearchPrincipalSource"] = 15;
@@ -2157,7 +2231,7 @@ ko.bindingHandlers.people = {
     schema["OnUserResolvedClientScript"] = function (elemId, userKeys) {
       //  get reference of People Picker Control
       var pickerElement = SPClientPeoplePicker.SPClientPeoplePickerDict[elemId];
-      var observable = valueAccessor();
+      var observable = valueAccessor().user;
       var userJSObject = pickerElement.GetControlValueAsJSObject()[0];
       if (userJSObject) {
         ensureUser(userJSObject.Key, function (user) {
@@ -2169,13 +2243,15 @@ ko.bindingHandlers.people = {
           userObj["title"] = user.get_title();
           observable(userObj);
         });
+      } else {
+        observable(null);
       }
       //observable(pickerElement.GetControlValueAsJSObject()[0]);
       //console.log(JSON.stringify(pickerElement.GetControlValueAsJSObject()[0]));
     };
 
     //  TODO: You can provide schema settings as options
-    var mergedOptions = allBindingsAccessor().options || schema;
+    var mergedOptions = Object.assign(schema, obs.schemaOpts);
 
     //  Initialize the Control, MS enforces to pass the Element ID hence we need to provide
     //  ID to our element, no other options
@@ -2194,7 +2270,7 @@ ko.bindingHandlers.people = {
   ) {
     //debugger;
     //  Force to Ensure User
-    var userValue = ko.utils.unwrapObservable(valueAccessor());
+    var userValue = ko.utils.unwrapObservable(valueAccessor().user);
     if (userValue && !userValue.isEnsured) {
       var pickerControl =
         SPClientPeoplePicker.SPClientPeoplePickerDict[element.id + "_TopSpan"];

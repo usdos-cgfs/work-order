@@ -585,13 +585,13 @@
                       class="editable-field"
                       type="text"
                       disabled="true"
-                      data-bind="value: requestor.user() ? requestor.user()['title'] :'',
+                      data-bind="value: requestor.title,
                        visible: currentView() == 'view'"
                     />
                     <div
                       id="peoplerequestor"
                       class="editable-field"
-                      data-bind="people: requestor.user, 
+                      data-bind="people: requestor, 
                       visible: currentView() != 'view'"
                     ></div>
                   </div>
@@ -604,12 +604,12 @@
                       class="editable-field"
                       type="text"
                       disabled="true"
-                      data-bind="value: requestorSupervisor.userName, visible: currentView() == 'view'"
+                      data-bind="value: requestorSupervisor.title, visible: currentView() == 'view'"
                     />
                     <div
                       id="peoplerequestorSupervisor"
                       class="editable-field"
-                      data-bind="people: requestorSupervisor.user, 
+                      data-bind="people: requestorSupervisor, 
                       visible: currentView() != 'view'"
                     ></div>
                   </div>

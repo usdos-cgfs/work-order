@@ -24,7 +24,7 @@ Workorder.NewNotifications = function () {
     });
 
     var bodyUser =
-      "You're " +
+      "Your " +
       vm.selectedServiceType().Title +
       " request  has been successfully submitted.</br></br>" +
       '<a href="' +
@@ -266,11 +266,15 @@ Workorder.NewNotifications = function () {
     var to = [vm.requestHeader().Author, vm.requestor.lookupUser()];
     var toString = [];
 
-    var pipelineAssignees = workorderPipelineAssignees();
+    var cc = [];
+    var ccString = [];
 
-    var cc = pipelineAssignees.users;
-    var ccString = pipelineAssignees.addresses;
+    if (vm.selectedServiceType().EmailPipelineOnClose) {
+      var pipelineAssignees = workorderPipelineAssignees();
 
+      cc = pipelineAssignees.users;
+      ccString = pipelineAssignees.addresses;
+    }
     //TODO: add other assignees here.
 
     var subject =
@@ -450,6 +454,7 @@ Workorder.NewNotifications = function () {
     newWorkorderEmailUser: newWorkorderEmailUser,
     newWorkorderEmailActionOffices: newWorkorderEmailActionOffices,
     workorderReminderEmails: workorderReminderEmails,
+    workorderPipelineAssignees: workorderPipelineAssignees,
     breakingPermissionsTimeout: breakingPermissionsTimeout,
     newAssignmentNotification: newAssignmentNotification,
     workorderClosedEmail: workorderClosedEmail,

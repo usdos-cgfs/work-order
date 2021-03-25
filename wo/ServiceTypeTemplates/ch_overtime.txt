@@ -13,7 +13,7 @@
       ManagerDept: {
         type: "Person",
         koMap: "overtimeManagerDept",
-        required: false,
+        required: true,
       },
       ManagerTask: {
         type: "Person",
@@ -52,8 +52,14 @@
   /***************************************************************
    *    Declare Observables
    ***************************************************************/
+  var DeptApproversTitle = "GOV_MGMT";
+  var DeptApproversId = sal.globalConfig.siteGroups.find(function (group) {
+    return group.title == DeptApproversTitle;
+  })?.ID;
   vm.overtimeFullName = new PeopleField();
-  vm.overtimeManagerDept = new PeopleField();
+  vm.overtimeManagerDept = new PeopleField({
+    SharePointGroupID: DeptApproversId,
+  });
   vm.overtimeManagerTask = new PeopleField();
   vm.overtimeDepartment = ko.observable();
   vm.overtimeRequisitionOrder = ko.observable();
@@ -73,31 +79,31 @@
           class="editable-field"
           type="text"
           disabled="true"
-          data-bind="value: overtimeFullName.userName, visible: currentView() == 'view'"
+          data-bind="value: overtimeFullName.title, visible: currentView() == 'view'"
         />
         <div
           id="peopleovertimeFullName"
           class="editable-field"
-          data-bind="people: overtimeFullName.user, 
+          data-bind="people: overtimeFullName, 
             visible: currentView() != 'view'"
         ></div>
       </div>
-      <!-- <div class="field">
+      <div class="field">
         <label>Dept Manager<span class="required">*</span>: </label>
         <input
           class="editable-field"
           type="text"
           disabled="true"
-          data-bind="value: overtimeManagerDept.userName, 
+          data-bind="value: overtimeManagerDept.title, 
           visible: currentView() == 'view'"
         />
         <div
           id="peopleovertimeManagerDept"
           class="editable-field"
-          data-bind="people: overtimeManagerDept.user, 
+          data-bind="people: overtimeManagerDept, 
             visible: currentView() != 'view'"
         ></div>
-      </div> -->
+      </div>
     </div>
     <div class="two fields">
       <div class="field">
@@ -106,12 +112,12 @@
           class="editable-field"
           type="text"
           disabled="true"
-          data-bind="value: overtimeManagerTask.userName, visible: currentView() == 'view'"
+          data-bind="value: overtimeManagerTask.title, visible: currentView() == 'view'"
         />
         <div
           id="peopleovertimeManagerTask"
           class="editable-field"
-          data-bind="people: overtimeManagerTask.user, 
+          data-bind="people: overtimeManagerTask, 
             visible: currentView() != 'view'"
         ></div>
       </div>
