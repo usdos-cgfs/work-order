@@ -203,6 +203,7 @@ var configRequestOrgsListDef = {
   viewFields: {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "empty" },
+    OrgType: { type: "Text", koMap: "empty" },
     UserGroup: { type: "Person", koMap: "empty" },
     ContactInfo: { type: "Text", koMap: "empty" },
   },
@@ -328,7 +329,47 @@ function Incremental(entry, target, next) {
     self.val(entry);
   };
 }
+
+function EnsuredUserOrGroup(userOrGroup, isGroup) {
+  var self = {};
+  if (isGroup) {
+    // Assume this is coming from sal.globalConfig.siteGroups
+    self.id = userOrGroup.ID;
+    self.title = userOrGroup.title;
+    self.loginName = userOrGroup.loginName;
+  } else {
+    self.id = userOrGroup.get_id();
+    self.title = userOrGroup.get_title();
+    self.loginName = userOrGroup.get_loginName();
+  }
+  return self;
+}
+
+function GroupField() {
+  var self = {};
+  self.EnsuredGroup = ko.observable();
+  return ko.pureComputed({
+    read: function () {
+      return self.EnsuredGroup();
+    },
+    write: function (val) {
+      if (!val) {
+        self.EnsuredGroup(null);
+        return;
+      }
+      var foundGroup = sal.globalConfig.siteGroups.find(function (group) {
+        return group.ID == val.get_lookupId();
+      });
+      // if (!foundGroup){
+      //   return null;
+      // }
+      self.EnsuredGroup(foundGroup);
+    },
+  });
+}
+
 function PeopleField(schemaOpts) {
+  // We need to refactor this whole thing to support groups/arrays.
   var self = this;
   self.loading = ko.observable(false);
   this.schemaOpts = schemaOpts || {};
@@ -346,6 +387,10 @@ function PeopleField(schemaOpts) {
       ? self.user().ID + ";#" + self.user().userName + ";#"
       : "";
   });
+  this.ID = function () {
+    // We need to refactor
+    return self.userId();
+  };
   this.userId = ko.pureComputed(
     {
       read: function () {

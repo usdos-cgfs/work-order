@@ -658,6 +658,7 @@ function getValuePairs(listDef) {
       var koMap = obj.koMap;
       console.log(koMap);
       var observable = vm[koMap];
+      var fieldValue = null;
       //let fieldValue = !$.isEmptyObject(vm[koMap]()) ? vm[koMap]() : "";
 
       // Based on the field type, do any casting or conversions here
@@ -671,6 +672,11 @@ function getValuePairs(listDef) {
           break;
         case "Person":
           fieldValue = observable.userId();
+          break;
+        case "Group":
+          if (observable()) {
+            fieldValue = observable().ID;
+          }
           break;
         default:
           fieldValue = observable();

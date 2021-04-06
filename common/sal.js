@@ -20,6 +20,8 @@ sal.site = sal.site || {};
 //ExecuteOrDelayUntilScriptLoaded(InitSal, "sp.js");
 
 function initSal() {
+  sal.globalConfig.siteGroups = [];
+
   console.log("we are initing sal");
   // Initialize the sitewide settings here.
   sal.globalConfig.siteUrl =
@@ -54,6 +56,11 @@ function initSal() {
       getUserProperties();
 
       sal.globalConfig.siteGroups = m_fnLoadSiteGroups(siteGroupCollection);
+      sal.globalConfig.siteGroups.forEach(function (group) {
+        sal.getUsersWithGroup(group.group, function (users) {
+          group.users = users;
+        });
+      });
       //alert("User is: " + user.get_title()); //there is also id, email, so this is pretty useful.
 
       // Role Definitions
@@ -231,9 +238,37 @@ sal.NewUtilities = function () {
     );
   }
 
+  function getUsersWithGroup(oGroup, callback) {
+    var context = new SP.ClientContext.get_current();
+
+    var oUsers = oGroup.get_users();
+
+    function onGetUserSuccess() {
+      var userObjs = [];
+      var userEnumerator = oUsers.getEnumerator();
+      while (userEnumerator.moveNext()) {
+        var userObj = {};
+        var oUser = userEnumerator.get_current();
+        userObj.title = oUser.get_title();
+        userObj.loginName = oUser.get_loginName();
+        userObjs.push(userObj);
+      }
+      callback(userObjs);
+    }
+
+    function onGetUserFailed(sender, args) {}
+
+    var data = { oUsers: oUsers, callback: callback };
+    context.load(oUsers);
+    context.executeQueryAsync(
+      Function.createDelegate(data, onGetUserSuccess),
+      Function.createDelegate(data, onGetUserFailed)
+    );
+  }
   var publicMembers = {
     createSiteGroup: createSiteGroup,
     getUserGroups: getUserGroups,
+    getUsersWithGroup: getUsersWithGroup,
   };
 
   return publicMembers;
@@ -347,8 +382,8 @@ ensureUserRest = function (userName) {
 
 function m_fnLoadSiteGroups(itemColl) {
   var m_arrSiteGroups = new Array();
-
   var listItemEnumerator = itemColl.getEnumerator();
+
   while (listItemEnumerator.moveNext()) {
     var oListItem = listItemEnumerator.get_current();
 
@@ -362,11 +397,44 @@ function m_fnLoadSiteGroups(itemColl) {
     groupObject["title"] = title;
     groupObject["group"] = oListItem;
 
+    // sal.getUsersWithGroup(oListItem, (users) => {
+    //   groupObject["users"] = users;
+    //   //sal.globalConfig.siteGroups.push(groupObject);
+    // });
+
     m_arrSiteGroups.push(groupObject);
   }
 
   return m_arrSiteGroups;
 }
+
+sal.getUsersWithGroup = function (oGroup, callback) {
+  var context = new SP.ClientContext.get_current();
+
+  var oUsers = oGroup.get_users();
+
+  function onGetUserSuccess() {
+    var userObjs = [];
+    var userEnumerator = oUsers.getEnumerator();
+    while (userEnumerator.moveNext()) {
+      var userObj = {};
+      var oUser = userEnumerator.get_current();
+      userObj.title = oUser.get_title();
+      userObj.loginName = oUser.get_loginName();
+      userObjs.push(userObj);
+    }
+    callback(userObjs);
+  }
+
+  function onGetUserFailed(sender, args) {}
+
+  var data = { oUsers: oUsers, callback: callback };
+  context.load(oUsers);
+  context.executeQueryAsync(
+    Function.createDelegate(data, onGetUserSuccess),
+    Function.createDelegate(data, onGetUserFailed)
+  );
+};
 
 sal.getSPSiteGroupByName = function (groupName) {
   var userGroup = null;
