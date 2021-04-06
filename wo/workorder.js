@@ -623,7 +623,12 @@ function getValuePairsHuman(listDef) {
           }
           break;
         case "Person":
-          fieldValue = observable.userName();
+          fieldValue = observable.title();
+          break;
+        case "Group":
+          if (observable()) {
+            fieldValue = observable().title;
+          }
           break;
         default:
           fieldValue = observable();

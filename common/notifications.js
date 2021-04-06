@@ -379,6 +379,23 @@ Workorder.NewNotifications = function () {
       "or copy and paste the below URL into your browser: <br> " +
       vm.requestLinkAdmin();
 
+    var addendum = new String();
+    var valuePairs = [];
+    if (vm.selectedServiceType().listDef) {
+      valuePairs = getValuePairsHuman(
+        vm.selectedServiceType().listDef.viewFields
+      );
+    }
+    addendum += "<br><br><ul>";
+    if (valuePairs.length) {
+      valuePairs.forEach(function (vp) {
+        addendum += "<li>" + vp[0] + " - " + vp[1] + "</li>";
+      });
+    }
+    addendum += "</ul>";
+
+    body += addendum;
+
     createEmail(to, toString, cc, ccString, [], subject, body);
   }
 
@@ -436,6 +453,10 @@ Workorder.NewNotifications = function () {
               vps.push(ao.get_lookupValue());
               break;
             case "SP.User":
+              vps.push(ao.get_id());
+              vps.push(ao.get_loginName());
+              break;
+            case "SP.Group":
               vps.push(ao.get_id());
               vps.push(ao.get_loginName());
               break;

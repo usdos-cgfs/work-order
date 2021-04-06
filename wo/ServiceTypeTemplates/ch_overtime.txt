@@ -60,6 +60,25 @@
   // vm.overtimeManagerDept = new PeopleField({
   //   SharePointGroupID: DeptApproversId,
   // });
+  vm.overtimeManagerDeptGroup = {
+    userName: ko.pureComputed(function () {
+      return vm.overtimeManagerDept()
+        ? vm.overtimeManagerDept().loginName
+        : null;
+    }),
+    lookupUser: ko.pureComputed(function () {
+      return vm.overtimeManagerDept() ? vm.overtimeManagerDept().group : null;
+    }),
+  };
+  // vm.overtimeManagerDeptGroup = function () {
+  //   if (!vm.overtimeManagerDept()) {
+  //     return null;
+  //   }
+  //   // We have to cludge this for now.
+  //   return {
+  //     userName: vm.overtimeManagerDept().group,
+  //   };
+  // };
   vm.overtimeManagerDept = new GroupField();
   vm.overtimeManagerTask = new PeopleField();
   vm.overtimeDepartment = ko.observable();
@@ -120,6 +139,7 @@
           overtimeManagerDept()"
         />
         <!-- ko if: overtimeManagerDept()?.users -->
+        <h3>Department Managers:</h3>
         <ul data-bind="foreach: overtimeManagerDept().users">
           <li data-bind="text: title"></li>
         </ul>
