@@ -1452,7 +1452,14 @@ function pipelineNotifications() {
 }
 
 function cancelWorkOrder() {
-  closeWorkOrder("Cancelled");
+  if (
+    confirm(
+      "Warning! Click OK to cancel this request.\n" +
+        "The request cannot be re-opened."
+    )
+  ) {
+    closeWorkOrder("Cancelled");
+  }
 }
 
 function closeWorkOrder(reason) {

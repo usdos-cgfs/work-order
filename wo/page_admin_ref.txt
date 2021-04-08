@@ -1013,7 +1013,7 @@
         onclick="cancelWorkOrder()"
         data-bind="enable: canEditForm"
       >
-        Cancel
+        Cancel Request
       </button>
     </div>
     <!-- /ko -->
