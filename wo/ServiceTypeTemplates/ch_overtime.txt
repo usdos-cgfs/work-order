@@ -11,7 +11,7 @@
       Title: { type: "Text", koMap: "requestID", required: false },
       FullName: { type: "Person", koMap: "overtimeFullName", required: true },
       ManagerDept: {
-        type: "Group",
+        type: "Person",
         koMap: "overtimeManagerDept",
         required: true,
       },
@@ -60,16 +60,16 @@
   // vm.overtimeManagerDept = new PeopleField({
   //   SharePointGroupID: DeptApproversId,
   // });
-  vm.overtimeManagerDeptGroup = {
-    userName: ko.pureComputed(function () {
-      return vm.overtimeManagerDept()
-        ? vm.overtimeManagerDept().loginName
-        : null;
-    }),
-    lookupUser: ko.pureComputed(function () {
-      return vm.overtimeManagerDept() ? vm.overtimeManagerDept().group : null;
-    }),
-  };
+  // vm.overtimeManagerDeptGroup = {
+  //   userName: ko.pureComputed(function () {
+  //     return vm.overtimeManagerDept()
+  //       ? vm.overtimeManagerDept().loginName
+  //       : null;
+  //   }),
+  //   lookupUser: ko.pureComputed(function () {
+  //     return vm.overtimeManagerDept() ? vm.overtimeManagerDept().group : null;
+  //   }),
+  // };
   // vm.overtimeManagerDeptGroup = function () {
   //   if (!vm.overtimeManagerDept()) {
   //     return null;
@@ -79,30 +79,30 @@
   //     userName: vm.overtimeManagerDept().group,
   //   };
   // };
-  vm.overtimeManagerDept = new GroupField();
+  vm.overtimeManagerDept = new PeopleField();
   vm.overtimeManagerTask = new PeopleField();
   vm.overtimeDepartment = ko.observable();
 
-  vm.overTimeDepartmentSelection = ko.observable();
-  vm.overTimeDepartmentSelection.subscribe(function (dept) {
-    if (!dept || typeof dept == "undefined") {
-      vm.overtimeManagerDept(null);
-      vm.overtimeDepartment(null);
-      return;
-    }
-    if (!dept.UserGroup) {
-      vm.overtimeDepartment(null);
-      vm.overtimeManagerDept(null);
-      return;
-    }
-    vm.overtimeDepartment(dept.Title);
-    vm.overtimeManagerDept(dept.UserGroup);
-  });
-  vm.overtimeDepartmentOpts = ko.pureComputed(function () {
-    return vm.configRequestOrgs().filter(function (ro) {
-      return ro.OrgType == "Department";
-    });
-  });
+  // vm.overTimeDepartmentSelection = ko.observable();
+  // vm.overTimeDepartmentSelection.subscribe(function (dept) {
+  //   if (!dept || typeof dept == "undefined") {
+  //     vm.overtimeManagerDept(null);
+  //     vm.overtimeDepartment(null);
+  //     return;
+  //   }
+  //   if (!dept.UserGroup) {
+  //     vm.overtimeDepartment(null);
+  //     vm.overtimeManagerDept(null);
+  //     return;
+  //   }
+  //   vm.overtimeDepartment(dept.Title);
+  //   vm.overtimeManagerDept(dept.UserGroup);
+  // });
+  // vm.overtimeDepartmentOpts = ko.pureComputed(function () {
+  //   return vm.configRequestOrgs().filter(function (ro) {
+  //     return ro.OrgType == "Department";
+  //   });
+  // });
   vm.overtimeRequisitionOrder = ko.observable();
   vm.overtimeLaborCategory = ko.observable();
   vm.overtimeContractorType = ko.observable();
@@ -130,35 +130,13 @@
         ></div>
       </div>
       <div class="field">
-        <!-- <label>Dept Manager Group<span class="required">*</span>: </label>
-        <input
-          class=""
-          type="text"
-          disabled
-          data-bind="value: overtimeManagerDept() ? overtimeManagerDept().title : 
-          overtimeManagerDept()"
-        /> -->
-        <!-- ko if: overtimeManagerDept()?.users -->
-        <label
-          >Department Managers:
-          <ul data-bind="foreach: overtimeManagerDept().users">
-            <li data-bind="text: title"></li>
-          </ul>
-        </label>
-        <!-- /ko -->
-        <!-- <input
-          class="editable-field"
-          type="text"
-          disabled="true"
-          data-bind="value: overtimeManagerDept.title, 
-          visible: currentView() == 'view'"
-        />
+        <label>Dept Manager: </label>
         <div
           id="peopleovertimeManagerDept"
           class="editable-field"
           data-bind="people: overtimeManagerDept, 
             visible: currentView() != 'view'"
-        ></div> -->
+        ></div>
       </div>
     </div>
     <div class="two fields">
@@ -182,18 +160,17 @@
         <input
           class="editable-field"
           type="text"
-          data-bind="visible: currentView() == 'view',
-          disable: currentView() == 'view',
+          data-bind="disable: currentView() == 'view',
               value: overtimeDepartment"
         />
-        <select
+        <!-- <select
           class="editable-field"
           type="text"
           data-bind="visible: currentView() != 'view',
             disable: currentView() == 'view',
             value: overTimeDepartmentSelection, options: overtimeDepartmentOpts,
             optionsText: 'Title', optionsCaption: 'Select...'"
-        ></select>
+        ></select> -->
       </div>
     </div>
     <div class="two fields">
