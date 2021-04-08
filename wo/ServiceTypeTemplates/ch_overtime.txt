@@ -13,7 +13,7 @@
       ManagerDept: {
         type: "Person",
         koMap: "overtimeManagerDept",
-        required: true,
+        required: false,
       },
       ManagerTask: {
         type: "Person",
