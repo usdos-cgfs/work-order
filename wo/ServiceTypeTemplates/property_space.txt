@@ -1,0 +1,257 @@
+<script>
+  /************************************************************
+   *    List Def:
+   ************************************************************/
+  vm.listDefs.push({
+    uid: "property_space",
+    name: "st_property_space",
+    title: "st_property_space",
+    viewFields: {
+      ID: { type: "Text", koMap: "empty", required: false },
+      Title: { type: "Text", koMap: "requestID", required: false },
+      LocationChoice: {
+        type: "Text",
+        koMap: "propertySpaceLoc",
+        required: false,
+      },
+      NumberItems: {
+        type: "Text",
+        koMap: "propertySpaceNumItems",
+        required: false,
+      },
+      NumberEmployees: {
+        type: "Text",
+        koMap: "propertySpaceNumEmployees",
+        required: false,
+      },
+      PropertyType: {
+        type: "Text",
+        koMap: "propertySpacePropertyType",
+        required: false,
+      },
+      CurrentLocation: {
+        type: "Text",
+        koMap: "propertySpaceCurLoc",
+        required: false,
+      },
+      NewLocation: {
+        type: "Text",
+        koMap: "propertySpaceNewLoc",
+        required: false,
+      },
+      Timeframe: {
+        type: "Text",
+        koMap: "propertySpaceTimeframe",
+        required: false,
+      },
+      PropOrSpace: {
+        type: "Text",
+        koMap: "propertySpaceProp",
+        required: false,
+      },
+      PropRequestType: {
+        type: "Text",
+        koMap: "propertySpacePropType",
+        required: false,
+      },
+      SpaceRequestType: {
+        type: "Text",
+        koMap: "propertySpaceSpaceType",
+        required: false,
+      },
+    },
+  });
+
+  /***************************************************************
+   *    Declare Observables
+   ***************************************************************/
+
+  vm.propertySpaceProp = ko.observable();
+  vm.propertySpacePropOpts = ko.observableArray([
+    { opt: 0, text: "Property" },
+    { opt: 1, text: "Space" },
+  ]);
+  vm.propertySpacePropType = ko.observable();
+  vm.propertySpacePropTypeOpts = ko.observableArray([
+    { opt: 0, text: "Inventory Request" },
+    { opt: 1, text: "Property move from one space to another" },
+    { opt: 2, text: "Property excess request" },
+  ]);
+  vm.propertySpaceSpaceType = ko.observable();
+  vm.propertySpaceSpaceTypeOpts = ko.observableArray([
+    { opt: 0, text: "Moving from one space to another" },
+    { opt: 1, text: "Request for new office space" },
+  ]);
+
+  vm.propertySpaceLoc = ko.observable();
+  vm.propertySpaceNumItems = ko.observable();
+  vm.propertySpaceNumEmployees = ko.observable();
+  vm.propertySpacePropertyType = ko.observable();
+  vm.propertySpaceCurLoc = ko.observable();
+  vm.propertySpaceNewLoc = ko.observable();
+  vm.propertySpaceTimeframe = ko.observable();
+  vm.propertySpaceLoc = ko.observable();
+</script>
+
+<script type="text/html" id="tmpl_property_space">
+  <div class="ui form">
+    <div class="eight wide field">
+      <div class="field">
+        <label
+          >Space or Property<span class="required">*</span>:
+          <select
+            class="editable-field"
+            type="text"
+            data-bind="value: propertySpaceProp,
+            options: propertySpacePropOpts,
+            optionsText: 'text',
+            optionsCaption: '--select--',
+             disable: currentView() == 'view'"
+          ></select>
+        </label>
+      </div>
+    </div>
+    <!-- ko if: vm.propertySpaceProp() && vm.propertySpaceProp().opt == 0 -->
+    <!-- if this is a property request -->
+    <div class="eight wide field">
+      <label
+        >Property Request Type<span class="required">*</span>:
+        <select
+          class="editable-field"
+          type="text"
+          data-bind="value: propertySpacePropType,
+            options: propertySpacePropTypeOpts,
+            optionsText: 'text',
+            optionsCaption: '--select--',
+             disable: currentView() == 'view'"
+        ></select>
+      </label>
+    </div>
+    <!-- ko if: propertySpacePropType() -->
+    <div class="two fields">
+      <div class="field">
+        <label
+          >Current Location:
+          <input
+            type="text"
+            data-bind="value: propertySpaceCurLoc,
+           disable: currentView() == 'view'"
+          />
+        </label>
+      </div>
+      <!-- ko if: propertySpacePropType() && propertySpacePropType().opt == 1-->
+      <div class="field">
+        <label
+          >Proposed Location:
+          <input
+            type="text"
+            data-bind="value: propertySpaceNewLoc,
+           disable: currentView() == 'view'"
+          />
+        </label>
+      </div>
+      <!-- /ko -->
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label
+          >Number of items:
+          <input
+            type="text"
+            data-bind="value: propertySpaceNumItems,
+             disable: currentView() == 'view'"
+          />
+        </label>
+      </div>
+      <div class="field">
+        <label
+          >Type of Property:
+          <input
+            type="text"
+            data-bind="value: propertySpacePropertyType,
+             disable: currentView() == 'view'"
+          />
+        </label>
+      </div>
+    </div>
+    <!-- /ko -->
+    <!-- /ko -->
+    <!-- ko if: vm.propertySpaceProp() && vm.propertySpaceProp().opt == 1 -->
+    <!-- if this is a Space request -->
+    <div class="eight wide field">
+      <label
+        >Space Request Type<span class="required">*</span>:
+        <select
+          class="editable-field"
+          type="text"
+          data-bind="value: propertySpaceSpaceType,
+          options: propertySpaceSpaceTypeOpts,
+          optionsText: 'text',
+          optionsCaption: '--select--',
+           disable: currentView() == 'view'"
+        ></select>
+      </label>
+    </div>
+    <!-- ko if: vm.propertySpaceSpaceType() && vm.propertySpaceSpaceType().opt == 0 -->
+    <div class="two fields">
+      <div class="field">
+        <label
+          >Current Location:
+          <input
+            type="text"
+            data-bind="value: propertySpaceCurLoc,
+              disable: currentView() == 'view'"
+          />
+        </label>
+      </div>
+      <div class="field">
+        <label
+          >Proposed Location:
+          <input
+            type="text"
+            data-bind="value: propertySpaceNewLoc,
+              disable: currentView() == 'view'"
+          />
+        </label>
+      </div>
+    </div>
+    <div class="eight wide field">
+      <label
+        >Number of items being moved:
+        <input
+          type="text"
+          data-bind="value: propertySpaceNumItems,
+         disable: currentView() == 'view'"
+        />
+      </label>
+    </div>
+    <!-- /ko -->
+    <!-- ko if: vm.propertySpaceSpaceType() && vm.propertySpaceSpaceType().opt == 1 -->
+    <div class="two fields">
+      <div class="field">
+        <label
+          >Number of employees:
+          <input
+            type="text"
+            data-bind="value: propertySpaceNumEmployees,
+              disable: currentView() == 'view'"
+          />
+        </label>
+      </div>
+    </div>
+    <!-- /ko -->
+    <!-- ko if: vm.propertySpaceSpaceType() -->
+    <div class="eight wide field">
+      <label
+        >Timeframe:
+        <input
+          type="text"
+          data-bind="value: propertySpaceTimeframe,
+        disable: currentView() == 'view'"
+        />
+      </label>
+    </div>
+    <!-- /ko -->
+    <!-- /ko -->
+  </div>
+</script>
