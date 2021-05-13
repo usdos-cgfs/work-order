@@ -25,11 +25,11 @@
         required: false,
       },
       Vendor: { type: "Text", koMap: "trainingVendor", required: true },
-      Location: { type: "Text", koMap: "trainingLocation", required: true },
-      Date1: { type: "DateTime", koMap: "trainingDate1", retuired: true },
-      Date2: { type: "DateTime", koMap: "trainingDate2", retuired: true },
-      Dates: { type: "Text", koMap: "trainingDates", required: true },
-      Cost: { type: "Text", koMap: "trainingCost", required: true },
+      Location: { type: "Text", koMap: "trainingLocation", required: false },
+      Date1: { type: "DateTime", koMap: "trainingDate1", required: true },
+      Date2: { type: "DateTime", koMap: "trainingDate2", required: true },
+      Dates: { type: "Text", koMap: "trainingDates", required: false },
+      Cost: { type: "Text", koMap: "trainingCost", required: false },
     },
   });
 
@@ -58,7 +58,7 @@
 <script type="text/html" id="tmpl_ch_hr_training">
   <div class="ui form">
     <div class="eight wide field">
-      <label>Request Supervisor<span class="required">*</span>: </label>
+      <label>Request Supervisor: </label>
       <input
         class="editable-field"
         type="text"
@@ -113,7 +113,7 @@
     </div>
     <div class="two fields">
       <div class="field">
-        <label>Location<span class="required">*</span>: </label>
+        <label>Location: </label>
         <input
           class="editable-field"
           type="text"
@@ -172,7 +172,7 @@
       </div>
     </div>
     <div class="eight wide field">
-      <label>Training Cost<span class="required">*</span>: </label>
+      <label>Training Cost: </label>
       <input
         class="editable-field"
         type="text"
