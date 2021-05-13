@@ -67,20 +67,17 @@
    ***************************************************************/
 
   vm.propertySpaceProp = ko.observable();
-  vm.propertySpacePropOpts = ko.observableArray([
-    { opt: 0, text: "Property" },
-    { opt: 1, text: "Space" },
-  ]);
+  vm.propertySpacePropOpts = ko.observableArray(["Property", "Space"]);
   vm.propertySpacePropType = ko.observable();
   vm.propertySpacePropTypeOpts = ko.observableArray([
-    { opt: 0, text: "Inventory Request" },
-    { opt: 1, text: "Property move from one space to another" },
-    { opt: 2, text: "Property excess request" },
+    "Inventory Request",
+    "Property move from one space to another",
+    "Property excess request",
   ]);
   vm.propertySpaceSpaceType = ko.observable();
   vm.propertySpaceSpaceTypeOpts = ko.observableArray([
-    { opt: 0, text: "Moving from one space to another" },
-    { opt: 1, text: "Request for new office space" },
+    "Moving from one space to another",
+    "Request for new office space",
   ]);
 
   vm.propertySpaceLoc = ko.observable();
@@ -104,14 +101,14 @@
             type="text"
             data-bind="value: propertySpaceProp,
             options: propertySpacePropOpts,
-            optionsText: 'text',
-            optionsCaption: '--select--',
+            optionsCaption: 'Select...',
              disable: currentView() == 'view'"
           ></select>
         </label>
       </div>
     </div>
-    <!-- ko if: vm.propertySpaceProp() && vm.propertySpaceProp().opt == 0 -->
+    <!-- ko if: vm.propertySpaceProp() && 
+      vm.propertySpaceProp() == vm.propertySpacePropOpts()[0] -->
     <!-- if this is a property request -->
     <div class="eight wide field">
       <label
@@ -121,13 +118,20 @@
           type="text"
           data-bind="value: propertySpacePropType,
             options: propertySpacePropTypeOpts,
-            optionsText: 'text',
-            optionsCaption: '--select--',
+            optionsCaption: 'Select...',
              disable: currentView() == 'view'"
         ></select>
       </label>
     </div>
     <!-- ko if: propertySpacePropType() -->
+    <!-- ko if: propertySpacePropType() == vm.propertySpacePropTypeOpts()[0] -->
+    <div class="eight wide field">
+      <label
+        >Location:
+        <select class="editable-field"></select>
+      </label>
+    </div>
+    <!-- /ko -->
     <div class="two fields">
       <div class="field">
         <label
@@ -139,7 +143,8 @@
           />
         </label>
       </div>
-      <!-- ko if: propertySpacePropType() && propertySpacePropType().opt == 1-->
+      <!-- ko if: propertySpacePropType() && 
+        propertySpacePropType() == vm.propertySpacePropTypeOpts()[1]-->
       <div class="field">
         <label
           >Proposed Location:
@@ -176,7 +181,8 @@
     </div>
     <!-- /ko -->
     <!-- /ko -->
-    <!-- ko if: vm.propertySpaceProp() && vm.propertySpaceProp().opt == 1 -->
+    <!-- ko if: vm.propertySpaceProp() && 
+      vm.propertySpaceProp() == vm.propertySpacePropOpts()[1] -->
     <!-- if this is a Space request -->
     <div class="eight wide field">
       <label
@@ -186,13 +192,13 @@
           type="text"
           data-bind="value: propertySpaceSpaceType,
           options: propertySpaceSpaceTypeOpts,
-          optionsText: 'text',
           optionsCaption: '--select--',
            disable: currentView() == 'view'"
         ></select>
       </label>
     </div>
-    <!-- ko if: vm.propertySpaceSpaceType() && vm.propertySpaceSpaceType().opt == 0 -->
+    <!-- ko if: vm.propertySpaceSpaceType() && 
+      vm.propertySpaceSpaceType() == vm.propertySpaceSpaceTypeOpts()[0] -->
     <div class="two fields">
       <div class="field">
         <label
@@ -226,7 +232,8 @@
       </label>
     </div>
     <!-- /ko -->
-    <!-- ko if: vm.propertySpaceSpaceType() && vm.propertySpaceSpaceType().opt == 1 -->
+    <!-- ko if: vm.propertySpaceSpaceType() && 
+      vm.propertySpaceSpaceType()== vm.propertySpaceSpaceTypeOpts()[1] -->
     <div class="two fields">
       <div class="field">
         <label
