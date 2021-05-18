@@ -25,9 +25,7 @@
         required: false,
       },
       Vendor: { type: "Text", koMap: "trainingVendor", required: true },
-      Location: { type: "Text", koMap: "trainingLocation", required: false },
       Date1: { type: "DateTime", koMap: "trainingDate1", required: true },
-      Date2: { type: "DateTime", koMap: "trainingDate2", required: true },
       Dates: { type: "Text", koMap: "trainingDates", required: false },
       Cost: { type: "Text", koMap: "trainingCost", required: false },
     },
@@ -44,13 +42,10 @@
   vm.trainingCourseTitle = ko.observable();
   vm.trainingCourseNumber = ko.observable();
   vm.trainingVendor = ko.observable();
-  vm.trainingLocation = ko.observable();
   vm.trainingDate1 = new DateField({
     minTimeGap: 15,
   });
-  vm.trainingDate2 = new DateField({
-    minTimeGap: 15,
-  });
+
   vm.trainingDates = ko.observable();
   vm.trainingCost = ko.observable();
 </script>
@@ -113,17 +108,7 @@
     </div>
     <div class="two fields">
       <div class="field">
-        <label>Location: </label>
-        <input
-          class="editable-field"
-          type="text"
-          data-bind="value: trainingLocation, disable: currentView() == 'view'"
-        />
-      </div>
-    </div>
-    <div class="two fields">
-      <div class="field">
-        <label>Requested Date 1<span class="required">*</span>:</label>
+        <label>Course Date<span class="required">*</span>:</label>
         <!-- ko if: currentView() == 'view' -->
         <input
           type="text"
@@ -141,30 +126,6 @@
               data-bind="disabled:
               currentView() == 'view',
               dateField: trainingDate1"
-            />
-          </div>
-        </div>
-        <!-- /ko -->
-      </div>
-      <div class="field">
-        <label>Requested Date 2<span class="required">*</span>:</label>
-        <!-- ko if: currentView() == 'view' -->
-        <input
-          type="text"
-          data-bind="value: trainingDate2.date().toLocaleString(),
-          disable: true"
-        />
-        <!-- /ko -->
-        <!-- ko if: currentView() != 'view' -->
-        <div class="ui calendar">
-          <div class="ui input left icon">
-            <i class="calendar icon"></i>
-            <input
-              class="editable-field"
-              type="text"
-              data-bind="disabled:
-              currentView() == 'view',
-              dateField: trainingDate2"
             />
           </div>
         </div>
