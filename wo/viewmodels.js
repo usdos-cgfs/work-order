@@ -111,8 +111,7 @@ var assignmentListDef = {
         },
         Viewer: {
           Name: "Viewer",
-          Desc:
-            "This role grants access to the request, but cannot make updates.",
+          Desc: "This role grants access to the request, but cannot make updates.",
         },
       },
       koMap: "empty",
@@ -273,6 +272,7 @@ var configServiceTypeListDef = {
     DescriptionTitle: { type: "Bool", koMap: "empty" },
     DaysToCloseBusiness: { type: "Text", koMap: "empty" },
     EmailPipelineOnClose: { type: "Bool", koMap: "empty" },
+    HideReport: { type: "Bool", koMap: "empty" },
     ReminderDays: { type: "Text", koMap: "empty" },
     KPIThresholdYellow: { type: "Text", koMap: "empty" },
     KPIThresholdGreen: { type: "Text", koMap: "empty" },

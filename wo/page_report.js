@@ -57,7 +57,7 @@ Workorder.Report.NewReportPage = function () {
             serviceType.RequestOrgs.map(function (reqOrg) {
               return reqOrg.get_lookupId();
             }).includes(self.requestOrg().ID) &&
-            serviceType.UID != "it_software"
+            !serviceType.HideReport
           );
         }
       });
