@@ -331,7 +331,7 @@
                     <!-- ko foreach: { data: stypeTable.cols, as: 'col' } -->
                     <td
                       class="disposable"
-                      data-bind="text: $root.lookupParseText(col, stypeTable.viewFields, order.ServiceItem[col])"
+                      data-bind="text: $root.lookupParseText(col, stypeTable.viewFields, order.ServiceItem)"
                     ></td>
                     <!-- /ko -->
                     <!-- /ko -->

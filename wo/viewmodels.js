@@ -1361,7 +1361,7 @@ function koviewmodel() {
         var lookupKeys = Object.keys(stype.listDef.viewFields).filter(function (
           col
         ) {
-          col != "ID" && col != "Title";
+          return col != "ID" && col != "Title";
         });
 
         //self.lookupTableCol(lookupKeys);
@@ -1384,12 +1384,14 @@ function koviewmodel() {
           var i = 0;
           lookupOrdersTemp.forEach(function (order) {
             var camlq =
-              '<View Scope="RecursiveAll"><Query><Where><Eq>' +
+              '<View Scope="RecursiveAll"><Query><Where><And>' +
+              '<Eq><FieldRef Name="FSObjType"/><Value Type="int">0</Value></Eq>' +
+              "<Eq>" +
               '<FieldRef Name="Title"/>' +
               '<Value Type="Text">' +
               order.Title +
               "</Value>" +
-              "</Eq></Where></Query></View>";
+              "</Eq></And></Where></Query></View>";
 
             stype.listRef.getListItems(camlq, function (val) {
               order.ServiceItem = val[0];
@@ -1419,22 +1421,23 @@ function koviewmodel() {
     return self.lookupServiceType().listDef;
   });
 
-  self.lookupParseText = function (col, viewFields, val) {
+  self.lookupParseText = function (col, viewFields, item) {
+    var targetValue = item ? item[col] : "";
     // If there's a value for this field
-    if (val) {
+    if (targetValue) {
       // Parse the type of val and return text
       switch (viewFields[col].type) {
         case "RichText":
-          return $(val).text();
+          return $(targetValue).text();
           break;
         case "DateTime":
-          return new Date(val).toLocaleDateString();
+          return new Date(targetValue).toLocaleDateString();
           break;
         case "Person":
-          return val.userName();
+          return targetValue.userName();
           break;
         default:
-          return val;
+          return targetValue;
       }
     }
   };

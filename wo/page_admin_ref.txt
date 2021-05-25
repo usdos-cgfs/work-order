@@ -43,7 +43,7 @@
     class="ui bottom attached tab segment"
   >
     <div class="container">
-      <div class="  " data-bind="visible: userIsSysAdmin()">
+      <div class="" data-bind="visible: userIsSysAdmin()">
         <input
           type="checkbox"
           id="admin-show-all-bool"
@@ -357,7 +357,7 @@
                     <!-- ko foreach: { data: stypeTable.cols, as: 'col' } -->
                     <td
                       class="disposable"
-                      data-bind="text: $root.lookupParseText(col, stypeTable.viewFields, order.ServiceItem[col])"
+                      data-bind="text: $root.lookupParseText(col, stypeTable.viewFields, order.ServiceItem)"
                     ></td>
                     <!-- /ko -->
                     <!-- /ko -->
