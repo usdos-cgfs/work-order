@@ -1342,6 +1342,8 @@ function koviewmodel() {
   self.lookupServiceType.subscribe(function (stype) {
     // First verify we have a valid servicetype that hasn't already been
     // looked up.
+    // This whole thing should probably be refactored. Should we do tables on
+    // a service type level?
     if (
       stype != undefined &&
       !self.lookupTables().find(function (tstype) {
@@ -1364,7 +1366,6 @@ function koviewmodel() {
           return col != "ID" && col != "Title";
         });
 
-        //self.lookupTableCol(lookupKeys);
         newServiceTable.cols = lookupKeys;
         newServiceTable.viewFields = stype.listDef.viewFields;
       }
