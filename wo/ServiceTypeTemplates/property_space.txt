@@ -119,7 +119,7 @@
           data-bind="value: propertySpacePropType,
             options: propertySpacePropTypeOpts,
             optionsCaption: 'Select...',
-             disable: currentView() == 'view'"
+            disable: currentView() == 'view'"
         ></select>
       </label>
     </div>
@@ -128,11 +128,19 @@
     <div class="eight wide field">
       <label
         >Location:
-        <select class="editable-field"></select>
+        <select
+          class="editable-field"
+          data-bind="value: propertySpaceLoc,
+            disable: currentView() == 'view'"
+        >
+          <option value="OnPremise">On Premise</option>
+          <option value="OffPremise">Off Premise</option>
+        </select>
       </label>
     </div>
     <!-- /ko -->
     <div class="two fields">
+      <!-- ko if: propertySpacePropType() != vm.propertySpacePropTypeOpts()[0] -->
       <div class="field">
         <label
           >Current Location:
@@ -143,6 +151,7 @@
           />
         </label>
       </div>
+      <!-- /ko -->
       <!-- ko if: propertySpacePropType() && 
         propertySpacePropType() == vm.propertySpacePropTypeOpts()[1]-->
       <div class="field">
