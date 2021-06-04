@@ -11,7 +11,7 @@
       Title: { type: "Text", koMap: "requestID" },
       Room: { type: "Text", koMap: "conferenceRoom", required: true },
       AVRequired: { type: "Bool", koMap: "conferenceAV", required: false },
-      AVNeeds: { type: "Text", koMap: "conferenceAVNeeds", required: false },
+      AVNeeds: { type: "Text", koMap: "conferenceAVNeeds", required: true },
     },
   });
 
@@ -53,6 +53,11 @@
         "This request has not been saved. " +
           "Please enter date ranges for your conference"
       );
+      vm.requestIsSaveable(false);
+    }
+
+    if (!vm.conferenceRoom() || !vm.conferenceAVNeeds()) {
+      alert("Conference room and AV Needs are required.");
       vm.requestIsSaveable(false);
     }
   };
