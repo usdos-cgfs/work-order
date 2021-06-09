@@ -40,14 +40,14 @@
           class="editable-field"
           type="text"
           disabled="true"
-          data-bind="value: voicemailEmployeeName.userName,  
+          data-bind="value: voicemailEmployeeName.title,  
           visible: currentView() == 'view'"
         />
         <div
           id="peoplevoiceMailEmployeeName"
           type="text"
           class="editable-field"
-          data-bind="people: voicemailEmployeeName.user, 
+          data-bind="people: voicemailEmployeeName, 
           visible: currentView()!='view'"
         ></div>
       </div>
