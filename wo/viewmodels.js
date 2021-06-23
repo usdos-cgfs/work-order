@@ -188,6 +188,7 @@ var configActionOfficesListDef = {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "empty" },
     //AOGroup: { type: "Person", koMap: "empty" },
+    Active: { type: "Bool", koMap: "empty" },
     CanAssign: { type: "Bool", koMap: "empty" },
     PreferredEmail: { type: "Text", koMap: "empty" },
     RequestOrg: { type: "Lookup", koMap: "empty" },
@@ -773,6 +774,11 @@ function koviewmodel() {
     role: ko.observable(),
   }; // Hold the details for our new assignment
   self.assignments.assigneeOpts = ko.pureComputed(function () {
+    var activeActionOffices = self
+      .configActionOffices()
+      .filter(function (office) {
+        return office.Active;
+      });
     //Who can the current user assign to?
     var uao = self.userActionOfficeOwnership().filter(function (uao) {
       return uao.CanAssign;
@@ -781,7 +787,9 @@ function koviewmodel() {
     if (!uao) {
       // This person isn't an action office, how did we get here?
       return [];
-    } else if (
+    }
+
+    if (
       uao
         .map(function (uao) {
           return uao.SysAdmin;
@@ -789,18 +797,18 @@ function koviewmodel() {
         .indexOf(true) >= 0
     ) {
       // User is sysadmin, return all action offices
-      return self.configActionOffices();
-    } else {
-      return self.configActionOffices().filter(function (aos) {
-        return (
-          uao
-            .map(function (userAO) {
-              return userAO.RequestOrg.get_lookupValue();
-            })
-            .indexOf(aos.RequestOrg.get_lookupValue()) >= 0
-        );
-      });
+      return activeActionOffices;
     }
+
+    // Finally, return only action offices that have our Request Org
+    // that our user is in (This should be done differently for legibility)
+    var myOrgIds = uao.map(function (office) {
+      return office.RequestOrg.get_lookupId();
+    });
+
+    return activeActionOffices.filter(function (office) {
+      return myOrgIds.indexOf(office.RequestOrg.get_lookupId()) >= 0;
+    });
   });
 
   self.assignments.roleOpts = function () {
