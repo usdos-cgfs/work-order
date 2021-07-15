@@ -50,7 +50,7 @@
         <div
           id="peoplephoneUser"
           class="editable-field"
-          data-bind="people: phoneUser.user, 
+          data-bind="people: phoneUser, 
             visible: currentView() != 'view'"
         ></div>
       </div>

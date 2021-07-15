@@ -47,7 +47,7 @@
         <div
           id="peoplemobileSupervisor"
           class="editable-field"
-          data-bind="people: mobileSupervisor.user, 
+          data-bind="people: mobileSupervisor, 
           visible: currentView() != 'view'"
         ></div>
       </div>
