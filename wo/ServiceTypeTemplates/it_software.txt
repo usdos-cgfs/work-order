@@ -58,6 +58,9 @@
   vm.itSoftwareType = ko.observable();
   vm.itSoftwareTypeOpts = ko.observableArray(["New", "Maintenance Renewal"]);
   vm.itSoftwarePRNum = ko.observable();
+  vm.itSoftwareShowPRNum = ko.pureComputed(function () {
+    return vm.page() == "admin.aspx";
+  });
 </script>
 
 <script type="text/html" id="tmpl_it_software">
@@ -99,13 +102,15 @@
             options: itSoftwareTypeOpts, optionsCaption: 'Select...', value: itSoftwareType"
         ></select>
       </div>
+      <!-- ko if: itSoftwareShowPRNum -->
       <div class="eight wide field">
         <label>PR #: </label>
         <input
           type="text"
-          data-bind="value: itSoftwarePRNum, disable: currentView()=='view'"
+          data-bind="value: itSoftwarePRNum, , disable: currentView()=='view'"
         />
       </div>
+      <!-- /ko -->
     </div>
   </div>
 </script>
