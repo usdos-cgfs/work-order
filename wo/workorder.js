@@ -548,17 +548,75 @@ function createWorkorderFolders() {
       }
     });
   });
+}
 
-  // vm.libRefWODocs().createFolderRec(vm.requestFolderPath(),function (folder) {
-  //   vm.libRefWODocs().setLibFolderPermissions(
-  //     vm.requestFolderPath(),
-  //     folderPermissions,
-  //     function()  {
-  //       vm.foldersCreatedInc();
-  //     },
-  //     true
-  //   );
-  // });
+function updatePermissions() {
+  window.breakingPermissionsTimeoutID = window.setTimeout(
+    breakingPermissionsTimeoutFunc,
+    5000
+  );
+
+  // Set all permissions up front
+  var folderPermissions = vm.requestFolderPerms();
+  var folderCnt = 0;
+
+  if (vm.requestAttachments().length) {
+    folderCnt += 1;
+  }
+  //For each of our multi-item lists, create a new folder
+  var listRefs = [
+    vm.listRefWO(),
+    vm.listRefAction(),
+    vm.listRefAssignment(),
+    vm.listRefWOEmails(),
+  ];
+
+  if (vm.requestSvcTypeListBool()) {
+    // Also create a folder for the service type
+    listRefs.push(vm.selectedServiceType().listRef);
+  }
+  if (vm.requestComments) {
+    listRefs.push(vm.listRefComment());
+  }
+
+  var folderIncrementer = new Incremental(
+    0,
+    listRefs.length + folderCnt,
+    updatePermissionsCallback
+  );
+
+  listRefs.forEach(function (listRef) {
+    listRef.upsertListFolderPath(vm.requestFolderPath(), function (folderId) {
+      // Update the permissions for the new folder
+      if (folderId) {
+        listRef.setItemPermissions(
+          folderId,
+          folderPermissions,
+          function () {
+            folderIncrementer.inc();
+          },
+          true
+        );
+      }
+    });
+  });
+
+  if (vm.requestAttachments().length) {
+    vm.libRefWODocs().createFolderRec(vm.requestFolderPath(), function () {
+      vm.libRefWODocs().setLibFolderPermissions(
+        vm.requestFolderPath(),
+        vm.requestFolderPerms(),
+        function () {
+          folderIncrementer.inc();
+        },
+        true
+      );
+    });
+  }
+}
+
+function updatePermissionsCallback() {
+  alert("Permissions updated");
 }
 
 function ensureAttachments() {
