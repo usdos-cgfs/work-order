@@ -39,6 +39,12 @@
         required: true,
         displayName: "Request Type",
       },
+      PRNumber: {
+        type: "Text",
+        koMap: "itSoftwarePRNum",
+        required: false,
+        displayName: "PR Number",
+      },
     },
   });
 
@@ -51,6 +57,7 @@
   vm.itSoftwareCost = ko.observable();
   vm.itSoftwareType = ko.observable();
   vm.itSoftwareTypeOpts = ko.observableArray(["New", "Maintenance Renewal"]);
+  vm.itSoftwarePRNum = ko.observable();
 </script>
 
 <script type="text/html" id="tmpl_it_software">
@@ -84,14 +91,21 @@
           data-bind="value: itSoftwareCost, disable: currentView()=='view'"
         />
       </div>
-    </div>
-    <div class="eight wide field">
-      <label> Request Type<span class="required">*</span>: </label>
-      <select
-        type="text"
-        data-bind="disable: currentView() == 'view',
+      <div class="eight wide field">
+        <label> Request Type<span class="required">*</span>: </label>
+        <select
+          type="text"
+          data-bind="disable: currentView() == 'view',
             options: itSoftwareTypeOpts, optionsCaption: 'Select...', value: itSoftwareType"
-      ></select>
+        ></select>
+      </div>
+      <div class="eight wide field">
+        <label>PR #: </label>
+        <input
+          type="text"
+          data-bind="value: itSoftwarePRNum, disable: currentView()=='view'"
+        />
+      </div>
     </div>
   </div>
 </script>

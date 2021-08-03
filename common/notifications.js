@@ -170,7 +170,11 @@ Workorder.NewNotifications = function () {
     if (vm.assignAssignee() && vm.assignAssignee().userName()) {
       to.push(vm.assignAssignee().lookupUser());
     } else if (vm.assignActionOffice() && vm.assignActionOffice().UserAddress) {
-      to.push(vm.assignActionOffice().UserAddress);
+      if (vm.assignActionOffice().PreferredEmail) {
+        to.push(vm.assignActionOffice().PreferredEmail);
+      } else {
+        to.push(vm.assignActionOffice().UserAddress);
+      }
     }
 
     var toString = [];
