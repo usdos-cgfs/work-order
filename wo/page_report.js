@@ -30,8 +30,28 @@ Workorder.Report.NewReportPage = function () {
       return self.timerEnd() - self.timerStart();
     });
 
-    self.thresholdGreen = ko.observable(90);
-    self.thresholdYellow = ko.observable(40);
+    /*
+     Metrics are:
+            green yellow
+      IT    85   82   
+      ADMIN 90   40  
+     */
+    self.thresholdGreen = ko.pureComputed(function () {
+      switch (self.requestOrg().Title) {
+        case "CGFS/EX/IT":
+          return 85;
+        default:
+          return 90;
+      }
+    });
+    self.thresholdYellow = ko.pureComputed(function () {
+      switch (self.requestOrg().Title) {
+        case "CGFS/EX/IT":
+          return 82;
+        default:
+          return 40;
+      }
+    });
 
     self.view = ko.observable();
     self.viewOpts = ko.observableArray(["Closed", "Open"]);
@@ -56,8 +76,7 @@ Workorder.Report.NewReportPage = function () {
           return (
             serviceType.RequestOrgs.map(function (reqOrg) {
               return reqOrg.get_lookupId();
-            }).includes(self.requestOrg().ID) &&
-            !serviceType.HideReport
+            }).includes(self.requestOrg().ID) && !serviceType.HideReport
           );
         }
       });

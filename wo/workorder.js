@@ -616,7 +616,8 @@ function updatePermissions() {
 }
 
 function updatePermissionsCallback() {
-  alert("Permissions updated");
+  window.clearTimeout(window.breakingPermissionsTimeoutID);
+  console.log("Permissions updated: ", vm.requestID());
 }
 
 function ensureAttachments() {
