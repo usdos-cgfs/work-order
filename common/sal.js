@@ -138,9 +138,8 @@ sal.NewUtilities = function () {
     oGroup.set_owner(oWebsite.get_associatedOwnerGroup());
 
     oGroup.update();
-    var collRoleDefinitionBinding = SP.RoleDefinitionBindingCollection.newObject(
-      clientContext
-    );
+    var collRoleDefinitionBinding =
+      SP.RoleDefinitionBindingCollection.newObject(clientContext);
 
     this.oRoleDefinitions = [];
 
@@ -302,6 +301,15 @@ function getUserProperties() {
 }
 
 function ensureUser(userName, callback) {
+  var group = sal.globalConfig.siteGroups.find(function (group) {
+    return group.loginName == userName;
+  });
+
+  if (group) {
+    callback(group.group);
+    return;
+  }
+
   var context = new SP.ClientContext.get_current();
   var user = context.get_web().ensureUser(userName);
 
@@ -328,6 +336,16 @@ function ensureUser(userName, callback) {
 }
 
 function ensureUserById(userId, callback) {
+  // First check if this is a group
+  var group = sal.globalConfig.siteGroups.find(function (group) {
+    return group.ID == userId;
+  });
+
+  if (group) {
+    callback(group.group);
+    return;
+  }
+
   var context = new SP.ClientContext.get_current();
   var user = context.get_web().getUserById(userId);
 
@@ -337,7 +355,7 @@ function ensureUserById(userId, callback) {
   }
 
   function onRequestFail(sender, args) {
-    alert("error msg");
+    alert("Could not find user with id: ", userId);
   }
   data = { user: user, callback: callback };
 
@@ -964,9 +982,8 @@ sal.NewSPList = function (listDef) {
       //var oList = web.get_lists().getByTitle(self.config.def.title);
 
       this.resolvedGroups.forEach(function (groupPairs) {
-        var roleDefBindingColl = SP.RoleDefinitionBindingCollection.newObject(
-          currCtx
-        );
+        var roleDefBindingColl =
+          SP.RoleDefinitionBindingCollection.newObject(currCtx);
         roleDefBindingColl.add(
           web.get_roleDefinitions().getByName(groupPairs[1])
         );
@@ -974,9 +991,8 @@ sal.NewSPList = function (listDef) {
       });
 
       this.users.forEach(function (userPairs) {
-        var roleDefBindingColl = SP.RoleDefinitionBindingCollection.newObject(
-          currCtx
-        );
+        var roleDefBindingColl =
+          SP.RoleDefinitionBindingCollection.newObject(currCtx);
         roleDefBindingColl.add(
           web.get_roleDefinitions().getByName(userPairs[1])
         );
@@ -1468,9 +1484,8 @@ sal.NewSPList = function (listDef) {
       }
 
       this.resolvedGroups.forEach(function (groupPairs) {
-        var roleDefBindingColl = SP.RoleDefinitionBindingCollection.newObject(
-          currCtx
-        );
+        var roleDefBindingColl =
+          SP.RoleDefinitionBindingCollection.newObject(currCtx);
         roleDefBindingColl.add(
           web.get_roleDefinitions().getByName(groupPairs[1])
         );
@@ -1478,9 +1493,8 @@ sal.NewSPList = function (listDef) {
       });
 
       this.users.forEach(function (userPairs) {
-        var roleDefBindingColl = SP.RoleDefinitionBindingCollection.newObject(
-          currCtx
-        );
+        var roleDefBindingColl =
+          SP.RoleDefinitionBindingCollection.newObject(currCtx);
         roleDefBindingColl.add(
           web.get_roleDefinitions().getByName(userPairs[1])
         );

@@ -79,30 +79,36 @@
   //     userName: vm.overtimeManagerDept().group,
   //   };
   // };
-  vm.overtimeManagerDept = new PeopleField();
+  var peopleSchemaOpts = {
+    PrincipalAccountType: "User,SPGroup",
+  };
+  vm.overtimeManagerDept = new PeopleField(peopleSchemaOpts);
   vm.overtimeManagerTask = new PeopleField();
   vm.overtimeDepartment = ko.observable();
 
-  // vm.overTimeDepartmentSelection = ko.observable();
-  // vm.overTimeDepartmentSelection.subscribe(function (dept) {
-  //   if (!dept || typeof dept == "undefined") {
-  //     vm.overtimeManagerDept(null);
-  //     vm.overtimeDepartment(null);
-  //     return;
-  //   }
-  //   if (!dept.UserGroup) {
-  //     vm.overtimeDepartment(null);
-  //     vm.overtimeManagerDept(null);
-  //     return;
-  //   }
-  //   vm.overtimeDepartment(dept.Title);
-  //   vm.overtimeManagerDept(dept.UserGroup);
-  // });
-  // vm.overtimeDepartmentOpts = ko.pureComputed(function () {
-  //   return vm.configRequestOrgs().filter(function (ro) {
-  //     return ro.OrgType == "Department";
-  //   });
-  // });
+  vm.overTimeDepartmentSelection = ko.observable();
+  vm.overTimeDepartmentSelection.subscribe(function (dept) {
+    if (!dept || typeof dept == "undefined") {
+      vm.overtimeManagerDept(null);
+      vm.overtimeDepartment(null);
+      return;
+    }
+    if (!dept.UserGroup) {
+      vm.overtimeDepartment(null);
+      vm.overtimeManagerDept(null);
+      return;
+    }
+    vm.overtimeDepartment(dept.Title);
+    vm.overtimeManagerDept.userId(dept.UserGroup);
+  });
+  vm.overtimeDepartmentOpts = ko.pureComputed(function () {
+    return vm.configRequestOrgs().filter(function (ro) {
+      return (
+        ro.OrgType ==
+        configRequestOrgsListDef.viewFields.OrgType.opts.DEPARTMENT
+      );
+    });
+  });
   vm.overtimeRequisitionOrder = ko.observable();
   vm.overtimeLaborCategory = ko.observable();
   vm.overtimeContractorType = ko.observable();
@@ -157,20 +163,20 @@
       </div>
       <div class="field">
         <label>Department<span class="required">*</span>:</label>
-        <input
+        <!-- <input
           class="editable-field"
           type="text"
           data-bind="disable: currentView() == 'view',
               value: overtimeDepartment"
-        />
-        <!-- <select
+        /> -->
+        <select
           class="editable-field"
           type="text"
           data-bind="visible: currentView() != 'view',
             disable: currentView() == 'view',
             value: overTimeDepartmentSelection, options: overtimeDepartmentOpts,
             optionsText: 'Title', optionsCaption: 'Select...'"
-        ></select> -->
+        ></select>
       </div>
     </div>
     <div class="two fields">

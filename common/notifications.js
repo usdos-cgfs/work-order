@@ -50,16 +50,20 @@ Workorder.NewNotifications = function () {
 
   function newWorkorderEmailActionOffices() {
     // 1. Send emails to request orgs letting them know there's a new email.
-    var to = vm
-      .requestOrgs()
-      .map(function (ao) {
-        return vm.configRequestOrgs().find(function (aoid) {
-          return aoid.ID == ao.ID;
-        });
-      })
-      .map(function (aoids) {
-        return aoids.UserGroup;
-      });
+    // var to = vm
+    //   .requestOrgs()
+    //   .map(function (ao) {
+    //     return vm.configRequestOrgs().find(function (aoid) {
+    //       return aoid.ID == ao.ID;
+    //     });
+    //   })
+    //   .map(function (aoids) {
+    //     return aoids.UserGroup;
+    //   });
+
+    var to = vm.request.pipeline.allActionOffices().map(function (ao) {
+      return ao.PreferredEmail ? ao.PreferredEmail : ao.UserAddress;
+    });
 
     var toString = [];
     var ccString = [];
@@ -95,16 +99,9 @@ Workorder.NewNotifications = function () {
   function workorderReminderEmails(id) {
     if (vm.selectedServiceType().ReminderDays) {
       // If we have reminders create our New Work Order Email
-      var to = vm
-        .requestOrgs()
-        .map(function (ao) {
-          vm.configRequestOrgs().find(function (aoid) {
-            return aoid.ID == ao.ID;
-          });
-        })
-        .map(function (aoids) {
-          return aoids.UserGroup;
-        });
+      var to = vm.request.pipeline.allActionOffices().map(function (ao) {
+        return ao.PreferredEmail ? ao.PreferredEmail : ao.UserAddress;
+      });
 
       var toString = [];
       var ccString = [];
@@ -167,9 +164,11 @@ Workorder.NewNotifications = function () {
 
   function newAssignmentNotification(role, id) {
     var to = [];
+    // Assigning an individual? Or an Action Office
     if (vm.assignAssignee() && vm.assignAssignee().userName()) {
       to.push(vm.assignAssignee().lookupUser());
     } else if (vm.assignActionOffice() && vm.assignActionOffice().UserAddress) {
+      // if tha action office has a preferred email, use it.
       if (vm.assignActionOffice().PreferredEmail) {
         to.push(vm.assignActionOffice().PreferredEmail);
       } else {

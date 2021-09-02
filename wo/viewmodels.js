@@ -203,7 +203,16 @@ var configRequestOrgsListDef = {
   viewFields: {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "empty" },
-    OrgType: { type: "Text", koMap: "empty" },
+    OrgType: {
+      type: "Text",
+      koMap: "empty",
+      opts: {
+        ACTIONOFFICES: "Action Offices",
+        REQUESTINGOFFICE: "Requesting Office",
+        DEPARTMENT: "Department",
+      },
+    },
+    BreakAccess: { type: "Bool", koMap: "empty" },
     UserGroup: { type: "Person", koMap: "empty" },
     ContactInfo: { type: "Text", koMap: "empty" },
   },
@@ -440,59 +449,6 @@ function PeopleField(schemaOpts) {
   this.lookupUser = ko.observable();
   this.ensuredUser = ko.observable();
 }
-// function PeopleField() {
-//   var self = this;
-//   this.user = ko.observable();
-//   this.userName = ko.pureComputed({
-//     read: function () {
-//       return self.user() ? self.user().userName : "";
-//     },
-//   });
-//   this.userTitle = ko.pureComputed({
-//     read: function () {
-//       return self.user() ? self.user().title : "";
-//     },
-//   });
-//   this.userId = ko.pureComputed(
-//     {
-//       read: function () {
-//         if (self.user()) {
-//           return self.user().ID;
-//         }
-//       },
-//       write: function (value) {
-//         if (value) {
-//           var user = {};
-//           switch (value.constructor.getName()) {
-//             case "SP.FieldUserValue":
-//               ensureUserById(value.get_lookupId(), function (ensuredUser) {
-//                 user.ID = ensuredUser.get_id();
-//                 user.userName = ensuredUser.get_loginName();
-//                 user.title = ensuredUser.get_title();
-//                 user.isEnsured = true;
-//                 self.user(user);
-//                 self.lookupUser(value);
-//               });
-//               break;
-//             case "SP.User":
-//               user.ID = value.get_id();
-//               user.userName = value.get_loginName();
-//               user.title = value.get_title();
-//               user.isEnsured = false;
-//               self.user(user);
-//               self.lookupUser(value);
-//               break;
-//             default:
-//               break;
-//           }
-//         }
-//       },
-//     },
-//     this
-//   );
-//   this.lookupUser = ko.observable();
-//   this.ensuredUser = ko.observable();
-// }
 
 function DateField(newOpts, newDate) {
   newOpts =
@@ -1853,7 +1809,7 @@ function koviewmodel() {
   });
 
   self.requestFolderPerms = ko.pureComputed(function () {
-    //These offices do not share info among all members
+    // These offices do not share info among all members
     var restrictedRequestingOffices = ["CGFS"];
 
     var folderPermissions = [
@@ -1881,13 +1837,23 @@ function koviewmodel() {
       var assignedOffice = self.configActionOffices().find(function (ao) {
         return ao.ID == stage.ActionOffice.get_lookupId();
       });
+
       var assignedOrg = self.configRequestOrgs().find(function (ro) {
         return ro.ID == assignedOffice.RequestOrg.get_lookupId();
       });
-      folderPermissions.push([
-        assignedOrg.UserGroup.get_lookupValue(),
-        "Restricted Contribute",
-      ]);
+
+      // Break access based on "BreakAccess" flag on Request Org
+      // Yes: Grant Access to Action Office UserAddress Only
+      // No: Grant Access to Request Org UserGroup
+      if (assignedOrg.BreakAccess) {
+        var assignee = assignedOffice.UserAddress.get_lookupValue();
+      } else {
+        var assignee = assignedOrg.UserGroup.get_lookupValue();
+      }
+
+      if (assignee) {
+        folderPermissions.push([assignee, "Restricted Contribute"]);
+      }
 
       //If there's a wildcard assignee, get them too
       if (stage.WildCardAssignee) {
