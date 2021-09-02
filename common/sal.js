@@ -849,6 +849,13 @@ sal.NewSPList = function (listDef) {
     );
   }
 
+  function getListItemsAsync(caml) {
+    viewFields = typeof viewFields !== "undefined" ? viewFields : null;
+    return new Promise((resolve, reject) => {
+      getListItems(caml, resolve);
+    });
+  }
+
   /*****************************************************************
                             updateListItem      
     ******************************************************************/
@@ -927,6 +934,12 @@ sal.NewSPList = function (listDef) {
   /*****************************************************************
                             Set Item Permissions  
     ******************************************************************/
+
+  function setItemPermissionsAsync(id, valuePairs, reset) {
+    return new Promise((resolve, reject) => {
+      setItemPermissions(id, valuePairs, resolve, reset);
+    });
+  }
   /**
    * Documentation - setItemPermissions
    * @param {number} id Item identifier, obtain using getListItems above
@@ -1567,9 +1580,11 @@ sal.NewSPList = function (listDef) {
     config: this.config,
     createListItem: createListItem,
     getListItems: getListItems,
+    getListItemsAsync: getListItemsAsync,
     updateListItem: updateListItem,
     deleteListItem: deleteListItem,
     setItemPermissions: setItemPermissions,
+    setItemPermissionsAsync: setItemPermissionsAsync,
     getItemPermissions: getItemPermissions,
     getFolderContents: getFolderContents,
     showModal: showModal,
