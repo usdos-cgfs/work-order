@@ -1,0 +1,148 @@
+<script>
+  /************************************************************
+   *    List Def: Conference
+   ************************************************************/
+  vm.listDefs.push({
+    uid: "ch_exit_interview",
+    name: "st_ch_exit_interview",
+    title: "st_ch_exit_interview",
+    viewFields: {
+      ID: { type: "Text", koMap: "empty" },
+      Title: { type: "Text", koMap: "requestID" },
+      Position: {
+        type: "Text",
+        koMap: "exit_interviewPosition",
+        required: true,
+      },
+      EmployeeType: {
+        type: "Text",
+        koMap: "exit_interviewEmployeeType",
+        required: true,
+      },
+      Reason: { type: "Text", koMap: "exit_interviewReason", required: false },
+      PreferredDate: {
+        type: "DateTime",
+        koMap: "exit_interviewPreferredDate",
+        required: true,
+      },
+      LastDay: {
+        type: "DateTime",
+        koMap: "exit_interviewLastDay",
+        required: true,
+      },
+    },
+  });
+
+  /***************************************************************
+   *    Declare Observables
+   ***************************************************************/
+
+  vm.exit_interviewPosition = ko.observable();
+  vm.exit_interviewEmployeeType = ko.observable();
+  vm.exit_interviewEmployeeTypeOpts = ko.observableArray([
+    "Direct Hire",
+    "Government",
+  ]);
+
+  vm.exit_interviewReason = ko.observable();
+  vm.exit_interviewReasonOpts = ko.observableArray([
+    "Transfer",
+    "Promotion",
+    "Resignation",
+    "Retirement",
+  ]);
+
+  vm.exit_interviewPreferredDate = new DateField({ minTimeGap: 15 });
+
+  vm.exit_interviewLastDay = new DateField();
+
+  var ch_exit_interview = vm.configServiceTypes().find(function (stype) {
+    return stype.UID == "ch_exit_interview";
+  });
+
+  ch_exit_interview.validate = function () {
+    // Service type specific validation
+  };
+</script>
+
+<script type="text/html" id="tmpl_ch_exit_interview">
+  <div class="ui form">
+    <div class="eight wide field">
+      <label>Position<span class="required">*</span>:</label>
+      <input
+        class="editable-field"
+        type="text"
+        data-bind="disable: currentView() == 'view',
+              value: exit_interviewPosition"
+      />
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label>Employee Type<span class="required">*</span>:</label>
+        <select
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+              value: exit_interviewEmployeeType,
+              options: exit_interviewEmployeeTypeOpts, optionsCaption: 'Select...',"
+        ></select>
+      </div>
+      <div class="field">
+        <label>Reason for Leaving<span class="required">*</span>:</label>
+        <select
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+              value: exit_interviewReason,
+              options: exit_interviewReasonOpts, optionsCaption: 'Select...',"
+        ></select>
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="eight wide field">
+        <label>Preferred Date/Time<span class="required">*</span>:</label>
+        <!-- ko if: currentView() == 'view' -->
+        <input
+          type="text"
+          data-bind="value: exit_interviewPreferredDate.date().toLocaleString(),
+        disable: true"
+        />
+        <!-- /ko -->
+        <!-- ko if: currentView() != 'view' -->
+        <div class="ui calendar">
+          <div class="ui fill input left icon">
+            <i class="calendar icon"></i>
+            <input
+              type="text"
+              placeholder="End"
+              data-bind="dateField: exit_interviewPreferredDate"
+            />
+          </div>
+        </div>
+        <!-- /ko -->
+      </div>
+      <div class="eight wide field">
+        <label>Last Day<span class="required">*</span>:</label>
+        <!-- ko if: currentView() == 'view' -->
+        <input
+          type="text"
+          data-bind="value: exit_interviewLastDay.date().toLocaleDateString(),
+        disable: true"
+        />
+        <!-- /ko -->
+        <!-- ko if: currentView() != 'view' -->
+        <div class="ui calendar">
+          <div class="ui fill input left icon">
+            <i class="calendar icon"></i>
+            <input
+              type="text"
+              placeholder="End"
+              data-bind="dateField: exit_interviewLastDay"
+            />
+          </div>
+        </div>
+        <!-- /ko -->
+      </div>
+    </div>
+  </div>
+</script>

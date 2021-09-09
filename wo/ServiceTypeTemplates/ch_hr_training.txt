@@ -12,10 +12,20 @@
       EmployeeType: {
         type: "Text",
         koMap: "trainingEmployeeType",
+        required: true,
+      },
+      CourseTitle: {
+        type: "Text",
+        koMap: "trainingCourseTitle",
+        required: true,
+      },
+      CourseNumber: {
+        type: "Text",
+        koMap: "trainingCourseNumber",
         required: false,
       },
-      Vendor: { type: "Text", koMap: "trainingVendor", required: false },
-      Location: { type: "Text", koMap: "trainingLocation", required: false },
+      Vendor: { type: "Text", koMap: "trainingVendor", required: true },
+      Date1: { type: "DateTime", koMap: "trainingDate1", required: true },
       Dates: { type: "Text", koMap: "trainingDates", required: false },
       Cost: { type: "Text", koMap: "trainingCost", required: false },
     },
@@ -29,17 +39,55 @@
     "Direct Hire",
     "Contractor",
   ]);
+  vm.trainingCourseTitle = ko.observable();
+  vm.trainingCourseNumber = ko.observable();
   vm.trainingVendor = ko.observable();
-  vm.trainingLocation = ko.observable();
+  vm.trainingDate1 = new DateField({
+    minTimeGap: 15,
+  });
+
   vm.trainingDates = ko.observable();
   vm.trainingCost = ko.observable();
 </script>
 
 <script type="text/html" id="tmpl_ch_hr_training">
   <div class="ui form">
+    <div class="eight wide field">
+      <label>Request Supervisor: </label>
+      <input
+        class="editable-field"
+        type="text"
+        disabled="true"
+        data-bind="value: requestorSupervisor.title, visible: currentView() == 'view'"
+      />
+      <div
+        id="peopletrainingrequestorSupervisor"
+        class="editable-field"
+        data-bind="people: requestorSupervisor, 
+        visible: currentView() != 'view'"
+      ></div>
+    </div>
     <div class="two fields">
       <div class="field">
-        <label>Training Provider/Vendor: </label>
+        <label>Course Title<span class="required">*</span>: </label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="value: trainingCourseTitle, disable: currentView() == 'view'"
+        />
+      </div>
+      <div class="field">
+        <label>Course Number: </label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="value: trainingCourseNumber, disable: currentView() == 'view'"
+        />
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label>Training Provider/Vendor<span class="required">*</span>: </label>
         <input
           class="editable-field"
           type="text"
@@ -60,20 +108,28 @@
     </div>
     <div class="two fields">
       <div class="field">
-        <label>Location: </label>
+        <label>Course Date<span class="required">*</span>:</label>
+        <!-- ko if: currentView() == 'view' -->
         <input
-          class="editable-field"
           type="text"
-          data-bind="value: trainingLocation, disable: currentView() == 'view'"
+          data-bind="value: trainingDate1.date().toLocaleString(),
+          disable: true"
         />
-      </div>
-      <div class="field">
-        <label>Training Dates: </label>
-        <input
-          class="editable-field"
-          type="text"
-          data-bind="value: trainingDates, disable: currentView() == 'view'"
-        />
+        <!-- /ko -->
+        <!-- ko if: currentView() != 'view' -->
+        <div class="ui calendar">
+          <div class="ui input left icon">
+            <i class="calendar icon"></i>
+            <input
+              class="editable-field"
+              type="text"
+              data-bind="disabled:
+              currentView() == 'view',
+              dateField: trainingDate1"
+            />
+          </div>
+        </div>
+        <!-- /ko -->
       </div>
     </div>
     <div class="eight wide field">

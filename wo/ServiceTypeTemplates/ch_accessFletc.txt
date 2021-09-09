@@ -64,7 +64,7 @@
       <div class="eight wide field">
         <label>Employee Type<span class="required">*</span>: </label>
         <select
-          data-bind="value: accessEmployeeType, options: accessEmployeeTypeOpts, 
+          data-bind="value: accessFletcEmployeeType, options: accessFletcEmployeeTypeOpts, 
           optionsCaption: 'Select...',
           disable: currentView()=='view'"
         ></select>

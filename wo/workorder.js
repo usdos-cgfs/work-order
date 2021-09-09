@@ -6,12 +6,16 @@ tabsEnum = {
   "#order-detail": 4,
 };
 
+var time = {};
+var dialog = {};
+
 function initStaticListRefs() {
   vm.listRefWO(new sal.NewSPList(workOrderListDef));
   //vm.listRefpu10k(new SPList(pu10kListDef));
 
   vm.listRefApproval(new sal.NewSPList(approvalListDef));
   vm.listRefAction(new sal.NewSPList(actionListDef));
+  vm.listRefDateRanges(new sal.NewSPList(dateRangesListDef));
   vm.libRefWODocs(new sal.NewSPList(workOrderDocDef));
   vm.listRefAssignment(new sal.NewSPList(assignmentListDef));
   vm.listRefComment(new sal.NewSPList(commentListDef));
@@ -32,11 +36,11 @@ function initStaticListRefs() {
 function initServiceTypeListRefDefs() {
   // These should be set as soon as templates are loaded.
 
-  vm.configServiceTypes().forEach((serviceType) => {
+  vm.configServiceTypes().forEach(function (serviceType) {
     if (serviceType.TemplateName) {
-      let listDef = vm
-        .listDefs()
-        .find((listDef) => listDef.uid == serviceType.UID);
+      var listDef = vm.listDefs().find(function (listDef) {
+        return listDef.uid == serviceType.UID;
+      });
 
       if (listDef) {
         serviceType.listDef = listDef;
@@ -63,6 +67,11 @@ function dismissDescription() {
   $("#wo-description-modal").modal("hide");
 }
 
+function createNewRequestID() {
+  var ts = new Date();
+  return ts.format("yyMMdd") + "-" + (ts.getTime() % 100000);
+}
+
 function newWorkOrder() {
   dismissDescription();
   // Chained, requires vm.selectedServiceType to already be selected.
@@ -72,14 +81,22 @@ function newWorkOrder() {
   vm.currentView("new");
 
   // Set our VM fields
-  vm.requestID(new Date().getTime());
+  vm.requestID(createNewRequestID());
   updateUrlParam("reqid", vm.requestID());
 
-  vm.requestorName(sal.globalConfig.currentUser.get_title());
+  // Check if we have a current requestor
+  Workorder.Common.Utilities.setPeoplePicker(
+    "peoplerequestor",
+    sal.globalConfig.currentUser.get_loginName()
+  );
+
+  //Get the current users phone
   if (sal.globalConfig.currentUserProfile) {
     vm.requestorTelephone(
       sal.globalConfig.currentUserProfile.UserProfileProperties.results.find(
-        (prop) => prop.Key == "WorkPhone"
+        function (prop) {
+          return prop.Key == "WorkPhone";
+        }
       ).Value
     );
   } else {
@@ -90,6 +107,22 @@ function newWorkOrder() {
   vm.requestIsActive(1);
   vm.requestStatus("Draft");
 
+  // vm.requestOrgIds(
+  //   vm.selectedServiceType().RequestOrgs.map(function (ro) {
+  //     return ro.get_lookupId();
+  //   })
+  // );
+  //Set the workorder request orgs.
+  vm.request.pipeline.allRequestOrgs().forEach(function (org) {
+    if (
+      !vm.requestOrgs().find(function (ro) {
+        return ro.ID == org.ID;
+      })
+    ) {
+      vm.requestOrgs.push(org);
+    }
+  });
+
   //Clear our requested fields.
   vm.requestHeader(new Object());
   vm.requestClosedDate(null);
@@ -98,16 +131,22 @@ function newWorkOrder() {
   vm.requestActions([]);
   vm.requestApprovals([]);
   vm.requestAttachments([]);
+  vm.request.dateRanges.all([]);
   //vm.requestAssignees([]);
   vm.requestAssignments([]);
   vm.requestComments([]);
-
-  buildPipelineElement();
 }
 
-function refreshWorkOrderItem(woID, callback = null) {
-  SP.UI.ModalDialog.showWaitScreenWithNoClose("Refreshing Work Order...");
-  let camlq =
+function refreshWorkOrderItem(woID, callback) {
+  /* 
+    Refresh the work order item in the vm.allOrders array.
+  */
+  callback = callback === undefined ? function () {} : callback;
+  // dialog.refresh = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+  //   "Refreshing Work Order..."
+  // );
+  vm.busy.addTask(appBusyStates.refresh);
+  var camlq =
     '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
     '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
     "</Eq><Eq>" +
@@ -116,58 +155,71 @@ function refreshWorkOrderItem(woID, callback = null) {
     "</Value>" +
     "</Eq></And></Where></Query><RowLimit>1</RowLimit></View>";
 
-  let reqCamlq =
-    '<View Scope="RecursiveAll"><Query><Where><And>' +
-    '<Eq><FieldRef Name="FSObjType"/><Value Type="int">0</Value></Eq>' +
-    '<Eq><FieldRef Name="Title"/><Value Type="Text">' +
-    woID +
-    "</Value></Eq>" +
-    "</And></Where></Query><RowLimit>1</RowLimit></View>";
-
-  vm.listRefWO().getListItems(camlq, (items) => {
+  vm.listRefWO().getListItems(camlq, function (items) {
     console.log("loading open orders", items);
     if (items[0]) {
-      let req = items[0];
-      if (vm.allOrders().find((order) => order.Title == woID)) {
+      var req = items[0];
+      if (
+        vm.allOrders().find(function (order) {
+          return order.Title == woID;
+        })
+      ) {
         vm.allOrders(
-          vm.allOrders().map((order) => (order.Title == woID ? req : order))
+          vm.allOrders().map(function (order) {
+            return order.Title == woID ? req : order;
+          })
         );
       } else {
         vm.allOrders.push(req);
       }
-      fetchRequestAssignments(woID, () => {
-        viewWorkOrderItem(woID);
-        if (callback) {
-          callback();
-        }
+      fetchRequestAssignments(woID, function () {
+        viewWorkOrderItem(woID, callback);
+        vm.busy.finishTask(appBusyStates.refresh);
+        // dialog.close(dialog.refresh);
       });
+    } else {
+      vm.busy.finishTask(appBusyStates.refresh);
+      // dialog.close(dialog.refresh);
     }
   });
 }
 
-function viewWorkOrderItem(woID) {
-  // Set the tab to detail view
-  //$('.ui.menu').find('.item').tab('change tab', 'order-detail');
+function viewWorkOrderItem(woID, callback) {
+  callback = callback === undefined ? function () {} : callback;
 
-  //$.tab('change tab', '');
-  //$("#tabs").tabs({ active: tabsEnum['#order-detail'] });
-  let request = vm.allOrders().find((order) => order.Title == woID);
+  vm.busy.addTask(appBusyStates.view);
+
+  var request = vm.allOrders().find(function (order) {
+    return order.Title == woID;
+  });
 
   if (!request) {
     // Clear urlparam
     updateUrlParam("reqid", "");
     vm.tab("my-orders");
+    vm.busy.finishTask(appBusyStates.view);
+    // dialog.close(dialog.view);
   } else {
     vm.requestID(woID);
+    vm.tab("order-detail");
+    vm.currentView("view");
 
     vm.requestHeader(request);
     console.log("workorder fetched - setting value pairs");
-    vm.selectedServiceType("");
+    //vm.selectedServiceType("");
     clearValuePairs(workOrderListDef.viewFields);
     setValuePairs(workOrderListDef.viewFields, vm.requestHeader());
 
     vm.requestAssignments(vm.allRequestAssignmentsMap()[woID]);
+
+    var hasItemDetail = vm.selectedServiceType().listDef ? true : false;
     /* Fetch all associated Items */
+    var queryCount = 4; // there are 4 lists we need to query
+    queryCount = hasItemDetail ? (queryCount += 1) : queryCount;
+
+    var queryInc = new Incremental(0, queryCount, function () {
+      onViewWorkOrderItemComplete(callback);
+    });
     //fetchRequestAssignments();
     fetchActions(function () {
       console.log("actions fetched");
@@ -176,27 +228,34 @@ function viewWorkOrderItem(woID) {
       } catch (e) {
         console.log("error showing accordion");
       }
+      queryInc.inc();
     });
     fetchApprovals(function () {
       console.log("approvals fetched");
+      queryInc.inc();
     });
     fetchAttachments();
     fetchComments(function () {
       console.log("comments fetched");
+      queryInc.inc();
+    });
+    fetchDateRanges(function () {
+      queryInc.inc();
     });
 
-    buildPipelineElement();
     /* Fetch the associated service type items */
-    if (vm.selectedServiceType().listDef) {
-      viewServiceTypeItem();
-    } else {
-      onViewWorkOrderItemComplete();
+    if (hasItemDetail) {
+      viewServiceTypeItem(function () {
+        queryInc.inc();
+      });
     }
     //initUIComponents();
   }
 }
 
-function viewServiceTypeItem() {
+function viewServiceTypeItem(callback) {
+  callback = callback === undefined ? function () {} : callback;
+
   // Fetches the list item info from the currently selected service type and record.
   var serviceTypeCaml =
     '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
@@ -204,101 +263,51 @@ function viewServiceTypeItem() {
     '</Eq><Eq><FieldRef Name="Title"/><Value Type="Text">' +
     vm.requestID() +
     "</Value></Eq></And></Where></Query></View>";
-  vm.selectedServiceType().listRef.getListItems(serviceTypeCaml, (items) => {
-    if (items[0]) {
-      let res = items[0];
-      vm.serviceTypeHeader(res);
-      console.log("service type fetched -- setting valuepairs", items);
-      setValuePairs(
-        vm.selectedServiceType().listDef.viewFields,
-        vm.serviceTypeHeader()
-      );
-    } else {
-      timedNotification("Warning: couldn't find Service Type Info");
+  vm.selectedServiceType().listRef.getListItems(
+    serviceTypeCaml,
+    function (items) {
+      if (items[0]) {
+        var res = items[0];
+        vm.serviceTypeHeader(res);
+        console.log("service type fetched -- setting valuepairs", items);
+        setValuePairs(
+          vm.selectedServiceType().listDef.viewFields,
+          vm.serviceTypeHeader()
+        );
+      } else {
+        timedNotification("Warning: couldn't find Service Type Info");
+      }
+      callback();
+      //onViewWorkOrderItemComplete(callback);
+
+      // This utilizes the date ranges list, we'll need to query that as well.
+      // vm.listRefDateRanges().getListItems(
+      //   serviceTypeCaml,
+      //   function (dateRanges) {
+      //     vm.request.dateRanges.all(dateRanges);
+      //
+      //   }
+      // );
     }
-    onViewWorkOrderItemComplete();
-  });
+  );
 }
 
-function onViewWorkOrderItemComplete() {
+function onViewWorkOrderItemComplete(callback) {
+  callback = callback === undefined ? function () {} : callback;
   vm.requestLoaded(new Date());
   vm.tab("order-detail");
   vm.currentView("view");
-  SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+  vm.busy.finishTask(appBusyStates.view);
+  callback();
+  // dialog.close(dialog.view);
 }
 
-function buildPipelineElement() {
-  if (!vm.selectedServiceType()) return;
-  // TODO: Fix all this for the current pipeline.
-  //Based off the currently selected record and record type, show a pipeline of where we're at in the process at the top of the page.
-  var pipeline = '<div class="ui mini ordered steps">';
-
-  // First step is editing, this is always checked
-  var inDraft = vm.requestStatus() == "Draft" ? "active" : "completed";
-
-  pipeline +=
-    '<div class="step completed"><div class="conent"><i class="fa fa-4x ' +
-    vm.selectedServiceType().Icon +
-    '"/></div></div>';
-
-  pipeline +=
-    '<div class="step ' +
-    inDraft +
-    '">' +
-    '<div class="content">' +
-    '<div class="title">Editing</div>' +
-    '<div class="description">New Request</div>' +
-    "</div></div>";
-
-  var status = "disabled";
-  var curStage = parseInt(vm.requestStageNum());
-  $.each(vm.selectedPipeline(), function (item, stage) {
-    status = "disabled";
-    if (stage.Step < curStage) {
-      status = "completed";
-    } else if (stage.Step == curStage) {
-      status = "active";
-    }
-
-    pipeline +=
-      '<div class="step ' +
-      status +
-      '">' +
-      '<div class="content">' +
-      '<div class="title">' +
-      stage.ActionType +
-      "</div>" +
-      '<div class="description">' +
-      stage.Title +
-      "</div>" +
-      "</div></div>";
-  });
-
-  let completeStatus = status == "completed" ? status : "disabled";
-  // Replace status with Request closed status?
-  pipeline +=
-    '<div class="step ' +
-    completeStatus +
-    '">' +
-    '<div class="content">' +
-    '<div class="title">Closed</div>' +
-    '<div class="description">Request Closed</div>' +
-    "</div></div></div>";
-
-  $("#wo-progress-pipeline").html(pipeline);
-  //console.log("building pipeline", vm.selectedServiceType().Title);
+function showAdvancePrompt() {
+  $("#prompt-advance").modal("show");
 }
 
-function actionComplete() {
-  // Progress to the next stage
-  SP.UI.ModalDialog.showWaitScreenWithNoClose(
-    "Progressing to Next Stage",
-    "Please wait..."
-  );
-  // TODO: Anything that needs to be closed out before we enter the next stage
-
-  // Enter the next stage, close if necessary.
-  pipelineForward();
+function dismissAdvancePrompt() {
+  $("#prompt-advance").modal("hide");
 }
 
 function editWorkOrder() {
@@ -314,29 +323,32 @@ function saveWorkOrder() {
         Saving edits to an already existing document
         Saving a new document
     */
-  SP.UI.ModalDialog.showWaitScreenWithNoClose(
-    "Saving Work Order...",
-    "Please wait..."
-  );
 
-  vm.requestIsSaveable(true);
-  ensureAttachments();
+  vm.busy.addTask(appBusyStates.save);
 
   // Need to get the value of the trix editor.
   vm.requestDescriptionHTML($("#trix-request-description").html());
+
+  //Get the requestors name
+  //vm.requestorName(vm.requestor.user()["title"]);
+
+  vm.requestIsSaveable(true);
+  var requestValuePairs = getValuePairs(workOrderListDef.viewFields);
+  if (vm.requestSvcTypeListBool()) {
+    var typeValuePairs = getValuePairs(vm.requestSvcTypeListViewFields());
+  }
+  validateRequest();
 
   // If all of our required fields are present.
   if (vm.requestIsSaveable()) {
     // First, save or update the parent work order item.
     switch (vm.currentView()) {
       case "edit":
-        var requestValuePairs = getValuePairs(workOrderListDef.viewFields);
-
         // We are saving an edit form, get the id and update.
         vm.listRefWO().updateListItem(
           vm.requestHeader().ID,
           requestValuePairs,
-          () => {
+          function () {
             console.log("Workorder header saved");
             if (!vm.selectedServiceType().listDef) {
               onSaveEditWorkOrderCallback();
@@ -344,7 +356,7 @@ function saveWorkOrder() {
           }
         );
         if (vm.requestSvcTypeListBool()) {
-          var typeValuePairs = getValuePairs(vm.requestSvcTypeListViewFields());
+          //var typeValuePairs = getValuePairs(vm.requestSvcTypeListViewFields());
 
           vm.selectedServiceType().listRef.updateListItem(
             vm.serviceTypeHeader().ID,
@@ -352,7 +364,7 @@ function saveWorkOrder() {
             onSaveEditWorkOrderCallback
           );
         }
-        createAction("Edited", `The request has been edited.`);
+        createAction("Edited", "The request has been edited.");
         break;
 
       case "new":
@@ -372,17 +384,20 @@ function saveWorkOrder() {
         break;
     }
   } else {
-    SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+    vm.busy.finishTask(appBusyStates.save);
+    vm.busy.addTask(appBusyStates.cancelAction);
+    vm.busy.finishTask(appBusyStates.cancelAction);
+    // dialog.close(dialog.save);
   }
 }
 
 function calcNewWorkorderDates() {
   // Check the submitted date, if it's between 3 pm, (19 UTC) and midnight (4 UTC)
   // it needs to be set as submitted the next business day
-  let now = new Date();
+  var now = new Date();
   if (now.getUTCHours() >= 19 || now.getUTCHours() < 4) {
     console.log("its after 3, this is submitted tomorrow");
-    let tomorrow = businessDaysFromDate(now, 1);
+    var tomorrow = businessDaysFromDate(now, 1);
     tomorrow.setUTCHours(13);
     tomorrow.setUTCMinutes(0);
     vm.requestSubmittedDate(tomorrow);
@@ -394,12 +409,12 @@ function calcNewWorkorderDates() {
   vm.requestEstClosed(
     businessDaysFromDate(
       vm.requestSubmittedDate(),
-      vm.selectedServiceType().DaysToCloseDisp
+      vm.selectedServiceType().DaysToCloseBusiness
     )
   );
 
   //Set the request orgs
-  vm.requestOrgIds(vm.selectedServiceType().RequestOrgs);
+  //vm.requestOrgIds(vm.selectedServiceType().RequestOrgs);
 
   //vm.requestStageNum(0);
   vm.requestStatus("Open");
@@ -412,6 +427,7 @@ function createNewWorkorderItems() {
   // at the folder level to prevent info spillage.
 
   calcNewWorkorderDates();
+  vm.requestStatus("Open");
 
   var valuePairs = getValuePairs(workOrderListDef.viewFields);
 
@@ -428,7 +444,9 @@ function createNewWorkorderItems() {
           // Save the workorder specific info here:
           vm.selectedServiceType().listRef.createListItem(
             typeValuePairs,
-            () => onSaveNewWorkOrderMaster(id),
+            function () {
+              onSaveNewWorkOrderMaster(id);
+            },
             vm.requestFolderPath()
           );
         } else {
@@ -445,28 +463,32 @@ function onSaveNewWorkOrderMaster(id) {
   console.log("callback val: ", id);
 
   // Create our New Work Order Email
-  Workorder.Notifications.newWorkorderEmails();
+  Workorder.Notifications.newWorkorderEmailUser();
 
   // Offload our reminder emails to a separate function
-  Workorder.Notifications.workorderReminderEmails(id);
+  // Workorder.Notifications.workorderReminderEmails(id);
 
   // Create our Action
   createAction(
     "Created",
-    `The request was submitted with an effective submission date of ${vm
-      .requestSubmittedDate()
-      .toDateString()}`,
+    "The request was submitted with an effective submission date of " +
+      vm.requestSubmittedDate().toDateString(),
     true
   );
-  //pipelineForward();
-  refreshWorkOrderItem(vm.requestID(), () => pipelineForward());
-  SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+
+  // Refresh the request
+  refreshWorkOrderItem(vm.requestID(), function () {
+    pipelineForward();
+  });
+  vm.busy.finishTask(appBusyStates.save);
+  // dialog.close(dialog.save);
 }
 
 function onSaveEditWorkOrderCallback(val) {
   console.log("callback val: ", val);
   refreshWorkOrderItem(vm.requestID());
-  SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+  vm.busy.finishTask(appBusyStates.save);
+  // dialog.close(dialog.save);
 }
 
 function breakingPermissionsTimeoutFunc() {
@@ -477,7 +499,8 @@ function breakingPermissionsTimeoutFunc() {
       "report it to cgfssharepoint@state.gov."
   );
   Workorder.Notifications.breakingPermissionsTimeout();
-  SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+  vm.busy.finishTask(appBusyStates.save);
+  // dialog.close(dialog.save);
 }
 
 function createWorkorderFolders() {
@@ -485,13 +508,13 @@ function createWorkorderFolders() {
     breakingPermissionsTimeoutFunc,
     5000
   );
-  vm.foldersCreated(0);
+  //vm.foldersCreated(0);
 
   // Set all permissions up front
-  let folderPermissions = vm.requestFolderPerms();
+  var folderPermissions = vm.requestFolderPerms();
 
   //For each of our multi-item lists, create a new folder
-  let listRefs = [
+  var listRefs = [
     vm.listRefWO(),
     vm.listRefAction(),
     vm.listRefAssignment(),
@@ -503,71 +526,168 @@ function createWorkorderFolders() {
     listRefs.push(vm.selectedServiceType().listRef);
   }
 
-  listRefs.forEach((listRef) =>
-    listRef.upsertListFolderPath(vm.requestFolderPath(), (folderId) => {
+  var folderIncrementer = new Incremental(
+    0,
+    listRefs.length,
+    createNewWorkorderItems
+  );
+
+  listRefs.forEach(function (listRef) {
+    listRef.upsertListFolderPath(vm.requestFolderPath(), function (folderId) {
       // Update the permissions for the new folder
       if (folderId) {
         listRef.setItemPermissions(
           folderId,
           folderPermissions,
-          () => {
-            vm.foldersCreatedInc();
+          function () {
+            //vm.foldersCreatedInc();
+            folderIncrementer.inc();
           },
           true
         );
       }
-    })
+    });
+  });
+}
+
+function updatePermissions() {
+  window.breakingPermissionsTimeoutID = window.setTimeout(
+    breakingPermissionsTimeoutFunc,
+    5000
   );
 
-  // vm.libRefWODocs().createFolderRec(vm.requestFolderPath(), (folder) => {
-  //   vm.libRefWODocs().setLibFolderPermissions(
-  //     vm.requestFolderPath(),
-  //     folderPermissions,
-  //     () => {
-  //       vm.foldersCreatedInc();
-  //     },
-  //     true
-  //   );
-  // });
+  // Set all permissions up front
+  var folderPermissions = vm.requestFolderPerms();
+  var folderCnt = 0;
+
+  if (vm.requestAttachments().length) {
+    folderCnt += 1;
+  }
+  //For each of our multi-item lists, create a new folder
+  var listRefs = [
+    vm.listRefWO(),
+    vm.listRefAction(),
+    vm.listRefAssignment(),
+    vm.listRefWOEmails(),
+  ];
+
+  if (vm.requestSvcTypeListBool()) {
+    // Also create a folder for the service type
+    listRefs.push(vm.selectedServiceType().listRef);
+  }
+  if (vm.requestComments) {
+    listRefs.push(vm.listRefComment());
+  }
+
+  var folderIncrementer = new Incremental(
+    0,
+    listRefs.length + folderCnt,
+    updatePermissionsCallback
+  );
+
+  listRefs.forEach(function (listRef) {
+    listRef.upsertListFolderPath(vm.requestFolderPath(), function (folderId) {
+      // Update the permissions for the new folder
+      if (folderId) {
+        listRef.setItemPermissions(
+          folderId,
+          folderPermissions,
+          function () {
+            folderIncrementer.inc();
+          },
+          true
+        );
+      }
+    });
+  });
+
+  if (vm.requestAttachments().length) {
+    vm.libRefWODocs().createFolderRec(vm.requestFolderPath(), function () {
+      vm.libRefWODocs().setLibFolderPermissions(
+        vm.requestFolderPath(),
+        vm.requestFolderPerms(),
+        function () {
+          folderIncrementer.inc();
+        },
+        true
+      );
+    });
+  }
+}
+
+function updatePermissionsCallback() {
+  window.clearTimeout(window.breakingPermissionsTimeoutID);
+  console.log("Permissions updated: ", vm.requestID());
 }
 
 function ensureAttachments() {
-  if (vm.selectedServiceType().AttachmentRequired) {
-    if (vm.requestAttachments().length == 0) {
-      vm.requestIsSaveable(false);
+  if (
+    vm.selectedServiceType().AttachmentsRequiredCnt &&
+    vm.requestAttachments().length <
+      vm.selectedServiceType().AttachmentsRequiredCnt
+  ) {
+    vm.requestIsSaveable(false);
+    alert(
+      "This request has not been saved. It is missing the required attachments."
+    );
+  }
+}
+
+function validateRequest() {
+  if (vm.selectedServiceType().SupervisorRequired) {
+    // Check if we have a supervisor
+    var supervisorAttached = vm.requestorSupervisor.user() ? true : false;
+    vm.requestIsSaveable(vm.requestIsSaveable() && supervisorAttached);
+    if (!supervisorAttached) {
       alert(
-        "This request has not been saved. It is missing the required attachments."
+        "This request has not been saved. Requestor Supervisor is required."
       );
     }
   }
+
+  if (vm.selectedServiceType().validate) {
+    vm.selectedServiceType().validate();
+  }
+  ensureAttachments();
 }
 
 /************************************************************
  * ValuePair Binding Getters and Setters
  ************************************************************/
-
-function getValuePairs(listDef) {
-  console.log(listDef);
+function getValuePairsHuman(listDef) {
   var valuePairs = [];
-  let missingFields = new Array();
+  var missingFields = [];
+
   $.each(listDef, function (field, obj) {
     console.log(field, obj);
 
     // For each mapped field in our List Def viewfields, push the bound
     // KO object to it.
-    if (!["ID", "ClosedDate", "Created"].includes(field)) {
-      let koMap = obj.koMap;
+    if (
+      ["ID", "ClosedDate", "Created"].indexOf(field) < 0 &&
+      obj.koMap != "empty"
+    ) {
+      var koMap = obj.koMap;
       console.log(koMap);
-      let observable = vm[koMap];
+      var observable = vm[koMap];
       //let fieldValue = !$.isEmptyObject(vm[koMap]()) ? vm[koMap]() : "";
 
       // Based on the field type, do any casting or conversions here
       switch (obj.type) {
         case "DateTime":
-          fieldValue = observable().toISOString();
+          if (observable.date) {
+            fieldValue = observable.date().format("yyyy-MM-dd");
+          } else {
+            fieldValue = observable().format("yyyy-MM-dd");
+          }
           break;
         case "Person":
-          fieldValue = observable.userId();
+          fieldValue = observable.title();
+          break;
+        case "Group":
+          if (observable()) {
+            fieldValue = observable().title;
+          }
           break;
         default:
           fieldValue = observable();
@@ -582,11 +702,64 @@ function getValuePairs(listDef) {
       }
     }
   });
+  return valuePairs;
+}
+
+function getValuePairs(listDef) {
+  //Get value pairs and validate
+  console.log(listDef);
+  var valuePairs = [];
+  var missingFields = [];
+  $.each(listDef, function (field, obj) {
+    console.log(field, obj);
+
+    // For each mapped field in our List Def viewfields, push the bound
+    // KO object to it.
+    if (
+      ["ID", "ClosedDate", "Created"].indexOf(field) < 0 &&
+      obj.koMap != "empty"
+    ) {
+      var koMap = obj.koMap;
+      console.log(koMap);
+      var observable = vm[koMap];
+      var fieldValue = null;
+      //let fieldValue = !$.isEmptyObject(vm[koMap]()) ? vm[koMap]() : "";
+
+      // Based on the field type, do any casting or conversions here
+      switch (obj.type) {
+        case "DateTime":
+          if (observable.date && !isNaN(observable.date())) {
+            fieldValue = observable.date().toISOString();
+          } else if (typeof observable === "function" && observable()) {
+            fieldValue = observable().toISOString();
+          }
+          break;
+        case "Person":
+          fieldValue = observable.userId();
+          break;
+        case "Group":
+          if (observable()) {
+            fieldValue = observable().ID;
+          }
+          break;
+        default:
+          fieldValue = observable();
+      }
+      // Check if this field is required
+      // TODO: highlight the offending field
+      if (obj.required && !fieldValue) {
+        missingFields.push(field);
+        vm.requestIsSaveable(false);
+      } else {
+        valuePairs.push([field, fieldValue]);
+      }
+    }
+  });
 
   if (missingFields.length) {
-    let warn =
+    var warn =
       "The request has not been saved. The following fields are missing: \n";
-    missingFields.forEach((field) => {
+    missingFields.forEach(function (field) {
       warn += field + "\n";
     });
     alert(warn);
@@ -600,11 +773,20 @@ function setValuePairs(listDef, jObject) {
   // from our returned object.
   $.each(listDef, function (field, obj) {
     //console.log(field + " " + obj.koMap + " " );
-    console.log(`Setting ${obj.koMap} to ${jObject[field]} from ${field}`);
-    let observable = vm[obj.koMap];
+    console.log(
+      "Setting " + obj.koMap + " to " + jObject[field] + " from " + field
+    );
+    var observable = vm[obj.koMap];
     switch (obj.type) {
       case "Person":
         observable.userId(jObject[field]);
+        break;
+      case "DateTime":
+        if (observable.date) {
+          observable.date(jObject[field]);
+        } else {
+          observable(jObject[field]);
+        }
         break;
       default:
         observable(jObject[field]);
@@ -614,12 +796,17 @@ function setValuePairs(listDef, jObject) {
 
 function clearValuePairs(listDef) {
   $.each(listDef, function (field, obj) {
-    if (obj.koMap != "requestID") {
-      let observable = vm[obj.koMap];
+    if (["requestID", "ServiceType"].indexOf(obj.koMap) < 0) {
+      var observable = vm[obj.koMap];
       switch (obj.type) {
         case "Person":
           observable.user(new Object());
           break;
+        case "DateTime":
+          if (observable.date) {
+            observable.date(new Date());
+            break;
+          }
         default:
           observable("");
       }
@@ -631,9 +818,9 @@ function clearValuePairs(listDef) {
  ************************************************************/
 function fetchStaticListData(callback) {
   // Fetch anything we need to present our app
-  fetchAllOrders((orders) => {
+  fetchAllOrders(function (orders) {
     vm.incLoadedListItems();
-    fetchAllAssignments((assignments) => {
+    fetchAllAssignments(function (assignments) {
       vm.incLoadedListItems();
     });
   });
@@ -646,38 +833,47 @@ function fetchStaticListData(callback) {
 function fetchConfigListData(callback) {
   /* Retrieve all data from our config lists */
   /* Once cnt loaded list items hit's 5, initComplete() */
-  vm.listRefConfigActionOffices().getListItems("<Query></Query>", (items) => {
-    vm.configActionOffices(items);
-    vm.incLoadedListItems();
-  });
+  vm.listRefConfigActionOffices().getListItems(
+    "<Query></Query>",
+    function (items) {
+      vm.configActionOffices(items);
+      vm.incLoadedListItems();
+    }
+  );
 
-  vm.listRefConfigRequestOrgs().getListItems("<Query></Query>", (items) => {
-    vm.configRequestOrgs(items);
-    vm.incLoadedListItems();
-  });
+  vm.listRefConfigRequestOrgs().getListItems(
+    "<Query></Query>",
+    function (items) {
+      vm.configRequestOrgs(items);
+      vm.incLoadedListItems();
+    }
+  );
 
-  vm.listRefConfigHolidays().getListItems("<Query></Query>", (items) => {
+  vm.listRefConfigHolidays().getListItems("<Query></Query>", function (items) {
     vm.configHolidays(items);
     vm.incLoadedListItems();
   });
 
-  vm.listRefConfigPipelines().getListItems("<Query></Query>", (items) => {
+  vm.listRefConfigPipelines().getListItems("<Query></Query>", function (items) {
     vm.configPipelines(items);
     vm.incLoadedListItems();
   });
 
   vm.listRefConfigRequestingOffices().getListItems(
     "<Query></Query>",
-    (items) => {
+    function (items) {
       vm.configRequestingOffices(items);
       vm.incLoadedListItems();
     }
   );
   /* We won't filter our inactive service types just in case there are some open */
-  vm.listRefConfigServiceType().getListItems("<Query></Query>", (items) => {
-    vm.configServiceTypes(items);
-    vm.incLoadedListItems();
-  });
+  vm.listRefConfigServiceType().getListItems(
+    "<Query></Query>",
+    function (items) {
+      vm.configServiceTypes(items);
+      vm.incLoadedListItems();
+    }
+  );
 }
 
 /************************************************************
@@ -689,7 +885,7 @@ function fetchAllOrders(callback) {
     '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
     "</Eq></Where></Query></View>";
 
-  vm.listRefWO().getListItems(camlq, (items) => {
+  vm.listRefWO().getListItems(camlq, function (items) {
     console.log("loading open orders", items);
     vm.allOrders(items);
     if (callback) {
@@ -702,11 +898,11 @@ function fetchAllOrders(callback) {
  * Attachments
  ************************************************************/
 function newAttachment() {
-  vm.libRefWODocs().createFolderRec(vm.requestFolderPath(), () => {
+  vm.libRefWODocs().createFolderRec(vm.requestFolderPath(), function () {
     vm.libRefWODocs().setLibFolderPermissions(
       vm.requestFolderPath(),
       vm.requestFolderPerms(),
-      () => {
+      function () {
         vm.libRefWODocs().uploadNewDocument(
           vm.requestFolderPath(),
           "Attach a New Document",
@@ -724,7 +920,7 @@ function newAttachment() {
 
 function fetchAttachments() {
   //Update the attachments from SAL and load them to the page.
-  let camlq =
+  var camlq =
     '<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name="WorkOrderID"/><Value Type="Text">' +
     vm.requestID() +
     "</Value></Eq></Where></Query></View>";
@@ -748,7 +944,9 @@ function newOfficeAssignment() {
   vm.listRefWO().updateListItem(
     vm.requestHeader().ID,
     [["RequestOrgs", vm.requestOrgIds()]],
-    () => vm.assignRequestOffice(null)
+    function () {
+      vm.assignRequestOffice(null);
+    }
   );
 }
 
@@ -767,10 +965,13 @@ function newAssignmentForm(role) {
   );
 }
 
-function createAssignment(role = "Action Resolver", notify = false) {
+function createAssignment(role, notify) {
+  role =
+    role === undefined ? assignmentListDef.viewFields.Role.opts.Resolver : role;
+  notify = notify === undefined ? false : notify;
   // Create a new assignment based off our set observables
   if (vm.assignActionOffice() || vm.assignAssignee()) {
-    let vp = [
+    var vp = [
       ["Title", vm.requestID()],
       ["Role", role],
     ];
@@ -786,18 +987,27 @@ function createAssignment(role = "Action Resolver", notify = false) {
     if (vm.assignAssignee()) {
       vp.push(["Assignee", vm.assignAssignee().userId()]);
     }
+
+    // Check if this is a type of Assignment that needs to be completed
+    var roleOpts = assignmentListDef.viewFields.Role.opts;
+    if (role == roleOpts.Approver.Name || role == roleOpts.Resolver.Name) {
+      vp.push(["IsActive", true]);
+    } else {
+      vp.push(["IsActive", true]);
+    }
+
     vm.listRefAssignment().createListItem(
       vp,
-      (id) => {
+      function (id) {
         console.log("Assigned: ", id);
         try {
           $("#wo-routing").accordion("open", 0);
         } catch (e) {
           console.warn("Do we have any accordions?", e);
         }
-        fetchRequestAssignments(vm.requestID(), (assignments) => {
+        fetchRequestAssignments(vm.requestID(), function (assignments) {
           //let rvp = [["RequestAssignments", vm.requestAssignmentIds()]];
-          //vm.listRefWO().updateListItem(vm.requestHeader().ID, rvp, () => {});
+          //vm.listRefWO().updateListItem(vm.requestHeader().ID, rvp, function()  {});
         });
         if (notify) {
           // Build our email
@@ -806,16 +1016,19 @@ function createAssignment(role = "Action Resolver", notify = false) {
         }
         //Update the request with a new assignment:
         // Create Action
-        let actionText = new String();
+        var actionText = "";
         if (vm.assignAssignee()) {
-          actionText = `The following Individual has been assigned to this request: ${vm
-            .assignAssignee()
-            .lookupUser()
-            .get_lookupValue()} - ${role}`;
+          actionText =
+            "The following Individual has been assigned to this request: " +
+            vm.assignAssignee().lookupUser().get_lookupValue() +
+            " - " +
+            role;
         } else if (vm.assignActionOffice()) {
-          actionText = `The following Action Office has been assigned to this request: ${
-            vm.assignActionOffice().Title
-          } - ${role}`;
+          actionText =
+            "The following Action Office has been assigned to this request: " +
+            vm.assignActionOffice().Title +
+            " - " +
+            role;
         }
         createAction("Assignment", actionText);
         timedNotification(actionText);
@@ -832,27 +1045,30 @@ function fetchAllAssignments(callback) {
     '<View Scope="RecursiveAll"><Query><Where><Eq>' +
     '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
     "</Eq></Where></Query></View>";
-  let start = new Date();
-  vm.listRefAssignment().getListItems(camlq, (assignments) => {
-    assignments.map((assignment) => {
+  var start = new Date();
+  vm.listRefAssignment().getListItems(camlq, function (assignments) {
+    assignments.map(function (assignment) {
       if (assignment.ActionOffice) {
-        assignment.actionOffice = vm
-          .configActionOffices()
-          .find((ao) => ao.ID == assignment.ActionOffice.get_lookupId());
+        assignment.actionOffice = vm.configActionOffices().find(function (ao) {
+          return ao.ID == assignment.ActionOffice.get_lookupId();
+        });
       }
     });
     vm.allAssignments(assignments);
 
-    let end = new Date();
-    console.log(`assignments mapped in ${end - start} ms`);
+    var end = new Date();
+    console.log("assignments mapped in " + (end - start) + " ms");
     if (callback) {
       callback(assignments);
     }
   });
 }
 
-function fetchRequestAssignments(title = null, callback = null) {
-  let queryTitle = title ? title : vm.requestID();
+function fetchRequestAssignments(title, callback) {
+  var title = title === undefined ? null : title;
+  var callback = callback === undefined ? null : callback;
+
+  var queryTitle = title ? title : vm.requestID();
 
   var camlq =
     '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
@@ -863,27 +1079,27 @@ function fetchRequestAssignments(title = null, callback = null) {
 
   vm.listRefAssignment().getListItems(camlq, function (assignments) {
     // Let's connect our Action offices here.
-    assignments.map((assignment) => {
+    assignments.map(function (assignment) {
       if (assignment.ActionOffice) {
-        assignment.actionOffice = vm
-          .configActionOffices()
-          .find((ao) => ao.ID == assignment.ActionOffice.get_lookupId());
+        assignment.actionOffice = vm.configActionOffices().find(function (ao) {
+          return ao.ID == assignment.ActionOffice.get_lookupId();
+        });
       }
     });
 
-    assignments.forEach((assignment) => {
+    assignments.forEach(function (assignment) {
       if (
-        vm
-          .allAssignments()
-          .find((allAssignment) => allAssignment.ID == assignment.ID)
+        vm.allAssignments().find(function (allAssignment) {
+          return allAssignment.ID == assignment.ID;
+        })
       ) {
         // If this is already in our assignment list, update it
         vm.allAssignments(
-          vm
-            .allAssignments()
-            .map((allAssignment) =>
-              allAssignment.ID == assignment.ID ? assignment : allAssignment
-            )
+          vm.allAssignments().map(function (allAssignment) {
+            return allAssignment.ID == assignment.ID
+              ? assignment
+              : allAssignment;
+          })
         );
       } else {
         // Push the new assignment to the list
@@ -893,12 +1109,6 @@ function fetchRequestAssignments(title = null, callback = null) {
 
     vm.requestAssignments(assignments);
 
-    // vm
-    //   .allOrders()
-    //   .find(
-    //     (order) => order.Title == queryTitle
-    //   ).requestAssignmentMap = assignments;
-
     vm.allAssignments.valueHasMutated();
     if (callback) {
       callback(assignments);
@@ -907,11 +1117,11 @@ function fetchRequestAssignments(title = null, callback = null) {
 }
 
 function updateTableRequest(id) {
-  let title = this.Title;
+  var title = this.Title;
   vm.tableRequestTitle(title);
-  fetchRequestAssignments(id, (assigments) =>
-    vm.tableRequestAssignments(assigments)
-  );
+  fetchRequestAssignments(id, function (assigments) {
+    vm.tableRequestAssignments(assigments);
+  });
 }
 
 function fetchMyAOAssignments() {
@@ -922,7 +1132,7 @@ function fetchMyAOAssignments() {
     '<FieldRef Name="ActionOffice" LookupId="TRUE"/><Values>' +
     vm
       .userActionOfficeMembership()
-      .map((ao) => {
+      .map(function (ao) {
         return '<Value Type="Lookup">' + ao.ID + "</Value>";
       })
       .join("") +
@@ -936,7 +1146,7 @@ function fetchMyAOAssignments() {
       idarr.push(this.Title);
     });
     var filtered = $(vm.allOrders()).filter(function () {
-      return idarr.includes(this.Title);
+      return idarr.indexOf(this.Title) >= 0;
     });
     var vanilla = $.makeArray(filtered);
     vm.assignedOpenOrders(vanilla);
@@ -949,7 +1159,7 @@ function fetchMyAOAssignments() {
  ************************************************************/
 function approveRequest() {
   // Find the assignment that needs approving and approve!
-  vm.requestAssignments().forEach((assignment) => {
+  vm.requestAssignments().forEach(function (assignment) {
     if (vm.assignmentCurUserCanApprove(assignment)) {
       vm.assignmentApprove(assignment);
     }
@@ -981,7 +1191,10 @@ function fetchApprovals(callback) {
 function newApprovalCallback(result, value) {
   console.log("approval callback: " + result, value);
   if (result === SP.UI.DialogResult.OK) {
-    SP.UI.ModalDialog.showWaitScreenWithNoClose("Saving Work Order...");
+    vm.busy.addTask(appBusyStates.approve);
+    //     dialog.approve = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+    //   "Approving Work Order..."
+    // );
     $(".admin-action-zone").hide();
     console.log(value);
     fetchApprovals(function () {
@@ -1001,7 +1214,8 @@ function newApprovalCallback(result, value) {
           //Something went wrong
           alert(":(");
       }
-      SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+      vm.busy.finishTask(appBusyStates.approve);
+      // dialog.close(dialog.approve);
     });
   }
 }
@@ -1017,8 +1231,10 @@ function newAction() {
   );
 }
 
-function createAction(type, desc, sendEmail = false) {
-  let vp = [
+function createAction(type, desc, sendEmail) {
+  var sendEmail = sendEmail === undefined ? false : sendEmail;
+
+  var vp = [
     ["Title", vm.requestID()],
     ["ActionType", type],
     ["Description", desc],
@@ -1026,7 +1242,9 @@ function createAction(type, desc, sendEmail = false) {
   ];
   vm.listRefAction().createListItem(
     vp,
-    () => newActionCallback(SP.UI.DialogResult.OK, null),
+    function () {
+      newActionCallback(SP.UI.DialogResult.OK, null);
+    },
     vm.requestFolderPath()
   );
 }
@@ -1047,11 +1265,15 @@ function fetchActions(callback) {
 function newActionCallback(result, value) {
   console.log("Action callback: " + result, value);
   if (result === SP.UI.DialogResult.OK) {
-    SP.UI.ModalDialog.showWaitScreenWithNoClose("Refreshing Actions List...");
+    vm.busy.addTask(appBusyStates.newAction);
+    //     dialog.newAction = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+    //   "Refreshing Actions List..."
+    // );
     //$(".admin-action-zone").hide();
     console.log(value);
     fetchActions(function () {
-      SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+      vm.busy.finishTask(appBusyStates.newAction);
+      // dialog.close(dialog.newAction);
       // Let's branch based on whether the last approval was approve or reject.
       console.log("actions fetched");
     });
@@ -1077,7 +1299,8 @@ function newCommentCallback(result, value) {
     $(".admin-action-zone").hide();
     console.log(value);
     fetchComments(function () {
-      SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+      vm.busy.finishTask(appBusyStates.newComment);
+      // dialog.close(dialog.newComment);
       // Let's branch based on whether the last approval was approve or reject.
       console.log("comments fetched");
     });
@@ -1086,16 +1309,19 @@ function newCommentCallback(result, value) {
 
 function submitComment() {
   if (vm.commentNew()) {
-    SP.UI.ModalDialog.showWaitScreenWithNoClose("Submitting Comment...");
+    vm.busy.addTask(appBusyStates.newComment);
+    //     dialog.newComment = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+    //   "Submitting Comment..."
+    // );
     vm.listRefComment().upsertListFolderPath(
       vm.requestFolderPath(),
-      (folderId) => {
+      function (folderId) {
         // Update the permissions for the new folder
         if (folderId) {
           vm.listRefComment().setItemPermissions(
             folderId,
             vm.requestFolderPerms(),
-            () => {
+            function () {
               vm.listRefComment().createListItem(
                 [
                   ["Title", vm.requestID()],
@@ -1115,8 +1341,10 @@ function submitComment() {
 
 function submitCommentCallback(id) {
   vm.commentNew("");
-  fetchComments(() => {
-    SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+  fetchComments(function () {
+    vm.busy.finishTask(appBusyStates.newComment);
+
+    // SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
   });
 }
 
@@ -1134,6 +1362,45 @@ function fetchComments(callback) {
 }
 
 /************************************************************
+ * DateRange
+ ************************************************************/
+function createDateRange(dateRange) {
+  var vp = [
+    ["Title", vm.requestID()],
+    ["TableName", dateRange.name()],
+    ["StartDateTime", dateRange.start.date()],
+    ["EndDateTime", dateRange.end.date()],
+    ["Label", dateRange.label()],
+  ];
+  vm.listRefDateRanges().createListItem(vp, function () {
+    console.log("Inserted");
+    dateRange.label("");
+
+    fetchDateRanges(function () {});
+  });
+}
+
+function fetchDateRanges(callback) {
+  var callback = callback === undefined ? function () {} : callback;
+  var camlq =
+    '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
+    '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
+    '</Eq><Eq><FieldRef Name="Title"/><Value Type="Text">' +
+    vm.requestID() +
+    "</Value></Eq></And></Where></Query></View>";
+  vm.listRefDateRanges().getListItems(camlq, function (dateRanges) {
+    vm.request.dateRanges.all(dateRanges);
+    callback();
+  });
+}
+
+function deleteDateRange(dateRange) {
+  vm.listRefDateRanges().deleteListItem(dateRange.ID, function () {
+    fetchDateRanges();
+  });
+}
+
+/************************************************************
  * Pipeline
  ************************************************************/
 /**
@@ -1143,36 +1410,26 @@ function fetchComments(callback) {
  * new ConfigPipeline stage.
  */
 function pipelineForward() {
-  let valuePairs = new Array();
+  dismissAdvancePrompt();
+
+  vm.busy.addTask(appBusyStates.pipeline);
+
+  // dialog.pipeline = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+  //   "Progressing to Next Stage",
+  //   "Please wait..."
+  // );
+
+  var valuePairs = new Array();
 
   /* Increment the current request stage num */
   var t = parseInt(vm.requestStageNum()) + 1;
   if (t > vm.selectedPipeline().length) {
     // vm.requestStatus("Closed");
     // valuePairs.push(["RequestStatus", "Closed"]);
+    vm.busy.finishTask(appBusyStates.pipeline);
+    // dialog.close(dialog.pipeline);
     closeWorkOrder();
   } else {
-    /*
-        // Add the current stages Request Org to requests RequestOrg column
-    // This is an off by one issue since stage 0 is editing but isn't
-    // in our pipeline.
-    let nextStage = vm.selectedPipeline().find(function (stage) {
-      return stage.Step == t;
-    });
-    if (nextStage.ActionOffice) {
-      let actionOfficeId = nextStage.ActionOffice.get_lookupId();
-      let actionOffice = vm.configActionOffices().find(function (office) {
-        return office.ID == actionOfficeId;
-      });
-      let reqOrg = vm.configRequestOrgs().find(function (org) {
-        return org.ID == actionOffice.RequestOrg.get_lookupId();
-      });
-      if (reqOrg) {
-        vm.requestOrgs.push(reqOrg);
-        valuePairs.push(["RequestOrgs", vm.requestOrgIds()]);
-      }
-    }
-    */
     vm.requestStageNum(t);
     valuePairs.push(["RequestStage", vm.requestStageNum()]);
 
@@ -1181,82 +1438,99 @@ function pipelineForward() {
       valuePairs,
       function () {
         console.log("pipeline moved to next stage.");
-        buildPipelineElement();
-        pipelineAssignments();
-        SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+        if (vm.requestIsActive() && vm.requestStage()) {
+          pipelineAssignments();
+          /* let's create a new Action every time the item progresses */
+          createAction(
+            vm.requestStage().Title,
+            sal.globalConfig.currentUser.get_title() +
+              " has moved the request to stage " +
+              vm.requestStage().Step +
+              ": " +
+              vm.requestStage().Title
+          );
+        }
+        vm.busy.finishTask(appBusyStates.pipeline);
+        // dialog.close(dialog.pipeline);
       }
     );
   }
 }
 
 function pipelineAssignments() {
-  if (vm.requestIsActive() && vm.requestStage()) {
-    if (vm.requestStage().WildCardAssignee) {
-      let personName = vm.requestStage().WildCardAssignee;
-      // This should be a person field
-      try {
-        let personObservable = vm[personName];
-        vm.assignAssignee(personObservable);
-      } catch (err) {
-        console.error(
-          `Something went wrong fetching ${personName} from viewmodel:`,
-          err
-        );
-      }
+  if (vm.requestStage().WildCardAssignee) {
+    var personName = vm.requestStage().WildCardAssignee;
+    // This should be a person field
+    try {
+      var personObservable = vm[personName];
+      vm.assignAssignee(personObservable);
+    } catch (err) {
+      console.error(
+        "Something went wrong fetching " + personName + " from viewmodel: ",
+        err
+      );
     }
+  }
 
-    // Add the current stages Request Org to requests RequestOrg column
-    // This is an off by one issue since stage 0 is editing but isn't
-    // in our pipeline.
+  // Add the current stages Request Org to requests RequestOrg column
+  // This is an off by one issue since stage 0 is editing but isn't
+  // in our pipeline.
 
-    if (vm.requestStageOrg()) {
-      vm.requestOrgs.push(vm.requestStageOrg());
-      valuePairs = [["RequestOrgs", vm.requestOrgIds()]];
-    }
+  if (vm.requestStageOrg()) {
+    vm.requestOrgs.push(vm.requestStageOrg());
+    valuePairs = [["RequestOrgs", vm.requestOrgIds()]];
+  }
 
-    switch (vm.requestStage().ActionType) {
-      case "Pending Approval":
-        // The assigned approver needs to check off
-        vm.assignActionOffice(vm.requestStageOffice());
-        createAssignment("Approver", true);
-        break;
-      case "Pending Action":
-        vm.assignActionOffice(vm.requestStageOffice());
-        createAssignment("Action Resolver");
-        break;
-      case "Notification":
-        pipelineNotifications();
-        pipelineForward();
-        break;
-      case "Pending Resolution":
-      case "Pending Assignment":
-      default:
-        pipelineNotifications();
-        break;
-    }
-  } else {
-    pipelineNotifications();
+  switch (vm.requestStage().ActionType) {
+    case "Pending Approval":
+      // The assigned approver needs to check off
+      vm.assignActionOffice(vm.requestStageOffice());
+      createAssignment("Approver", true);
+      break;
+    case "Pending Action":
+      vm.assignActionOffice(vm.requestStageOffice());
+      createAssignment("Action Resolver");
+      break;
+    case "Notification":
+      pipelineNotifications();
+      pipelineForward();
+      createAction("Notification");
+      break;
+    case "Pending Resolution":
+    case "Pending Assignment":
+    default:
+      pipelineNotifications();
+      break;
   }
 }
 
-function pipelineNotifications(addendum = null) {
+function pipelineNotifications() {
   Workorder.Notifications.pipelineStageNotification();
 
   // Create the action
-  createAction(
-    vm.requestStage().Title == "Closed" ? "Closed" : "Progressed",
-    `${sal.globalConfig.currentUser.get_title()} has moved the request to stage ${
-      vm.requestStage().Step
-    }: ${vm.requestStage().Title}`
-  );
 }
 
 function cancelWorkOrder() {
-  SP.UI.ModalDialog.showWaitScreenWithNoClose("Cancelling Request...");
-  closeWorkOrder("Cancelled");
+  if (
+    confirm(
+      "Warning! Click OK to cancel this request.\n" +
+        "The request cannot be re-opened."
+    )
+  ) {
+    closeWorkOrder("Cancelled");
+  }
 }
 
-function closeWorkOrder(reason = "Closed") {
+function closeWorkOrder(reason) {
+  var statusClosed = configPipelinesListDef.viewFields.ActionType.opts.Closed;
+  var reason = reason === undefined ? statusClosed : reason;
+
+  vm.busy.addTask(appBusyStates.closing);
+  // dialog.closing = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+  //   "Closing Request...",
+  //   reason
+  // );
+
   var vp = [
     ["RequestStatus", reason],
     ["RequestStage", "10"],
@@ -1271,10 +1545,79 @@ function closeWorkOrder(reason = "Closed") {
     // Create the action
     createAction(
       reason,
-      `${sal.globalConfig.currentUser.get_title()} has ${reason} the request`
+      sal.globalConfig.currentUser.get_title() +
+        " has " +
+        reason +
+        " the request"
     );
-    SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+    vm.busy.finishTask(appBusyStates.closing);
+    // dialog.close(dialog.closing);
+    lockRequest(vm.requestID());
+  });
+}
+
+function lockRequest(woID) {
+  vm.busy.addTask(appBusyStates.lock);
+  //       dialog.lock = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+  //   "Locking Request..."
+  // );
+  // Put the request into read only mode
+  var listRefs = [
+    vm.listRefWO(),
+    vm.listRefAction(),
+    vm.listRefAssignment(),
+    vm.listRefWOEmails(),
+    vm.listRefComment(),
+  ];
+
+  if (vm.requestSvcTypeListBool()) {
+    // Also create a folder for the service type
+    listRefs.push(vm.selectedServiceType().listRef);
+  }
+
+  var incrementer = new Incremental(0, listRefs.length, function () {
+    vm.busy.finishTask(appBusyStates.lock);
+    // dialog.close(dialog.lock);
     refreshWorkOrderItem(vm.requestID());
+  });
+
+  var camlq =
+    '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
+    '<FieldRef Name="FSObjType"/><Value Type="int">1</Value>' +
+    "</Eq><Eq>" +
+    '<FieldRef Name="Title"/><Value Type="Text">' +
+    woID +
+    "</Value>" +
+    "</Eq></And></Where></Query><RowLimit>1</RowLimit></View>";
+
+  listRefs.forEach(function (list) {
+    list.getListItems(camlq, function (items) {
+      if (items[0]) {
+        var item = items[0];
+        list.getItemPermissions(item.ID, function (logins) {
+          console.log("success", logins);
+          var vp = logins.map(function (login) {
+            return [login, "Restricted Read"];
+          });
+          list.setItemPermissions(
+            item.ID,
+            vp,
+            function () {
+              console.log(
+                "Updated item perms " +
+                  list.config.def.name +
+                  " " +
+                  incrementer.val()
+              );
+              incrementer.inc();
+            },
+            true
+          );
+        });
+      } else {
+        incrementer.inc();
+      }
+    });
   });
 }
 
@@ -1283,7 +1626,14 @@ function closeWorkOrder(reason = "Closed") {
  ************************************************************/
 /* initApp -> fetchXListData -> initServiceTypes -> initTemplates -> initComplete */
 function initApp() {
-  SP.UI.ModalDialog.showWaitScreenWithNoClose("Initializing", "Please Wait...");
+  // Initialize ViewModel
+  vm = new koviewmodel();
+  var initTime = new Date();
+  //vm.busy.addTask(appBusyStates.init);
+  dialog.init = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+    "Initializing",
+    "Please Wait..."
+  );
   $(".non-editable-field").prop("disabled", true);
 
   console.log("initialized listeners");
@@ -1291,11 +1641,19 @@ function initApp() {
   // Initialize our SharePoint Access Layer
   var ini = initSal();
 
-  // Initialize our Notifications
-  InitNotifications();
+  //init our common utilities
+  InitCommon();
 
-  // Initialize ViewModel
-  vm = new koviewmodel();
+  vm.timers.init(initTime);
+
+  //InitCommon();
+
+  /* Depending on our page, we may need additional info */
+  /* Submitter/Action Office/Approval */
+  if (typeof InitNotifications != "undefined") {
+    // Initialize our Notifications
+    InitNotifications();
+  }
 
   // Setup models for each of the config lists we may connect to
   initStaticListRefs();
@@ -1305,7 +1663,9 @@ function initApp() {
   fetchConfigListData();
 
   // Get our current user groups and store them
-  getCurrentUserGroups((groups) => vm.userGroupMembership(groups));
+  getCurrentUserGroups(function (groups) {
+    vm.userGroupMembership(groups);
+  });
 }
 
 function initServiceTypes() {
@@ -1314,27 +1674,40 @@ function initServiceTypes() {
 }
 
 function initTemplates() {
-  let templates = vm
+  var templates = vm
     .configServiceTypes()
-    .map((stype) => stype.TemplateName)
-    .filter((templ) => templ);
+    .map(function (stype) {
+      return stype.TemplateName;
+    })
+    .filter(function (templ) {
+      return templ;
+    });
 
-  let cnt = templates.length;
-  let loaded = 0;
+  var cnt = templates.length + 1;
+  var loaded = 0;
 
-  templates.forEach((template) => {
+  var templateIncrementer = new Incremental(0, cnt, initComplete);
+
+  templates.forEach(function (template) {
     $.get(
-      `${sal.globalConfig.siteUrl}/SiteAssets/workorder/wo/ServiceTypeTemplates/${template}`,
+      sal.globalConfig.siteUrl +
+        "/SiteAssets/workorder/wo/ServiceTypeTemplates/" +
+        template,
       function (html) {
         $("#service-type-templates").append(html);
-        loaded++;
-        if (loaded == cnt) {
-          // We've loaded all templates
-          initComplete();
-        }
+        templateIncrementer.inc();
       }
     );
   });
+
+  $.get(
+    sal.globalConfig.siteUrl +
+      "/SiteAssets/workorder/common/common_elements.html",
+    function (html) {
+      $("#service-type-templates").append(html);
+      templateIncrementer.inc();
+    }
+  );
 }
 
 function initComplete() {
@@ -1348,13 +1721,13 @@ function initComplete() {
   var href = window.location.href.toLowerCase();
   var hash = window.location.hash.replace("#", "");
 
-  const queryString = window.location.search;
-  const urlParams = new URLSearchParams(queryString);
+  var queryString = window.location.search;
+  //const urlParams = new URLSearchParams(queryString);
 
-  let tab = urlParams.get("tab");
-  let id = urlParams.get("reqid");
-  let stypeId = urlParams.get("stype");
-  let stype = null;
+  var tab = getUrlParam("tab");
+  var id = getUrlParam("reqid");
+  var service = getUrlParam("lookup");
+  var stype = null;
 
   // if (id && tab == 'order-detail') {
   //   viewWorkOrderItem(id);
@@ -1379,7 +1752,9 @@ function initComplete() {
   vm.applicationIsLoaded(true);
   ko.applyBindings(vm);
 
-  if (vm.page().toLocaleLowerCase() != "approval.aspx") {
+  if (
+    ["approval.aspx", "reports.aspx"].indexOf(vm.page().toLocaleLowerCase()) < 0
+  ) {
     $("#tabs").show();
     initUIComponents();
 
@@ -1396,7 +1771,15 @@ function initComplete() {
         vm.tab(tab);
     }
   }
-  SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
+  /* Reports 
+  if (typeof InitReport != "undefined") {
+    InitReport();
+  }
+  */
+  // vm.busy.finishTask(appBusyStates.init);
+  dialog.init.close();
+  vm.timers.initComplete(new Date());
+  //SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
 
 function initUIComponents() {
@@ -1405,19 +1788,26 @@ function initUIComponents() {
   makeDataTable("#wo-closed-orders");
   makeDataTable("#wo-cancelled-orders");
 
-  $(".ui.checkbox").checkbox();
-  $(".ui.accordion").accordion();
+  //$("#example1").calendar();
+  if ($(".ui.checkbox").length) {
+    $(".ui.checkbox").checkbox();
+  }
+  if ($(".ui.accordion").length) {
+    $(".ui.accordion").accordion();
+  }
   // $(".view-action-office").popup({
   //   popup: ".ui.list-action-office.popup",
   //   on: "click",
   // });
-  $(".menu .item").tab();
-  $(".top.menu .item").tab({
-    onVisible: function () {
-      vm.tab(this.id);
-    },
-  });
-  $(".ui.secondary.menu").find(".item").tab("change tab", "my-open-orders");
+  if ($(".menu .item").length) {
+    $(".menu .item").tab();
+    $(".top.menu .item").tab({
+      onVisible: function () {
+        vm.tab(this.id);
+      },
+    });
+    $(".ui.secondary.menu").find(".item").tab("change tab", "my-open-orders");
+  }
   //$(".ui.top.menu").find(".item").tab("change tab", "my-orders");
 }
 

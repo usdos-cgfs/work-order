@@ -15,17 +15,17 @@
         koMap: "accessEmployeeType",
         required: false,
       },
-      FullName: { type: "Text", koMap: "accessFullName", required: false },
-      BadgeNum: { type: "Text", koMap: "accessBadgeNum", required: false },
+      FullName: { type: "Text", koMap: "accessFullName", required: true },
+      BadgeNum: { type: "Text", koMap: "accessBadgeNum", required: true },
       ExpirationDate: {
         type: "DateTime",
         koMap: "accessExpirationDate",
-        required: false,
+        required: true,
       },
       Locations: {
         type: "Text",
         koMap: "accessLocations",
-        required: false,
+        required: true,
       },
       Justification: {
         type: "Text",
@@ -39,7 +39,6 @@
         required: false,
       },
     },
-    
   });
 
   vm.accessTypeOpts = ko.observableArray([
@@ -61,18 +60,11 @@
 
   vm.accessFullName = ko.observable();
   vm.accessBadgeNum = ko.observable();
-  vm.accessExpirationDate = ko.observable();
+  vm.accessExpirationDate = new DateField({
+    type: "date",
+  });
   vm.accessLocations = ko.observable();
   vm.accessJustification = ko.observable();
-
-  vm.accessExpirationDateStr = ko.pureComputed({
-    read: function () {
-      return new Date(vm.accessExpirationDate()).format("yyyy-MM-dd");
-    },
-    write: function (val) {
-      vm.accessExpirationDate(new Date(val + "T00:00:00"));
-    },
-  });
 </script>
 
 <script type="text/html" id="tmpl_access">
@@ -96,10 +88,27 @@
     <div class="two fields">
       <div class="field">
         <label> Expiration Date<span class="required">*</span>: </label>
+        <!-- ko if: currentView() == 'view' -->
         <input
-          type="date"
-          data-bind="value: accessExpirationDateStr, disable: currentView()=='view'"
+          type="text"
+          data-bind="value: accessExpirationDate.date().toLocaleString(),
+   disable: true"
         />
+        <!-- /ko -->
+        <!-- ko if: currentView() != 'view' -->
+        <div class="ui calendar">
+          <div class="ui input left icon">
+            <i class="calendar icon"></i>
+            <input
+              class="editable-field"
+              type="text"
+              data-bind="disabled:
+                currentView() == 'view', 
+                dateField: accessExpirationDate"
+            />
+          </div>
+        </div>
+        <!-- /ko -->
       </div>
       <div class="field">
         <label> Locations<span class="required">*</span>: </label>

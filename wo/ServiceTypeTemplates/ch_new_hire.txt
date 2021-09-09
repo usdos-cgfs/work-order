@@ -1,0 +1,123 @@
+<script>
+  /************************************************************
+   *    List Def: Conference
+   ************************************************************/
+  vm.listDefs.push({
+    uid: "ch_new_hire",
+    name: "st_ch_new_hire",
+    title: "st_ch_new_hire",
+    viewFields: {
+      ID: { type: "Text", koMap: "empty" },
+      Title: { type: "Text", koMap: "requestID" },
+      Position: {
+        type: "Text",
+        koMap: "new_hirePosition",
+        required: true,
+      },
+      EOD: {
+        type: "DateTime",
+        koMap: "new_hireEOD",
+        required: true,
+      },
+      EmployeeType: {
+        type: "Text",
+        koMap: "new_hireEmployeeType",
+        required: true,
+      },
+      OrientationType: {
+        type: "Text",
+        koMap: "new_hireOrientationType",
+        required: false,
+      },
+    },
+  });
+
+  /***************************************************************
+   *    Declare Observables
+   ***************************************************************/
+
+  vm.new_hirePosition = ko.observable();
+  vm.new_hireEOD = new DateField();
+
+  vm.new_hireEmployeeType = ko.observable();
+  vm.new_hireEmployeeTypeOpts = ko.observableArray([
+    "Direct Hire",
+    "Government",
+  ]);
+
+  vm.new_hireOrientationType = ko.observable();
+  vm.new_hireOrientationTypeOpts = ko.observableArray([
+    "Security/COOP",
+    "ISO 9001",
+    "New Hire Orientation (direct hire only)",
+    "Meeting with CGFS EX Director",
+  ]);
+
+  var ch_new_hire = vm.configServiceTypes().find(function (stype) {
+    return stype.UID == "ch_new_hire";
+  });
+
+  ch_new_hire.validate = function () {
+    // Service type specific validation
+  };
+</script>
+
+<script type="text/html" id="tmpl_ch_new_hire">
+  <div class="ui form">
+    <div class="two fields">
+      <div class="eight wide field">
+        <label>Position<span class="required">*</span>:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+              value: new_hirePosition"
+        />
+      </div>
+      <div class="eight wide field">
+        <label>Entrance On Duty<span class="required">*</span>:</label>
+        <!-- ko if: currentView() == 'view' -->
+        <input
+          type="text"
+          data-bind="value: new_hireEOD.dateFormat(),
+          disable: true"
+        />
+        <!-- /ko -->
+        <!-- ko if: currentView() != 'view' -->
+        <div class="ui calendar">
+          <div class="ui fill input left icon">
+            <i class="calendar icon"></i>
+            <input
+              type="text"
+              placeholder="End"
+              data-bind="dateField: new_hireEOD"
+            />
+          </div>
+        </div>
+        <!-- /ko -->
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label>Employee Type<span class="required">*</span>:</label>
+        <select
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+              value: new_hireEmployeeType,
+              options: new_hireEmployeeTypeOpts, optionsCaption: 'Select...',"
+        ></select>
+      </div>
+      <div class="field">
+        <label>Orientation Type<span class="required">*</span>:</label>
+        <select
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+              value: new_hireOrientationType,
+              options: new_hireOrientationTypeOpts, optionsCaption: 'Select...',"
+        ></select>
+      </div>
+    </div>
+  </div>
+</script>

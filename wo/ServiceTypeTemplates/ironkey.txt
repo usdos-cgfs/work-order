@@ -9,18 +9,22 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      UserName: { type: "Text", koMap: "ironkeyUserName", required: false },
+      UserName: { type: "Person", koMap: "ironkeyUserName", required: true },
       EmployeeType: {
         type: "Text",
         koMap: "ironkeyEmployeeType",
-        required: false,
+        required: true,
       },
       RequestType: {
         type: "Text",
         koMap: "ironkeyRequestType",
-        required: false,
+        required: true,
       },
-      Supervisor: { type: "Text", koMap: "ironkeySupervisor", required: false },
+      Supervisor: {
+        type: "Person",
+        koMap: "ironkeySupervisor",
+        required: true,
+      },
     },
   });
 
@@ -28,51 +32,65 @@
    *    Declare Observables
    ***************************************************************/
 
-  vm.ironkeyUserName = ko.observable();
+  vm.ironkeyUserName = new PeopleField();
   vm.ironkeyEmployeeType = ko.observable();
-  vm.ironkeyEmployeeTypes = ko.observableArray(["FTE", "Contractor"]);
+  vm.ironkeyEmployeeTypeOpts = ko.observableArray(["FTE", "Contractor"]);
   vm.ironkeyRequestType = ko.observable();
-  vm.ironkeyRequestTypes = ko.observableArray(["New", "Replacement"]);
-  vm.ironkeySupervisor = ko.observable();
+  vm.ironkeyRequestTypeOpts = ko.observableArray(["New", "Replacement"]);
+  vm.ironkeySupervisor = new PeopleField();
 </script>
 
 <script type="text/html" id="tmpl_ironkey">
   <div class="ui form">
     <div class="two fields">
       <div class="field">
-        <label>User Name:</label>
+        <label>User Name<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="text"
-          data-bind="disable: currentView() == 'view', value: ironkeyUserName"
+          disabled="true"
+          data-bind="value: ironkeyUserName.userName, visible: currentView() == 'view'"
         />
+        <div
+          id="peopleironkeyUserName"
+          class="editable-field"
+          data-bind="people: ironkeyUserName.user, 
+            visible: currentView() != 'view'"
+        ></div>
       </div>
       <div class="field">
-        <label>Employee Type:</label>
+        <label>Employee Type<span class="required">*</span>:</label>
         <select
           class="editable-field"
           type="text"
           data-bind="disable: currentView() == 'view',
-              options: ironkeyEmployeeTypes, optionsCaption: 'Select...', value: ironkeyEmployeeType"
+              options: ironkeyEmployeeTypeOpts, optionsCaption: 'Select...', value: ironkeyEmployeeType"
         ></select>
       </div>
     </div>
     <div class="two fields">
       <div class="field">
-        <label>COR/Supervisor:</label>
+        <label>COR/Supervisor<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="text"
-          data-bind="disable: currentView() == 'view', value: ironkeySupervisor"
+          disabled="true"
+          data-bind="value: ironkeySupervisor.userName, visible: currentView() == 'view'"
         />
+        <div
+          id="peopleironkeySupervisor"
+          class="editable-field"
+          data-bind="people: ironkeySupervisor.user, 
+            visible: currentView() != 'view'"
+        ></div>
       </div>
       <div class="field">
-        <label>Employee Type:</label>
+        <label>Request Type<span class="required">*</span>:</label>
         <select
           class="editable-field"
           type="text"
           data-bind="disable: currentView() == 'view',
-              options: ironkeyRequestTypes, optionsCaption: 'Select...', value: ironkeyRequestType"
+              options: ironkeyRequestTypeOpts, optionsCaption: 'Select...', value: ironkeyRequestType"
         ></select>
       </div>
     </div>

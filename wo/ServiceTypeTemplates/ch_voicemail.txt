@@ -12,9 +12,9 @@
       Employee: {
         type: "Person",
         koMap: "voicemailEmployeeName",
-        required: false,
+        required: true,
       },
-      Phone: { type: "Text", koMap: "voicemailPhone", required: false },
+      Phone: { type: "Text", koMap: "voicemailPhone", required: true },
       Location: {
         type: "Text",
         koMap: "voicemailLocation",
@@ -39,15 +39,20 @@
         <input
           class="editable-field"
           type="text"
-          data-bind="value: voicemailEmployeeName.userName, visible: currentView() == 'view'"
+          disabled="true"
+          data-bind="value: voicemailEmployeeName.title,  
+          visible: currentView() == 'view'"
         />
         <div
+          id="peoplevoiceMailEmployeeName"
           type="text"
-          data-bind="people: voicemailEmployeeName, visible: currentView()!='view'"
+          class="editable-field"
+          data-bind="people: voicemailEmployeeName, 
+          visible: currentView()!='view'"
         ></div>
       </div>
       <div class="field">
-        <label>Phone Number: </label>
+        <label>Phone Number<span class="required">*</span>: </label>
         <input
           class="editable-field"
           type="text"

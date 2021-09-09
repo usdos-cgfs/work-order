@@ -14,8 +14,8 @@
         koMap: "diplomaticVisaFullName",
         required: true,
       },
-      BirthDate: {
-        type: "Text",
+      DateOfBirth: {
+        type: "DateTime",
         koMap: "diplomaticVisaBirthDate",
         required: true,
       },
@@ -24,45 +24,45 @@
         koMap: "diplomaticVisaPassNum",
         required: true,
       },
-      Issued: {
-        type: "Text",
+      PassportDateIssued: {
+        type: "DateTime",
         koMap: "diplomaticPassportIssued",
-        required: false,
+        required: true,
       },
-      Expiration: {
-        type: "Text",
+      PassportDateExpiration: {
+        type: "DateTime",
         koMap: "diplomaticPassportExpiration",
-        required: false,
+        required: true,
       },
       RequestType: {
         type: "Text",
         koMap: "diplomaticPassportSelectedType",
-        required: false,
+        required: true,
       },
       Grade: {
         type: "Text",
         koMap: "diplomaticPassportGrade",
-        required: false,
+        required: true,
       },
       DestinationCity: {
         type: "Text",
         koMap: "diplomaticPassportDestinationCity",
-        required: false,
+        required: true,
       },
       DestinationCountry: {
         type: "Text",
         koMap: "diplomaticPassportDestinationCountry",
-        required: false,
+        required: true,
       },
       Departure: {
-        type: "Text",
+        type: "DateTime",
         koMap: "diplomaticPassportDeparture",
-        required: false,
+        required: true,
       },
       Return: {
-        type: "Text",
+        type: "DateTime",
         koMap: "diplomaticPassportReturn",
-        required: false,
+        required: true,
       },
       Purpose: {
         type: "Text",
@@ -72,7 +72,7 @@
       BirthLocation: {
         type: "Text",
         koMap: "diplomaticPassportBirthLocation",
-        required: false,
+        required: true,
       },
     },
   });
@@ -80,22 +80,50 @@
   /***************************************************************
    *    Declare Observables
    ***************************************************************/
+  /***************************************************************
+   *    !!! NOTICE !!!!
+   *  We are overloading (read re-using) fields from the Diplomatic
+   * Passport Service Type.
+   *
+   *  IF THE DIPLOMATIC PASSPORT SERVICE TYPE DOES NOT EXIST, WE
+   * NEED TO REBUILD THE OBSERVABLES (BELOW) AND UPDATE THE LISTDEF (ABOVE)
+   *
+   *    !!! NOTICE !!!!
+   ***************************************************************/
   vm.diplomaticVisaFullName = ko.observable();
-  vm.diplomaticVisaBirthDate = ko.observable();
+  vm.diplomaticVisaBirthDate = new DateField({ type: "date" });
   vm.diplomaticVisaPassNum = ko.observable();
 
-  vm.diplomaticVisaBirthDateStr = ko.pureComputed({
-    read: function () {
-      return new Date(vm.diplomaticVisaBirthDate()).format("yyyy-MM-dd");
-    },
-    write: function (val) {
-      vm.diplomaticVisaBirthDate(new Date(val + "T00:00:00"));
-    },
+  var diplomatic_visa = vm.configServiceTypes().find(function (stype) {
+    return stype.UID == "diplomatic_visa";
   });
+
+  diplomatic_visa.validate = function () {
+    if (vm.diplomaticPassportSelectedType() == "Renewal") {
+      if (isNaN(vm.diplomaticPassportIssued.date())) {
+        alert("Provide a PassPort Issued Date.");
+        vm.requestIsSaveable(false);
+      }
+      if (isNaN(vm.diplomaticPassportExpiration.date())) {
+        alert("Provide a PassPort Expiration Date.");
+        vm.requestIsSaveable(false);
+      }
+    }
+  };
 </script>
 
 <script type="text/html" id="tmpl_diplomatic_visa">
   <div class="ui form">
+    <div class="six wide field">
+      <label> Request Type<span class="required">*</span>: </label>
+      <select
+        class="editable-field"
+        type="text"
+        data-bind="disable: currentView() == 'view',
+            options: diplomaticPassportServiceTypeOpts, optionsCaption: 'Select...', value: diplomaticPassportSelectedType"
+      ></select>
+    </div>
+    <div data-bind="visible: diplomaticPassportSelectedType() != undefined">
       <div class="fields">
         <div class="eight wide field">
           <label
@@ -110,16 +138,34 @@
         </div>
         <div class="eight wide field">
           <label>Date of Birth<span class="required">*</span>:</label>
+          <!-- ko if: currentView() == 'view' -->
           <input
-            class="editable-field"
-            type="date"
-            data-bind="value: diplomaticVisaBirthDateStr, disable: currentView() == 'view'"
+            type="text"
+            data-bind="value: diplomaticVisaBirthDate.date().toLocaleString(),
+      disable: true"
           />
+          <!-- /ko -->
+          <!-- ko if: currentView() != 'view' -->
+          <div class="ui calendar">
+            <div class="ui input left icon">
+              <i class="calendar icon"></i>
+              <input
+                class="editable-field"
+                type="text"
+                data-bind="disabled:
+                currentView() == 'view', 
+                dateField: diplomaticVisaBirthDate"
+              />
+            </div>
+          </div>
+          <!-- /ko -->
         </div>
       </div>
       <div class="fields">
         <div class="eight wide field">
-          <label> State/Country of Birth<span class="required">*</span>: </label>
+          <label>
+            State/Country of Birth<span class="required">*</span>:
+          </label>
           <input
             class="editable-field"
             type="text"
@@ -162,53 +208,118 @@
           />
         </div>
       </div>
-      <h4 class="ui dividing header">
-        Renewal Information
-      </h4>
-      <div class="two fields" data-bind="">
-        <div class="field">
-          <label>
-            Issued Date (of most recent Passport)<span class="required">*</span>:
-          </label>
-          <input
-            class="editable-field"
-            type="date"
-            placeholder="Passport Expiration Date"
-            data-bind="value: diplomaticPassportIssuedStr, disable: currentView() == 'view'"
-          />
-        </div>
-        <div class="field">
-          <label>
-            Expiration Date (of most recent Passport)<span class="required"
-              >*</span
-            >:
-          </label>
-          <input
-            class="editable-field"
-            type="date"
-            placeholder="Passport Expiration Date"
-            data-bind="value: diplomaticPassportExpirationStr, disable: currentView() == 'view'"
-          />
+      <div data-bind="visible: diplomaticPassportSelectedType() == 'Renewal'">
+        <h4 class="ui dividing header">Renewal Information</h4>
+        <div class="two fields" data-bind="">
+          <div class="field">
+            <label>
+              Issued Date (of most recent Passport)<span class="required"
+                >*</span
+              >:
+            </label>
+            <!-- ko if: currentView() == 'view' -->
+            <input
+              type="text"
+              data-bind="value: diplomaticPassportIssued.date().toLocaleString(),
+      disable: true"
+            />
+            <!-- /ko -->
+            <!-- ko if: currentView() != 'view' -->
+            <div class="ui calendar">
+              <div class="ui input left icon">
+                <i class="calendar icon"></i>
+                <input
+                  class="editable-field"
+                  type="text"
+                  data-bind="disabled:
+                currentView() == 'view', 
+                dateField: diplomaticPassportIssued"
+                />
+              </div>
+            </div>
+            <!-- /ko -->
+          </div>
+          <div class="field">
+            <label>
+              Expiration Date (of most recent Passport)<span class="required"
+                >*</span
+              >:
+            </label>
+            <!-- ko if: currentView() == 'view' -->
+            <input
+              type="text"
+              data-bind="value: diplomaticPassportExpiration.date().toLocaleString(),
+              disable: true"
+            />
+            <!-- /ko -->
+            <!-- ko if: currentView() != 'view' -->
+            <div class="ui calendar">
+              <div class="ui input left icon">
+                <i class="calendar icon"></i>
+                <input
+                  class="editable-field"
+                  type="text"
+                  data-bind="disabled:
+                currentView() == 'view', 
+                dateField: diplomaticPassportExpiration"
+                />
+              </div>
+            </div>
+            <!-- /ko -->
+          </div>
         </div>
       </div>
       <h4 class="ui dividing header">Travel Dates</h4>
       <div class="two fields">
         <div class="field">
           <label> Departure<span class="required">*</span>: </label>
+          <!-- ko if: currentView() == 'view' -->
           <input
-            class="editable-field"
-            type="date"
-            data-bind="value: diplomaticPassportDepartureStr, disable: currentView() == 'view'"
+            type="text"
+            data-bind="value: diplomaticPassportDeparture.date().toLocaleString(),
+            disable: true"
           />
+          <!-- /ko -->
+          <!-- ko if: currentView() != 'view' -->
+          <div class="ui calendar">
+            <div class="ui input left icon">
+              <i class="calendar icon"></i>
+              <input
+                class="editable-field"
+                type="text"
+                data-bind="disabled:
+                currentView() == 'view', 
+                dateField: diplomaticPassportDeparture"
+              />
+            </div>
+          </div>
+          <!-- /ko -->
         </div>
         <div class="eight wide field">
           <label> Return<span class="required">*</span>: </label>
+          <!-- ko if: currentView() == 'view' -->
           <input
-            class="editable-field"
-            type="date"
-            data-bind="value: diplomaticPassportReturnStr, disable: currentView() == 'view'"
+            type="text"
+            data-bind="value: diplomaticPassportReturn.date().toLocaleString(),
+            disable: true"
           />
+          <!-- /ko -->
+          <!-- ko if: currentView() != 'view' -->
+          <div class="ui calendar">
+            <div class="ui input left icon">
+              <i class="calendar icon"></i>
+              <input
+                class="editable-field"
+                type="text"
+                data-bind="disabled:
+                currentView() == 'view', 
+                dateField: diplomaticPassportReturn"
+              />
+            </div>
+          </div>
+          <!-- /ko -->
         </div>
       </div>
     </div>
+  </div>
 </script>

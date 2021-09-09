@@ -12,13 +12,13 @@
       SubName: {
         type: "RichText",
         koMap: "newsSubName",
-        required: false,
+        required: true,
         displayName: "Subscription Name",
       },
       Quantity: {
         type: "RichText",
         koMap: "newsSubQuantity",
-        required: false,
+        required: true,
         displayName: "Quantity",
       },
     },
@@ -35,7 +35,9 @@
   <div class="ui form">
     <div class="two fields">
       <div class="eight wide field">
-        <label> Name(s) of Paper/Magazine<span class="required">*</span>: </label>
+        <label>
+          Name(s) of Paper/Magazine<span class="required">*</span>:
+        </label>
         <textarea
           type="text"
           data-bind="value: newsSubName, disable: currentView()=='view'"

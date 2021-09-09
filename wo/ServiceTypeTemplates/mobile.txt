@@ -9,72 +9,80 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      User: { type: "Text", koMap: "phoneUser", required: false },
+      User: { type: "Person", koMap: "phoneUser", required: true },
       EmployeeType: {
         type: "Text",
         koMap: "phoneEmployeeType",
-        required: false,
+        required: true,
       },
-      RequestType: { type: "Text", koMap: "phoneRequestType", required: false },
-      PlanType: { type: "Text", koMap: "phonePlanType", required: false },
+      RequestType: { type: "Text", koMap: "phoneRequestType", required: true },
+      PlanType: { type: "Text", koMap: "phonePlanType", required: true },
     },
   });
 
   /***************************************************************
    *    Declare Observables
    ***************************************************************/
-  vm.phoneUser = ko.observable();
+  vm.phoneUser = new PeopleField();
   vm.phoneEmployeeType = ko.observable();
-  vm.phoneEmployeeTypes = ko.observableArray(["FTE", "Contractor"]);
+  vm.phoneEmployeeTypeOpts = ko.observableArray(["FTE", "Contractor"]);
   vm.phoneRequestType = ko.observable();
-  vm.phoneRequestTypes = ko.observable([
+  vm.phoneRequestTypeOpts = ko.observable([
     "New",
     "Broken/Lost/Stolen",
     "Accessories",
   ]);
   vm.phonePlanType = ko.observable();
-  vm.phonePlanTypes = ko.observable(["Domestic", "Global"]);
+  vm.phonePlanTypeOpts = ko.observable(["Domestic", "Global"]);
 </script>
 
 <script type="text/html" id="tmpl_mobile">
   <div class="ui form">
     <div class="two fields">
       <div class="field">
-        <label>User Name:</label>
+        <label>User Name<span class="required">*</span>:</label>
         <input
           class="editable-field"
-          data-bind="value: phoneUser, disable: currentView() == 'view'"
-        ></input>
+          type="text"
+          disabled="true"
+          data-bind="value: phoneUser.userName, visible: currentView() == 'view'"
+        />
+        <div
+          id="peoplephoneUser"
+          class="editable-field"
+          data-bind="people: phoneUser, 
+            visible: currentView() != 'view'"
+        ></div>
       </div>
       <div class="field">
-          <label>Employee Type:</label>
-          <select
-          class="editable-field"
-          type="text"
-          data-bind="disable: currentView() == 'view',
-              options: phoneEmployeeTypes, optionsCaption: 'Select...', value: phoneEmployeeType"
-        ></select>
-        </div>
-    </div>
-    <div class="two fields">
-      <div class="field">
-        <label>Request Type:</label>
+        <label>Employee Type<span class="required">*</span>:</label>
         <select
           class="editable-field"
           type="text"
           data-bind="disable: currentView() == 'view',
-              options: phoneRequestTypes, optionsCaption: 'Select...', value: phoneRequestType"
+              options: phoneEmployeeTypeOpts, optionsCaption: 'Select...', value: phoneEmployeeType"
         ></select>
       </div>
+    </div>
+    <div class="two fields">
       <div class="field">
-          <label>Phone Plan Type:</label>
-          <select
+        <label>Request Type<span class="required">*</span>:</label>
+        <select
           class="editable-field"
           type="text"
           data-bind="disable: currentView() == 'view',
-              options: phonePlanTypes, optionsCaption: 'Select...', value: phonePlanType"
+              options: phoneRequestTypeOpts, optionsCaption: 'Select...', value: phoneRequestType"
         ></select>
-        </div>
+      </div>
+      <div class="field">
+        <label>Phone Plan Type<span class="required">*</span>:</label>
+        <select
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+              options: phonePlanTypeOpts, optionsCaption: 'Select...', value: phonePlanType"
+        ></select>
+      </div>
     </div>
   </div>
 </script>

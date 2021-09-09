@@ -9,8 +9,8 @@
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      TonerNum: { type: "Text", koMap: "tonerNum", required: false },
-      Quantity: { type: "Text", koMap: "tonerQty", required: false },
+      TonerNum: { type: "Text", koMap: "tonerNum", required: true },
+      Quantity: { type: "Text", koMap: "tonerQty", required: true },
     },
   });
 
@@ -25,7 +25,7 @@
   <div class="ui form">
     <div class="two fields">
       <div class="eight wide field">
-        <label>Toner #:</label>
+        <label>Toner #<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="text"
@@ -34,7 +34,7 @@
         />
       </div>
       <div class="eight wide field">
-        <label>Quantity:</label>
+        <label>Quantity<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="text"

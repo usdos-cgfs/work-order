@@ -13,7 +13,7 @@
       ManagerDept: {
         type: "Person",
         koMap: "overtimeManagerDept",
-        required: true,
+        required: false,
       },
       ManagerTask: {
         type: "Person",
@@ -31,7 +31,6 @@
         koMap: "overtimeLaborCategory",
         required: true,
       },
-      LaborRate: { type: "Num", koMap: "overtimeLaborRate", required: true },
       ContractorType: {
         type: "Text",
         koMap: "overtimeContractorType",
@@ -53,13 +52,65 @@
   /***************************************************************
    *    Declare Observables
    ***************************************************************/
+  var DeptApproversTitle = "GOV_MGMT";
+  var DeptApproversId = sal.globalConfig.siteGroups.find(function (group) {
+    return group.title == DeptApproversTitle;
+  })?.ID;
   vm.overtimeFullName = new PeopleField();
-  vm.overtimeManagerDept = new PeopleField();
+  // vm.overtimeManagerDept = new PeopleField({
+  //   SharePointGroupID: DeptApproversId,
+  // });
+  // vm.overtimeManagerDeptGroup = {
+  //   userName: ko.pureComputed(function () {
+  //     return vm.overtimeManagerDept()
+  //       ? vm.overtimeManagerDept().loginName
+  //       : null;
+  //   }),
+  //   lookupUser: ko.pureComputed(function () {
+  //     return vm.overtimeManagerDept() ? vm.overtimeManagerDept().group : null;
+  //   }),
+  // };
+  // vm.overtimeManagerDeptGroup = function () {
+  //   if (!vm.overtimeManagerDept()) {
+  //     return null;
+  //   }
+  //   // We have to cludge this for now.
+  //   return {
+  //     userName: vm.overtimeManagerDept().group,
+  //   };
+  // };
+  var peopleSchemaOpts = {
+    PrincipalAccountType: "User,SPGroup",
+  };
+  vm.overtimeManagerDept = new PeopleField(peopleSchemaOpts);
   vm.overtimeManagerTask = new PeopleField();
   vm.overtimeDepartment = ko.observable();
+
+  vm.overTimeDepartmentSelection = ko.observable();
+  vm.overTimeDepartmentSelection.subscribe(function (dept) {
+    if (!dept || typeof dept == "undefined") {
+      vm.overtimeManagerDept(null);
+      vm.overtimeDepartment(null);
+      return;
+    }
+    if (!dept.UserGroup) {
+      vm.overtimeDepartment(null);
+      vm.overtimeManagerDept(null);
+      return;
+    }
+    vm.overtimeDepartment(dept.Title);
+    vm.overtimeManagerDept.userId(dept.UserGroup);
+  });
+  vm.overtimeDepartmentOpts = ko.pureComputed(function () {
+    return vm.configRequestOrgs().filter(function (ro) {
+      return (
+        ro.OrgType ==
+        configRequestOrgsListDef.viewFields.OrgType.opts.DEPARTMENT
+      );
+    });
+  });
   vm.overtimeRequisitionOrder = ko.observable();
   vm.overtimeLaborCategory = ko.observable();
-  vm.overtimeLaborRate = ko.observable();
   vm.overtimeContractorType = ko.observable();
   vm.overtimeContractorTypeOpts = ko.observableArray(["SCA", "Non-SCA"]);
   vm.overtimeDates = ko.observable();
@@ -70,95 +121,89 @@
   <div class="ui form">
     <div class="two fields">
       <div class="field">
-        <label>Contractor: </label>
+        <label>Contractor<span class="required">*</span>: </label>
         <input
           class="editable-field"
           type="text"
           disabled="true"
-          data-bind="value: overtimeFullName.userName, visible: currentView() == 'view'"
+          data-bind="value: overtimeFullName.title, visible: currentView() == 'view'"
         />
         <div
           id="peopleovertimeFullName"
           class="editable-field"
-          data-bind="people: overtimeFullName.user, 
+          data-bind="people: overtimeFullName, 
             visible: currentView() != 'view'"
         ></div>
       </div>
       <div class="field">
         <label>Dept Manager: </label>
-        <input
-          class="editable-field"
-          type="text"
-          disabled="true"
-          data-bind="value: overtimeManagerDept.userName, visible: currentView() == 'view'"
-        />
         <div
           id="peopleovertimeManagerDept"
           class="editable-field"
-          data-bind="people: overtimeManagerDept.user, 
+          data-bind="people: overtimeManagerDept, 
             visible: currentView() != 'view'"
         ></div>
       </div>
     </div>
     <div class="two fields">
       <div class="field">
-        <label>Task Manager: </label>
+        <label>Task Manager<span class="required">*</span>: </label>
         <input
           class="editable-field"
           type="text"
           disabled="true"
-          data-bind="value: overtimeManagerTask.userName, visible: currentView() == 'view'"
+          data-bind="value: overtimeManagerTask.title, visible: currentView() == 'view'"
         />
         <div
           id="peopleovertimeManagerTask"
           class="editable-field"
-          data-bind="people: overtimeManagerTask.user, 
+          data-bind="people: overtimeManagerTask, 
             visible: currentView() != 'view'"
         ></div>
       </div>
       <div class="field">
-        <label>Department:</label>
-        <input
+        <label>Department<span class="required">*</span>:</label>
+        <!-- <input
           class="editable-field"
           type="text"
           data-bind="disable: currentView() == 'view',
               value: overtimeDepartment"
-        />
+        /> -->
+        <select
+          class="editable-field"
+          type="text"
+          data-bind="visible: currentView() != 'view',
+            disable: currentView() == 'view',
+            value: overTimeDepartmentSelection, options: overtimeDepartmentOpts,
+            optionsText: 'Title', optionsCaption: 'Select...'"
+        ></select>
       </div>
     </div>
     <div class="two fields">
       <div class="field">
-        <label>Labor Category (LCAT):</label>
+        <label>Labor Category (LCAT)<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="text"
-          data-bind="disabled:
+          data-bind="disable:
               currentView() == 'view', value: overtimeLaborCategory"
         />
       </div>
-      <div class="field">
-        <label>Labor Rate (Hourly Rate):</label>
-        <input
-          class="editable-field"
-          type="number"
-          min="0"
-          data-bind="disabled:
-              currentView() == 'view', value: overtimeLaborRate"
-        />
-      </div>
     </div>
     <div class="two fields">
       <div class="field">
-        <label>Requisition Number/Task Order:</label>
+        <label
+          >Requisition Number/Task Order<span class="required">*</span>:</label
+        >
         <input
           class="editable-field"
           type="text"
-          data-bind="disabled:
+          data-bind="disable:
               currentView() == 'view', value: overtimeRequisitionOrder"
         />
       </div>
       <div class="field">
-        <label>Contractor Type:</label>
+        <label>Contractor Type<span class="required">*</span>:</label>
         <select
           class="editable-field"
           type="text"
@@ -170,16 +215,16 @@
     </div>
     <div class="two fields">
       <div class="field">
-        <label>Overtime Dates:</label>
+        <label>Overtime Dates<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="text"
-          data-bind="disabled:
+          data-bind="disable:
               currentView() == 'view', value: overtimeDates"
         />
       </div>
       <div class="field">
-        <label>Overtime Hours:</label>
+        <label>Overtime Hours<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="Number"

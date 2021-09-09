@@ -12,13 +12,13 @@
       Name: {
         type: "Text",
         koMap: "itSoftwareName",
-        required: false,
+        required: true,
         displayName: "Software Name",
       },
       Quantity: {
         type: "Text",
         koMap: "itSoftwareQuantity",
-        required: false,
+        required: true,
         displayName: "Quantity",
       },
       POCName: {
@@ -39,6 +39,12 @@
         required: true,
         displayName: "Request Type",
       },
+      PRNumber: {
+        type: "Text",
+        koMap: "itSoftwarePRNum",
+        required: false,
+        displayName: "PR Number",
+      },
     },
   });
 
@@ -50,60 +56,61 @@
   vm.itSoftwarePOCName = ko.observable();
   vm.itSoftwareCost = ko.observable();
   vm.itSoftwareType = ko.observable();
-  vm.itSoftwareTypes = ko.observableArray(["New", "Mainenance Renewal"]);
+  vm.itSoftwareTypeOpts = ko.observableArray(["New", "Maintenance Renewal"]);
+  vm.itSoftwarePRNum = ko.observable();
+  vm.itSoftwareShowPRNum = ko.pureComputed(function () {
+    return vm.page() == "admin.aspx";
+  });
 </script>
 
 <script type="text/html" id="tmpl_it_software">
   <div class="ui form">
-      <div class="ui grid">
-          <div class="eight wide field">
-            <label>
-              Software Name<span class="required">*</span>:
-            </label>
-              <input
-                type="text"
-                data-bind="value: itSoftwareName, disable: currentView()=='view'"
-              />
-          </div>
-          <div class="eight wide field">
-            <label>
-              Quantity<span class="required">*</span>:
-            </label>
-              <input
-                type="text"
-                data-bind="value: itSoftwareQuantity, disable: currentView()=='view'"
-              />
-
-          </div>
-          <div class="eight wide field">
-            <label>
-              POC<span class="required">*</span>:
-            </label>
-              <input
-                type="text"
-                data-bind="value: itSoftwarePOCName, disable: currentView()=='view'"
-              />
-
-          </div>
-          <div class="eight wide field">
-            <label>
-              Cost<span class="required">*</span>:
-            </label>
-              <input
-                type="text"
-                data-bind="value: itSoftwareCost, disable: currentView()=='view'"
-              />
-          </div>
-        </div>
-        <div class="eight wide field">
-            <label>
-              Request Type<span class="required">*</span>:
-            </label>
-              <select
-                type="text"
-                data-bind="disable: currentView() == 'view',
-            options: itSoftwareTypes, optionsCaption: 'Select...', value: itSoftwareType"
-      ></select>
-          </div>
+    <div class="ui grid">
+      <div class="eight wide field">
+        <label> Software Name<span class="required">*</span>: </label>
+        <input
+          type="text"
+          data-bind="value: itSoftwareName, disable: currentView()=='view'"
+        />
+      </div>
+      <div class="eight wide field">
+        <label> Quantity<span class="required">*</span>: </label>
+        <input
+          type="text"
+          data-bind="value: itSoftwareQuantity, disable: currentView()=='view'"
+        />
+      </div>
+      <div class="eight wide field">
+        <label> POC<span class="required">*</span>: </label>
+        <input
+          type="text"
+          data-bind="value: itSoftwarePOCName, disable: currentView()=='view'"
+        />
+      </div>
+      <div class="eight wide field">
+        <label> Cost<span class="required">*</span>: </label>
+        <input
+          type="text"
+          data-bind="value: itSoftwareCost, disable: currentView()=='view'"
+        />
+      </div>
+      <div class="eight wide field">
+        <label> Request Type<span class="required">*</span>: </label>
+        <select
+          type="text"
+          data-bind="disable: currentView() == 'view',
+            options: itSoftwareTypeOpts, optionsCaption: 'Select...', value: itSoftwareType"
+        ></select>
+      </div>
+      <!-- ko if: itSoftwareShowPRNum -->
+      <div class="eight wide field">
+        <label>PR #: </label>
+        <input
+          type="text"
+          data-bind="value: itSoftwarePRNum, , disable: currentView()=='view'"
+        />
+      </div>
+      <!-- /ko -->
+    </div>
   </div>
 </script>

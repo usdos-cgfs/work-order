@@ -35,6 +35,10 @@
   padding-right: 30px;
 }
 
+input[id$="uploadLocation"] {
+  pointer-events: none;
+}
+
 .wo-id {
   color: blue;
   cursor: pointer;
@@ -122,10 +126,23 @@
   color: red;
 }
 
+.hl-late {
+  background-color: #c32b33 !important;
+  color: white !important;
+}
+
+.hl-warn {
+  background-color: #f07122 !important;
+}
+
+.hl-info {
+  background-color: #f0b222 !important;
+}
+
 .sticky {
-  position: sticky;
-  top: 0;
-  z-index: 1;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1 !important;
 }
 
 #service-types {
@@ -143,6 +160,49 @@
 
 #wo-progress-bar .ui-progressbar-value {
   background: rgb(0, 127, 255);
+}
+
+#actions-bar {
+  padding: 0.25em 15px;
+  margin: 0.25em 0px;
+  background-color: white;
+}
+
+#actions-bar .actions {
+  margin: auto 0px;
+}
+#actions-bar .actions.left span {
+  padding-right: 0.25em;
+}
+
+.fbox {
+  display: flex !important;
+}
+
+.fbox.fluid {
+  justify-content: space-between;
+}
+
+.fbox.left {
+  /* display: flex; */
+  flex-direction: row;
+}
+
+.fbox.right {
+  flex-direction: row-reverse;
+}
+div [class*="left floated"] {
+  float: left;
+  margin-left: 0.25em;
+}
+
+div [class*="right floated"] {
+  float: right;
+  margin-right: 0.25em;
+}
+
+#progress-card .button {
+  /* float: right; */
 }
 
 .admin-action-zone {
@@ -194,4 +254,8 @@ textarea {
 
 .ui.form {
   padding-top: 5px;
+}
+
+.ui.input.fill {
+  min-width: 100%;
 }

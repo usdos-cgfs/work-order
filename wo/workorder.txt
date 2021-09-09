@@ -22,10 +22,10 @@
 />
 <!--<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">-->
 <link rel="stylesheet" href="../SiteAssets/workorder/vendor/trix/trix.css" />
-<link
+<!-- <link
   rel="stylesheet"
   href="../SiteAssets/workorder/vendor/Semantic-UI-CSS-master/semantic.min.css"
-/>
+/> -->
 
 <link rel="stylesheet" href="../SiteAssets/workorder/wo/workorder.css" />
 <!-- common/RDT/app"  -->
@@ -38,13 +38,17 @@
 <!-- <script type="text/javascript" src="/_layouts/15/SP.UserProfiles.js"></script> -->
 
 <h1>WorkOrder System</h1>
+<!-- <div data-bind="template: {name: 'tmpl_property_space' }"></div> -->
 <div id="tabs" style="display: none">
   <div class="ui top attached tabular menu">
     <a class="item" data-tab="my-orders">My Orders</a>
     <a class="item" data-tab="order-new">New Order</a>
-    <!-- ko if: selectedServiceType -->
-    <a class="item" data-tab="order-detail">Detail View</a>
-    <!-- /ko -->
+    <a
+      class="item"
+      data-tab="order-detail"
+      data-bind="disable: !selectedServiceType"
+      >Detail View</a
+    >
   </div>
   <div
     id="my-orders"
@@ -108,9 +112,13 @@
                   ></td>
                   <td data-bind="text: ServiceType.get_lookupValue()"></td>
                   <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
-                  <td data-bind="text: RequestorName"></td>
+                  <td
+                    data-bind="text: Requestor ? Requestor.get_lookupValue() : ''"
+                  ></td>
                   <td data-bind="text: Created.format('yyyy-MM-dd')"></td>
-                  <td data-bind="text: $root.estimateClosingDate($data)"></td>
+                  <td
+                    data-bind="text: EstClosedDate ? EstClosedDate.format('yyyy-MM-dd') : 'N/A'"
+                  ></td>
                 </tr>
               </tbody>
               <tfoot>
@@ -131,18 +139,6 @@
                 business days this service type is usually closed in and is not
                 a guarantee of completion.
               </p>
-            </div>
-            <div
-              id="wo-est-completion-modal"
-              class="ui modal"
-              style="display: none"
-            >
-              <div class="content">
-                <h2 class="ui header">Esimated Completion Date</h2>
-              </div>
-              <div class="content">
-                <p>How is</p>
-              </div>
             </div>
           </div>
         </div>
@@ -185,7 +181,9 @@
                   ></td>
                   <td data-bind="text: ServiceType.get_lookupValue()"></td>
                   <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
-                  <td data-bind="text: RequestorName"></td>
+                  <td
+                    data-bind="text: Requestor ? Requestor.get_lookupValue() : ''"
+                  ></td>
                   <td data-bind="text: Created.format('yyyy-MM-dd')"></td>
                   <td
                     data-bind="text: ClosedDate ? ClosedDate.format('yyyy-MM-dd') : 'error'"
@@ -244,7 +242,9 @@
                   ></td>
                   <td data-bind="text: ServiceType.get_lookupValue()"></td>
                   <td data-bind="text: RequestorOffice.get_lookupValue()"></td>
-                  <td data-bind="text: RequestorName"></td>
+                  <td
+                    data-bind="text: Requestor ? Requestor.get_lookupValue() : ''"
+                  ></td>
                   <td data-bind="text: Created.format('yyyy-MM-dd')"></td>
                   <td data-bind="text: ClosedDate.format('yyyy-MM-dd')"></td>
                 </tr>
@@ -322,14 +322,16 @@
                     <td
                       data-bind="text: order.RequestorOffice.get_lookupValue()"
                     ></td>
-                    <td data-bind="text: order.RequestorName"></td>
+                    <td
+                      data-bind="text: order.Requestor ? order.Requestor.get_lookupValue() : ''"
+                    ></td>
                     <td data-bind="text: order.RequestStatus"></td>
                     <td data-bind="text: $(RequestDescription).text()"></td>
                     <!-- ko if: stypeTable.cols.length -->
                     <!-- ko foreach: { data: stypeTable.cols, as: 'col' } -->
                     <td
                       class="disposable"
-                      data-bind="text: $root.lookupParseText(col, stypeTable.viewFields, order.ServiceItem[col])"
+                      data-bind="text: $root.lookupParseText(col, stypeTable.viewFields, order.ServiceItem)"
                     ></td>
                     <!-- /ko -->
                     <!-- /ko -->
@@ -398,15 +400,35 @@
       <!-- /ko -->
     </div>
     <!-- /ko -->
+    <!-- ko if: selectedServiceType -->
     <div id="wo-description-modal" class="ui modal" style="display: none">
       <div
         class="header"
         data-bind="text: selectedServiceType() ? selectedServiceType().Title : 'Oops, something went wrong'"
       ></div>
       <div class="content">
+        <div>
+          For
+          <span data-bind="text: selectedServiceType().Title"></span> requests,
+          please complete the following Work Order Form. Please have prepared
+          the following information:
+        </div>
         <div
           data-bind="html: selectedServiceType() ? selectedServiceType().Description : ''"
         ></div>
+        <br />
+        <div
+          data-bind="html: selectedServiceType().AttachmentDescription"
+        ></div>
+        <div>
+          Once submitted, this request will be handled by a member of the
+          <!-- ko if: selectedServiceType().RequestOrgs -->
+          <span
+            data-bind="text: selectedServiceType().RequestOrgs[0].get_lookupValue()"
+          ></span>
+          <!-- /ko -->
+          team.
+        </div>
       </div>
       <div class="actions">
         <div class="actions">
@@ -423,6 +445,7 @@
         </div>
       </div>
     </div>
+    <!-- /ko -->
   </div>
   <div
     id="order-detail"
@@ -434,43 +457,59 @@
       <div class="content">
         <h3>
           Please select an open request from the
-          <a href="./app.aspx?tab=my-orders">Open Orders</a> Tab or
-          <a href="./app.aspx?tab=order-new"> Create a New Order</a>
+          <a data-bind="click: vm.tab('my-orders')">Open Orders</a>
+          Tab or
+          <a data-bind="click: vm.tab('order-new')"> Create a New Order</a>
         </h3>
       </div>
     </div>
     <!-- /ko -->
     <!-- ko if: selectedServiceType -->
-    <div class="sticky">
-      <div class="ui fluid card">
-        <div class="content">
-          <div class="ui left middle aligned grid">
-            <div class="row">
-              <div class="sixteen wide column">
-                <div id="wo-progress-pipeline"></div>
-                <p>
-                  <span>
-                    <a
-                      title="View this link on the admin dash"
-                      target="blank"
-                      class="fas fa-user-shield"
-                      data-bind="attr: { href: requestLinkAdmin }, "
-                    >
-                    </a>
-                  </span>
-                  <span
-                    title="Refresh this request"
-                    class="fas fa-sync pointer"
-                    onclick="refreshWorkOrderItem(vm.requestID())"
-                  ></span>
-                  Loaded:
-                  <span
-                    data-bind="text: requestLoaded().toLocaleString()"
-                  ></span>
-                </p>
-              </div>
-            </div>
-          </div>
+    <div id="actions-bar" class="ui sticky fluid fbox message">
+      <div class="actions left">
+        <span
+          ><h3>Request: <span data-bind="text: requestID"></span></h3>
+        </span>
+        <!-- ko if: vm.userActionOfficeMembership().length > 0 -->
+        <span>
+          <a
+            title="View this link on the admin dash"
+            target="blank"
+            class="fas fa-user-shield"
+            data-bind="attr: { href: requestLinkAdmin }, "
+          >
+          </a>
+        </span>
+        <!-- /ko -->
+        Loaded:
+        <span data-bind="text: requestLoaded().toLocaleString()"></span>
+        <span
+          title="Refresh this request"
+          class="fas fa-sync pointer"
+          onclick="refreshWorkOrderItem(vm.requestID())"
+        ></span>
+      </div>
+      <div style="width: 250px" class="actions">
+        <!-- ko if: canSaveForm -->
+        <button
+          type="button"
+          class="editable-field ui primary button"
+          onclick="saveWorkOrder()"
+          data-bind="enable: canSaveForm"
+        >
+          Submit Request <span class="fas fa-caret-right"></span>
+        </button>
+        <!-- /ko -->
+      </div>
+    </div>
+    <div class="ui info message">
+      <i class="close icon"></i>
+      <div class="header">Need help with this request?</div>
+      <p>This service type is supported by:</p>
+      <div class="fbox" data-bind="foreach: requestOrgs">
+        <div class="container">
+          <h5 class="ui header" data-bind="text: Title"></h5>
+          <div data-bind="html: ContactInfo"></div>
         </div>
       </div>
     </div>
@@ -478,10 +517,16 @@
     <div class="ui left middle aligned grid">
       <div class="row">
         <div class="six wide column">
-          <h1 data-bind="text: selectedServiceType().Title"></h1>
+          <h1
+            class="ui header"
+            data-bind="text: selectedServiceType().Title"
+          ></h1>
         </div>
       </div>
     </div>
+    <!-- <div id="wo-progress-pipeline" class="fluid"></div> -->
+    <div data-bind="html: selectedPipelineElement"></div>
+    <div data-bind="template: {name: 'tmpl_pipeline'}"></div>
     <div class="ui hidden divider"></div>
     <div id="wo-form">
       <div class="ui grid">
@@ -502,7 +547,7 @@
                     />
                   </div>
                   <div class="field" data-bind="visible: requestClosedDate">
-                    <label> Closed Date Date: </label>
+                    <label> Closed Date: </label>
                     <input
                       class="non-editable-field"
                       type="text"
@@ -535,14 +580,40 @@
                 </div>
                 <div class="two fields">
                   <div class="field">
-                    <label>Requestor Name: </label>
+                    <label>Requestor<span class="required">*</span>: </label>
                     <input
-                      class="non-editable-field"
+                      class="editable-field"
                       type="text"
-                      data-bind="value: requestorName"
+                      disabled="true"
+                      data-bind="value: requestor.title,
+                       visible: currentView() == 'view'"
                     />
+                    <div
+                      id="peoplerequestor"
+                      class="editable-field"
+                      data-bind="people: requestor, 
+                      visible: currentView() != 'view'"
+                    ></div>
                   </div>
-
+                  <!-- ko if: selectedServiceType().SupervisorRequired -->
+                  <div class="field">
+                    <label
+                      >Request Supervisor<span class="required">*</span>:
+                    </label>
+                    <input
+                      class="editable-field"
+                      type="text"
+                      disabled="true"
+                      data-bind="value: requestorSupervisor.title, visible: currentView() == 'view'"
+                    />
+                    <div
+                      id="peoplerequestorSupervisor"
+                      class="editable-field"
+                      data-bind="people: requestorSupervisor, 
+                      visible: currentView() != 'view'"
+                    ></div>
+                  </div>
+                  <!-- /ko -->
                   <!-- <div class="field">
                     <label>Request Manager: </label>
                     <input
@@ -594,7 +665,7 @@
                       class="editable-field new"
                       type="select"
                       data-bind="value: selectedServiceType,
-                                                           options: configServiceTypes() ? configServiceTypes().filter((stype) => stype.Active) : [{}, {}],
+                                                           options: configServiceTypes() ? configServiceTypes().filter(function(stype) {return stype.Active}) : [{}, {}],
                                                            optionsText: function(stype) {return stype.Title ? stype.Title : 'unknown'},
                                                            optionsCaption: 'Select...',
                                                            enable: currentView() == 'new'"
@@ -715,181 +786,15 @@
       <div class="ui grid">
         <div class="six wide column" data-bind="if: selectedServiceType">
           <!-- Capture any attachments below -->
-          <div id="wo-attachments" class="ui fluid card" data-bind="">
-            <div class="content">
-              <h2 class="ui header">Attachments</h2>
-            </div>
-            <div class="content">
-              <div
-                data-bind="visible: selectedServiceType().AttachmentRequired"
-              >
-                <h3>
-                  This service type has required attachments:<span
-                    class="required"
-                    >*</span
-                  >
-                </h3>
-              </div>
-              <div
-                id="instr-attachments"
-                data-bind="html: selectedServiceType().AttachmentDescription"
-              >
-                Instructions for uploading attachments.
-              </div>
-              <table
-                id="table-attachments"
-                class="ui very basic celled table"
-                data-bind="visible: requestAttachments().length > 0"
-              >
-                <thead>
-                  <tr>
-                    <th>Title</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody
-                  data-bind="foreach: requestAttachments().filter((att) => att.IsActive)"
-                >
-                  <tr>
-                    <td>
-                      <a
-                        target="_blank"
-                        data-bind="attr: { href: FileRef }, text: Title"
-                      ></a>
-                    </td>
-                    <td>
-                      <i
-                        class="fas fa-search pointer"
-                        data-bind="click: $root.attachmentView"
-                      ></i>
-                      <i
-                        class="fas fa-trash pointer"
-                        data-bind="click: $root.attachmentRemove"
-                      ></i>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="content aligned right">
-              <button
-                type="button"
-                class="ui primary button"
-                onclick="newAttachment()"
-                data-bind="enable: requestIsActive"
-              >
-                New Attachment
-              </button>
-            </div>
-          </div>
+          <div data-bind="template: {name: 'template_attachments'}"></div>
         </div>
         <div class="ten wide column" data-bind="visible: showActionsTable">
           <!-- Approvals here -->
-          <div id="wo-approvals" class="ui styled fluid accordion">
-            <div class="title">
-              <h2 class="ui header">
-                <i class="dropdown icon"></i>
-                Approvals and Actions Log
-              </h2>
-            </div>
-            <div class="content">
-              <!--<div class="admin-action-zone" data-bind="visible: pu10kShowAdmin">
-                                <h3>Administrative Action Zone</h3>
-                                <p>This purchase request requires your approval:</p>
-                                <button type="button" href="javascript:void(0)" onclick="newApproval()">Approve/Reject</button>
-                            </div>
-                            <div data-bind="visible: requestApprovals().length == 0">
-                                <p>This request has not been approved yet, check back later.</p>
-                            </div>-->
-              <table
-                id="table-actions"
-                class="ui celled very basic table"
-                data-bind="visible: requestActions().length > 0"
-              >
-                <thead>
-                  <tr>
-                    <th>Action Taker</th>
-                    <th>Action Type</th>
-                    <th>Description</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody data-bind="foreach: requestActions">
-                  <tr>
-                    <td class="collapsing">
-                      <p data-bind="text: Author.get_lookupValue()"></p>
-                    </td>
-                    <td class="collapsing">
-                      <p data-bind="text: ActionType"></p>
-                    </td>
-                    <td>
-                      <p data-bind="text: Description"></p>
-                    </td>
-                    <td class="right aligned collapsing">
-                      <p data-bind="text: Created.toLocaleString()"></p>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <div data-bind="template: {name: 'template_actions'}"></div>
         </div>
       </div>
-      <div id="wo-comments" class="ui fluid card service-type-detail">
-        <div class="content">
-          <h2 class="ui header">Comments</h2>
-        </div>
-        <div class="content">
-          <p>
-            Leave additional comments/instructions here. Note: Anyone with
-            access to this record will be able to view them.
-          </p>
-          <table
-            id="table-comments"
-            class="ui celled very basic table"
-            data-bind="visible: requestComments().length > 0"
-          >
-            <thead>
-              <tr>
-                <th>Author</th>
-                <th>Comment</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody data-bind="foreach: requestComments">
-              <tr>
-                <td class="collapsing">
-                  <p data-bind="text: Author.get_lookupValue()"></p>
-                </td>
-                <td>
-                  <p data-bind="text: Comment"></p>
-                </td>
-                <td class="right aligned collapsing">
-                  <p data-bind="text: Created.toLocaleString()"></p>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="content">
-          <div class="ui form">
-            <div class="field">
-              <textarea
-                placeholder="Enter a new comment..."
-                data-bind="value: commentNew"
-              ></textarea>
-            </div>
-            <button
-              type="button"
-              class="ui primary button"
-              onclick="submitComment()"
-            >
-              Submit Comment
-            </button>
-          </div>
-        </div>
-      </div>
+      <br />
+      <div data-bind="template: {name: 'template_comments'}"></div>
     </div>
     <br />
     <div data-bind="visible: requestIsActive()">
@@ -899,31 +804,26 @@
         onclick="saveWorkOrder()"
         data-bind="enable: canSaveForm, visible: canSaveForm"
       >
-        Save
+        Submit Request
       </button>
-      <!-- <button
-        id="edit-form"
-        type="button"
-        class="ui basic blue button"
-        onclick="editWorkOrder()"
-        data-bind="enable: canEditForm, visible: canEditForm"
-      >
-        Edit
-      </button> -->
-      <!-- <button
-        id="close-form"
-        type="button"
-        class="ui basic red button"
-        onclick="closeWorkOrder()"
-        data-bind="enable: canEditForm"
-      >
-        Cancel
-      </button> -->
     </div>
     <!-- /ko -->
   </div>
+  <!-- ko if: timers.initDelta() > 0-->
+  <p>
+    Application loaded in:
+    <span data-bind="text: timers.initDelta()/1000"></span> s
+  </p>
+  <!-- /ko -->
 </div>
+
+<p>
+  Issues or Questions? Contact us here:
+  <a href="mailto:cgfssharepoint@state.gov">cgfssharepoint@state.gov</a>
+</p>
 <div id="service-type-templates"></div>
+
+<div data-bind="template: { name: 'template_loader'}"></div>
 
 <!--<script src="/_layouts/15/SP.Runtime.js"></script>
 <script src="/_layouts/15/SP.js"></script>
@@ -953,8 +853,13 @@
 <script src="../SiteAssets/workorder/vendor/DataTables/datatables.min.js"></script>
 <script src="../SiteAssets/workorder/vendor/knockout/knockout-3.5.0.js"></script>
 <script src="../SiteAssets/workorder/vendor/trix/trix.js"></script>
-<script src="../SiteAssets/workorder/vendor/Semantic-UI-CSS-master/semantic.min.js"></script>
-<!-- <script src="../SiteAssets/workorder/vendor/nicEdit/nicEdit.js"></script> -->
+<!-- <script src="../SiteAssets/workorder/vendor/Semantic-UI-CSS-master/semantic.min.js"></script> -->
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.7/dist/semantic.min.css"
+/>
+<script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.7/dist/semantic.min.js"></script>
 
 <script
   type="text/javascript"
@@ -963,6 +868,7 @@
 
 <script src="../SiteAssets/workorder/common/sal.js"></script>
 <script src="../SiteAssets/workorder/common/common.js"></script>
+<!-- <script src="../SiteAssets/workorder/wo/page_test.js"></script> -->
 <script src="../SiteAssets/workorder/common/notifications.js"></script>
 <script src="../SiteAssets/workorder/common/deployment.js"></script>
 

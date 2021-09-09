@@ -5,79 +5,154 @@ function InitNotifications() {
 }
 
 Workorder.NewNotifications = function () {
-  function newWorkorderEmails() {
-    // 1. Send emails to request orgs letting them know there's a new email.
-    let to = vm
-      .requestOrgs()
-      .map((ao) => vm.configRequestOrgs().find((aoid) => aoid.ID == ao.ID))
-      .map((aoids) => aoids.UserGroup);
-
-    let subject = `Work Order -New- ${
-      vm.selectedServiceType().Title
-    } - ${vm.requestID()}`;
-
-    let body =
-      `Greetings Colleagues,<br><br> A new service request has been opened requiring your attention:<br>` +
-      `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
-        vm.selectedServiceType().Title
-      }<br><br>` +
-      `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
-      `${vm.requestLinkAdmin()}`;
-
-    createEmail(to, [], [], subject, body);
-
+  function newWorkorderEmailUser() {
     // 2. Send email to user, letting them know their request has been created
-    let toUser = [sal.globalConfig.currentUser];
+    var toUser = [sal.globalConfig.currentUser];
+    var toString = [];
+    var ccString = [];
 
-    let subjectUser = subject;
+    var subject =
+      "Work Order -New- " +
+      vm.selectedServiceType().Title +
+      " - " +
+      vm.requestID();
 
-    let bodyUser =
-      `You're ${
-        vm.selectedServiceType().Title
-      } request  has been successfully submitted.</br></br>` +
-      `<a href="${vm.requestLink()}" target="blank">${vm.requestID()}</a> - ${
-        vm.selectedServiceType().Title
-      }<br><br>` +
-      `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
-      `${vm.requestLink()}`;
+    var requestOrgs = vm.selectedServiceType().RequestOrgs.map(function (ro) {
+      return vm.configRequestOrgs().find(function (cro) {
+        return cro.ID == ro.get_lookupId();
+      });
+    });
 
-    createEmail(toUser, [], [], subjectUser, bodyUser);
+    var bodyUser =
+      "Your " +
+      vm.selectedServiceType().Title +
+      " request  has been successfully submitted.</br></br>" +
+      '<a href="' +
+      vm.requestLink() +
+      '" target="blank">' +
+      vm.requestID() +
+      "</a> - " +
+      vm.selectedServiceType().Title +
+      "<br><br>" +
+      "Estimated business days to close this request type: " +
+      vm.selectedServiceType().DaysToCloseBusiness +
+      "<br><br>" +
+      "This request will be serviced by: <br>" +
+      requestOrgs.map(function (ro) {
+        return ro.Title + " - <br>" + ro.ContactInfo + "<br><br>";
+      }) +
+      "To view the request, please click the link above, or copy and paste the below URL into your browser:" +
+      "<br><br>" +
+      vm.requestLink();
+
+    createEmail(toUser, toString, [], ccString, [], subject, bodyUser);
+  }
+
+  function newWorkorderEmailActionOffices() {
+    // 1. Send emails to request orgs letting them know there's a new email.
+    // var to = vm
+    //   .requestOrgs()
+    //   .map(function (ao) {
+    //     return vm.configRequestOrgs().find(function (aoid) {
+    //       return aoid.ID == ao.ID;
+    //     });
+    //   })
+    //   .map(function (aoids) {
+    //     return aoids.UserGroup;
+    //   });
+
+    var to = vm.request.pipeline.allActionOffices().map(function (ao) {
+      return ao.PreferredEmail ? ao.PreferredEmail : ao.UserAddress;
+    });
+
+    var toString = [];
+    var ccString = [];
+
+    var subject =
+      "Work Order -New- " +
+      vm.selectedServiceType().Title +
+      " - " +
+      vm.requestID();
+
+    var body =
+      "Greetings Colleagues,<br><br> A new service request has been opened requiring your attention:<br>" +
+      '<a href="' +
+      vm.requestLinkAdmin() +
+      '" target="blank">' +
+      vm.requestID() +
+      "</a> - " +
+      vm.selectedServiceType().Title +
+      "<br><br>" +
+      "Estimated business days to close this request type: " +
+      vm.selectedServiceType().DaysToCloseBusiness +
+      "<br><br>" +
+      "This request will be serviced by: " +
+      vm.selectedServiceType().RequestOrgs.get_lookupValue() +
+      "<br>" +
+      "To view the request, please click the link above, or copy and paste the below URL into your browser:" +
+      "<br><br>" +
+      vm.requestLinkAdmin();
+
+    createEmail(to, toString, [], ccString, [], subject, body);
   }
 
   function workorderReminderEmails(id) {
     if (vm.selectedServiceType().ReminderDays) {
       // If we have reminders create our New Work Order Email
-      let to = vm
-        .requestOrgs()
-        .map((ao) => vm.configRequestOrgs().find((aoid) => aoid.ID == ao.ID))
-        .map((aoids) => aoids.UserGroup);
+      var to = vm.request.pipeline.allActionOffices().map(function (ao) {
+        return ao.PreferredEmail ? ao.PreferredEmail : ao.UserAddress;
+      });
 
-      let days = vm.selectedServiceType().ReminderDays.split(",");
+      var toString = [];
+      var ccString = [];
 
-      days.forEach((day) => {
-        let intDay = parseInt(day);
+      var days = vm.selectedServiceType().ReminderDays.split(",");
 
-        let sendDate = businessDaysFromDate(vm.requestEstClosed(), intDay);
+      days.forEach(function (day) {
+        var intDay = parseInt(day);
+
+        var sendDate = businessDaysFromDate(vm.requestEstClosed(), intDay);
         if (sendDate > new Date()) {
-          let reminder = intDay > 0 ? intDay + " Day " : "";
+          var reminder = intDay > 0 ? intDay + " Day " : "";
 
-          let subject = `Work Order -${reminder}Reminder- ${
-            vm.selectedServiceType().Title
-          } - ${vm.requestID()}`;
+          var subject =
+            "Work Order -" +
+            reminder +
+            "Reminder- " +
+            vm.selectedServiceType().Title +
+            " - " +
+            vm.requestID();
 
-          let body =
-            `Greetings Colleagues,<br><br> This is a ${reminder}reminder for the following` +
-            ` service request requiring your attention:<br>` +
-            `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
-              vm.selectedServiceType().Title
-            }<br><br>` +
-            `This request has an estimated completion date of: ${vm
-              .requestEstClosed()
-              .toDateString()}<br><br>` +
-            `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
-            `${vm.requestLinkAdmin()}`;
+          var body =
+            "Greetings Colleagues,<br><br> This is a " +
+            reminder +
+            "reminder for the following " +
+            " service request requiring your attention:<br> " +
+            '<a href="' +
+            vm.requestLinkAdmin() +
+            '" target="blank">' +
+            vm.requestID() +
+            "</a> - " +
+            vm.selectedServiceType().Title +
+            "<br><br> " +
+            "This request has an estimated completion date of: " +
+            vm.requestEstClosed().toDateString() +
+            "<br><br>" +
+            "To view the request, please click the link above," +
+            " or copy and paste the below URL into your browser: <br> " +
+            vm.requestLinkAdmin();
 
-          createEmail(to, [], [], subject, body, sendDate, id);
+          createEmail(
+            to,
+            toString,
+            [],
+            ccString,
+            [],
+            subject,
+            body,
+            sendDate,
+            id
+          );
         }
       });
     }
@@ -88,77 +163,151 @@ Workorder.NewNotifications = function () {
   }
 
   function newAssignmentNotification(role, id) {
-    let to = [];
+    var to = [];
+    // Assigning an individual? Or an Action Office
     if (vm.assignAssignee() && vm.assignAssignee().userName()) {
       to.push(vm.assignAssignee().lookupUser());
     } else if (vm.assignActionOffice() && vm.assignActionOffice().UserAddress) {
-      to.push(vm.assignActionOffice().UserAddress);
+      // if tha action office has a preferred email, use it.
+      if (vm.assignActionOffice().PreferredEmail) {
+        to.push(vm.assignActionOffice().PreferredEmail);
+      } else {
+        to.push(vm.assignActionOffice().UserAddress);
+      }
     }
 
-    let subject = `Work Order -${vm.requestStage().Title}- ${
-      vm.selectedServiceType().Title
-    } - ${vm.requestID()}`;
+    var toString = [];
+    var ccString = [];
 
-    let body =
-      `Greetings Colleagues,<br><br> You have been assigned to the following workorder request by your action office assignor:<br>` +
-      `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
-        vm.selectedServiceType().Title
-      }<br><br>` +
-      `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
-      `${vm.requestLinkAdmin()}`;
+    var subject =
+      "Work Order -" +
+      vm.requestStage().Title +
+      "- " +
+      vm.selectedServiceType().Title +
+      " - " +
+      vm.requestID();
 
-    let addendum = new String();
+    var body =
+      "Greetings Colleagues,<br><br> You have been assigned to the following workorder request by your action office assignor:<br> " +
+      '<a href="' +
+      vm.requestLinkAdmin() +
+      '" target="blank">' +
+      vm.requestID() +
+      "</a> - " +
+      vm.selectedServiceType().Title +
+      "<br><br>" +
+      "To view the request, please click the link above,\
+        or copy and paste the below URL into your browser: <br> " +
+      vm.requestLinkAdmin();
 
-    if ((role = "Approver")) {
-      let valuePairs = getValuePairs(
+    var addendum = new String();
+    var valuePairs = [];
+    if (vm.selectedServiceType().listDef) {
+      valuePairs = getValuePairsHuman(
         vm.selectedServiceType().listDef.viewFields
       );
-      addendum += "<br><br><ul>";
-      if (valuePairs.length) {
-        valuePairs.forEach((vp) => {
-          addendum += `<li>${vp[0]} - ${vp[1]}</li>`;
-        });
-      }
-      addendum += "</ul>";
-      addendum +=
-        `<br>Click the link below to quick approve this request:<br>` +
-        `<a href="${vm.requestLinkAdminApprove(
-          id
-        )}" target="blank">${vm.requestLinkAdminApprove(id)}</a><br><br>`;
-      addendum +=
-        `<br>Click the link below to quick reject this request:<br>` +
-        `<a href="${vm.requestLinkAdminReject(
-          id
-        )}" target="blank">${vm.requestLinkAdminReject(id)}</a><br><br>`;
     }
-    createEmail(to, [], [], subject, body + addendum);
+    addendum += "<br><br><ul>";
+    if (valuePairs.length) {
+      valuePairs.forEach(function (vp) {
+        addendum += "<li>" + vp[0] + " - " + vp[1] + "</li>";
+      });
+    }
+    addendum += "</ul>";
+
+    if (role == "Approver") {
+      addendum +=
+        "<br>Click the link below to quick approve this request:<br> " +
+        '<a href="' +
+        vm.requestLinkAdminApprove(id) +
+        '" target="blank">' +
+        vm.requestLinkAdminApprove(id) +
+        "</a><br><br>";
+      addendum +=
+        "<br>Click the link below to quick reject this request:<br> " +
+        '<a href="' +
+        vm.requestLinkAdminReject(id) +
+        '" target="blank">' +
+        vm.requestLinkAdminReject(id) +
+        "</a><br><br>";
+    }
+
+    createEmail(to, toString, [], ccString, [], subject, body + addendum);
+  }
+
+  function workorderPipelineAssignees() {
+    // Get all the action offices and wild cards assigned to this request.
+    var users = [];
+    var addresses = [];
+
+    vm.request.pipeline.allActionOffices().forEach(function (actionOffice) {
+      // Check if we have a wildcard user and they were ensured
+      if (actionOffice.WildCardAssignee) {
+        try {
+          var personObservable = vm[actionOffice.WildCardAssignee];
+          users.push(personObservable.lookupUser());
+        } catch (err) {
+          console.error(
+            "Something went wrong fetching " + personName + " from viewmodel: ",
+            err
+          );
+        }
+        //users.push(self[actionOffice.WildCardAssignee]().lookupUser());
+      }
+
+      if (actionOffice.PreferredEmail) {
+        addresses.push(actionOffice.PreferredEmail);
+      } else {
+        users.push(actionOffice.UserAddress);
+      }
+    });
+
+    return { users: users, addresses: addresses };
   }
 
   function workorderClosedEmail(reason) {
-    let to = [vm.requestHeader().Author];
-    let cc = vm
-      .requestOrgs()
-      .map((ao) => vm.configRequestOrgs().find((aoid) => aoid.ID == ao.ID))
-      .map((aoids) => aoids.UserGroup);
+    var to = [vm.requestHeader().Author, vm.requestor.lookupUser()];
+    var toString = [];
 
-    cc.concat(vm.requestAssignmentsUsers());
+    var cc = [];
+    var ccString = [];
 
-    let subject = `Work Order -${reason}- ${
-      vm.selectedServiceType().Title
-    } - ${vm.requestID()}`;
+    if (vm.selectedServiceType().EmailPipelineOnClose) {
+      var pipelineAssignees = workorderPipelineAssignees();
+
+      cc = pipelineAssignees.users;
+      ccString = pipelineAssignees.addresses;
+    }
+    //TODO: add other assignees here.
+
+    var subject =
+      "Work Order -" +
+      reason +
+      "- " +
+      vm.selectedServiceType().Title +
+      " - " +
+      vm.requestID();
 
     // Let's switch verbiage
-    if (reason == "Closed") {
-      reason = "Fulfilled";
-    }
+    // if (reason == "Closed") {
+    //   reason = "Fulfilled";
+    // }
 
-    let body =
-      `Greetings Colleagues,<br><br> The following service request has been ${reason.toLocaleLowerCase()}:<br>` +
-      `<a href="${vm.requestLink()}" target="blank">${vm.requestID()}</a> - ${
-        vm.selectedServiceType().Title
-      }<br><br>` +
-      `To view an archive of the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
-      `${vm.requestLinkAdmin()}<br><br>`;
+    var body =
+      "Greetings Colleagues,<br><br> The following service request has been " +
+      reason.toLocaleLowerCase() +
+      ":<br>" +
+      '<a href="' +
+      vm.requestLink() +
+      '" target="blank">' +
+      vm.requestID() +
+      "</a> - " +
+      vm.selectedServiceType().Title +
+      "<br><br>" +
+      "To view an archive of the request, please click the link above, \
+       or copy and paste the below URL into your browser: <br> " +
+      vm.requestLinkAdmin() +
+      "<br><br>";
 
     if (reason == "Closed") {
       body += "This request has been succesfully fulfilled.<br><br>";
@@ -167,67 +316,115 @@ Workorder.NewNotifications = function () {
         "This request has been cancelled with the following justification:<br>" +
         vm.assignmentRejectComment();
     }
+
+    // TODO: Refactor these templates into a list item.
+    if (!location.pathname.split("/").includes("wocharleston")) {
+      body +=
+        "<div style='color: red'>Thank you for utilizing the CGFS/EX Work Order System. " +
+        "Please take a moment to complete the survey below and let us know how we did: " +
+        '<a href="https://www.surveymonkey.com/r/6LSSY3W">CGFS/EX Survey</a><br><br></div>';
+    }
     body +=
       "<b>Note:</b> This request cannot be reactivated. " +
       "To reinitiate, please create a new service request.<br><br>";
 
-    createEmail(to, cc, [], subject, body);
+    createEmail(to, toString, cc, ccString, [], subject, body);
   }
 
   function pipelineStageNotification() {
-    let to = [
-      vm.requestStageOffice() ? vm.requestStageOffice().UserAddress : null,
-    ];
+    var to = [];
+    var toString = [];
+    if (!vm.requestStageOffice()) {
+    } else if (vm.requestStageOffice().PreferredEmail) {
+      toString.push(vm.requestStageOffice().PreferredEmail);
+    } else if (vm.requestStageOffice().UserAddress) {
+      to.push(vm.requestStageOffice().UserAddress);
+    }
+
     if (vm.requestStage().WildCardAssignee) {
-      let personName = vm.requestStage().WildCardAssignee;
+      var personName = vm.requestStage().WildCardAssignee;
       // This should be a person field
       try {
-        let personObservable = vm[personName];
+        var personObservable = vm[personName];
         to.push(personObservable.lookupUser());
       } catch (err) {
         console.error(
-          `Something went wrong fetching ${personName} from viewmodel:`,
+          "Something went wrong fetching " + personName + " from viewmodel: ",
           err
         );
       }
     }
 
-    let cc = new Array();
-    if (vm.requestStageOrg()) {
-      cc.push(vm.requestStageOrg().UserGroup);
+    var cc = [];
+    var ccString = [];
+    // if (vm.requestStageOrg()) {
+    //   cc.push(vm.requestStageOrg().UserGroup);
+    // }
+
+    var subject =
+      "Work Order -" +
+      vm.requestStage().Title +
+      "- " +
+      vm.selectedServiceType().Title +
+      " - " +
+      vm.requestID();
+
+    var body =
+      "Greetings Colleagues,<br><br> The following service request has changed, requiring your attention:<br> " +
+      '<a href="' +
+      vm.requestLinkAdmin() +
+      '" target="blank">' +
+      vm.requestID() +
+      "</a> - " +
+      vm.selectedServiceType().Title +
+      "<br><br>" +
+      "To view the request, please click the link above, " +
+      "or copy and paste the below URL into your browser: <br> " +
+      vm.requestLinkAdmin();
+
+    var addendum = new String();
+    var valuePairs = [];
+    if (vm.selectedServiceType().listDef) {
+      valuePairs = getValuePairsHuman(
+        vm.selectedServiceType().listDef.viewFields
+      );
     }
+    addendum += "<br><br><ul>";
+    if (valuePairs.length) {
+      valuePairs.forEach(function (vp) {
+        addendum += "<li>" + vp[0] + " - " + vp[1] + "</li>";
+      });
+    }
+    addendum += "</ul>";
 
-    let subject = `Work Order -${vm.requestStage().Title}- ${
-      vm.selectedServiceType().Title
-    } - ${vm.requestID()}`;
+    body += addendum;
 
-    let body =
-      `Greetings Colleagues,<br><br> The following service request has changed, requiring your attention:<br>` +
-      `<a href="${vm.requestLinkAdmin()}" target="blank">${vm.requestID()}</a> - ${
-        vm.selectedServiceType().Title
-      }<br><br>` +
-      `To view the request, please click the link above, or copy and paste the below URL into your browser: <br>` +
-      `${vm.requestLinkAdmin()}`;
-
-    createEmail(to, cc, [], subject, body);
+    createEmail(to, toString, cc, ccString, [], subject, body);
   }
 
   function createEmail(
     to,
+    toString,
     cc,
+    ccString,
     bcc,
     subject,
     body,
-    sendDate = null,
-    id = vm.requestHeader().ID
+    sendDate,
+    id
   ) {
-    let toArr = createEmailAddressee(to);
-    let ccArr = createEmailAddressee(cc);
-    let bccArr = createEmailAddressee(bcc);
+    sendDate = sendDate === undefined ? null : sendDate;
+    id = id === undefined ? vm.requestHeader().ID : id;
 
-    let vp = [
+    var toArr = createEmailAddressee(to);
+    var ccArr = createEmailAddressee(cc);
+    var bccArr = createEmailAddressee(bcc);
+
+    var vp = [
       ["To", toArr],
+      ["ToString", toString.join(";")],
       ["CC", ccArr],
+      ["CCString", ccString.join(";")],
       ["BCC", bccArr],
       ["Title", subject],
       ["Body", body],
@@ -240,41 +437,52 @@ Workorder.NewNotifications = function () {
 
     vm.listRefWOEmails().createListItem(
       vp,
-      () => newEmailCallback(SP.UI.DialogResult.OK, null),
+      function () {
+        newEmailCallback(SP.UI.DialogResult.OK, null);
+      },
       vm.requestFolderPath()
     );
   }
 
   function createEmailAddressee(arr) {
-    let vps = new Array();
+    var vps = new Array();
 
-    arr.forEach((ao) => {
-      switch (ao.constructor.getName()) {
-        case "SP.FieldUserValue":
-          vps.push(ao.get_lookupId());
-          vps.push(ao.get_lookupValue());
-          break;
-        case "SP.User":
-          vps.push(ao.get_id());
-          vps.push(ao.get_loginName());
-          break;
-        default:
-      }
-    });
-
-    return vps.join(";#");
+    if (arr) {
+      arr.forEach(function (ao) {
+        if (ao) {
+          switch (ao.constructor.getName()) {
+            case "SP.FieldUserValue":
+              vps.push(ao.get_lookupId());
+              vps.push(ao.get_lookupValue());
+              break;
+            case "SP.User":
+              vps.push(ao.get_id());
+              vps.push(ao.get_loginName());
+              break;
+            case "SP.Group":
+              vps.push(ao.get_id());
+              vps.push(ao.get_loginName());
+              break;
+            default:
+          }
+        }
+      });
+      return vps.join(";#");
+    }
   }
   function newEmailCallback(result, value) {
     console.log("Email created successfully");
   }
 
   var publicMembers = {
-    newWorkorderEmails,
-    workorderReminderEmails,
-    breakingPermissionsTimeout,
-    newAssignmentNotification,
-    workorderClosedEmail,
-    pipelineStageNotification,
+    newWorkorderEmailUser: newWorkorderEmailUser,
+    newWorkorderEmailActionOffices: newWorkorderEmailActionOffices,
+    workorderReminderEmails: workorderReminderEmails,
+    workorderPipelineAssignees: workorderPipelineAssignees,
+    breakingPermissionsTimeout: breakingPermissionsTimeout,
+    newAssignmentNotification: newAssignmentNotification,
+    workorderClosedEmail: workorderClosedEmail,
+    pipelineStageNotification: pipelineStageNotification,
   };
 
   return publicMembers;
