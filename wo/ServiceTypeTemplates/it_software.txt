@@ -45,6 +45,28 @@
         required: false,
         displayName: "PR Number",
       },
+
+      PurchaseFrequency: {
+        type: "Text",
+        koMap: "itSoftwarePurchaseFreq",
+        required: false,
+        displayName: "Purchase Frequency",
+      },
+
+      ApprovedPurchase: {
+        type: "Text",
+        koMap: "itSoftwareAppPurchase",
+        required: false,
+        displayName: "Approved Purchase",
+      },
+
+      FundingSource: {
+        type: "Text",
+        koMap: "itSoftwareFundSource",
+        required: false,
+        displayName: "Funding Source",
+      },
+
     },
   });
 
@@ -61,6 +83,10 @@
   vm.itSoftwareShowPRNum = ko.pureComputed(function () {
     return vm.page() == "admin.aspx";
   });
+  vm.itSoftwarePurchaseFreq = ko.observable();
+  vm.itSoftwareAppPurchase = ko.observable();
+  vm.itSoftwareFundSource = ko.observable();
+  
 </script>
 
 <script type="text/html" id="tmpl_it_software">
@@ -102,15 +128,48 @@
             options: itSoftwareTypeOpts, optionsCaption: 'Select...', value: itSoftwareType"
         ></select>
       </div>
+
       <!-- ko if: itSoftwareShowPRNum -->
       <div class="eight wide field">
         <label>PR #: </label>
         <input
           type="text"
-          data-bind="value: itSoftwarePRNum, , disable: currentView()=='view'"
+          data-bind="value: itSoftwarePRNum, disable: currentView()=='view'"
         />
       </div>
       <!-- /ko -->
+
+      <div class="eight wide field">
+        <label> Purchase Frequency<span class="required">*</span>: </label>
+        <select
+        data-bind="value: itSoftwarePurchaseFreq, disable: currentView()=='view'"
+          type="text">
+            <option value="oneTime">One Time</option>
+            <option value="recurring">Recurring</option>
+        </select>
+      </div>
+
+      <div class="eight wide field">
+        <label> Approved Purchase<span class="required">*</span>: </label>
+        <select
+        data-bind="value: itSoftwareAppPurchase, disable: currentView()=='view'"
+          type="text">
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+        </select>
+      </div>
+
+      <div class="eight wide field">
+        <label> Funding Source<span class="required">*</span>: </label>
+        <select
+        data-bind="value: itSoftwareFundSource, disable: currentView()=='view'"
+          type="text">
+            <option value="project">Project</option>
+            <option value="contract">Contract</option>
+            <option value="other">Other</option>
+        </select>
+      </div>
+
     </div>
   </div>
 </script>
