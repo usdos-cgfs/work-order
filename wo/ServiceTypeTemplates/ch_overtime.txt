@@ -87,6 +87,7 @@
   vm.overtimeDepartment = ko.observable();
 
   vm.overTimeDepartmentSelection = ko.observable();
+  /*
   vm.overTimeDepartmentSelection.subscribe(function (dept) {
     if (!dept || typeof dept == "undefined") {
       vm.overtimeManagerDept(null);
@@ -101,6 +102,7 @@
     vm.overtimeDepartment(dept.Title);
     vm.overtimeManagerDept.userId(dept.UserGroup);
   });
+  */
   vm.overtimeDepartmentOpts = ko.pureComputed(function () {
     return vm
       .configRequestOrgs()
