@@ -170,6 +170,7 @@
 </script>
 
 <script type="text/html" id="tmpl_it_software">
+  <!-- ko if: itSoftwareShowPRNum -->
   <button
     type="button"
     class="ui primary button"
@@ -177,7 +178,9 @@
   >
     Create Procurement
   </button>
-
+  <hr />
+  <br />
+  <!-- /ko -->
   <div class="ui form">
     <div class="ui grid">
       <div class="eight wide field">
@@ -261,5 +264,6 @@
         </select>
       </div>
     </div>
+    <br />
   </div>
 </script>
