@@ -264,7 +264,50 @@ sal.NewUtilities = function () {
       Function.createDelegate(data, onGetUserFailed)
     );
   }
+
+  function copyFiles(sourceLib, destLib, callback, onError) {
+    var context = new SP.ClientContext.get_current();
+    var web = context.get_web();
+    var folderSrc = web.getFolderByServerRelativeUrl(sourceLib);
+    context.load(folderSrc, "Files");
+    context.executeQueryAsync(
+      function () {
+        console.log("Got the source folder right here!");
+        var files = folderSrc.get_files();
+        var e = files.getEnumerator();
+        var dest = [];
+        while (e.moveNext()) {
+          var file = e.get_current();
+          var destLibUrl = destLib + "/" + file.get_name();
+          dest.push(destLibUrl); //delete this when we're happy we got the file paths right
+          file.copyTo(destLibUrl, true);
+        }
+        console.log(dest); //delete this when we're happy we got the file paths right
+        context.executeQueryAsync(
+          function () {
+            console.log("Files moved successfully!");
+            callback();
+          },
+          function (sender, args) {
+            console.log("error: ") + args.get_message();
+            onError;
+          }
+        );
+      },
+      function (sender, args) {
+        console.log("Sorry, something messed up: " + args.get_message());
+      }
+    );
+  }
+
+  function copyFilesAsync(sourceFolder, destFolder) {
+    return new Promise((resolve, reject) => {
+      copyFiles(sourceFolder, destFolder, resolve, reject);
+    });
+  }
   var publicMembers = {
+    copyFiles: copyFiles,
+    copyFilesAsync: copyFilesAsync,
     createSiteGroup: createSiteGroup,
     getUserGroups: getUserGroups,
     getUsersWithGroup: getUsersWithGroup,
@@ -783,7 +826,7 @@ sal.NewSPList = function (listDef) {
 
     var collListItem = oList.getItems(camlQuery);
 
-    function onGetListItemsSucceeded(sender, args) {
+    function onGetListItemsSucceeded() {
       var self = this;
       var listItemEnumerator = self.collListItem.getEnumerator();
       self.focusedItems = [];
@@ -874,7 +917,7 @@ sal.NewSPList = function (listDef) {
     //oListItem.set_item('Title', 'My Updated Title');
     oListItem.update();
 
-    function onUpdateListItemsSucceeded(sender, args) {
+    function onUpdateListItemsSucceeded() {
       //alert('Item updated!');
       console.log("Successfully updated " + this.oListItem.get_item("Title"));
       this.callback();
@@ -892,6 +935,12 @@ sal.NewSPList = function (listDef) {
       Function.createDelegate(data, onUpdateListItemsSucceeded),
       Function.createDelegate(data, onUpdateListItemFailed)
     );
+  }
+
+  function updateListItemAsync(id, valuePairs) {
+    return new Promise((resolve, reject) => {
+      updateListItem(id, valuePairs, resolve);
+    });
   }
 
   /*****************************************************************
@@ -1161,13 +1210,14 @@ sal.NewSPList = function (listDef) {
     files = folder.get_files();
     //files.get_listItemAllFields();
 
-    function onGetListFilesSucceeded(sender, args) {
+    function onGetListFilesSucceeded() {
       var fileArr = [];
       var listItemEnumerator = this.files.getEnumerator();
       while (listItemEnumerator.moveNext()) {
         var file = listItemEnumerator.get_current();
         //console.log(file);
         var fileUrl = file.get_serverRelativeUrl();
+        currCtx.load(file, "ListItemAllFields");
         fileArr.push({
           fileUrl: fileUrl,
           title: file.get_title(),
@@ -1176,7 +1226,17 @@ sal.NewSPList = function (listDef) {
           file: file,
         });
       }
-      callback(fileArr);
+      currCtx.executeQueryAsync(
+        function () {
+          fileArr.forEach(function (file) {
+            file.ID = file.file.get_listItemAllFields().get_id();
+          });
+          callback(fileArr);
+        },
+        function (sender, args) {
+          console.warn("Unable to fetch file info");
+        }
+      );
     }
 
     function ongetListFilesFailed(sender, args) {
@@ -1188,11 +1248,17 @@ sal.NewSPList = function (listDef) {
 
     data = { files: files, callback: callback };
 
-    self.config.currentContext.load(files);
-    self.config.currentContext.executeQueryAsync(
+    currCtx.load(files);
+    currCtx.executeQueryAsync(
       Function.createDelegate(data, onGetListFilesSucceeded),
       Function.createDelegate(data, ongetListFilesFailed)
     );
+  }
+
+  function getFolderContentsAsync(folderName) {
+    return new Promise((resolve, reject) => {
+      getFolderContents(folderName, resolve);
+    });
   }
 
   /*****************************************************************
@@ -1582,11 +1648,13 @@ sal.NewSPList = function (listDef) {
     getListItems: getListItems,
     getListItemsAsync: getListItemsAsync,
     updateListItem: updateListItem,
+    updateListItemAsync: updateListItemAsync,
     deleteListItem: deleteListItem,
     setItemPermissions: setItemPermissions,
     setItemPermissionsAsync: setItemPermissionsAsync,
     getItemPermissions: getItemPermissions,
     getFolderContents: getFolderContents,
+    getFolderContentsAsync: getFolderContentsAsync,
     showModal: showModal,
     uploadNewDocument: uploadNewDocument,
     upsertListFolderPath: upsertListFolderPath,

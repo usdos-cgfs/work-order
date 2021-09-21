@@ -66,7 +66,6 @@
         required: false,
         displayName: "Funding Source",
       },
-
     },
   });
 
@@ -86,10 +85,99 @@
   vm.itSoftwarePurchaseFreq = ko.observable();
   vm.itSoftwareAppPurchase = ko.observable();
   vm.itSoftwareFundSource = ko.observable();
-  
+
+  vm.itSoftwareCreateProcurement = async function () {
+    var docRootUrl =
+      sal.globalConfig.siteUrl + "/" + workOrderDocDef.name + "/";
+    var vm = this;
+    var sourceAttachmentFolder = docRootUrl + vm.requestFolderPath();
+    var addendum = "<ul>";
+    var valuePairs = [];
+    if (vm.selectedServiceType().listDef) {
+      valuePairs = getValuePairsHuman(
+        vm.selectedServiceType().listDef.viewFields
+      );
+    }
+    if (valuePairs.length) {
+      valuePairs.forEach(function (vp) {
+        addendum += "<li>" + vp[0] + ": " + vp[1] + "</li>";
+      });
+    }
+    addendum += "</ul>";
+
+    vm.selectedServiceType(
+      vm.configServiceTypes().find(function (serviceType) {
+        return serviceType.UID == "procurement";
+      })
+    );
+
+    vm.requestStatus("Draft");
+
+    vm.requestID(createNewRequestID());
+    updateUrlParam("reqid", vm.requestID());
+
+    vm.requestStageNum(0);
+    vm.requestIsActive(1);
+
+    vm.request.pipeline.allRequestOrgs().forEach(function (org) {
+      if (
+        !vm.requestOrgs().find(function (ro) {
+          return ro.ID == org.ID;
+        })
+      ) {
+        vm.requestOrgs.push(org);
+      }
+    });
+
+    vm.requestClosedDate(null);
+    vm.requestSubmittedDate(null);
+    vm.requestDescriptionHTML(addendum);
+    vm.requestActions([]);
+    vm.requestApprovals([]);
+    vm.requestAttachments([]);
+    vm.request.dateRanges.all([]);
+    vm.requestAssignments([]);
+
+    vm.currentView("new");
+
+    var destinationAttachmentFolder = docRootUrl + vm.requestFolderPath();
+
+    vm.libRefWODocs().createFolderRec(
+      vm.requestFolderPath(),
+      async function () {
+        vm.libRefWODocs().setLibFolderPermissions(
+          vm.requestFolderPath(),
+          vm.requestFolderPerms(),
+          async function () {
+            await sal.utilities.copyFilesAsync(
+              sourceAttachmentFolder,
+              destinationAttachmentFolder
+            );
+            var valuePair = [["WorkOrderID", vm.requestID()]];
+            var files = await vm
+              .libRefWODocs()
+              .getFolderContentsAsync(vm.requestFolderPath());
+
+            await files.forEach(async function (file) {
+              await vm.libRefWODocs().updateListItemAsync(file.ID, valuePair);
+            });
+            window.setTimeout(fetchAttachments, 1000);
+          }
+        );
+      }
+    );
+  };
 </script>
 
 <script type="text/html" id="tmpl_it_software">
+  <button
+    type="button"
+    class="ui primary button"
+    data-bind="click: $root.itSoftwareCreateProcurement"
+  >
+    Create Procurement
+  </button>
+
   <div class="ui form">
     <div class="ui grid">
       <div class="eight wide field">
@@ -142,34 +230,36 @@
       <div class="eight wide field">
         <label> Purchase Frequency<span class="required">*</span>: </label>
         <select
-        data-bind="value: itSoftwarePurchaseFreq, disable: currentView()=='view'"
-          type="text">
-            <option value="oneTime">One Time</option>
-            <option value="recurring">Recurring</option>
+          data-bind="value: itSoftwarePurchaseFreq, disable: currentView()=='view'"
+          type="text"
+        >
+          <option value="oneTime">One Time</option>
+          <option value="recurring">Recurring</option>
         </select>
       </div>
 
       <div class="eight wide field">
         <label> Approved Purchase<span class="required">*</span>: </label>
         <select
-        data-bind="value: itSoftwareAppPurchase, disable: currentView()=='view'"
-          type="text">
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
+          data-bind="value: itSoftwareAppPurchase, disable: currentView()=='view'"
+          type="text"
+        >
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
         </select>
       </div>
 
       <div class="eight wide field">
         <label> Funding Source<span class="required">*</span>: </label>
         <select
-        data-bind="value: itSoftwareFundSource, disable: currentView()=='view'"
-          type="text">
-            <option value="project">Project</option>
-            <option value="contract">Contract</option>
-            <option value="other">Other</option>
+          data-bind="value: itSoftwareFundSource, disable: currentView()=='view'"
+          type="text"
+        >
+          <option value="project">Project</option>
+          <option value="contract">Contract</option>
+          <option value="other">Other</option>
         </select>
       </div>
-
     </div>
   </div>
 </script>
