@@ -167,10 +167,26 @@
       }
     );
   };
+
+  vm.itSoftwareShowCreateProcurement = ko.pureComputed(function () {
+    var group = vm.userGroupMembership().find(function (group) {
+      return group.Title === "AO_CGFS_EX_IT";
+    });
+
+    return group && vm.page() === "app.aspx";
+  });
+
+  vm.itSoftwareShowLinkToApp = ko.pureComputed(function () {
+    var group = vm.userGroupMembership().find(function (group) {
+      return group.Title === "AO_CGFS_EX_IT";
+    });
+
+    return group && vm.page() === "admin.aspx";
+  });
 </script>
 
 <script type="text/html" id="tmpl_it_software">
-  <!-- ko if: itSoftwareShowPRNum -->
+  <!-- ko if: itSoftwareShowCreateProcurement -->
   <button
     type="button"
     class="ui primary button"
@@ -178,6 +194,15 @@
   >
     Create Procurement
   </button>
+  <hr />
+  <br />
+  <!-- /ko -->
+  <!-- ko if: itSoftwareShowLinkToApp -->
+  <a data-bind="attr: {href: requestLink}">
+    <button type="button" class="ui primary button">
+      Navigate to Create Procurement Request
+    </button>
+  </a>
   <hr />
   <br />
   <!-- /ko -->
