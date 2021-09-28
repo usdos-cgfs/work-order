@@ -45,21 +45,18 @@
         required: false,
         displayName: "PR Number",
       },
-
       PurchaseFrequency: {
         type: "Text",
         koMap: "itSoftwarePurchaseFreq",
         required: false,
         displayName: "Purchase Frequency",
       },
-
       ApprovedPurchase: {
         type: "Text",
-        koMap: "itSoftwareAppPurchase",
+        koMap: "itSoftwareApprovedPurchase",
         required: false,
         displayName: "Approved Purchase",
       },
-
       FundingSource: {
         type: "Text",
         koMap: "itSoftwareFundSource",
@@ -76,6 +73,9 @@
   vm.itSoftwareQuantity = ko.observable();
   vm.itSoftwarePOCName = ko.observable();
   vm.itSoftwareCost = ko.observable();
+  vm.itSoftwareCostThresh = ko.pureComputed(function () {
+    return parseInt(vm.itSoftwareCost()) > 500;
+  });
   vm.itSoftwareType = ko.observable();
   vm.itSoftwareTypeOpts = ko.observableArray(["New", "Maintenance Renewal"]);
   vm.itSoftwarePRNum = ko.observable();
@@ -83,8 +83,31 @@
     return vm.page() == "admin.aspx";
   });
   vm.itSoftwarePurchaseFreq = ko.observable();
-  vm.itSoftwareAppPurchase = ko.observable();
+  vm.itSoftwareApprovedPurchase = ko.observable();
   vm.itSoftwareFundSource = ko.observable();
+
+  var itSoftware = vm.configServiceTypes().find(function (stype) {
+    return stype.UID == "it_software";
+  });
+
+  itSoftware.validate = function () {
+    if (vm.itSoftwareCostThresh()) {
+      var message = "";
+      if (!vm.itSoftwarePurchaseFreq()) {
+        message += "Purchase Frequency is required.\n";
+      }
+      if (!vm.itSoftwareApprovedPurchase()) {
+        message += "Approved Purchase is required.\n";
+      }
+      if (!vm.itSoftwareFundSource()) {
+        message += "Funding Source is required.\n";
+      }
+      if (message !== "") {
+        alert(message);
+        vm.requestIsSaveable(false);
+      }
+    }
+  };
 
   vm.itSoftwareCreateProcurement = async function () {
     var docRootUrl =
@@ -209,35 +232,37 @@
   <div class="ui form">
     <div class="ui grid">
       <div class="eight wide field">
-        <label> Software Name<span class="required">*</span>: </label>
+        <label>Software Name<span class="required">*</span>: </label>
         <input
           type="text"
           data-bind="value: itSoftwareName, disable: currentView()=='view'"
         />
       </div>
       <div class="eight wide field">
-        <label> Quantity<span class="required">*</span>: </label>
+        <label>Quantity<span class="required">*</span>: </label>
         <input
           type="text"
           data-bind="value: itSoftwareQuantity, disable: currentView()=='view'"
         />
       </div>
       <div class="eight wide field">
-        <label> POC<span class="required">*</span>: </label>
+        <label>POC<span class="required">*</span>: </label>
         <input
           type="text"
           data-bind="value: itSoftwarePOCName, disable: currentView()=='view'"
         />
       </div>
       <div class="eight wide field">
-        <label> Cost<span class="required">*</span>: </label>
+        <label>Cost (USD)<span class="required">*</span>: </label>
         <input
-          type="text"
+          type="number"
+          min="0.00"
+          step="0.01"
           data-bind="value: itSoftwareCost, disable: currentView()=='view'"
         />
       </div>
       <div class="eight wide field">
-        <label> Request Type<span class="required">*</span>: </label>
+        <label>Request Type<span class="required">*</span>: </label>
         <select
           type="text"
           data-bind="disable: currentView() == 'view',
@@ -254,35 +279,61 @@
         />
       </div>
       <!-- /ko -->
-
       <div class="eight wide field">
-        <label> Purchase Frequency<span class="required">*</span>: </label>
+        <label
+          >Purchase Frequency<span
+            data-bind="visible: itSoftwareCostThresh()"
+            class="required"
+            >*</span
+          >:
+        </label>
         <select
-          data-bind="value: itSoftwarePurchaseFreq, disable: currentView()=='view'"
+          data-bind="value: itSoftwarePurchaseFreq,
+          disable: currentView()=='view',
+          optionsCaption: 'Select...'"
           type="text"
         >
+          <option value="" disabled selected hidden>Select...</option>
           <option value="oneTime">One Time</option>
           <option value="recurring">Recurring</option>
         </select>
       </div>
 
       <div class="eight wide field">
-        <label> Approved Purchase<span class="required">*</span>: </label>
+        <label
+          >Approved Purchase<span
+            data-bind="visible: itSoftwareCostThresh()"
+            class="required"
+            >*</span
+          >:
+        </label>
         <select
-          data-bind="value: itSoftwareAppPurchase, disable: currentView()=='view'"
+          data-bind="value: itSoftwareApprovedPurchase, 
+          disable: currentView()=='view',
+          optionsCaption: 'Select...'"
           type="text"
         >
+          <option value="" disabled selected hidden>Select...</option>
           <option value="yes">Yes</option>
           <option value="no">No</option>
         </select>
       </div>
 
       <div class="eight wide field">
-        <label> Funding Source<span class="required">*</span>: </label>
+        <label
+          >Funding Source<span
+            data-bind="visible: itSoftwareCostThresh()"
+            class="required"
+            >*</span
+          >:
+        </label>
         <select
-          data-bind="value: itSoftwareFundSource, disable: currentView()=='view'"
+          data-bind="value: itSoftwareFundSource, 
+          disable: currentView()=='view',
+          optionsCaption: 'Select...'"
           type="text"
         >
+          <option value="" disabled selected hidden>Select...</option>
           <option value="project">Project</option>
           <option value="contract">Contract</option>
           <option value="other">Other</option>
