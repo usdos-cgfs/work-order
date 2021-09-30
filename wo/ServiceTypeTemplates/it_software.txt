@@ -191,20 +191,29 @@
     );
   };
 
-  vm.itSoftwareShowCreateProcurement = ko.pureComputed(function () {
+  function userIsIT() {
+    var itGroup = vm.configRequestOrgs().find(function (org) {
+      return org.Title === "CGFS/EX/IT";
+    });
+    if (!itGroup || !itGroup.UserGroup) {
+      return false;
+    }
+
+    var groupTitle = itGroup.UserGroup.get_lookupValue();
+
     var group = vm.userGroupMembership().find(function (group) {
-      return group.Title === "AO_CGFS_EX_IT";
+      return group.Title === groupTitle;
     });
 
-    return group && vm.page() === "app.aspx";
+    return group ? true : false;
+  }
+
+  vm.itSoftwareShowCreateProcurement = ko.pureComputed(function () {
+    return userIsIT() && vm.page() === "app.aspx";
   });
 
   vm.itSoftwareShowLinkToApp = ko.pureComputed(function () {
-    var group = vm.userGroupMembership().find(function (group) {
-      return group.Title === "AO_CGFS_EX_IT";
-    });
-
-    return group && vm.page() === "admin.aspx";
+    return userIsIT() && vm.page() === "admin.aspx";
   });
 </script>
 
