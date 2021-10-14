@@ -382,6 +382,7 @@ Workorder.NewNotifications = function () {
       "or copy and paste the below URL into your browser: <br> " +
       vm.requestLinkAdmin();
 
+    // Append our valuepairs
     var addendum = new String();
     var valuePairs = [];
     if (vm.selectedServiceType().listDef) {
@@ -395,6 +396,13 @@ Workorder.NewNotifications = function () {
         addendum += "<li>" + vp[0] + " - " + vp[1] + "</li>";
       });
     }
+    addendum += "</ul><br>";
+
+    // append our comments
+    addendum += "Comments:<br><ul>";
+    vm.requestComments().forEach(function (comment) {
+      addendum += "<li>" + comment.Comment + "</li>";
+    });
     addendum += "</ul>";
 
     body += addendum;
