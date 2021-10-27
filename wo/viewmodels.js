@@ -1399,7 +1399,7 @@ function koviewmodel() {
           return new Date(targetValue).toLocaleDateString();
           break;
         case "Person":
-          return targetValue.userName();
+          return targetValue.get_lookupValue();
           break;
         default:
           return targetValue;
