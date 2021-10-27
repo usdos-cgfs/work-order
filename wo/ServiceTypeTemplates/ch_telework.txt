@@ -116,6 +116,13 @@
       </div>
       <div class="field">
         <label>Dept Manager: </label>
+        <input
+          class="editable-field"
+          type="text"
+          disabled="true"
+          data-bind="value: teleworkManagerDept.title(), 
+        visible: currentView() == 'view'"
+        />
         <div
           id="peopleteleworkManagerDept"
           class="editable-field"
@@ -131,7 +138,8 @@
           class="editable-field"
           type="text"
           disabled="true"
-          data-bind="value: teleworkManagerTask.title, visible: currentView() == 'view'"
+          data-bind="value: teleworkManagerTask.title(), 
+          visible: currentView() == 'view'"
         />
         <div
           id="peopleteleworkManagerTask"
@@ -145,7 +153,7 @@
         <select
           class="editable-field"
           type="text"
-          data-bind="visible: currentView() != 'view',
+          data-bind="
             disable: currentView() == 'view',
             value: teleworkDepartment, options: teleworkDepartmentOpts,
             optionsCaption: 'Select...'"
