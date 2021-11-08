@@ -89,6 +89,7 @@
   vm.teleworkTypeOpts = ko.observableArray(["Core", "Situational"]);
   vm.teleworkEligibility = ko.observable();
   vm.teleworkEligibilityOpts = ko.observableArray([
+    "80%",
     "60%",
     "40%",
     "20%",
