@@ -1492,14 +1492,16 @@ function pipelineAssignments() {
       createAssignment("Action Resolver");
       break;
     case "Notification":
-      pipelineNotifications();
+      Workorder.Notifications.recordStatusNotification();
+      // pipelineNotifications();
       pipelineForward();
       createAction("Notification");
       break;
     case "Pending Resolution":
     case "Pending Assignment":
     default:
-      pipelineNotifications();
+      Workorder.Notifications.pipelineStageNotification();
+      //pipelineNotifications();
       break;
   }
 }

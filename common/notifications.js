@@ -357,9 +357,6 @@ Workorder.NewNotifications = function () {
 
     var cc = [];
     var ccString = [];
-    // if (vm.requestStageOrg()) {
-    //   cc.push(vm.requestStageOrg().UserGroup);
-    // }
 
     var subject =
       "Work Order -" +
@@ -381,6 +378,87 @@ Workorder.NewNotifications = function () {
       "To view the request, please click the link above, " +
       "or copy and paste the below URL into your browser: <br> " +
       vm.requestLinkAdmin();
+
+    // Append our valuepairs
+    var addendum = new String();
+    var valuePairs = [];
+    if (vm.selectedServiceType().listDef) {
+      valuePairs = getValuePairsHuman(
+        vm.selectedServiceType().listDef.viewFields
+      );
+    }
+    addendum += "<br><br><ul>";
+    if (valuePairs.length) {
+      valuePairs.forEach(function (vp) {
+        addendum += "<li>" + vp[0] + " - " + vp[1] + "</li>";
+      });
+    }
+    addendum += "</ul><br>";
+
+    // append our comments
+    addendum += "Comments:<br><ul>";
+    vm.requestComments().forEach(function (comment) {
+      addendum += "<li>" + comment.Comment + "</li>";
+    });
+    addendum += "</ul>";
+
+    body += addendum;
+
+    createEmail(to, toString, cc, ccString, [], subject, body);
+  }
+
+  /**
+   * recordStatusNotification
+   *
+   * Intended for "Notification" pipeline stages. Link to app page.
+   */
+  function recordStatusNotification() {
+    var to = [];
+    var toString = [];
+    if (!vm.requestStageOffice()) {
+    } else if (vm.requestStageOffice().PreferredEmail) {
+      toString.push(vm.requestStageOffice().PreferredEmail);
+    } else if (vm.requestStageOffice().UserAddress) {
+      to.push(vm.requestStageOffice().UserAddress);
+    }
+
+    if (vm.requestStage().WildCardAssignee) {
+      var personName = vm.requestStage().WildCardAssignee;
+      // This should be a person field
+      try {
+        var personObservable = vm[personName];
+        to.push(personObservable.lookupUser());
+      } catch (err) {
+        console.error(
+          "Something went wrong fetching " + personName + " from viewmodel: ",
+          err
+        );
+      }
+    }
+
+    var cc = [];
+    var ccString = [];
+
+    var subject =
+      "Work Order -" +
+      vm.requestStage().Title +
+      "- " +
+      vm.selectedServiceType().Title +
+      " - " +
+      vm.requestID();
+
+    var body =
+      "Greetings Colleagues,<br><br> This is a courtesy notification for the following record. No action is required:<br> " +
+      '<a href="' +
+      vm.requestLink() +
+      '" target="blank">' +
+      vm.requestID() +
+      "</a> - " +
+      vm.selectedServiceType().Title +
+      "<br><br>" +
+      "To view the request, please click the link above, " +
+      "or copy and paste the below URL into your browser: <br> " +
+      vm.requestLink();
 
     // Append our valuepairs
     var addendum = new String();
@@ -491,6 +569,7 @@ Workorder.NewNotifications = function () {
     newAssignmentNotification: newAssignmentNotification,
     workorderClosedEmail: workorderClosedEmail,
     pipelineStageNotification: pipelineStageNotification,
+    recordStatusNotification: recordStatusNotification,
   };
 
   return publicMembers;
