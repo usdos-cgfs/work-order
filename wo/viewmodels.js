@@ -1834,6 +1834,8 @@ function koviewmodel() {
 
     self.selectedPipeline().forEach(function (stage) {
       // first get the action office
+      // TODO: DEPRECATE action office
+
       var assignedOffice = self.configActionOffices().find(function (ao) {
         return ao.ID == stage.ActionOffice.get_lookupId();
       });
