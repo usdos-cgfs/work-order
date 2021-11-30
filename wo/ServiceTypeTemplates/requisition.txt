@@ -3,7 +3,7 @@
    *    List Def: Requisition
    ************************************************************/
   vm.listDefs.push({
-    uid: "access",
+    uid: "requisition",
     name: "st_requisition",
     title: "st_requisition",
     viewFields: {
