@@ -1,0 +1,268 @@
+<script>
+  /************************************************************
+   *    List Def:
+   ************************************************************/
+  vm.listDefs.push({
+    uid: "telework",
+    name: "st_telework",
+    title: "st_telework",
+    viewFields: {
+      ID: { type: "Text", koMap: "empty", required: false },
+      Title: { type: "Text", koMap: "requestID", required: false },
+      FullName: {
+        type: "Person",
+        koMap: "teleworkFullName",
+        required: true,
+        displayName: "Contractor",
+      },
+      ManagerDept: {
+        type: "Person",
+        koMap: "teleworkManagerDept",
+        required: false,
+        displayName: "Department Manager",
+      },
+      ManagerTask: {
+        type: "Person",
+        koMap: "teleworkManagerTask",
+        required: true,
+        displayName: "Government Technical Monitor",
+      },
+      Office: {
+        type: "Text",
+        koMap: "teleworkOffice",
+        required: true,
+        displayName: "Department",
+      },
+      RequisitionOrder: {
+        type: "Text",
+        koMap: "teleworkRequisitionOrder",
+        required: true,
+        displayName: "Requisition Order",
+      },
+      LaborCategory: {
+        type: "Text",
+        koMap: "teleworkLaborCategory",
+        required: true,
+        displayName: "Labor Category",
+      },
+      ContractorType: {
+        type: "Text",
+        koMap: "teleworkContractorType",
+        required: true,
+        displayName: "Contractor Type",
+      },
+      TeleworkType: {
+        type: "Text",
+        koMap: "teleworkType",
+        required: true,
+        displayName: "Telework Type",
+      },
+      MaxEligibility: {
+        type: "Text",
+        koMap: "teleworkEligibility",
+        required: true,
+        displayName: "Max Eligibility",
+      },
+      Days: {
+        type: "Text",
+        koMap: "teleworkDays",
+        required: true,
+        displayName: "Telework Days",
+      },
+    },
+  });
+
+  /***************************************************************
+   *    Declare Observables
+   ***************************************************************/
+  var DeptApproversTitle = "GOV_MGMT";
+  var DeptApproversId = sal.globalConfig.siteGroups.find(function (group) {
+    return group.title == DeptApproversTitle;
+  })?.ID;
+  vm.teleworkFullName = new PeopleField();
+
+  var peopleSchemaOpts = {
+    PrincipalAccountType: "User,SPGroup",
+  };
+  vm.teleworkManagerDept = new PeopleField(peopleSchemaOpts);
+  vm.teleworkManagerTask = new PeopleField();
+  vm.teleworkOffice = ko.observable();
+
+  vm.teleworkOfficeSelection = ko.observable();
+
+  vm.teleworkOfficeOpts = ko.pureComputed(function () {
+    return vm.configRequestingOffices().map(function (dept) {
+      return dept.Title;
+    });
+  });
+
+  vm.teleworkRequisitionOrder = ko.observable();
+  vm.teleworkLaborCategory = ko.observable();
+  vm.teleworkContractorType = ko.observable();
+  vm.teleworkContractorTypeOpts = ko.observableArray(["SCA", "Non-SCA"]);
+
+  vm.teleworkType = ko.observable();
+  vm.teleworkTypeOpts = ko.observableArray(["Core", "Situational"]);
+  vm.teleworkEligibility = ko.observable();
+  vm.teleworkEligibilityOpts = ko.observableArray([
+    "80%",
+    "60%",
+    "40%",
+    "20%",
+    "None",
+  ]);
+
+  vm.teleworkDays = ko.observableArray();
+  vm.teleworkDaysOpts = ko.observableArray([
+    "N/A",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ]);
+</script>
+
+<script type="text/html" id="tmpl_telework">
+  <div class="ui form">
+    <div class="two fields">
+      <div class="field">
+        <label>Contractor<span class="required">*</span>: </label>
+        <input
+          class="editable-field"
+          type="text"
+          disabled="true"
+          data-bind="value: teleworkFullName.title, visible: currentView() == 'view'"
+        />
+        <div
+          id="peopleteleworkFullName"
+          class="editable-field"
+          data-bind="people: teleworkFullName, 
+            visible: currentView() != 'view'"
+        ></div>
+      </div>
+      <div class="field">
+        <label>Dept Manager: </label>
+        <input
+          class="editable-field"
+          type="text"
+          disabled="true"
+          data-bind="value: teleworkManagerDept.title(), 
+        visible: currentView() == 'view'"
+        />
+        <div
+          id="peopleteleworkManagerDept"
+          class="editable-field"
+          data-bind="people: teleworkManagerDept, 
+            visible: currentView() != 'view'"
+        ></div>
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label
+          >Government Technical Monitor<span class="required">*</span>:
+        </label>
+        <input
+          class="editable-field"
+          type="text"
+          disabled="true"
+          data-bind="value: teleworkManagerTask.title(), 
+          visible: currentView() == 'view'"
+        />
+        <div
+          id="peopleteleworkManagerTask"
+          class="editable-field"
+          data-bind="people: teleworkManagerTask, 
+            visible: currentView() != 'view'"
+        ></div>
+      </div>
+      <div class="field">
+        <label>Office<span class="required">*</span>:</label>
+        <select
+          class="editable-field"
+          type="text"
+          data-bind="
+            disable: currentView() == 'view',
+            value: teleworkOffice, options: teleworkOfficeOpts,
+            optionsCaption: 'Select...'"
+        ></select>
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label>Labor Category (LCAT)<span class="required">*</span>:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable:
+              currentView() == 'view', value: teleworkLaborCategory"
+        />
+      </div>
+      <div class="field">
+        <label for="days-of-week">Days of Week:</label>
+        <div>
+          <select
+            multiple
+            name="days-of-week"
+            class="ui fluid dropdown selection multiple"
+            data-bind="disable: currentView() =='view',
+            selectedOptions: teleworkDays, options: teleworkDaysOpts,
+            optionsCaption: 'Select...'"
+          ></select>
+        </div>
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label
+          >Requisition Number/Task Order<span class="required">*</span>:</label
+        >
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable:
+              currentView() == 'view', value: teleworkRequisitionOrder"
+        />
+      </div>
+      <div class="field">
+        <label>Contractor Type<span class="required">*</span>:</label>
+        <select
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+              value: teleworkContractorType, options: teleworkContractorTypeOpts,
+              optionsCaption: 'Select...'"
+        ></select>
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label
+          >Telework Type<span class="required">*</span>:
+          <select
+            class="editable-field"
+            type="text"
+            data-bind="disable: currentView() == 'view',
+          value: teleworkType, options: teleworkTypeOpts,
+          optionsCaption: 'Select...'"
+          ></select>
+        </label>
+      </div>
+      <div class="field">
+        <label
+          >Max Eligibility<span class="required">*</span>:
+          <select
+            class="editable-field"
+            type="text"
+            data-bind="disable: currentView() == 'view',
+          value: teleworkEligibility, options: teleworkEligibilityOpts,
+          optionsCaption: 'Select...'"
+          ></select>
+        </label>
+      </div>
+    </div>
+  </div>
+</script>
