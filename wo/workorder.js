@@ -297,6 +297,7 @@ function onViewWorkOrderItemComplete(callback) {
   vm.requestLoaded(new Date());
   vm.tab("order-detail");
   vm.currentView("view");
+  $(".ui.dropdown").dropdown();
   vm.busy.finishTask(appBusyStates.view);
   callback();
   // dialog.close(dialog.view);
@@ -692,14 +693,9 @@ function getValuePairsHuman(listDef) {
         default:
           fieldValue = observable();
       }
-      // Check if this field is required
-      // TODO: highlight the offending field
-      if (obj.required && !fieldValue) {
-        missingFields.push(field);
-        //vm.requestIsSaveable(false);
-      } else {
-        valuePairs.push([field, fieldValue]);
-      }
+
+      let title = obj.displayName ? obj.displayName : field;
+      valuePairs.push([title, fieldValue]);
     }
   });
   return valuePairs;
@@ -1796,6 +1792,9 @@ function initUIComponents() {
   }
   if ($(".ui.accordion").length) {
     $(".ui.accordion").accordion();
+  }
+  if ($(".ui.dropdown").length) {
+    $(".ui.dropdown").dropdown();
   }
   // $(".view-action-office").popup({
   //   popup: ".ui.list-action-office.popup",

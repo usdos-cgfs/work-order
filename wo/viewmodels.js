@@ -1081,6 +1081,7 @@ function koviewmodel() {
       if (newPage == "order-detail") {
         console.log("Activate Accordion");
         $(".ui.accordion").accordion();
+        $(".ui.dropdown").dropdown();
         var elmnt = document.getElementById("tabs");
         elmnt.scrollIntoView({ behavior: "smooth" });
       }
