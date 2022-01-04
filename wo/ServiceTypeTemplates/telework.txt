@@ -21,11 +21,23 @@
         required: false,
         displayName: "Department Manager",
       },
-      ManagerTask: {
+      ManagerTechnical: {
         type: "Person",
-        koMap: "teleworkManagerTask",
-        required: true,
+        koMap: "teleworkManagerTechnical",
+        required: false,
         displayName: "Government Technical Monitor",
+      },
+      NoGTM: {
+        type: "Bool",
+        koMap: "teleworkNoGTM",
+        required: false,
+        displayName: "No GTM",
+      },
+      COR: {
+        type: "Person",
+        koMap: "teleworkCOR",
+        required: true,
+        displayName: "COR",
       },
       Office: {
         type: "Text",
@@ -63,12 +75,6 @@
         required: true,
         displayName: "Max Eligibility",
       },
-      Days: {
-        type: "Text",
-        koMap: "teleworkDays",
-        required: false,
-        displayName: "Telework Days",
-      },
       DaysWeek1: {
         type: "Text",
         koMap: "teleworkDays1",
@@ -97,7 +103,9 @@
     PrincipalAccountType: "User,SPGroup",
   };
   vm.teleworkManagerDept = new PeopleField(peopleSchemaOpts);
-  vm.teleworkManagerTask = new PeopleField();
+  vm.teleworkManagerTechnical = new PeopleField();
+  vm.teleworkNoGTM = ko.observable(false);
+  vm.teleworkCOR = new PeopleField();
   vm.teleworkOffice = ko.observable();
 
   vm.teleworkOfficeSelection = ko.observable();
@@ -124,7 +132,6 @@
     "None",
   ]);
 
-  vm.teleworkDays = ko.observableArray();
   vm.teleworkDaysOpts = ko.observableArray([
     "Sun",
     "Mon",
@@ -166,7 +173,7 @@
           return;
         }
         value.forEach((element) => {
-          vm.teleworkDays1Map()
+          map()
             .find((mapElem) => mapElem.day == element)
             .isSet(true);
         });
@@ -181,14 +188,25 @@
     });
   }
 
-  // vm.teleworkDays2 = ko.observableArray();
-
   var telework = vm.configServiceTypes().find(function (stype) {
     return stype.UID == "telework";
   });
+
   telework.validate = function () {
+    var isSaveable = true;
+    var msg = "Request not saved:\n";
     if (!vm.teleworkDays1().length && !vm.teleworkDays2().length) {
-      alert("No telework days selected");
+      msg += "No telework days selected.\n";
+      isSaveable = false;
+    }
+
+    if (!vm.teleworkNoGTM() && !vm.teleworkManagerTechnical.ID()) {
+      msg += "Technical Monitor must be designated.";
+      isSaveable = false;
+    }
+
+    if (!isSaveable) {
+      alert(msg);
       vm.requestIsSaveable(false);
     }
   };
@@ -238,15 +256,25 @@
           class="editable-field"
           type="text"
           disabled="true"
-          data-bind="value: teleworkManagerTask.title(),
-          visible: currentView() == 'view'"
+          data-bind="value: teleworkManagerTechnical.title(),
+          visible: currentView() == 'view' && !teleworkNoGTM()"
         />
         <div
-          id="peopleteleworkManagerTask"
+          id="peopleteleworkManagerTechnical"
           class="editable-field"
-          data-bind="people: teleworkManagerTask,
-            visible: currentView() != 'view'"
+          data-bind="people: teleworkManagerTechnical,
+            visible: currentView() != 'view' && !teleworkNoGTM(),
+            "
         ></div>
+        <div>
+          <label
+            >Check here if no GTM for this contract:
+            <input
+              type="checkbox"
+              data-bind="checked: teleworkNoGTM, 
+                disable: currentView() == 'view'"
+          /></label>
+        </div>
       </div>
       <div class="field">
         <label>Office<span class="required">*</span>:</label>
@@ -258,6 +286,24 @@
             value: teleworkOffice, options: teleworkOfficeOpts,
             optionsCaption: 'Select...'"
         ></select>
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label>COR<span class="required">*</span>: </label>
+        <input
+          class="editable-field"
+          type="text"
+          disabled="true"
+          data-bind="value: teleworkCOR.title(),
+        visible: currentView() == 'view'"
+        />
+        <div
+          id="peopleteleworkCOR"
+          class="editable-field"
+          data-bind="people: teleworkCOR,
+          visible: currentView() != 'view'"
+        ></div>
       </div>
     </div>
     <div class="two fields">
