@@ -693,14 +693,14 @@ function koviewmodel() {
       : false;
   });
 
-  self.assignmentCurUserActions = ko.pureComputed(function () {
-    return self.request;
-  });
+  // self.assignmentCurUserActions = ko.pureComputed(function () {
+  //   return self.request;
+  // });
 
-  // Can the current user take action on the record?
-  self.requestCurUserAction = ko.pureComputed(function () {
-    return true;
-  });
+  // // Can the current user take action on the record?
+  // self.requestCurUserAction = ko.pureComputed(function () {
+  //   return true;
+  // });
 
   /************************************************************
    * ADMIN: Assignment
@@ -808,7 +808,8 @@ function koviewmodel() {
       isAssignee =
         assignment.Assignee.get_lookupId() ==
         sal.globalConfig.currentUser.get_id();
-    } else if (assignment.ActionOffice) {
+    }
+    if (assignment.ActionOffice) {
       isAO =
         self
           .userActionOfficeMembership()
@@ -1032,12 +1033,8 @@ function koviewmodel() {
             var userAssignmentCnt = 0;
             // Is the user listed as an action office in the assignments?
             self.requestAssignments().forEach(function (assignment) {
-              var user = self.requestAssignmentUser(assignment);
-              if (
-                user &&
-                user.get_lookupId() == sal.globalConfig.currentUser.get_id()
-              ) {
-                // we are the user assigned to this assignment
+              // track if we are assigned.
+              if (self.assignmentCurUserIsAOorAssignee(assignment)) {
                 if (
                   assignment.Role == roleOpts.Resolver.Name ||
                   assignment.Role == roleOpts.Approver.Name

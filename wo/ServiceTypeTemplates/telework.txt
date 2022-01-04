@@ -66,8 +66,20 @@
       Days: {
         type: "Text",
         koMap: "teleworkDays",
-        required: true,
+        required: false,
         displayName: "Telework Days",
+      },
+      DaysWeek1: {
+        type: "Text",
+        koMap: "teleworkDays1",
+        required: false,
+        displayName: "Telework Days Week 1",
+      },
+      DaysWeek2: {
+        type: "Text",
+        koMap: "teleworkDays2",
+        required: false,
+        displayName: "Telework Days Week 2",
       },
     },
   });
@@ -114,15 +126,62 @@
 
   vm.teleworkDays = ko.observableArray();
   vm.teleworkDaysOpts = ko.observableArray([
-    "N/A",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
+    "Sun",
+    "Mon",
+    "Tues",
+    "Wed",
+    "Thurs",
+    "Fri",
+    "Sat",
   ]);
+
+  function DayOfWeek(day) {
+    this.day = day;
+    this.isSet = ko.observable(false);
+  }
+
+  vm.teleworkDays1Map = ko.observableArray(
+    vm.teleworkDaysOpts().map((element) => {
+      return new DayOfWeek(element);
+    })
+  );
+
+  vm.teleworkDays1 = new weekMap(vm.teleworkDays1Map);
+
+  vm.teleworkDays2Map = ko.observableArray(
+    vm.teleworkDaysOpts().map((element) => {
+      return new DayOfWeek(element);
+    })
+  );
+
+  vm.teleworkDays2 = new weekMap(vm.teleworkDays1Map);
+
+  function weekMap(map) {
+    return ko.pureComputed({
+      write: function (value) {
+        console.log(value);
+        if (!value) {
+          // passed a null value, clear out array
+          map().forEach((elem) => elem.isSet(false));
+          return;
+        }
+        value.forEach((element) => {
+          vm.teleworkDays1Map()
+            .find((mapElem) => mapElem.day == element)
+            .isSet(true);
+        });
+      },
+      read: function () {
+        return map()
+          .map((elem) => {
+            if (elem.isSet()) return elem.day;
+          })
+          .filter((elem) => elem != null);
+      },
+    });
+  }
+
+  vm.teleworkDays2 = ko.observableArray();
 </script>
 
 <script type="text/html" id="tmpl_telework">
@@ -139,7 +198,7 @@
         <div
           id="peopleteleworkFullName"
           class="editable-field"
-          data-bind="people: teleworkFullName, 
+          data-bind="people: teleworkFullName,
             visible: currentView() != 'view'"
         ></div>
       </div>
@@ -149,13 +208,13 @@
           class="editable-field"
           type="text"
           disabled="true"
-          data-bind="value: teleworkManagerDept.title(), 
+          data-bind="value: teleworkManagerDept.title(),
         visible: currentView() == 'view'"
         />
         <div
           id="peopleteleworkManagerDept"
           class="editable-field"
-          data-bind="people: teleworkManagerDept, 
+          data-bind="people: teleworkManagerDept,
             visible: currentView() != 'view'"
         ></div>
       </div>
@@ -169,13 +228,13 @@
           class="editable-field"
           type="text"
           disabled="true"
-          data-bind="value: teleworkManagerTask.title(), 
+          data-bind="value: teleworkManagerTask.title(),
           visible: currentView() == 'view'"
         />
         <div
           id="peopleteleworkManagerTask"
           class="editable-field"
-          data-bind="people: teleworkManagerTask, 
+          data-bind="people: teleworkManagerTask,
             visible: currentView() != 'view'"
         ></div>
       </div>
@@ -202,16 +261,54 @@
         />
       </div>
       <div class="field">
-        <label for="days-of-week">Days of Week:</label>
+        <!-- <label for="days-of-week">Days of Week:</label>
         <div>
           <select
             multiple
             name="days-of-week"
             class="ui fluid dropdown selection multiple"
-            data-bind="disable: currentView() =='view',
+            data-bind="disable: currentView() == 'view',
             selectedOptions: teleworkDays, options: teleworkDaysOpts,
             optionsCaption: 'Select...'"
           ></select>
+        </div> -->
+        <div class="field">
+          <label>Week 1</label>
+          <div class="week-days">
+            <!-- ko foreach: teleworkDays1Map -->
+            <div class="option">
+              <label
+                data-bind="text: $data.day, attr: {'for':  'telework-' + $data.day + '1'}"
+              ></label
+              ><br />
+              <input
+                type="checkbox"
+                data-bind="checked: $data.isSet, 
+                  disable: $root.currentView() == 'view',
+                  attr: {'id':  'telework-' + $data.day + '1'}"
+              />
+            </div>
+            <!-- /ko -->
+          </div>
+        </div>
+        <div class="field">
+          <label>Week 2</label>
+          <div class="week-days">
+            <!-- ko foreach: teleworkDays2Map -->
+            <div class="option">
+              <label
+                data-bind="text: $data.day, attr: {'for':  'telework-' + $data.day + '1'}"
+              ></label
+              ><br />
+              <input
+                type="checkbox"
+                data-bind="checked: $data.isSet, 
+                  disable: $root.currentView() == 'view',
+                  attr: {'id':  'telework-' + $data.day + '1'}"
+              />
+            </div>
+            <!-- /ko -->
+          </div>
         </div>
       </div>
     </div>

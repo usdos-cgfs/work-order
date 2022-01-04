@@ -659,10 +659,10 @@
               <h3>New Assignment:</h3>
               <div class="ui compact menu" data-bind="">
                 <select
-                  class="ui search dropdown"
+                  class="ui dropdown"
                   data-bind=" value: assignments.new.actionOffice,
-                        options: assignments.assigneeOpts, 
-                        optionsText: (AO) => {return AO.Title}, 
+                        options: assignments.assigneeOpts(), 
+                        optionsText: 'Title', 
                         optionsCaption: 'Select...'"
                 ></select>
                 <select

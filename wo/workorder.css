@@ -259,3 +259,9 @@ textarea {
 .ui.input.fill {
   min-width: 100%;
 }
+
+.week-days {
+  display: flex;
+  justify-content: space-between;
+  max-width: 320px;
+}
