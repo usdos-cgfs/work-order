@@ -154,7 +154,7 @@
     })
   );
 
-  vm.teleworkDays2 = new weekMap(vm.teleworkDays1Map);
+  vm.teleworkDays2 = new weekMap(vm.teleworkDays2Map);
 
   function weekMap(map) {
     return ko.pureComputed({
@@ -181,7 +181,17 @@
     });
   }
 
-  vm.teleworkDays2 = ko.observableArray();
+  // vm.teleworkDays2 = ko.observableArray();
+
+  var telework = vm.configServiceTypes().find(function (stype) {
+    return stype.UID == "telework";
+  });
+  telework.validate = function () {
+    if (!vm.teleworkDays1().length && !vm.teleworkDays2().length) {
+      alert("No telework days selected");
+      vm.requestIsSaveable(false);
+    }
+  };
 </script>
 
 <script type="text/html" id="tmpl_telework">
@@ -291,6 +301,7 @@
             <!-- /ko -->
           </div>
         </div>
+        <div class="ui hidden divider"></div>
         <div class="field">
           <label>Week 2</label>
           <div class="week-days">

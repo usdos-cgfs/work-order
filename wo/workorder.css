@@ -260,6 +260,14 @@ textarea {
   min-width: 100%;
 }
 
+#tabs .ui.form .field :disabled {
+  opacity: 0.85;
+}
+
+#tabs .ui.form .field input[type="checkbox"] :disabled {
+  opacity: 1;
+}
+
 .week-days {
   display: flex;
   justify-content: space-between;
