@@ -340,43 +340,43 @@ function Incremental(entry, target, next) {
   };
 }
 
-function EnsuredUserOrGroup(userOrGroup, isGroup) {
-  var self = {};
-  if (isGroup) {
-    // Assume this is coming from sal.globalConfig.siteGroups
-    self.id = userOrGroup.ID;
-    self.title = userOrGroup.title;
-    self.loginName = userOrGroup.loginName;
-  } else {
-    self.id = userOrGroup.get_id();
-    self.title = userOrGroup.get_title();
-    self.loginName = userOrGroup.get_loginName();
-  }
-  return self;
-}
+// function EnsuredUserOrGroup(userOrGroup, isGroup) {
+//   var self = {};
+//   if (isGroup) {
+//     // Assume this is coming from sal.globalConfig.siteGroups
+//     self.id = userOrGroup.ID;
+//     self.title = userOrGroup.title;
+//     self.loginName = userOrGroup.loginName;
+//   } else {
+//     self.id = userOrGroup.get_id();
+//     self.title = userOrGroup.get_title();
+//     self.loginName = userOrGroup.get_loginName();
+//   }
+//   return self;
+// }
 
-function GroupField() {
-  var self = {};
-  self.EnsuredGroup = ko.observable();
-  return ko.pureComputed({
-    read: function () {
-      return self.EnsuredGroup();
-    },
-    write: function (val) {
-      if (!val) {
-        self.EnsuredGroup(null);
-        return;
-      }
-      var foundGroup = sal.globalConfig.siteGroups.find(function (group) {
-        return group.ID == val.get_lookupId();
-      });
-      // if (!foundGroup){
-      //   return null;
-      // }
-      self.EnsuredGroup(foundGroup);
-    },
-  });
-}
+// function GroupField() {
+//   var self = {};
+//   self.EnsuredGroup = ko.observable();
+//   return ko.pureComputed({
+//     read: function () {
+//       return self.EnsuredGroup();
+//     },
+//     write: function (val) {
+//       if (!val) {
+//         self.EnsuredGroup(null);
+//         return;
+//       }
+//       var foundGroup = sal.globalConfig.siteGroups.find(function (group) {
+//         return group.ID == val.get_lookupId();
+//       });
+//       // if (!foundGroup){
+//       //   return null;
+//       // }
+//       self.EnsuredGroup(foundGroup);
+//     },
+//   });
+// }
 
 function PeopleField(schemaOpts) {
   // We need to refactor this whole thing to support groups/arrays.
@@ -558,7 +558,7 @@ function koviewmodel() {
   //
   self.busy = {};
   self.busy.addTask = function (task) {
-    newTask = {
+    var newTask = {
       id: Math.floor(Math.random() * 100000 + 1),
       task: task,
       active: ko.observable(true),
@@ -638,7 +638,7 @@ function koviewmodel() {
    * ADMIN: Authorize Current user to take actions
    ************************************************************/
   self.userRole = ko.observable(); // Determine whether the user is in the admin group or not.
-  self.userRecordRole = ko.observable(); // Determine how the user is associated to the selected record.
+  // self.userRecordRole = ko.observable(); // Determine how the user is associated to the selected record.
 
   self.userActionOfficeMembership = ko.pureComputed(function () {
     // Return the configActionOffice offices this user is a part of
@@ -1031,6 +1031,11 @@ function koviewmodel() {
           case actionOpts.Resolution:
             var allCompleted = true;
             var userAssignmentCnt = 0;
+            if (
+              vm.userActionOfficeMembership().includes(vm.requestStageOffice())
+            ) {
+              userAssignmentCnt++;
+            }
             // Is the user listed as an action office in the assignments?
             self.requestAssignments().forEach(function (assignment) {
               // track if we are assigned.

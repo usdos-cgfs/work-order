@@ -57,7 +57,7 @@ Workorder.Common.NewUtilities = function () {
       SPClientPeoplePicker.SPClientPeoplePickerDict[id + "_TopSpan"];
 
     // Check if this has been set, if so, remove
-    if (pickerControl.HasResolvedUsers()) {
+    while (pickerControl.HasResolvedUsers()) {
       pickerControl.DeleteProcessedUser();
     }
     var editId = "#" + pickerControl.EditorElementId;
