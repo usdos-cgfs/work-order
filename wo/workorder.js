@@ -970,6 +970,7 @@ function createAssignment(role, notify) {
     var vp = [
       ["Title", vm.requestID()],
       ["Role", role],
+      ["PipelineStage", vm.requestStageNum()],
     ];
     if (vm.assignActionOffice()) {
       vp.push(["ActionOffice", vm.assignActionOffice().ID]);

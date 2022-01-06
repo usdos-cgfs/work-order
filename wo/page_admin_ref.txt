@@ -639,12 +639,12 @@
                       <!-- /ko -->
                     </td>
                     <td>
-                      <!-- ko if:  $root.assignmentCurUserCanRemove($data) -->
                       <i
                         title="View"
                         class="fas fa-search-plus pointer"
                         data-bind="click: $root.assignmentShowAssignment.bind($data)"
                       ></i>
+                      <!-- ko if:  $root.assignmentCurUserCanRemove($data) -->
                       <i
                         title="Remove"
                         class="fas fa-user-times pointer"
@@ -659,7 +659,7 @@
               <h3>New Assignment:</h3>
               <div class="ui compact menu" data-bind="">
                 <select
-                  class="ui dropdown"
+                  class=""
                   data-bind=" value: assignments.new.actionOffice,
                         options: assignments.assigneeOpts(), 
                         optionsText: 'Title', 

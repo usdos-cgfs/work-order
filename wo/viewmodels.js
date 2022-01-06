@@ -98,6 +98,7 @@ var assignmentListDef = {
     CanDelegate: { type: "Bool" },
     Comment: { type: "Text", koMap: "empty" },
     IsActive: { type: "Bool", koMap: "empty" },
+    PipelineStage: { type: "Text", koMap: "empty" },
     Role: {
       type: "Text",
       opts: {
@@ -680,6 +681,19 @@ function koviewmodel() {
       }
     });
 
+    //
+    var userGroupIds = vm.userGroupMembership().map((group) => group.ID);
+
+    self.configRequestOrgs().forEach(function (reqOrg) {
+      if (!reqOrg.UserGroup) return;
+      if (userGroupIds.includes(reqOrg.UserGroup.get_lookupId())) {
+        // User is a member of this request org, add if not
+        if (!reqOrgIds.includes(reqOrg.ID)) {
+          reqOrgIds.push(reqOrg.ID);
+        }
+      }
+    });
+
     return self.configRequestOrgs().filter(function (reqOrg) {
       return reqOrgIds.indexOf(reqOrg.ID) >= 0;
     });
@@ -945,6 +959,9 @@ function koviewmodel() {
     if (!vm.requestIsActive()) {
       return false;
     }
+    if (!assignment.IsActive) {
+      return false;
+    }
     return (
       self.assignments
         .assigneeOpts()
@@ -1032,22 +1049,35 @@ function koviewmodel() {
             var allCompleted = true;
             var userAssignmentCnt = 0;
             if (
-              vm.userActionOfficeMembership().includes(vm.requestStageOffice())
+              vm
+                .userActionOfficeMembership()
+                .includes(vm.requestStageOffice()) ||
+              vm.user.requestOrgMembership().includes(vm.requestStageOrg())
             ) {
               userAssignmentCnt++;
             }
+
             // Is the user listed as an action office in the assignments?
             self.requestAssignments().forEach(function (assignment) {
-              // track if we are assigned.
-              if (self.assignmentCurUserIsAOorAssignee(assignment)) {
-                if (
-                  assignment.Role == roleOpts.Resolver.Name ||
-                  assignment.Role == roleOpts.Approver.Name
-                ) {
-                  userAssignmentCnt += 1;
-                  if (assignment.IsActive) {
-                    allCompleted = false;
-                  }
+              // Take into account existing assignments that don't have
+              // a designated stage.
+              // We're only looking for assignees for the current stage.
+              if (
+                assignment.PipelineStage &&
+                assignment.PipelineStage != vm.requestStageNum()
+              ) {
+                return;
+              }
+              if (!self.assignmentCurUserIsAOorAssignee(assignment)) {
+                return;
+              }
+              if (
+                assignment.Role == roleOpts.Resolver.Name ||
+                assignment.Role == roleOpts.Approver.Name
+              ) {
+                userAssignmentCnt += 1;
+                if (assignment.IsActive) {
+                  allCompleted = false;
                 }
               }
             });
