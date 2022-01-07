@@ -1021,7 +1021,7 @@ function koviewmodel() {
     } else {
       return (
         "<p>All the required actions have been completed for current stage.</p>" +
-        "<p> This request is ready to be advanced.</p>"
+        "<p>Please click advance to move this request to the next stage.</p>"
       );
     }
   });
@@ -2005,6 +2005,16 @@ function koviewmodel() {
 
   self.requestOrgs = ko.observableArray([]);
 
+  self.requestOrgsPush = function (newOrg) {
+    if (
+      !self.requestOrgs().find(function (existingOrg) {
+        return existingOrg.ID == newOrg.ID;
+      })
+    ) {
+      self.requestOrgs.push(newOrg);
+    }
+  };
+
   self.requestOrgIds = ko.pureComputed({
     read: function () {
       var vps = new Array();
@@ -2025,15 +2035,7 @@ function koviewmodel() {
         });
         // Now add each org to our requestOrgs if if isn't already
         // in the array
-        orgs.forEach(function (newOrg) {
-          if (
-            !self.requestOrgs().find(function (existingOrg) {
-              return existingOrg.ID == newOrg.ID;
-            })
-          ) {
-            self.requestOrgs.push(newOrg);
-          }
-        });
+        orgs.forEach(self.requestOrgsPush);
         //self.requestOrgs(orgs);
       } else {
         self.requestOrgs([]);

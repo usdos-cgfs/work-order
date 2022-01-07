@@ -210,6 +210,15 @@
       vm.requestIsSaveable(false);
     }
   };
+
+  telework.pipelineLogic = {
+    skipStage: function (stageNum) {
+      if (stageNum == 2) {
+        return vm.teleworkNoGTM();
+      }
+      return false;
+    },
+  };
 </script>
 
 <script type="text/html" id="tmpl_telework">

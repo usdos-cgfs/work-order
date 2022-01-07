@@ -544,13 +544,13 @@
       class="ui styled fluid accordion"
       data-bind="visible: showRouting"
     >
-      <div class="title">
+      <div class="active title">
         <h2 class="ui header">
           <i class="dropdown icon"></i>
           Routing and Assignment
         </h2>
       </div>
-      <div id="wo-routing-assignment" class="content">
+      <div id="wo-routing-assignment" class="active content">
         <div class="ui grid">
           <div class="row">
             <div class="twelve wide column">

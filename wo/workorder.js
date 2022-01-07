@@ -113,15 +113,7 @@ function newWorkOrder() {
   //   })
   // );
   //Set the workorder request orgs.
-  vm.request.pipeline.allRequestOrgs().forEach(function (org) {
-    if (
-      !vm.requestOrgs().find(function (ro) {
-        return ro.ID == org.ID;
-      })
-    ) {
-      vm.requestOrgs.push(org);
-    }
-  });
+  vm.request.pipeline.allRequestOrgs().forEach(vm.requestOrgsPush);
 
   //Clear our requested fields.
   vm.requestHeader(new Object());
@@ -935,7 +927,7 @@ function fetchAttachments() {
  ************************************************************/
 function newOfficeAssignment() {
   // Takes a new action office and adds it to the request assigned offices
-  vm.requestOrgs.push(vm.assignRequestOffice());
+  vm.requestOrgsPush(vm.assignRequestOffice());
 
   vm.listRefWO().updateListItem(
     vm.requestHeader().ID,
@@ -1200,7 +1192,6 @@ function newApprovalCallback(result, value) {
         case "Approved":
           //let'do whatever we need for an approved record.
           alert("Record has been approved. You may now close this window.");
-          //TODO: Push to the next stage!!!!
           pipelineForward();
           break;
         case "Rejected":
@@ -1421,13 +1412,20 @@ function pipelineForward() {
   /* Increment the current request stage num */
   var t = parseInt(vm.requestStageNum()) + 1;
   if (t > vm.selectedPipeline().length) {
-    // vm.requestStatus("Closed");
-    // valuePairs.push(["RequestStatus", "Closed"]);
+    // End of process. Close work order.
     vm.busy.finishTask(appBusyStates.pipeline);
-    // dialog.close(dialog.pipeline);
     closeWorkOrder();
   } else {
     vm.requestStageNum(t);
+    if (
+      vm.selectedServiceType().pipelineLogic &&
+      vm.selectedServiceType().pipelineLogic.skipStage &&
+      vm.selectedServiceType().pipelineLogic.skipStage(t)
+    ) {
+      vm.busy.finishTask(appBusyStates.pipeline);
+      pipelineForward();
+      return;
+    }
     valuePairs.push(["RequestStage", vm.requestStageNum()]);
 
     vm.listRefWO().updateListItem(
@@ -1474,7 +1472,7 @@ function pipelineAssignments() {
   // in our pipeline.
 
   if (vm.requestStageOrg()) {
-    vm.requestOrgs.push(vm.requestStageOrg());
+    vm.requestOrgsPush(vm.requestStageOrg());
     valuePairs = [["RequestOrgs", vm.requestOrgIds()]];
   }
 
