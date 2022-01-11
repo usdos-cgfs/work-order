@@ -518,7 +518,44 @@
       </div>
     </div>
     <!-- <div id="wo-progress-pipeline" class="fluid"></div> -->
-    <div data-bind="html: selectedPipelineElement"></div>
+    <div data-bind="">
+      <div class="ui mini ordered steps">
+        <div class="step completed">
+          <div class="content">
+            <i
+              class="fa fa-4x"
+              data-bind="class: selectedServiceType().Icon"
+            ></i>
+          </div>
+        </div>
+        <div
+          class="step"
+          data-bind="class: requestStatus() == 'Draft' ? 'active' : 'completed'"
+        >
+          <div class="content">
+            <div class="title">Editing</div>
+            <div class="description">New Request</div>
+          </div>
+        </div>
+        <!-- ko foreach: selectedPipeline -->
+        <div class="step" data-bind="class: $root.pipelineStageClass($data)">
+          <div class="content">
+            <div class="title" data-bind="text: ActionType"></div>
+            <div class="description" data-bind="text: Title"></div>
+          </div>
+        </div>
+        <!-- /ko -->
+        <div
+          class="step"
+          data-bind="class: $root.requestIsActive() ? 'disabled' : 'completed'"
+        >
+          <div class="content">
+            <div class="title">Closed</div>
+            <div class="description">Request Closed</div>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="ui hidden divider"></div>
     <!-- ko if: showRouting -->
     <div class="ui modal" id="assignment-reject-modal" style="display: none">

@@ -1708,6 +1708,18 @@ function koviewmodel() {
     }
   });
 
+  self.pipelineStageClass = function (stage) {
+    var curStage = parseInt(self.requestStageNum());
+    var status = "disabled";
+    if (stage.Step < curStage) {
+      status = "completed";
+    } else if (stage.Step == curStage) {
+      status = "active";
+    }
+
+    return status;
+  };
+
   self.selectedPipelineElement = ko.pureComputed(function () {
     if (!self.selectedServiceType()) return "<div>No Service Selected</div>";
     // TODO: Fix all this for the current pipeline.
@@ -1718,7 +1730,7 @@ function koviewmodel() {
     var inDraft = self.requestStatus() == "Draft" ? "active" : "completed";
 
     pipeline +=
-      '<div class="step completed"><div class="conent"><i class="fa fa-4x ' +
+      '<div class="step completed"><div class="content"><i class="fa fa-4x ' +
       self.selectedServiceType().Icon +
       '"/></div></div>';
 

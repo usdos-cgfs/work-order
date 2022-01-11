@@ -31,7 +31,7 @@
         type: "Bool",
         koMap: "teleworkNoGTM",
         required: false,
-        displayName: "No GTM",
+        displayName: "Skip GTM Approval:",
       },
       COR: {
         type: "Person",
