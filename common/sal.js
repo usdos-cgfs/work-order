@@ -409,6 +409,39 @@ function ensureUserById(userId, callback) {
   );
 }
 
+function ensureUserByIdAsync(userId) {
+  return new Promise((resolve, reject) => {
+    // First check if this is a group
+    var group = sal.globalConfig.siteGroups.find(function (group) {
+      return group.ID == userId;
+    });
+
+    if (group) {
+      resolve(group.group);
+      return;
+    }
+
+    var context = new SP.ClientContext.get_current();
+    var user = context.get_web().getUserById(userId);
+
+    function onRequestSuccess() {
+      resolve(user);
+    }
+
+    function onRequestFail(sender, args) {
+      alert("Could not find user with id: ", userId);
+      reject(args);
+    }
+    data = { user: user, resolve: resolve, reject };
+
+    context.load(user);
+    context.executeQueryAsync(
+      Function.createDelegate(data, onRequestSuccess),
+      Function.createDelegate(data, onRequestFail)
+    );
+  });
+}
+
 ensureUserRest = function (userName) {
   userName = userName === undefined ? "i:0#.w|cgfs\backlundpf" : userName;
 
