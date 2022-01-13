@@ -151,6 +151,8 @@ function refreshWorkOrderItem(woID, callback) {
     console.log("loading open orders", items);
     if (items[0]) {
       var req = items[0];
+      // If the item is in our all orders, update it with our response
+      // Otherwise, push it to the end
       if (
         vm.allOrders().find(function (order) {
           return order.Title == woID;
@@ -176,7 +178,7 @@ function refreshWorkOrderItem(woID, callback) {
   });
 }
 
-function viewWorkOrderItem(woID, callback) {
+async function viewWorkOrderItem(woID, callback) {
   callback = callback === undefined ? function () {} : callback;
 
   vm.busy.addTask(appBusyStates.view);
@@ -200,7 +202,7 @@ function viewWorkOrderItem(woID, callback) {
     console.log("workorder fetched - setting value pairs");
     //vm.selectedServiceType("");
     clearValuePairs(workOrderListDef.viewFields);
-    setValuePairs(workOrderListDef.viewFields, vm.requestHeader());
+    await setValuePairs(workOrderListDef.viewFields, vm.requestHeader());
 
     vm.requestAssignments(vm.allRequestAssignmentsMap()[woID]);
 
@@ -257,12 +259,12 @@ function viewServiceTypeItem(callback) {
     "</Value></Eq></And></Where></Query></View>";
   vm.selectedServiceType().listRef.getListItems(
     serviceTypeCaml,
-    function (items) {
+    async function (items) {
       if (items[0]) {
         var res = items[0];
         vm.serviceTypeHeader(res);
         console.log("service type fetched -- setting valuepairs", items);
-        setValuePairs(
+        await setValuePairs(
           vm.selectedServiceType().listDef.viewFields,
           vm.serviceTypeHeader()
         );
@@ -756,10 +758,14 @@ function getValuePairs(listDef) {
   return valuePairs;
 }
 
-function setValuePairs(listDef, jObject) {
+async function setValuePairs(listDef, jObject) {
   // The inverse of our getValuePairs function, set the KO observables
   // from our returned object.
-  $.each(listDef, function (field, obj) {
+  // await $.each(listDef, async function (field, obj) {
+
+  for (const field of Object.keys(listDef)) {
+    var obj = listDef[field];
+
     //console.log(field + " " + obj.koMap + " " );
     console.log(
       "Setting " + obj.koMap + " to " + jObject[field] + " from " + field
@@ -767,7 +773,7 @@ function setValuePairs(listDef, jObject) {
     var observable = vm[obj.koMap];
     switch (obj.type) {
       case "Person":
-        observable.userId(jObject[field]);
+        await observable.setUser(jObject[field]);
         break;
       case "DateTime":
         if (observable.date) {
@@ -779,7 +785,7 @@ function setValuePairs(listDef, jObject) {
       default:
         observable(jObject[field]);
     }
-  });
+  }
 }
 
 function clearValuePairs(listDef) {
