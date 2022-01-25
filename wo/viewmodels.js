@@ -211,6 +211,7 @@ var configRequestOrgsListDef = {
         ACTIONOFFICES: "Action Offices",
         REQUESTINGOFFICE: "Requesting Office",
         DEPARTMENT: "Department",
+        BUDGETPMO: "Budget PMO",
       },
     },
     BreakAccess: { type: "Bool", koMap: "empty" },

@@ -20,6 +20,11 @@
         koMap: "overtimeManagerProgram",
         required: true,
       },
+      BudgetPMO: {
+        type: "Person",
+        koMap: "overtimeBudgetPMO",
+        required: true,
+      },
       Office: { type: "Text", koMap: "overtimeOffice", required: true },
       RequisitionNumber: {
         type: "Text",
@@ -68,6 +73,29 @@
   };
   vm.overtimeManagerDept = new PeopleField(peopleSchemaOpts);
   vm.overtimeManagerProgram = new PeopleField();
+  vm.overtimeBudgetPMO = new PeopleField();
+
+  vm.overtimeBudgetPMOMap = ko.pureComputed({
+    read: function () {
+      var person = new PeopleField();
+      if (vm.overtimeBudgetPMO) person.setUser();
+      return;
+    },
+  });
+
+  vm.overtimeBudgetPMOSelect = ko.observable();
+  vm.overtimeBudgetPMOSelect.subscribe(function (pmo) {
+    vm.overtimeBudgetPMO.setUser(pmo.UserGroup);
+  });
+
+  vm.overtimeBudgetPMOOpts = ko.pureComputed(function () {
+    return vm.configRequestOrgs().filter(function (ro) {
+      return (
+        ro.OrgType == configRequestOrgsListDef.viewFields.OrgType.opts.BUDGETPMO
+      );
+    });
+  });
+
   vm.overtimeOffice = ko.observable();
 
   vm.overtimeOfficeSelection = ko.observable();
@@ -147,14 +175,22 @@
         ></div>
       </div>
       <div class="field">
-        <label>Department<span class="required">*</span>:</label>
-        <select
-          class="editable-field"
-          type="text"
-          data-bind="disable: currentView() == 'view',
-            value: overtimeOffice, options: overtimeOfficeOpts,
+        <label
+          >Budget PMO<span class="required">*</span>:
+          <select
+            name="overtime-budget-pmo"
+            id="overtime-budget-pmo"
+            class="editable-field"
+            data-bind="visible: currentView() != 'view',
+            value: overtimeBudgetPMOSelect, options: overtimeBudgetPMOOpts,
+            optionsText: 'Title',
             optionsCaption: 'Select...'"
-        ></select>
+          ></select>
+        </label>
+        <input
+          data-bind="value: overtimeBudgetPMO.title, 
+            visible: currentView() == 'view'"
+        />
       </div>
     </div>
     <div class="two fields">
@@ -218,6 +254,18 @@
           data-bind="disable: currentView() == 'view',
               value: overtimeHours"
         />
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label>Department<span class="required">*</span>:</label>
+        <select
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+            value: overtimeOffice, options: overtimeOfficeOpts,
+            optionsCaption: 'Select...'"
+        ></select>
       </div>
     </div>
   </div>
