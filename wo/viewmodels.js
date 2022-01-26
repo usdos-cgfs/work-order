@@ -485,13 +485,13 @@ function DateField(newOpts, newDate) {
   };
 }
 
-function DateRange(name) {
-  var opts = { minTimeGap: 15 };
+function DateRange(name, opts) {
+  var newOpts = opts ? opts : { minTimeGap: 15 };
   var self = this;
   this.name = ko.observable(name);
   this.label = ko.observable();
-  this.start = new DateField(opts);
-  this.end = new DateField(opts);
+  this.start = new DateField(newOpts);
+  this.end = new DateField(newOpts);
   this.save = function () {
     createDateRange(self);
   };
@@ -505,7 +505,7 @@ function DateRange(name) {
   return publicMembers;
 }
 
-function DateRangeTable(name) {
+function DateRangeTable(name, opts = null) {
   var self = this;
   this.testDate = new DateField();
   this.name = name;
@@ -515,7 +515,13 @@ function DateRangeTable(name) {
       return (dateRange.name = self.name);
     });
   });
-  self.new = new DateRange(self.name);
+  self.formatColumnDate = function (date) {
+    if (opts && opts.type == "date") {
+      return date.toDateString();
+    }
+    return date.toLocaleString();
+  };
+  self.new = new DateRange(self.name, opts);
 }
 
 function timers() {

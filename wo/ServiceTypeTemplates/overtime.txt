@@ -46,11 +46,6 @@
         koMap: "overtimeContractorType",
         required: true,
       },
-      Dates: {
-        type: "Text",
-        koMap: "overtimeDates",
-        required: true,
-      },
       Hours: {
         type: "Number",
         koMap: "overtimeHours",
@@ -118,8 +113,25 @@
   vm.overtimeLaborCategory = ko.observable();
   vm.overtimeContractorType = ko.observable();
   vm.overtimeContractorTypeOpts = ko.observableArray(["SCA", "Non-SCA"]);
-  vm.overtimeDates = ko.observable();
+  // vm.overtimeDates = ko.observable();
+  vm.overtimeDates = new DateRangeTable("overtimedates", { type: "date" });
   vm.overtimeHours = ko.observable();
+
+  var overtime = vm.configServiceTypes().find(function (stype) {
+    return stype.UID == "overtime";
+  });
+
+  overtime.validate = function () {
+    // Service type specific validation
+    var hasDates = vm.overtimeDates.dateRanges().length;
+    if (!hasDates) {
+      alert(
+        "This request has not been saved. " +
+          "Please enter date ranges for your overtime request."
+      );
+      vm.requestIsSaveable(false);
+    }
+  };
 </script>
 
 <script type="text/html" id="tmpl_overtime">
@@ -240,7 +252,7 @@
       </div>
     </div>
     <div class="two fields">
-      <div class="field">
+      <!-- <div class="field">
         <label>Overtime Dates<span class="required">*</span>:</label>
         <input
           class="editable-field"
@@ -248,6 +260,16 @@
           data-bind="disable:
               currentView() == 'view', value: overtimeDates"
         />
+      </div> -->
+      <div class="field">
+        <label>Department<span class="required">*</span>:</label>
+        <select
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+            value: overtimeOffice, options: overtimeOfficeOpts,
+            optionsCaption: 'Select...'"
+        ></select>
       </div>
       <div class="field">
         <label>Overtime Hours<span class="required">*</span>:</label>
@@ -259,17 +281,13 @@
         />
       </div>
     </div>
-    <div class="two fields">
-      <div class="field">
-        <label>Department<span class="required">*</span>:</label>
-        <select
-          class="editable-field"
-          type="text"
-          data-bind="disable: currentView() == 'view',
-            value: overtimeOffice, options: overtimeOfficeOpts,
-            optionsCaption: 'Select...'"
-        ></select>
-      </div>
+    <div class="">
+      <h3>Overtime Dates<span class="required">*</span>:</h3>
+      <div
+        data-bind="template: 
+        {name: 'template_dateranges', 
+        data: overtimeDates }"
+      ></div>
     </div>
   </div>
 </script>

@@ -31,12 +31,15 @@
         <!-- ko foreach: $data.dateRanges -->
         <tr>
           <td data-bind="text: $index"></td>
-          <td data-bind="text: StartDateTime.toLocaleString()"></td>
-          <td data-bind="text: EndDateTime.toLocaleString()"></td>
+          <td data-bind="text: $parent.formatColumnDate(StartDateTime)"></td>
+          <td data-bind="text: $parent.formatColumnDate(EndDateTime)"></td>
           <td data-bind="text: Label"></td>
-          <td data-bind="click: deleteDateRange.bind($data)">
+          <td>
             <!-- ko if: $root.currentView() != 'view' -->
-            <span class="fas fa-trash pointer"></span>
+            <span
+              class="fas fa-trash pointer"
+              data-bind="click: deleteDateRange.bind($data)"
+            ></span>
             <!-- /ko -->
           </td>
         </tr>
