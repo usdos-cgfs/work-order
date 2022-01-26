@@ -13,7 +13,7 @@
       ManagerDept: {
         type: "Person",
         koMap: "overtimeManagerDept",
-        required: false,
+        required: true,
       },
       ManagerProgram: {
         type: "Person",
@@ -141,7 +141,7 @@
         ></div>
       </div>
       <div class="field">
-        <label>Dept Manager: </label>
+        <label>Dept Manager<span class="required">*</span>: </label>
         <input
           class="editable-field"
           type="text"
@@ -188,6 +188,9 @@
           ></select>
         </label>
         <input
+          class="editable-field"
+          type="text"
+          disabled="true"
           data-bind="value: overtimeBudgetPMO.title, 
             visible: currentView() == 'view'"
         />
