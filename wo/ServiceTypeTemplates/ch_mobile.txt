@@ -12,7 +12,7 @@
       Supervisor: { type: "Person", koMap: "mobileSupervisor", required: true },
       PhoneNum: { type: "Text", koMap: "mobilePhone", required: false },
       ServiceType: { type: "Text", koMap: "mobileType", required: true },
-      Serial: { type: "Text", koMap: "mobileSerial", required: true },
+      Serial: { type: "Text", koMap: "mobileSerial", required: false },
       Carrier: { type: "Text", koMap: "mobileCarrier", required: true },
     },
   });
@@ -63,7 +63,7 @@
     </div>
     <div class="two fields">
       <div class="field">
-        <label>Serial Number<span class="required">*</span>: </label>
+        <label>Serial Number: </label>
         <input
           class="editable-field"
           type="text"
