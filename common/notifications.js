@@ -215,7 +215,8 @@ Workorder.NewNotifications = function () {
     }
     addendum += "</ul>";
 
-    if (role == "Approver") {
+    // TODO: Fix quick approval
+    if (role == "Approver" && false) {
       addendum +=
         "<br>Click the link below to quick approve this request:<br> " +
         '<a href="' +
