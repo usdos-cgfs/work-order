@@ -497,9 +497,6 @@
         </div>
       </div>
       <div class="actions">
-        <div class="ui red deny button" onclick="dismissAdvancePrompt()">
-          Cancel
-        </div>
         <div
           class="ui positive right labeled icon button"
           onclick="pipelineForward()"
