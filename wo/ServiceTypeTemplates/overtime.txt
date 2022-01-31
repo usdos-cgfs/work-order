@@ -126,8 +126,8 @@
     var hasDates = vm.overtimeDates.dateRanges().length;
     if (!hasDates) {
       alert(
-        "This request has not been saved. " +
-          "Please enter date ranges for your overtime request."
+        "This request has not been saved. \n" +
+          "Please enter date ranges for your overtime request and click Add+"
       );
       vm.requestIsSaveable(false);
     }
