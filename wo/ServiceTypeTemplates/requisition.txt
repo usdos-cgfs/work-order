@@ -15,7 +15,7 @@
         required: true,
       },
       Quantity: { type: "Text", koMap: "requisitionQuantity", required: true },
-      Comments: { type: "Text", koMap: "requisitionComments", required: true },
+      Comments: { type: "Text", koMap: "requisitionComments", required: false },
     },
   });
 
