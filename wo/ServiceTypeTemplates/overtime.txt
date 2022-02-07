@@ -96,9 +96,9 @@
       return group.ID == pmo.UserGroup.get_lookupId();
     });
     if (userGroup) {
-      users = userGroup.users.map((user) => user.title).join(", ");
+      users = userGroup.users.map((user) => user.title).join("; ");
     }
-    return pmo.Title + " - " + users;
+    return pmo.Title + ": " + users;
   };
 
   overtimeBudgetPMODisp = ko.pureComputed({
@@ -109,8 +109,8 @@
         return group.ID == pmo.ID();
       });
       if (userGroup) {
-        users = userGroup.users.map((user) => user.title).join(", ");
-        return pmo.title() + " - " + users;
+        users = userGroup.users.map((user) => user.title).join("; ");
+        return pmo.title() + ": " + users;
       }
       return users;
     },
