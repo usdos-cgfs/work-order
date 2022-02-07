@@ -131,7 +131,7 @@ Report.NewReport = async function () {
 
   await loadAllRecords();
 
-  function assignPagePermissions(pageName, role, userArr) {
+  async function assignPagePermissions(pageName, role, userArr) {
     console.log(`assigning ${role} on ${pageName} to`, userArr);
     var pageId = vm.allPages.find(function (page) {
       return page.FileLeafRef === pageName;
@@ -141,10 +141,16 @@ Report.NewReport = async function () {
     var permissionsArr = userArr.map(function (user) {
       return [user.get_lookupValue(), role];
     });
-    var clientContext = new SP.ClientContext("<subsite url>");
-    var ownerGroup = clientContext.get_web().get_associatedOwnerGroup();
-    permissionsArr.push([ownerGroup, sal.config.siteRoles.roles.FullControl]);
-    app.listRefs.pages.setItemPermissionsAsync(pageId, permissionsArr, false);
+    var ownerGroup = sal.globalConfig.defaultGroups.owners;
+    permissionsArr.push([
+      ownerGroup.get_title(),
+      sal.config.siteRoles.roles.FullControl,
+    ]);
+    await app.listRefs.pages.setItemPermissionsAsync(
+      pageId,
+      permissionsArr,
+      false
+    );
   }
 
   async function synchronize() {

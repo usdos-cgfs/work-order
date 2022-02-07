@@ -43,6 +43,9 @@ function initSal() {
     members: web.get_associatedMemberGroup(),
     visitors: web.get_associatedVisitorGroup(),
   };
+  currCtx.load(sal.globalConfig.defaultGroups.owners);
+  currCtx.load(sal.globalConfig.defaultGroups.members);
+  currCtx.load(sal.globalConfig.defaultGroups.visitors);
 
   // Get Current User information
   var user = web.get_currentUser(); //must load this to access info.
