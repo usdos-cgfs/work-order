@@ -90,6 +90,31 @@
       );
     });
   });
+  overtimeBudgetPMOOptsText = function (pmo) {
+    var users = pmo.UserGroup.get_lookupValue();
+    var userGroup = sal.globalConfig.siteGroups.find((group) => {
+      return group.ID == pmo.UserGroup.get_lookupId();
+    });
+    if (userGroup) {
+      users = userGroup.users.map((user) => user.title).join(", ");
+    }
+    return pmo.Title + " - " + users;
+  };
+
+  overtimeBudgetPMODisp = ko.pureComputed({
+    read: function () {
+      var pmo = vm.overtimeBudgetPMO;
+      var users = pmo.title();
+      var userGroup = sal.globalConfig.siteGroups.find((group) => {
+        return group.ID == pmo.ID();
+      });
+      if (userGroup) {
+        users = userGroup.users.map((user) => user.title).join(", ");
+        return pmo.title() + " - " + users;
+      }
+      return users;
+    },
+  });
 
   vm.overtimeOffice = ko.observable();
 
@@ -171,7 +196,7 @@
     </div>
     <div class="two fields">
       <div class="field">
-        <label>Task Manager<span class="required">*</span>: </label>
+        <label>Program Manager<span class="required">*</span>: </label>
         <input
           class="editable-field"
           type="text"
@@ -195,7 +220,7 @@
             class="editable-field"
             data-bind="visible: currentView() != 'view',
             value: overtimeBudgetPMOSelect, options: overtimeBudgetPMOOpts,
-            optionsText: 'Title',
+            optionsText: overtimeBudgetPMOOptsText,
             optionsCaption: 'Select...'"
           ></select>
         </label>
@@ -203,7 +228,7 @@
           class="editable-field"
           type="text"
           disabled="true"
-          data-bind="value: overtimeBudgetPMO.title, 
+          data-bind="value: overtimeBudgetPMODisp, 
             visible: currentView() == 'view'"
         />
       </div>

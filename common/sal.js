@@ -37,6 +37,13 @@ function initSal() {
   var web = currCtx.get_web();
   //sal.site = sal.siteConnection;
 
+  // Get default groups
+  sal.globalConfig.defaultGroups = {
+    owners: web.get_associatedOwnerGroup(),
+    members: web.get_associatedMemberGroup(),
+    visitors: web.get_associatedVisitorGroup(),
+  };
+
   // Get Current User information
   var user = web.get_currentUser(); //must load this to access info.
   currCtx.load(user);
