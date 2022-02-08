@@ -752,7 +752,7 @@ sal.NewSPList = function (listDef) {
 
   self.getLibGUID = function (callback) {
     self.callbackGUID = callback;
-    //self.updateConfig();
+
     self.config.currentContext.load(self.config.listRef);
     self.config.currentContext.executeQueryAsync(
       function () {
@@ -770,6 +770,115 @@ sal.NewSPList = function (listDef) {
   /*****************************************************************
                                 Common Public Methods       
     ******************************************************************/
+
+  function setListPermissionsAsync(valuePairs, reset) {
+    return new Promise((resolve, reject) => {
+      setListPermissions(valuePairs, resolve, reset);
+    });
+  }
+
+  function setListPermissions(valuePairs, callback, reset) {
+    reset = reset === undefined ? false : reset;
+
+    var users = new Array();
+    var resolvedGroups = new Array();
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+
+    var oList = web.get_lists().getByTitle(self.config.def.title);
+
+    valuePairs.forEach(function (vp) {
+      var resolvedGroup = sal.getSPSiteGroupByName(vp[0]);
+      if (resolvedGroup) {
+        resolvedGroups.push([resolvedGroup, vp[1]]);
+      } else {
+        users.push([currCtx.get_web().ensureUser(vp[0]), vp[1]]);
+      }
+    });
+
+    function onFindItemSucceeded() {
+      console.log("Successfully found item");
+      var currCtx = new SP.ClientContext.get_current();
+      var web = currCtx.get_web();
+
+      if (reset) {
+        oList.resetRoleInheritance();
+        oList.breakRoleInheritance(false, false);
+        oList
+          .get_roleAssignments()
+          .getByPrincipal(sal.globalConfig.currentUser)
+          .deleteObject();
+      } else {
+        oList.breakRoleInheritance(false, false);
+      }
+
+      //var oList = web.get_lists().getByTitle(self.config.def.title);
+
+      this.resolvedGroups.forEach(function (groupPairs) {
+        var roleDefBindingColl =
+          SP.RoleDefinitionBindingCollection.newObject(currCtx);
+        roleDefBindingColl.add(
+          web.get_roleDefinitions().getByName(groupPairs[1])
+        );
+        oList.get_roleAssignments().add(groupPairs[0], roleDefBindingColl);
+      });
+
+      this.users.forEach(function (userPairs) {
+        var roleDefBindingColl =
+          SP.RoleDefinitionBindingCollection.newObject(currCtx);
+        roleDefBindingColl.add(
+          web.get_roleDefinitions().getByName(userPairs[1])
+        );
+        oList.get_roleAssignments().add(userPairs[0], roleDefBindingColl);
+      });
+
+      var data = { oList: oList, callback: callback };
+
+      function onSetItemPermissionsSuccess() {
+        console.log("Successfully set permissions");
+        callback(oList);
+      }
+
+      function onSetItemPermissionsFailure(sender, args) {
+        console.error(
+          "Failed to update permissions on List: " +
+            this.oList.get_title() +
+            args.get_message() +
+            "\n",
+          args.get_stackTrace()
+        );
+      }
+
+      currCtx.load(oList);
+      currCtx.executeQueryAsync(
+        Function.createDelegate(data, onSetItemPermissionsSuccess),
+        Function.createDelegate(data, onSetItemPermissionsFailure)
+      );
+    }
+
+    function onFindItemFailed(sender, args) {
+      console.error(
+        "Failed to find List: " + this.oList.get_title + args.get_message(),
+        args.get_stackTrace()
+      );
+    }
+    var data = {
+      oList: oList,
+      users: users,
+      resolvedGroups: resolvedGroups,
+      callback: callback,
+    };
+    //let data = { title: oListItem.get_item("Title"), oListItem: oListItem };
+
+    currCtx.load(oList);
+    users.map(function (user) {
+      currCtx.load(user[0]);
+    });
+    currCtx.executeQueryAsync(
+      Function.createDelegate(data, onFindItemSucceeded),
+      Function.createDelegate(data, onFindItemFailed)
+    );
+  }
 
   self.generateEmptyItem = function () {
     /* Create an empty object that matches the viewfields */
@@ -857,7 +966,7 @@ sal.NewSPList = function (listDef) {
     /*
         Obtain all list items that match the querystring passed by caml.
         */
-    //self.updateConfig();
+
     //console.log("context loaded", self.config);
     var camlQuery = new SP.CamlQuery.createAllItemsQuery();
 
@@ -947,7 +1056,7 @@ sal.NewSPList = function (listDef) {
     ******************************************************************/
   function updateListItem(id, valuePairs, callback) {
     //[["ColName", "Value"], ["Col2", "Value2"]]
-    //self.updateConfig();
+
     var currCtx = new SP.ClientContext.get_current();
     var web = currCtx.get_web();
     var oList = web.get_lists().getByTitle(self.config.def.title);
@@ -992,7 +1101,7 @@ sal.NewSPList = function (listDef) {
   function deleteListItem(id, callback) {
     //[["ColName", "Value"], ["Col2", "Value2"]]
     //self.callbackDeleteListItem = callback;
-    //self.updateConfig();
+
     var currCtx = new SP.ClientContext.get_current();
     var web = currCtx.get_web();
     var oList = web.get_lists().getByTitle(self.config.def.title);
@@ -1035,8 +1144,8 @@ sal.NewSPList = function (listDef) {
   /**
    * Documentation - setItemPermissions
    * @param {number} id Item identifier, obtain using getListItems above
-   * @param {Array} valuePairs A 2d array containing groups and permission levels
-   *    e.g. [["Owners", "Full Control"], ["Members", "Contribute"]]
+   * @param {Array} valuePairs A 2d array containing groups/users and permission levels
+   *    e.g. [["Owners", "Full Control"], ["backlundpf", "Contribute"]]
    */
   function setItemPermissions(id, valuePairs, callback, reset) {
     reset = reset === undefined ? false : reset;
@@ -1687,6 +1796,8 @@ sal.NewSPList = function (listDef) {
 
   var publicMembers = {
     config: this.config,
+    setListPermissions: setListPermissions,
+    setListPermissionsAsync: setListPermissionsAsync,
     createListItem: createListItem,
     getListItems: getListItems,
     getListItemsAsync: getListItemsAsync,
