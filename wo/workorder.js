@@ -860,11 +860,21 @@ function fetchConfigListData(callback) {
       vm.incLoadedListItems();
     }
   );
+
   /* We won't filter our inactive service types just in case there are some open */
   vm.listRefConfigServiceType().getListItems(
-    "<Query></Query>",
+    "<Query><OrderBy><FieldRef Name='Title' Ascending='FALSE'/></OrderBy></Query>",
     function (items) {
-      vm.configServiceTypes(items);
+      const sorted = items.sort((a, b) => {
+        if (a.Title > b.Title) {
+          return 1;
+        }
+        if (a.Title < b.Title) {
+          return -1;
+        }
+        return 0;
+      });
+      vm.configServiceTypes(sorted);
       vm.incLoadedListItems();
     }
   );

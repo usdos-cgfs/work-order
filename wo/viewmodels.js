@@ -1340,20 +1340,9 @@ function koviewmodel() {
     uniqueSet.forEach(function (item) {
       unique.push(item);
     });
-    return self
-      .configServiceTypes()
-      .filter(function (stype) {
-        return unique.indexOf(stype.Title) >= 0;
-      })
-      .sort((a, b) => {
-        if (a.Title > b.Title) {
-          return 1;
-        }
-        if (b.Title < a.Title) {
-          return -1;
-        }
-        return 0;
-      });
+    return self.configServiceTypes().filter(function (stype) {
+      return unique.indexOf(stype.Title) >= 0;
+    });
   });
 
   self.lookupTables = ko.observableArray();
