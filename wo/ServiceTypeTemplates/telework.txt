@@ -412,14 +412,14 @@
             <!-- ko foreach: teleworkDays2Map -->
             <div class="option">
               <label
-                data-bind="text: $data.day, attr: {'for':  'telework-' + $data.day + '1'}"
+                data-bind="text: $data.day, attr: {'for':  'telework-' + $data.day + '2'}"
               ></label
               ><br />
               <input
                 type="checkbox"
                 data-bind="checked: $data.isSet, 
                   disable: $root.currentView() == 'view',
-                  attr: {'id':  'telework-' + $data.day + '1'}"
+                  attr: {'id':  'telework-' + $data.day + '2'}"
               />
             </div>
             <!-- /ko -->
