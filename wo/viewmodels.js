@@ -1270,6 +1270,7 @@ function koviewmodel() {
    * allOpenOrders Table Handlers
    ************************************************************/
   self.showWorkOrder = function (request) {
+    // TODO: Preven default click of element.
     console.log("clicked", request);
     viewWorkOrderItem(request.Title);
   };
@@ -1828,6 +1829,15 @@ function koviewmodel() {
     var id = self.requestID() ? self.requestID() : "";
     return link + id;
   });
+
+  self.requestLinkGenerator = function (request) {
+    var link =
+      _spPageContextInfo.webAbsoluteUrl +
+      "/Pages/app.aspx?tab=order-detail&reqid=";
+
+    var id = request.Title ? request.Title : "";
+    return link + id;
+  };
 
   self.requestLinkAdmin = ko.pureComputed(function () {
     var link =

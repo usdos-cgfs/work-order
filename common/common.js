@@ -67,10 +67,19 @@ Workorder.Common.NewUtilities = function () {
     pickerControl.AddUnresolvedUserFromEditor(true);
   }
 
+  function createElementFromHTML(htmlString) {
+    var div = document.createElement("div");
+    div.innerHTML = htmlString.trim();
+
+    // Change this to div.childNodes to support multiple top-level nodes.
+    return div.firstChild;
+  }
+
   publicMembers = {
     queries: queries,
     peoplePickerIsEmpty: peoplePickerIsEmpty,
     setPeoplePicker: setPeoplePicker,
+    createElementFromHTML: createElementFromHTML,
   };
 
   return publicMembers;
@@ -119,58 +128,114 @@ var linkViewModel = ["Title", "LinkType", "LinkUrl"];
 function makeDataTable(id) {
   if ($(id).length) {
     $(id).DataTable({
+      dom:
+        "<'ui stackable grid'" +
+        "<'row'" +
+        "<'eight wide column'B>" +
+        "<'right aligned eight wide column'f>" +
+        ">" +
+        "<'row dt-table'" +
+        "<'sixteen wide column'tr>" +
+        ">" +
+        "<'row'" +
+        "<'four wide column'i>" +
+        "<'four wide column'l>" +
+        "<'right aligned eight wide column'p>" +
+        ">" +
+        ">",
+      buttons: ["copy", "csv", "excel", "pdf", "print"],
       order: [[0, "desc"]],
       iDisplayLength: 25,
       deferRender: true,
       bDestroy: true,
       columnDefs: [{ width: "10%", targets: 0 }],
       initComplete: function () {
-        //this.api().columns([1, 3, 4]).every( function () {
-        // this.api()
-        //   .columns()
-        //   .every(function () {
-        //     var tempCol = this;
-        //     $("").appendTo($(tempCol.header()));
-        //   });
         this.api()
           .columns()
           .every(function () {
-            //this.api().columns([0, 2, 5]).every( function () {
-            // colum filtering from https://datatables.net/examples/api/multi_filter_select.html
             var column = this;
-            if (
-              ["Assignees", "Description"].indexOf($(column.header()).html()) <
-              0
-            ) {
-              var className = "";
-              if ($(column.header()).html()) {
-                className =
-                  "dataTableSelect" +
-                  $(column.header()).html().replace(/\s+/g, "");
-              }
-              //var columnValues = [];
-              //var columnTitle = $(column.header()).html();
-              // $(column.header()).append("<br>");
-              var select = $(
-                '<select class="' +
-                  className +
-                  '"><option value=""></option></select>'
-              )
-                .appendTo($(column.footer()).empty())
-                //.appendTo($(column.header()))
-                .on("change", function () {
-                  var val = $.fn.dataTable.util.escapeRegex($(this).val());
-
-                  column.search(val ? "^" + val + "$" : "", true, false).draw();
+            var tbl = $(column.header()).closest("table");
+            // var filterCell = tbl.find("thead tr:eq(1) th").eq(column.index());
+            var filterCell = $(column.footer());
+            // var select = $(
+            //   '<select class="form-select"><option value=""></option></select>'
+            // );
+            var select = $(
+              '<select class="ui long compact dropdown search selection multiple"><option value=""></option></select>'
+            );
+            switch (filterCell.attr("data-filter")) {
+              case "select-filter":
+                select.attr("multiple", "true");
+              case "single-select-filter":
+                select.appendTo(filterCell.empty()).on("change", function () {
+                  var vals = $(this).val();
+                  if (!vals) {
+                    vals = [];
+                  } else {
+                    vals = vals.map(function (value) {
+                      return value
+                        ? "^" + $.fn.dataTable.util.escapeRegex(value) + "$"
+                        : null;
+                    });
+                  }
+                  var val = vals.join("|");
+                  column.search(val, true, false).draw();
                 });
 
-              column
-                .data()
-                .unique()
-                .sort()
-                .each(function (d, j) {
-                  select.append('<option value="' + d + '">' + d + "</option>");
-                });
+                column
+                  .data()
+                  .unique()
+                  .sort()
+                  .each(function (optionText, j) {
+                    // first try to parse html
+                    try {
+                      let parsedElement = $(optionText);
+
+                      if (parsedElement.is("a")) {
+                        optionText = parsedElement.text();
+                      }
+                    } catch (e) {
+                      //Nothing to do here, it's not valid html
+                    }
+                    select.append(
+                      '<option value="' +
+                        optionText +
+                        '">' +
+                        optionText +
+                        "</option>"
+                    );
+                  });
+                break;
+              case "search-filter":
+                $(
+                  '<div class="ui fluid input">' +
+                    '<input type="text" placeholder="Search..." style="width: 100%"/>' +
+                    "</div>"
+                )
+                  .appendTo(filterCell.empty())
+                  .on("keyup change clear", function () {
+                    if (column.search() !== this.value) {
+                      column.search(this.value).draw();
+                    }
+                  });
+                break;
+              case "bool-filter":
+                // Does this row contain data?
+                var checkbox = $('<input type="checkbox"></input>')
+                  .appendTo(filterCell.empty())
+                  .change(function () {
+                    if (this.checked) {
+                      column.search("true").draw();
+                    } else {
+                      column.search("").draw();
+                    }
+                  });
+                break;
+              default:
+            }
+            if (filterCell.attr("column-width")) {
+              // Clear width
+              tbl.find("thead tr:eq(0) th").eq(column.index()).width("");
             }
           });
       },

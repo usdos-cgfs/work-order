@@ -40,8 +40,13 @@ input[id$="uploadLocation"] {
 }
 
 .wo-id {
-  color: blue;
+  color: #4183c4;
   cursor: pointer;
+}
+
+.wo-id a,
+a:visited {
+  color: #4183c4;
 }
 
 #new-wo-table td {
@@ -55,6 +60,28 @@ input[id$="uploadLocation"] {
 
 .data-table {
   width: 100% !important;
+}
+
+table.records {
+  width: 100% !important;
+}
+
+table.records .ui.compact.selection.search.dropdown {
+  min-width: 70%;
+}
+
+table.records th .ui.selection.dropdown .menu {
+  min-width: 100%;
+  max-width: 100%;
+}
+
+table.records th .ui.selection.dropdown .menu > .item {
+  padding: 0.5rem 1.14285714rem !important;
+  min-height: 1.15rem;
+}
+
+table.records th .ui.selection.dropdown .menu > .item:nth-child(odd) {
+  background-color: rgb(249, 249, 249);
 }
 
 .trix-button-group--file-tools {
