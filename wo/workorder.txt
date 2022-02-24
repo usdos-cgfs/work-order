@@ -117,7 +117,7 @@
               </tbody>
               <tfoot>
                 <tr>
-                  <th data-filter="select-filter"></th>
+                  <th clear-width data-filter="select-filter"></th>
                   <th data-filter="select-filter"></th>
                   <th data-filter="select-filter"></th>
                   <th data-filter="select-filter"></th>

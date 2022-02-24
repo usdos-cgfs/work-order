@@ -138,9 +138,9 @@ function makeDataTable(id) {
         "<'sixteen wide column'tr>" +
         ">" +
         "<'row'" +
-        "<'four wide column'i>" +
-        "<'four wide column'l>" +
-        "<'right aligned eight wide column'p>" +
+        "<'six wide column'i>" +
+        "<'center aligned four wide column'l>" +
+        "<'right aligned six wide column'p>" +
         ">" +
         ">",
       buttons: ["copy", "csv", "excel", "pdf", "print"],
@@ -148,18 +148,17 @@ function makeDataTable(id) {
       iDisplayLength: 25,
       deferRender: true,
       bDestroy: true,
-      columnDefs: [{ width: "10%", targets: 0 }],
+      // columnDefs: [{ width: "10%", targets: 0 }],
       initComplete: function () {
         this.api()
           .columns()
           .every(function () {
             var column = this;
             var tbl = $(column.header()).closest("table");
+            // Set the row we want our filter to show up in
             // var filterCell = tbl.find("thead tr:eq(1) th").eq(column.index());
             var filterCell = $(column.footer());
-            // var select = $(
-            //   '<select class="form-select"><option value=""></option></select>'
-            // );
+
             var select = $(
               '<select class="ui long compact dropdown search selection multiple"><option value=""></option></select>'
             );
@@ -181,7 +180,7 @@ function makeDataTable(id) {
                   var val = vals.join("|");
                   column.search(val, true, false).draw();
                 });
-
+                // Populate our select option values based on column cells.
                 column
                   .data()
                   .unique()
@@ -214,8 +213,10 @@ function makeDataTable(id) {
                 )
                   .appendTo(filterCell.empty())
                   .on("keyup change clear", function () {
-                    if (column.search() !== this.value) {
-                      column.search(this.value).draw();
+                    const inputSearchText =
+                      this.getElementsByTagName("input")[0].value;
+                    if (column.search() !== inputSearchText) {
+                      column.search(inputSearchText).draw();
                     }
                   });
                 break;
@@ -233,8 +234,8 @@ function makeDataTable(id) {
                 break;
               default:
             }
-            if (filterCell.attr("column-width")) {
-              // Clear width
+            if (filterCell.attr("clear-width")) {
+              // Clear width to contents
               tbl.find("thead tr:eq(0) th").eq(column.index()).width("");
             }
           });
