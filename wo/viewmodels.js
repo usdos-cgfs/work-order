@@ -1368,18 +1368,7 @@ function koviewmodel() {
       newServiceTable.stype = stype;
 
       newServiceTable.cols = new Array();
-      newServiceTable.requests = new Array();
-
-      if (stype.listDef) {
-        var lookupKeys = Object.keys(stype.listDef.viewFields).filter(function (
-          col
-        ) {
-          return col != "ID" && col != "Title";
-        });
-
-        newServiceTable.cols = lookupKeys;
-        newServiceTable.viewFields = stype.listDef.viewFields;
-      }
+      newServiceTable.requests = [];
 
       var camlq =
         '<View Scope="RecursiveAll"><Query><Where><Eq>' +
@@ -1391,39 +1380,43 @@ function koviewmodel() {
 
       self.listRefWO().getListItems(camlq, function (lookupOrdersTemp) {
         if (stype.listDef) {
-          // If this request type has related orders, let's query those
-          var count = lookupOrdersTemp.length - 1;
-          var i = 0;
-          lookupOrdersTemp.forEach(function (order) {
-            var camlq =
-              '<View Scope="RecursiveAll"><Query><Where><And>' +
-              '<Eq><FieldRef Name="FSObjType"/><Value Type="int">0</Value></Eq>' +
-              "<Eq>" +
-              '<FieldRef Name="Title"/>' +
-              '<Value Type="Text">' +
-              order.Title +
-              "</Value>" +
-              "</Eq></And></Where></Query></View>";
+          // If this request type has related orders
+          // 1. Add the additional columns to the table
+          var lookupKeys = Object.keys(stype.listDef.viewFields).filter(
+            function (col) {
+              return col != "ID" && col != "Title";
+            }
+          );
 
-            stype.listRef.getListItems(camlq, function (val) {
-              order.ServiceItem = val[0];
-              //self.lookupOrders.push(order);
-              newServiceTable.requests.push(order);
+          newServiceTable.cols = lookupKeys;
+          newServiceTable.viewFields = stype.listDef.viewFields;
 
-              if (i == count) {
-                self.lookupTables.push(newServiceTable);
-                makeDataTable("#" + newServiceTable.id);
-              } else {
-                console.log(i + "/" + count);
-                i++;
-              }
+          // 2. Get the related service type items.
+          var camlq =
+            '<View Scope="RecursiveAll"><Query><Where>' +
+            '<Eq><FieldRef Name="FSObjType"/><Value Type="int">0</Value></Eq>' +
+            "</Where></Query></View>";
+
+          stype.listRef.getListItems(camlq, function (serviceTypeItems) {
+            lookupOrdersTemp.forEach(function (order) {
+              var serviceItem = serviceTypeItems.find(function (
+                serviceTypeItem
+              ) {
+                return serviceTypeItem.Title == order.Title;
+              });
+              order.ServiceItem = serviceItem;
             });
+            // Need to do this twice since we're making another async call here
+            newServiceTable.requests = lookupOrdersTemp;
+            self.lookupTables.push(newServiceTable);
+            makeDataTable("#" + newServiceTable.id);
+            $(".dropdown").dropdown();
           });
         } else {
           newServiceTable.requests = lookupOrdersTemp;
-
           self.lookupTables.push(newServiceTable);
           makeDataTable("#" + newServiceTable.id);
+          $(".dropdown").dropdown();
         }
       });
     }
