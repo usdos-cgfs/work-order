@@ -131,7 +131,7 @@ function makeDataTable(id) {
       dom:
         "<'ui stackable grid'" +
         "<'row'" +
-        "<'eight wide column'B>" +
+        "<'eight wide column'l>" +
         "<'right aligned eight wide column'f>" +
         ">" +
         "<'row dt-table'" +
@@ -139,7 +139,7 @@ function makeDataTable(id) {
         ">" +
         "<'row'" +
         "<'six wide column'i>" +
-        "<'center aligned four wide column'l>" +
+        "<'center aligned four wide column'B>" +
         "<'right aligned six wide column'p>" +
         ">" +
         ">",
