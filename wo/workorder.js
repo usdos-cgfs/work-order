@@ -684,6 +684,11 @@ function getValuePairsHuman(listDef) {
             fieldValue = observable().title;
           }
           break;
+        case "Document":
+          if (observable.doc()) {
+            fieldValue = observable.getValueHuman();
+          }
+          break;
         default:
           fieldValue = observable();
       }
@@ -732,6 +737,11 @@ function getValuePairs(listDef) {
             fieldValue = observable().ID;
           }
           break;
+        case "Document":
+          if (observable.doc()) {
+            fieldValue = observable.getValue();
+          }
+          break;
         default:
           fieldValue = observable();
       }
@@ -771,6 +781,7 @@ async function setValuePairs(listDef, jObject) {
       "Setting " + obj.koMap + " to " + jObject[field] + " from " + field
     );
     var observable = vm[obj.koMap];
+    // TODO: This is a violation of the Open/Closed principle, need to refactor
     switch (obj.type) {
       case "Person":
         await observable.setUser(jObject[field]);
@@ -781,6 +792,9 @@ async function setValuePairs(listDef, jObject) {
         } else {
           observable(jObject[field]);
         }
+        break;
+      case "Document":
+        observable.setValue(jObject[field]);
         break;
       default:
         observable(jObject[field]);
@@ -801,6 +815,12 @@ function clearValuePairs(listDef) {
             observable.date(new Date());
             break;
           }
+          break;
+        case "Document":
+          if (observable.doc()) {
+            observable.clearValue([]);
+          }
+          break;
         default:
           observable("");
       }

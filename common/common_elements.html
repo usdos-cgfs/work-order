@@ -15,6 +15,76 @@
   <div></div>
 </script>
 
+<script type="text/html" id="template_dates">
+  <div>
+    <table class="ui very basic table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Date</th>
+          <th>Label</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- ko foreach: $data.doc -->
+        <tr>
+          <td data-bind="text: $index"></td>
+          <td data-bind="text: date.toLocaleString()"></td>
+          <td data-bind="text: label"></td>
+          <td>
+            <!-- ko if: $root.currentView() != 'view' -->
+            <span
+              class="fas fa-trash pointer"
+              data-bind="click: () => $parent.deleteEntry($data)"
+            ></span>
+            <!-- /ko -->
+          </td>
+        </tr>
+        <!-- /ko -->
+        <!-- ko if: $root.currentView() != 'view' -->
+        <tr>
+          <td></td>
+          <td>
+            <div class="field">
+              <div class="ui calendar">
+                <div class="ui fill input left icon">
+                  <i class="calendar icon"></i>
+                  <input
+                    type="text"
+                    placeholder="Start"
+                    data-bind="dateField: $data.newDate.date"
+                  />
+                </div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="ui input fill field">
+              <input
+                class="ui input fill"
+                type="text"
+                placeholder="Label (optional)..."
+                data-bind="value: $data.newDate.label"
+              />
+            </div>
+          </td>
+          <td>
+            <button
+              type="button"
+              class="ui green button"
+              data-bind="click: $data.newDate.save"
+            >
+              Add <i class="fas fa-plus"></i>
+            </button>
+          </td>
+        </tr>
+        <!-- /ko -->
+      </tbody>
+    </table>
+  </div>
+</script>
+
 <script type="text/html" id="template_dateranges">
   <div>
     <table class="ui very basic table">

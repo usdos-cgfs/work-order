@@ -28,6 +28,7 @@ Workorder.Common = Workorder.Common || {};
 
 function InitCommon() {
   Workorder.Common.Utilities = new Workorder.Common.NewUtilities();
+  Workorder.Common.Components = new Workorder.Common.NewComponents();
 }
 
 Workorder.Common.NewUtilities = function () {
@@ -80,6 +81,118 @@ Workorder.Common.NewUtilities = function () {
     peoplePickerIsEmpty: peoplePickerIsEmpty,
     setPeoplePicker: setPeoplePicker,
     createElementFromHTML: createElementFromHTML,
+  };
+
+  return publicMembers;
+};
+
+Workorder.Common.NewComponents = function () {
+  function DocumentStore() {
+    var doc = ko.observableArray([]);
+
+    function setValue(initialValue) {
+      if (initialValue) {
+        doc(JSON.parse(initialValue));
+        return;
+      }
+      doc([]);
+    }
+
+    function getValue() {
+      return JSON.stringify(doc());
+    }
+
+    function clearValue() {
+      doc([]);
+    }
+
+    function getValueHuman() {
+      // Overload this in your component object, see DateTable
+      if (!this.getValueHumanComponent) {
+        return getValue();
+      }
+      return this.getValueHumanComponent();
+    }
+
+    // function commitChanges() {
+    //   var currCtx = new SP.ClientContext.get_current();
+    //   var web = currCtx.get_web();
+    //   //Now push to the request item:
+    //   var requestList = web.get_lists().getByTitle(listTitle);
+    //   oListItem = requestList.getItemById(itemId);
+    //   oListItem.set_item(columnName, JSON.stringify(record()));
+    //   oListItem.update();
+
+    //   currCtx.load(oListItem);
+
+    //   currCtx.executeQueryAsync(
+    //     function onSuccess() {
+    //       // console.log("Added User");
+    //     },
+    //     function onFailure(args, sender) {
+    //       console.error("Failed to commit changes - " + columnName, args);
+    //     }
+    //   );
+    // }
+
+    var publicMembers = {
+      doc,
+      setValue,
+      getValue,
+      getValueHuman,
+      clearValue,
+      // commitChanges,
+    };
+    return publicMembers;
+  }
+
+  function DateTable() {
+    let self = this;
+    let newDate = new DateComponent();
+    let documentStore = new DocumentStore();
+
+    var getValueHumanComponent = function () {
+      // TODO: refactor to human readable table
+      return this.getValue();
+    };
+
+    var deleteEntry = function (entryToDelete) {
+      let tempArr = this.doc().filter(function (dateEntry) {
+        return dateEntry.identifier != entryToDelete.identifier;
+      });
+
+      this.doc(tempArr);
+    };
+
+    var publicMembers = {
+      ...documentStore,
+      newDate,
+      deleteEntry,
+    };
+    return publicMembers;
+  }
+
+  function DateComponent() {
+    var date = new DateField();
+    var label = ko.observable();
+    var save = function () {
+      this.doc.push({
+        identifier: Date.now(),
+        date: date.date(),
+        label: label(),
+      });
+    };
+    var publicMembers = {
+      date,
+      label,
+      save,
+    };
+    return publicMembers;
+  }
+
+  var publicMembers = {
+    DateTable,
+    DocumentStore: DocumentStore,
   };
 
   return publicMembers;

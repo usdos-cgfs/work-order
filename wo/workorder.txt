@@ -472,7 +472,7 @@
         <!-- ko if: vm.userActionOfficeMembership().length > 0 -->
         <span>
           <a
-            title="View this link on the admin dash"
+            title="View this request on the admin dash"
             target="blank"
             class="fas fa-user-shield"
             data-bind="attr: { href: requestLinkAdmin }, "

@@ -51,6 +51,11 @@
         koMap: "overtimeHours",
         required: true,
       },
+      DatesRaw: {
+        type: "Document",
+        koMap: "overtimeDateStore",
+        required: false,
+      },
     },
   });
 
@@ -142,13 +147,15 @@
   vm.overtimeDates = new DateRangeTable("overtimedates", { type: "date" });
   vm.overtimeHours = ko.observable();
 
+  vm.overtimeDateStore = Workorder.Common.Components.DateTable();
+
   var overtime = vm.configServiceTypes().find(function (stype) {
     return stype.UID == "overtime";
   });
 
   overtime.validate = function () {
     // Service type specific validation
-    var hasDates = vm.overtimeDates.dateRanges().length;
+    var hasDates = vm.overtimeDateStore.doc().length;
     if (!hasDates) {
       alert(
         "This request has not been saved. \n" +
@@ -306,13 +313,21 @@
         />
       </div>
     </div>
-    <div class="">
+    <div>
+      <div
+        data-bind="template: {
+        name: 'template_dates',
+        data: overtimeDateStore
+      }"
+      ></div>
+    </div>
+    <!-- <div class="">
       <h3>Overtime Dates<span class="required">*</span>:</h3>
       <div
         data-bind="template: 
         {name: 'template_dateranges', 
         data: overtimeDates }"
       ></div>
-    </div>
+    </div> -->
   </div>
 </script>
