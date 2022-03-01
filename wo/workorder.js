@@ -685,7 +685,7 @@ function getValuePairsHuman(listDef) {
           }
           break;
         case "Document":
-          if (observable.doc()) {
+          if (observable.getValueHuman) {
             fieldValue = observable.getValueHuman();
           }
           break;

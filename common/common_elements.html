@@ -30,7 +30,7 @@
         <!-- ko foreach: $data.doc -->
         <tr>
           <td data-bind="text: $index"></td>
-          <td data-bind="text: date.toLocaleString()"></td>
+          <td data-bind="text: new Date(date).toDateString()"></td>
           <td data-bind="text: label"></td>
           <td>
             <!-- ko if: $root.currentView() != 'view' -->

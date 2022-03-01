@@ -108,10 +108,10 @@ Workorder.Common.NewComponents = function () {
 
     function getValueHuman() {
       // Overload this in your component object, see DateTable
-      if (!this.getValueHumanComponent) {
+      if (!this.getValueHumanImplementation) {
         return getValue();
       }
-      return this.getValueHumanComponent();
+      return this.getValueHumanImplementation();
     }
 
     // function commitChanges() {
@@ -151,9 +151,16 @@ Workorder.Common.NewComponents = function () {
     let newDate = new DateComponent();
     let documentStore = new DocumentStore();
 
-    var getValueHumanComponent = function () {
-      // TODO: refactor to human readable table
-      return this.getValue();
+    var getValueHumanImplementation = function () {
+      let body =
+        "<table><thead><tr><th>Date</th><th>Label</th></tr></thead><tbody>";
+      this.doc().forEach((entry) => {
+        body += `<tr><td>${new Date(entry.date).toDateString()}</td><td>${
+          entry.label
+        }</td></tr>`;
+      });
+      body += "</tbody></table>";
+      return body;
     };
 
     var deleteEntry = function (entryToDelete) {
@@ -168,6 +175,7 @@ Workorder.Common.NewComponents = function () {
       ...documentStore,
       newDate,
       deleteEntry,
+      getValueHumanImplementation,
     };
     return publicMembers;
   }

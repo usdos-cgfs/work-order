@@ -55,6 +55,7 @@
         type: "Document",
         koMap: "overtimeDateStore",
         required: false,
+        displayName: "Dates",
       },
     },
   });
