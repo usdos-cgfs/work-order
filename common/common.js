@@ -87,6 +87,10 @@ Workorder.Common.NewUtilities = function () {
 };
 
 Workorder.Common.NewComponents = function () {
+  /**
+   * TODO: This needs to be reorganized, the
+   * @returns DocumentStore types for getting/setting column values.
+   */
   function DocumentStore() {
     var doc = ko.observableArray([]);
 
@@ -146,6 +150,10 @@ Workorder.Common.NewComponents = function () {
     return publicMembers;
   }
 
+  /**
+   * Builds a simple Date Table with DocumentStore type composition.
+   * @returns DateTableDocumentStore
+   */
   function DateTable() {
     let self = this;
     let newDate = new DateComponent();
@@ -153,11 +161,12 @@ Workorder.Common.NewComponents = function () {
 
     var getValueHumanImplementation = function () {
       let body =
-        "<table><thead><tr><th>Date</th><th>Label</th></tr></thead><tbody>";
+        "<table><thead><tr><th>Date</th><th>Hours</th><th>Label</th></tr></thead><tbody>";
       this.doc().forEach((entry) => {
-        body += `<tr><td>${new Date(entry.date).toDateString()}</td><td>${
-          entry.label
-        }</td></tr>`;
+        body +=
+          `<tr><td>${new Date(entry.date).toDateString()}</td>` +
+          `<td>${entry.hours}</td>` +
+          `<td>${entry.label}</td></tr>`;
       });
       body += "</tbody></table>";
       return body;
@@ -183,17 +192,31 @@ Workorder.Common.NewComponents = function () {
   function DateComponent() {
     var date = new DateField();
     var label = ko.observable();
+    var hours = ko.observable();
+    var isSaveable = function () {
+      if (!hours() || !date.date()) {
+        return false;
+      }
+      return true;
+    };
     var save = function () {
+      if (!isSaveable()) {
+        alert("Please provide Date and Hours.");
+        return;
+      }
       this.doc.push({
         identifier: Date.now(),
         date: date.date(),
-        label: label(),
+        hours: hours() ? hours() : "",
+        label: label() ? label() : "",
       });
     };
     var publicMembers = {
       date,
+      hours,
       label,
       save,
+      isSaveable,
     };
     return publicMembers;
   }

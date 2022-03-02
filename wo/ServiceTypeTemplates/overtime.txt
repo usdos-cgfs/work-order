@@ -145,7 +145,7 @@
   vm.overtimeContractorType = ko.observable();
   vm.overtimeContractorTypeOpts = ko.observableArray(["SCA", "Non-SCA"]);
 
-  vm.overtimeDates = new DateRangeTable("overtimedates", { type: "date" });
+  // vm.overtimeDates = new DateRangeTable("overtimedates", { type: "date" });
   vm.overtimeHours = ko.observable();
 
   vm.overtimeDateStore = Workorder.Common.Components.DateTable();
@@ -161,6 +161,30 @@
       alert(
         "This request has not been saved. \n" +
           "Please enter date ranges for your overtime request and click Add+"
+      );
+      vm.requestIsSaveable(false);
+      return;
+    }
+    var totalHours = 0;
+    vm.overtimeDateStore.doc().forEach(function (entry) {
+      if (!entry.hours) {
+        vm.requestIsSaveable(false);
+      } else {
+        totalHours += parseFloat(entry.hours);
+      }
+    });
+
+    if (!vm.requestIsSaveable()) {
+      alert(
+        "This request has not been saved. \n" +
+          "Please provide hours of overtime for each date."
+      );
+    }
+
+    if (totalHours != vm.overtimeHours()) {
+      alert(
+        "This request has not been saved. \n" +
+          "Hours assigned by date does not equal overtime hours provided"
       );
       vm.requestIsSaveable(false);
     }
