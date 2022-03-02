@@ -156,7 +156,7 @@
 
   overtime.validate = function () {
     // Service type specific validation
-    var hasDates = vm.overtimeDateStore.doc().length;
+    var hasDates = vm.overtimeDateStore.recordArr().length;
     if (!hasDates) {
       alert(
         "This request has not been saved. \n" +
@@ -166,7 +166,7 @@
       return;
     }
     var totalHours = 0;
-    vm.overtimeDateStore.doc().forEach(function (entry) {
+    vm.overtimeDateStore.recordArr().forEach(function (entry) {
       if (!entry.hours) {
         vm.requestIsSaveable(false);
       } else {

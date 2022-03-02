@@ -91,23 +91,23 @@ Workorder.Common.NewComponents = function () {
    * TODO: This needs to be reorganized, the
    * @returns DocumentStore types for getting/setting column values.
    */
-  function DocumentStore() {
-    var doc = ko.observableArray([]);
+  function DocumentStore({ recordArr }) {
+    // var doc = ko.observableArray([]);
 
     function setValue(initialValue) {
       if (initialValue) {
-        doc(JSON.parse(initialValue));
+        recordArr(JSON.parse(initialValue));
         return;
       }
-      doc([]);
+      recordArr([]);
     }
 
     function getValue() {
-      return JSON.stringify(doc());
+      return JSON.stringify(recordArr());
     }
 
     function clearValue() {
-      doc([]);
+      recordArr([]);
     }
 
     function getValueHuman() {
@@ -124,7 +124,7 @@ Workorder.Common.NewComponents = function () {
     //   //Now push to the request item:
     //   var requestList = web.get_lists().getByTitle(listTitle);
     //   oListItem = requestList.getItemById(itemId);
-    //   oListItem.set_item(columnName, JSON.stringify(record()));
+    //   oListItem.set_item(columnName, JSON.stringify(recordArr()));
     //   oListItem.update();
 
     //   currCtx.load(oListItem);
@@ -140,7 +140,6 @@ Workorder.Common.NewComponents = function () {
     // }
 
     var publicMembers = {
-      doc,
       setValue,
       getValue,
       getValueHuman,
@@ -156,13 +155,16 @@ Workorder.Common.NewComponents = function () {
    */
   function DateTable() {
     let self = this;
-    let newDate = new DateComponent();
-    let documentStore = new DocumentStore();
+    let state = {
+      recordArr: ko.observableArray(),
+    };
+    // let newDate = new DateComponent();
+    // let documentStore = new DocumentStore();
 
     var getValueHumanImplementation = function () {
       let body =
         "<table><thead><tr><th>Date</th><th>Hours</th><th>Label</th></tr></thead><tbody>";
-      this.doc().forEach((entry) => {
+      state.recordArr().forEach((entry) => {
         body +=
           `<tr><td>${new Date(entry.date).toDateString()}</td>` +
           `<td>${entry.hours}</td>` +
@@ -173,23 +175,24 @@ Workorder.Common.NewComponents = function () {
     };
 
     var deleteEntry = function (entryToDelete) {
-      let tempArr = this.doc().filter(function (dateEntry) {
+      let tempArr = state.recordArr().filter(function (dateEntry) {
         return dateEntry.identifier != entryToDelete.identifier;
       });
 
-      this.doc(tempArr);
+      state.recordArr(tempArr);
     };
 
     var publicMembers = {
-      ...documentStore,
-      newDate,
+      recordArr: state.recordArr,
+      ...DocumentStore(state),
+      newDate: DateComponent(state),
       deleteEntry,
       getValueHumanImplementation,
     };
     return publicMembers;
   }
 
-  function DateComponent() {
+  function DateComponent({ recordArr }) {
     var date = new DateField();
     var label = ko.observable();
     var hours = ko.observable();
@@ -204,7 +207,7 @@ Workorder.Common.NewComponents = function () {
         alert("Please provide Date and Hours.");
         return;
       }
-      this.doc.push({
+      recordArr.push({
         identifier: Date.now(),
         date: date.date(),
         hours: hours() ? hours() : "",

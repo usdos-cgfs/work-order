@@ -738,9 +738,7 @@ function getValuePairs(listDef) {
           }
           break;
         case "Document":
-          if (observable.doc()) {
-            fieldValue = observable.getValue();
-          }
+          fieldValue = observable.getValue();
           break;
         default:
           fieldValue = observable();
@@ -817,9 +815,7 @@ function clearValuePairs(listDef) {
           }
           break;
         case "Document":
-          if (observable.doc()) {
-            observable.clearValue([]);
-          }
+          observable.clearValue();
           break;
         default:
           observable("");
