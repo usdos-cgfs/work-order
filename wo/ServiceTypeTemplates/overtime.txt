@@ -160,33 +160,39 @@
     if (!hasDates) {
       alert(
         "This request has not been saved. \n" +
-          "Please enter date ranges for your overtime request and click Add+"
+          "Please enter date ranges for your overtime request and click Save + New"
       );
       vm.requestIsSaveable(false);
       return;
     }
     var totalHours = 0;
+    var missingHoursFlag = false;
     vm.overtimeDateStore.recordArr().forEach(function (entry) {
       if (!entry.hours) {
-        vm.requestIsSaveable(false);
+        missingHoursFlag = true;
       } else {
         totalHours += parseFloat(entry.hours);
       }
     });
 
-    if (!vm.requestIsSaveable()) {
+    if (missingHoursFlag) {
+      // We shouldn't get here
       alert(
         "This request has not been saved. \n" +
           "Please provide hours of overtime for each date."
       );
+      vm.requestIsSaveable(false);
     }
 
     if (totalHours != vm.overtimeHours()) {
-      alert(
-        "This request has not been saved. \n" +
-          "Hours assigned by date does not equal overtime hours provided"
-      );
-      vm.requestIsSaveable(false);
+      if (
+        !confirm(
+          "Hours assigned by date does not equal the Overtime Hours Total provided. \n" +
+            "Click Cancel to correct the dates, or Ok to save and continue."
+        )
+      ) {
+        vm.requestIsSaveable(false);
+      }
     }
   };
 </script>
@@ -329,7 +335,7 @@
         ></select>
       </div>
       <div class="field">
-        <label>Overtime Hours<span class="required">*</span>:</label>
+        <label>Overtime Hours Total<span class="required">*</span>:</label>
         <input
           class="editable-field"
           type="Number"

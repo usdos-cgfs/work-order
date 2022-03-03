@@ -17,13 +17,22 @@
 
 <script type="text/html" id="template_dates">
   <div>
+    <div class="ui info message" style="display: block;">
+      <div class="header">
+        Add Overtime Dates
+      </div>
+      <p>For each date the contractor will work overtime, please enter the date, the number of hours to be worked (e.g. 3.5)
+        and provide an optional note or label.
+      </p>
+      <p><span class="ui bold red text">Note:</span> You must click the green "Save + New" button to save each date!</p>
+    </div>
     <table class="ui very basic table">
       <thead>
         <tr>
-          <th>#</th>
+          <th></th>
           <th>Date</th>
-          <th>Hours</th>
-          <th>Label</th>
+          <th># of Hours</th>
+          <th>Note/Label</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -66,7 +75,7 @@
               <input
                 class="ui input fill"
                 type="number"
-                placeholder="Hours..."
+                placeholder="Hours (number)..."
                 data-bind="value: $data.newDate.hours"
               />
             </div>
@@ -76,7 +85,7 @@
               <input
                 class="ui input fill"
                 type="text"
-                placeholder="Label (optional)..."
+                placeholder="Note/Label (optional)..."
                 data-bind="value: $data.newDate.label"
               />
             </div>
@@ -87,7 +96,7 @@
               class="ui green button"
               data-bind="click: $data.newDate.save"
             >
-              Add <i class="fas fa-plus"></i>
+              Save + New</i>
             </button>
           </td>
         </tr>

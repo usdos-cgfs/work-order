@@ -465,7 +465,12 @@ function DateField(newOpts, newDate) {
           type: "date",
         }
       : newOpts;
-  newDate = newDate === undefined ? new Date() : newDate;
+  // Default new date to today
+  var d = new Date();
+  newDate =
+    newDate === undefined
+      ? new Date(d.getFullYear(), d.getMonth(), d.getDate())
+      : newDate;
 
   var self = this;
   this.opts = newOpts; // These are the options sent to the datepicker
