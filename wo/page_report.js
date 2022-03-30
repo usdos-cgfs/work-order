@@ -86,19 +86,22 @@ Workorder.Report.NewReportPage = function () {
       if (self.requestOrg()) {
         self.timerStart(new Date());
         console.log("Applying Filter");
+        var nonCancelledRequests = vm.allOrders().filter(function (request) {
+          return request.RequestStatus != "Cancelled";
+        });
         let filteredRequests = [];
         // Filter by Open or Closed
         if (self.view() == "Open") {
-          filteredRequests = vm.allOrders().filter(function (request) {
+          filteredRequests = nonCancelledRequests.filter(function (request) {
             return request.ClosedDate == null;
           });
         } else if (self.allDates()) {
           // Filter by Date
-          filteredRequests = vm.allOrders().filter(function (request) {
+          filteredRequests = nonCancelledRequests.filter(function (request) {
             return request.ClosedDate != null;
           });
         } else {
-          filteredRequests = vm.allOrders().filter(function (request) {
+          filteredRequests = nonCancelledRequests.filter(function (request) {
             let closeDate = new Date(request.ClosedDate);
             return self.startDate() <= closeDate && closeDate <= self.endDate();
           });
