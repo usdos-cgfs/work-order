@@ -82,29 +82,41 @@ Workorder.Report.NewReportPage = function () {
       });
     });
 
+    self.nonCancelledRequests = ko.pureComputed(function () {
+      return vm.allOrders().filter(function (request) {
+        return request.RequestStatus != "Cancelled";
+      });
+    });
+
     self.filteredRequests = ko.pureComputed(function () {
       if (self.requestOrg()) {
         self.timerStart(new Date());
         console.log("Applying Filter");
-        var nonCancelledRequests = vm.allOrders().filter(function (request) {
-          return request.RequestStatus != "Cancelled";
-        });
+
         let filteredRequests = [];
         // Filter by Open or Closed
         if (self.view() == "Open") {
-          filteredRequests = nonCancelledRequests.filter(function (request) {
-            return request.ClosedDate == null;
-          });
+          filteredRequests = self
+            .nonCancelledRequests()
+            .filter(function (request) {
+              return request.ClosedDate == null;
+            });
         } else if (self.allDates()) {
           // Filter by Date
-          filteredRequests = nonCancelledRequests.filter(function (request) {
-            return request.ClosedDate != null;
-          });
+          filteredRequests = self
+            .nonCancelledRequests()
+            .filter(function (request) {
+              return request.ClosedDate != null;
+            });
         } else {
-          filteredRequests = nonCancelledRequests.filter(function (request) {
-            let closeDate = new Date(request.ClosedDate);
-            return self.startDate() <= closeDate && closeDate <= self.endDate();
-          });
+          filteredRequests = self
+            .nonCancelledRequests()
+            .filter(function (request) {
+              let closeDate = new Date(request.ClosedDate);
+              return (
+                self.startDate() <= closeDate && closeDate <= self.endDate()
+              );
+            });
         }
 
         // Filter by config Service Type assignments

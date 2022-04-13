@@ -781,7 +781,7 @@
                     />
                   </div>
                   <div class="field" data-bind="visible: requestClosedDate">
-                    <label> Closed Date Date: </label>
+                    <label>Closed Date: </label>
                     <input
                       class="non-editable-field"
                       type="text"
