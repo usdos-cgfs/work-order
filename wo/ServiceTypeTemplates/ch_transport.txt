@@ -3,13 +3,12 @@
    *    List Def:
    ************************************************************/
   vm.listDefs.push({
-    uid: "ch_invoice_approval",
-    name: "st_ch_invoice_approval",
-    title: "st_ch_invoice_approval",
+    uid: "ch_transport",
+    name: "st_ch_transport",
+    title: "st_ch_transport",
     viewFields: {
       ID: { type: "Text", koMap: "empty", required: false },
       Title: { type: "Text", koMap: "requestID", required: false },
-      Vendor: { type: "Text", koMap: "invoice_approvalVendor", required: true },
       InvoiceNum: {
         type: "Text",
         koMap: "transport_invoiceNum",
