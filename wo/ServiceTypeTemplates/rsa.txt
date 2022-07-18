@@ -50,7 +50,7 @@
         <div
           id="peoplersaUserName"
           class="editable-field"
-          data-bind="people: rsaUserName.user, 
+          data-bind="people: rsaUserName, 
             visible: currentView() != 'view'"
         ></div>
       </div>
@@ -76,7 +76,7 @@
         <div
           id="peoplersaSupervisor"
           class="editable-field"
-          data-bind="people: rsaSupervisor.user, 
+          data-bind="people: rsaSupervisor, 
             visible: currentView() != 'view'"
         ></div>
       </div>
