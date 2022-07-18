@@ -169,11 +169,11 @@ Workorder.NewNotifications = function () {
       to.push(vm.assignAssignee().lookupUser());
     } else if (vm.assignActionOffice() && vm.assignActionOffice().UserAddress) {
       // if tha action office has a preferred email, use it.
-      if (vm.assignActionOffice().PreferredEmail) {
-        to.push(vm.assignActionOffice().PreferredEmail);
-      } else {
-        to.push(vm.assignActionOffice().UserAddress);
-      }
+      to.push(
+        vm.assignActionOffice().PreferredEmail
+          ? vm.assignActionOffice().PreferredEmail
+          : vm.assignActionOffice().UserAddress
+      );
     }
 
     var toString = [];

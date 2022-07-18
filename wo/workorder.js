@@ -986,9 +986,9 @@ function newAssignmentForm(role) {
 }
 
 function createAssignment(role, notify) {
-  role =
+  var role =
     role === undefined ? assignmentListDef.viewFields.Role.opts.Resolver : role;
-  notify = notify === undefined ? false : notify;
+  var notify = notify === undefined ? false : notify;
   // Create a new assignment based off our set observables
   if (vm.assignActionOffice() || vm.assignAssignee()) {
     var vp = [
@@ -1010,12 +1010,12 @@ function createAssignment(role, notify) {
     }
 
     // Check if this is a type of Assignment that needs to be completed
+    // E.g. Approver, Actiontaker
     var roleOpts = assignmentListDef.viewFields.Role.opts;
-    if (role == roleOpts.Approver.Name || role == roleOpts.Resolver.Name) {
-      vp.push(["IsActive", true]);
-    } else {
-      vp.push(["IsActive", true]);
-    }
+    vp.push([
+      "IsActive",
+      role == roleOpts.Approver.Name || role == roleOpts.Resolver.Name,
+    ]);
 
     vm.listRefAssignment().createListItem(
       vp,
@@ -1434,54 +1434,45 @@ function pipelineForward() {
 
   vm.busy.addTask(appBusyStates.pipeline);
 
-  // dialog.pipeline = SP.UI.ModalDialog.showWaitScreenWithNoClose(
-  //   "Progressing to Next Stage",
-  //   "Please wait..."
-  // );
-
   var valuePairs = new Array();
 
   /* Increment the current request stage num */
   var t = parseInt(vm.requestStageNum()) + 1;
   if (t > vm.selectedPipeline().length) {
-    // End of process. Close work order.
+    // End of pipeline. Close work order.
     vm.busy.finishTask(appBusyStates.pipeline);
     closeWorkOrder();
-  } else {
-    vm.requestStageNum(t);
-    if (
-      vm.selectedServiceType().pipelineLogic &&
-      vm.selectedServiceType().pipelineLogic.skipStage &&
-      vm.selectedServiceType().pipelineLogic.skipStage(t)
-    ) {
-      vm.busy.finishTask(appBusyStates.pipeline);
-      pipelineForward();
-      return;
-    }
-    valuePairs.push(["RequestStage", vm.requestStageNum()]);
-
-    vm.listRefWO().updateListItem(
-      vm.requestHeader().ID,
-      valuePairs,
-      function () {
-        console.log("pipeline moved to next stage.");
-        if (vm.requestIsActive() && vm.requestStage()) {
-          pipelineAssignments();
-          /* let's create a new Action every time the item progresses */
-          createAction(
-            vm.requestStage().Title,
-            sal.globalConfig.currentUser.get_title() +
-              " has moved the request to stage " +
-              vm.requestStage().Step +
-              ": " +
-              vm.requestStage().Title
-          );
-        }
-        vm.busy.finishTask(appBusyStates.pipeline);
-        // dialog.close(dialog.pipeline);
-      }
-    );
+    return;
   }
+  vm.requestStageNum(t);
+  if (
+    vm.selectedServiceType().pipelineLogic &&
+    vm.selectedServiceType().pipelineLogic.skipStage &&
+    vm.selectedServiceType().pipelineLogic.skipStage(t)
+  ) {
+    vm.busy.finishTask(appBusyStates.pipeline);
+    pipelineForward();
+    return;
+  }
+  valuePairs.push(["RequestStage", vm.requestStageNum()]);
+
+  vm.listRefWO().updateListItem(vm.requestHeader().ID, valuePairs, function () {
+    console.log("pipeline moved to next stage.");
+    if (vm.requestIsActive() && vm.requestStage()) {
+      /* let's create a new Action every time the item progresses */
+      createAction(
+        vm.requestStage().Title,
+        sal.globalConfig.currentUser.get_title() +
+          " has moved the request to stage " +
+          vm.requestStage().Step +
+          ": " +
+          vm.requestStage().Title
+      );
+      pipelineAssignments();
+    }
+    vm.busy.finishTask(appBusyStates.pipeline);
+    // dialog.close(dialog.pipeline);
+  });
 }
 
 function pipelineAssignments() {
@@ -1521,8 +1512,10 @@ function pipelineAssignments() {
     case "Notification":
       Workorder.Notifications.recordStatusNotification();
       // pipelineNotifications();
-      pipelineForward();
       createAction("Notification");
+      // clear the userAssignment before pushing forward.
+      vm.assignAssignee(null);
+      pipelineForward();
       break;
     case "Pending Resolution":
     case "Pending Assignment":
