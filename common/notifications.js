@@ -333,28 +333,7 @@ Workorder.NewNotifications = function () {
   }
 
   function pipelineStageNotification() {
-    var to = [];
-    var toString = [];
-    if (!vm.requestStageOffice()) {
-    } else if (vm.requestStageOffice().PreferredEmail) {
-      toString.push(vm.requestStageOffice().PreferredEmail);
-    } else if (vm.requestStageOffice().UserAddress) {
-      to.push(vm.requestStageOffice().UserAddress);
-    }
-
-    if (vm.requestStage().WildCardAssignee) {
-      var personName = vm.requestStage().WildCardAssignee;
-      // This should be a person field
-      try {
-        var personObservable = vm[personName];
-        to.push(personObservable.lookupUser());
-      } catch (err) {
-        console.error(
-          "Something went wrong fetching " + personName + " from viewmodel: ",
-          err
-        );
-      }
-    }
+    var to, toString = getCurrentEmailOffice();
 
     var cc = [];
     var ccString = [];
@@ -408,19 +387,14 @@ Workorder.NewNotifications = function () {
     createEmail(to, toString, cc, ccString, [], subject, body);
   }
 
-  /**
-   * recordStatusNotification
-   *
-   * Intended for "Notification" pipeline stages. Link to app page.
-   */
-  function recordStatusNotification() {
-    var to = [];
-    var toString = [];
+  function getCurrentEmailOffice() {
+    var email = [];
+    var emailString = [];
     if (!vm.requestStageOffice()) {
     } else if (vm.requestStageOffice().PreferredEmail) {
-      toString.push(vm.requestStageOffice().PreferredEmail);
+      emailString.push(vm.requestStageOffice().PreferredEmail);
     } else if (vm.requestStageOffice().UserAddress) {
-      to.push(vm.requestStageOffice().UserAddress);
+      email.push(vm.requestStageOffice().UserAddress);
     }
 
     if (vm.requestStage().WildCardAssignee) {
@@ -428,7 +402,7 @@ Workorder.NewNotifications = function () {
       // This should be a person field
       try {
         var personObservable = vm[personName];
-        to.push(personObservable.lookupUser());
+        email.push(personObservable.lookupUser());
       } catch (err) {
         console.error(
           "Something went wrong fetching " + personName + " from viewmodel: ",
@@ -436,6 +410,16 @@ Workorder.NewNotifications = function () {
         );
       }
     }
+    return email, emailstring;
+  }
+
+  /**
+   * recordStatusNotification
+   *
+   * Intended for "Notification" pipeline stages. Link to app page.
+   */
+  function recordStatusNotification() {
+    var to, toString = getCurrentEmailOffice()
 
     var cc = [];
     var ccString = [];
@@ -487,6 +471,27 @@ Workorder.NewNotifications = function () {
     body += addendum;
 
     createEmail(to, toString, cc, ccString, [], subject, body);
+  }
+
+  function newComment(comment) {
+    var to, toString = getCurrentEmailOffice();
+
+    to.push(sal.globalConfig.currentUser);
+
+    var subject = "Work Order -New Comment- " +
+      vm.selectedServiceType().Title +
+      " - " +
+      vm.requestID();
+
+    var body = 
+      `${sal.globalConfig.currentUser} has left a new comment on <a href="${
+      vm.requestLink()}" target="blank">${
+      vm.requestID()
+      }</a>:<br><br>`
+
+    body += comment.Comment;
+
+    createEmail(to, toString, [], [], [], subject, body)
   }
 
   function createEmail(
