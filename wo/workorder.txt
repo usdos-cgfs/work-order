@@ -700,6 +700,7 @@
                     <label>
                       Service Type<span class="required">*</span>:
                     </label>
+<!-- ko if: currentView() == 'new' -->
                     <select
                       class="editable-field new"
                       type="select"
@@ -709,6 +710,14 @@
                                                            optionsCaption: 'Select...',
                                                            enable: currentView() == 'new'"
                     ></select>
+		    <!-- /ko -->
+		    <!-- ko if: currentView() != 'new' -->
+                    <input
+                      class="non-editable-field"
+                      type="text"
+                      data-bind="value: selectedServiceType().Title"
+                    />
+		    <!-- /ko -->
                   </div>
                 </div>
                 <!-- <div class="field">
