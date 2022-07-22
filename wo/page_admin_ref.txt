@@ -891,15 +891,24 @@
                     <label>
                       Service Type<span class="required">*</span>:
                     </label>
+<!-- ko if: currentView() == 'new' -->
                     <select
                       class="editable-field new"
                       type="select"
                       data-bind="value: selectedServiceType,
-                                                           options: configServiceTypes() ? configServiceTypes().filter((stype) => stype.Active) : [{}, {}],
+                                                           options: configServiceTypes() ? configServiceTypes().filter(function(stype) {return stype.Active}) : [{}, {}],
                                                            optionsText: function(stype) {return stype.Title ? stype.Title : 'unknown'},
                                                            optionsCaption: 'Select...',
                                                            enable: currentView() == 'new'"
                     ></select>
+		    <!-- /ko -->
+		    <!-- ko if: currentView() != 'new' -->
+                    <input
+                      class="non-editable-field"
+                      type="text"
+                      data-bind="value: selectedServiceType().Title"
+                    />
+		    <!-- /ko -->
                   </div>
                 </div>
                 <!-- <div class="field">
