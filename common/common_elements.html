@@ -353,6 +353,7 @@
             <th>Author</th>
             <th>Comment</th>
             <th>Date</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody data-bind="foreach: requestComments">
@@ -365,6 +366,16 @@
             </td>
             <td class="right aligned collapsing">
               <p data-bind="text: Created.toLocaleString()"></p>
+            </td>
+            <td class="collapsing">
+              <i
+                title=""
+                class="pointer envelope outline icon"
+                data-bind="click: sendCommentNotification.bind($data),
+                class: NotificationSent ? 'open' : '',
+                attr: {title: NotificationSent ? 'Re-Send Email Notification' : 'Send Email Notification'}"
+              ></i>
+              <!-- <i class="envelope open outline icon"></i> -->
             </td>
           </tr>
         </tbody>
