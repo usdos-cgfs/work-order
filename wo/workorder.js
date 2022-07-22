@@ -1368,6 +1368,26 @@ function submitCommentCallback(id) {
   });
 }
 
+function sendCommentNotification(comment) {
+  // vm.busy.addTask(appBusyStates.notifyComment);
+  // 1. send notification
+  Workorder.Notifications.sendCommentNotification(comment);
+  // 2. set comment notified to true
+  vm.listRefComment().updateListItem(
+    comment.ID,
+    [["NotificationSent", true]],
+    function () {
+      // vm.busy.finishTask(appBusyStates.notifyComment)
+      // vm.busy.addTask(appBusyStates.newComment)
+      fetchComments(function () {
+        $("body").toast({
+          message: "Email sent! Please check your email to confirm.",
+        });
+      });
+    }
+  );
+}
+
 function fetchComments(callback) {
   var camlq =
     '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +

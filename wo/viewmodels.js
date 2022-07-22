@@ -130,6 +130,7 @@ var commentListDef = {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "empty" },
     Comment: { type: "Text", koMap: "empty" },
+    NotificationSent: { type: "Bool", koMap: "empty" },
     Author: { type: "Text", koMap: "empty" },
     Created: { type: "Text", koMap: "empty" },
   },
@@ -307,6 +308,7 @@ var appBusyStates = {
   closing: "Closing Request...",
   pipeline: "Progressing to Next Stage...",
   newComment: "Refreshing Comments...",
+  notifyComment: "Sending Comment Email...",
   newAction: "Refreshing Actions...",
   approve: "Approving Request...",
 };
@@ -1645,6 +1647,7 @@ function koviewmodel() {
    ************************************************************/
 
   self.commentNew = ko.observable();
+
   /************************************************************
    * Declare our form input computed functions
    ************************************************************/

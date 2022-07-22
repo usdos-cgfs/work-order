@@ -8,7 +8,7 @@ Workorder.NewNotifications = function () {
   function newWorkorderEmailUser() {
     // 2. Send email to user, letting them know their request has been created
     var toUser = [sal.globalConfig.currentUser];
-    var toString = [];
+    var toStringArr = [];
     var ccString = [];
 
     var subject =
@@ -45,7 +45,7 @@ Workorder.NewNotifications = function () {
       "<br><br>" +
       vm.requestLink();
 
-    createEmail(toUser, toString, [], ccString, [], subject, bodyUser);
+    createEmail(toUser, toStringArr, [], ccString, [], subject, bodyUser);
   }
 
   function newWorkorderEmailActionOffices() {
@@ -65,7 +65,7 @@ Workorder.NewNotifications = function () {
       return ao.PreferredEmail ? ao.PreferredEmail : ao.UserAddress;
     });
 
-    var toString = [];
+    var toStringArr = [];
     var ccString = [];
 
     var subject =
@@ -93,7 +93,7 @@ Workorder.NewNotifications = function () {
       "<br><br>" +
       vm.requestLinkAdmin();
 
-    createEmail(to, toString, [], ccString, [], subject, body);
+    createEmail(to, toStringArr, [], ccString, [], subject, body);
   }
 
   function workorderReminderEmails(id) {
@@ -103,7 +103,7 @@ Workorder.NewNotifications = function () {
         return ao.PreferredEmail ? ao.PreferredEmail : ao.UserAddress;
       });
 
-      var toString = [];
+      var toStringArr = [];
       var ccString = [];
 
       var days = vm.selectedServiceType().ReminderDays.split(",");
@@ -144,7 +144,7 @@ Workorder.NewNotifications = function () {
 
           createEmail(
             to,
-            toString,
+            toStringArr,
             [],
             ccString,
             [],
@@ -176,7 +176,7 @@ Workorder.NewNotifications = function () {
       );
     }
 
-    var toString = [];
+    var toStringArr = [];
     var ccString = [];
 
     var subject =
@@ -233,7 +233,7 @@ Workorder.NewNotifications = function () {
         "</a><br><br>";
     }
 
-    createEmail(to, toString, [], ccString, [], subject, body + addendum);
+    createEmail(to, toStringArr, [], ccString, [], subject, body + addendum);
   }
 
   function workorderPipelineAssignees() {
@@ -268,7 +268,7 @@ Workorder.NewNotifications = function () {
 
   function workorderClosedEmail(reason) {
     var to = [vm.requestHeader().Author, vm.requestor.lookupUser()];
-    var toString = [];
+    var toStringArr = [];
 
     var cc = [];
     var ccString = [];
@@ -329,11 +329,13 @@ Workorder.NewNotifications = function () {
       "<b>Note:</b> This request cannot be reactivated. " +
       "To reinitiate, please create a new service request.<br><br>";
 
-    createEmail(to, toString, cc, ccString, [], subject, body);
+    createEmail(to, toStringArr, cc, ccString, [], subject, body);
   }
 
   function pipelineStageNotification() {
-    var to, toString = getCurrentEmailOffice();
+    var emails = getCurrentEmailOffice();
+    var to = emails.email;
+    var toStringArr = emails.emailString;
 
     var cc = [];
     var ccString = [];
@@ -384,9 +386,15 @@ Workorder.NewNotifications = function () {
 
     body += addendum;
 
-    createEmail(to, toString, cc, ccString, [], subject, body);
+    createEmail(to, toStringArr, cc, ccString, [], subject, body);
   }
 
+  /**
+   * Get's the current pipeline stages action office either preferred email
+   * or their user address,
+   * If there's a wildcard assignee, add them too.
+   * @returns email [], emailString []
+   */
   function getCurrentEmailOffice() {
     var email = [];
     var emailString = [];
@@ -410,7 +418,7 @@ Workorder.NewNotifications = function () {
         );
       }
     }
-    return email, emailstring;
+    return { email, emailString };
   }
 
   /**
@@ -419,7 +427,9 @@ Workorder.NewNotifications = function () {
    * Intended for "Notification" pipeline stages. Link to app page.
    */
   function recordStatusNotification() {
-    var to, toString = getCurrentEmailOffice()
+    var emails = getCurrentEmailOffice();
+    var to = emails.email;
+    var toStringArr = emails.emailString;
 
     var cc = [];
     var ccString = [];
@@ -470,33 +480,32 @@ Workorder.NewNotifications = function () {
 
     body += addendum;
 
-    createEmail(to, toString, cc, ccString, [], subject, body);
+    createEmail(to, toStringArr, cc, ccString, [], subject, body);
   }
 
-  function newComment(comment) {
-    var to, toString = getCurrentEmailOffice();
+  function sendCommentNotification(comment) {
+    var emails = getCurrentEmailOffice();
+    var to = emails.email;
+    var toStringArr = emails.emailString;
 
     to.push(sal.globalConfig.currentUser);
 
-    var subject = "Work Order -New Comment- " +
+    var subject =
+      "Work Order -New Comment- " +
       vm.selectedServiceType().Title +
       " - " +
       vm.requestID();
 
-    var body = 
-      `${sal.globalConfig.currentUser} has left a new comment on <a href="${
-      vm.requestLink()}" target="blank">${
-      vm.requestID()
-      }</a>:<br><br>`
+    var body = `${sal.globalConfig.currentUser.get_title()} has left a new comment on <a href="${vm.requestLink()}" target="blank">${vm.requestID()}</a>:<br><br>`;
 
     body += comment.Comment;
 
-    createEmail(to, toString, [], [], [], subject, body)
+    createEmail(to, toStringArr, [], [], [], subject, body);
   }
 
   function createEmail(
     to,
-    toString,
+    toStringArr,
     cc,
     ccString,
     bcc,
@@ -514,7 +523,7 @@ Workorder.NewNotifications = function () {
 
     var vp = [
       ["To", toArr],
-      ["ToString", toString.join(";")],
+      ["ToString", toStringArr.join(";")],
       ["CC", ccArr],
       ["CCString", ccString.join(";")],
       ["BCC", bccArr],
@@ -576,6 +585,7 @@ Workorder.NewNotifications = function () {
     workorderClosedEmail: workorderClosedEmail,
     pipelineStageNotification: pipelineStageNotification,
     recordStatusNotification: recordStatusNotification,
+    sendCommentNotification: sendCommentNotification,
   };
 
   return publicMembers;
