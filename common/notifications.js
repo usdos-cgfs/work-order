@@ -489,6 +489,7 @@ Workorder.NewNotifications = function () {
     var toStringArr = emails.emailString;
 
     to.push(sal.globalConfig.currentUser);
+    to.push(vm.requestor.lookupUser());
 
     var subject =
       "Work Order -New Comment- " +
