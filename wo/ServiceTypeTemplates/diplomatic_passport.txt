@@ -54,6 +54,32 @@
         koMap: "diplomaticPassportExpiration",
         required: false,
       },
+// Added 
+      FullName: {
+        type: "Text",
+        koMap: "diplomaticVisaFullName",
+        required: true,
+      },
+      DateOfBirth: {
+        type: "DateTime",
+        koMap: "diplomaticVisaBirthDate",
+        required: true,
+      },
+      PassportNum: {
+        type: "Text",
+        koMap: "diplomaticVisaPassNum",
+        required: true,
+      },
+      PassportDateIssued: {
+        type: "DateTime",
+        koMap: "diplomaticPassportIssued",
+        required: true,
+      },
+      PassportDateExpiration: {
+        type: "DateTime",
+        koMap: "diplomaticPassportExpiration",
+        required: true,
+      },
     },
   });
 
@@ -69,16 +95,32 @@
   vm.diplomaticPassportBirthLocation = ko.observable();
   vm.diplomaticPassportExpiration = new DateField({ type: "date" });
 
-  vm.diplomaticPassportServiceTypeOpts = ko.observableArray(["New", "Renewal"]);
+//Added
+  vm.diplomaticVisaFullName = ko.observable();
+  vm.diplomaticVisaBirthDate = new DateField({ type: "date" });
+  vm.diplomaticVisaPassNum = ko.observable();
+
+  vm.diplomaticPassportServiceTypeOpts = ko.observableArray(["New Passport", "New Visa", "Renewal Passport", "Renewal Visa"]);
 
   var diplomatic_passport = vm.configServiceTypes().find(function (stype) {
     return stype.UID == "diplomatic_passport";
   });
 
   diplomatic_passport.validate = function () {
-    if (vm.diplomaticPassportSelectedType() == "Renewal") {
+    if (vm.diplomaticPassportSelectedType() == "Renewal Passport") {
       if (!vm.diplomaticPassportBirthLocation()) {
         alert("Provide a State/Country of Birth.");
+        vm.requestIsSaveable(false);
+      }
+    }
+//Added
+    if (vm.diplomaticPassportSelectedType() == "Renewal Visa") {
+      if (isNaN(vm.diplomaticPassportIssued.date())) {
+        alert("Provide a PassPort Issued Date.");
+        vm.requestIsSaveable(false);
+      }
+      if (isNaN(vm.diplomaticPassportExpiration.date())) {
+        alert("Provide a PassPort Expiration Date.");
         vm.requestIsSaveable(false);
       }
     }
@@ -126,13 +168,13 @@
       </div>
       <h4
         class="ui dividing header"
-        data-bind="visible: diplomaticPassportSelectedType() == 'Renewal'"
+        data-bind="visible: diplomaticPassportSelectedType() == 'Renewal Passport'"
       >
         Renewal Information
       </h4>
       <div
         class="two fields"
-        data-bind="visible: diplomaticPassportSelectedType() == 'Renewal'"
+        data-bind="visible: diplomaticPassportSelectedType() == 'Renewal Passport'"
       >
         <div class="field">
           <label>
