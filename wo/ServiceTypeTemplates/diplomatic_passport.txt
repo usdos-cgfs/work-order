@@ -75,6 +75,21 @@
         koMap: "diplomaticPassportExpiration",
         required: false,
       },
+      Gender: {
+        type: "Text",
+        koMap: "diplomaticPassportGender",
+        required: true,
+      },
+      JobTitle: {
+        type: "Text",
+        koMap: "diplomaticPassportJobTitle",
+        required: true,
+      },
+      Justification: {
+        type: "Text",
+        koMap: "diplomaticPassportJustification",
+        required: false,
+      },
     },
   });
 
@@ -90,6 +105,9 @@
   vm.diplomaticPassportPurpose = ko.observable();
   vm.diplomaticPassportBirthLocation = ko.observable();
   vm.diplomaticPassportExpiration = new DateField({ type: "date" });
+  vm.diplomaticPassportGender = ko.observable(); //
+  vm.diplomaticPassportJobTitle = ko.observable(); //
+  vm.diplomaticPassportJustification = ko.observable(); //
 
   //Added
   vm.diplomaticVisaFullName = ko.observable();
@@ -147,13 +165,23 @@
     <div data-bind="">
       <!-- all of shared fields: grade, destination city/country, departure, return, birth location -->
       <div>
-        <div class="eight wide field">
-          <label> Grade/Rank<span class="required">*</span>: </label>
-          <input
-            class="editable-field"
-            type="text"
-            data-bind="value: diplomaticPassportGrade, disable: currentView() == 'view'"
-          />
+        <div class="two fields">
+          <div class="field">
+            <label> Grade/Rank<span class="required">*</span>: </label>
+            <input
+              class="editable-field"
+              type="text"
+              data-bind="value: diplomaticPassportGrade, disable: currentView() == 'view'"
+            />
+          </div>
+          <div class="field">
+            <label> Job Title<span class="required">*</span>: </label>
+            <input
+              class="editable-field"
+              type="text"
+              data-bind="value: diplomaticPassportJobTitle, disable: currentView() == 'view'"
+            />
+          </div>
         </div>
         <h4 class="ui dividing header">Travel Information</h4>
         <div class="two fields">
@@ -174,6 +202,16 @@
             />
           </div>
         </div>
+        <!-- <div class="two fields">
+          <div class="field">
+            <label for="">Purpose of Travel:</label>
+            <input
+              class="editable-field"
+              type="text"
+              data-bind="value: diplomaticPassportPurpose, disable: currentView() == 'view'"
+            />
+          </div>
+        </div> -->
         <div class="two fields">
           <div class="field">
             <label> Departure<span class="required">*</span>: </label>
@@ -232,7 +270,7 @@
             <input
               type="text"
               data-bind="value: diplomaticVisaBirthDate.date().toLocaleString(),
-        disable: true"
+                disable: true"
             />
             <!-- /ko -->
             <!-- ko if: currentView() != 'view' -->
@@ -258,6 +296,16 @@
               class="editable-field"
               type="text"
               data-bind="value: diplomaticPassportBirthLocation, disable: currentView() == 'view'"
+            />
+          </div>
+        </div>
+        <div class="two fields">
+          <div class="field">
+            <label for="">Gender<span class="required">*</span>:</label>
+            <input
+              class="editable-field"
+              type="text"
+              data-bind="value: diplomaticPassportGender, disable: currentView() == 'view'"
             />
           </div>
         </div>
@@ -343,6 +391,15 @@
         </div>
       </div>
       <!-- /ko -->
+      <div class="field">
+        <label for="">Justification (if passport is expedited):</label>
+        <textarea
+          class="editable-field"
+          type="textarea"
+          rows="5"
+          data-bind="value: diplomaticPassportJustification, disable: currentView() == 'view'"
+        ></textarea>
+      </div>
     </div>
     <!-- /ko -->
   </div>
