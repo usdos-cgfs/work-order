@@ -1672,10 +1672,10 @@ function initApp() {
   vm = new koviewmodel();
   var initTime = new Date();
   //vm.busy.addTask(appBusyStates.init);
-  dialog.init = SP.UI.ModalDialog.showWaitScreenWithNoClose(
-    "Initializing",
-    "Please Wait..."
-  );
+  // dialog.init = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+  //   "Initializing",
+  //   "Please Wait..."
+  // );
   $(".non-editable-field").prop("disabled", true);
 
   console.log("initialized listeners");
@@ -1819,7 +1819,9 @@ function initComplete() {
   }
   */
   // vm.busy.finishTask(appBusyStates.init);
-  dialog.init.close();
+  // dialog.init.close();
+
+  document.getElementById('initial-loader').classList.remove('active')
   vm.timers.initComplete(new Date());
   //SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
