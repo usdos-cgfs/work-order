@@ -413,54 +413,6 @@
                     <div data-bind="html: vm.serviceTypeViews()[$data].icon"></div>
                     <p data-bind="text: vm.serviceTypeViews()[$data].name"></p>
                 </a>-->
-<<<<<<< HEAD
-=======
-      </div>
-      <!-- /ko -->
-    </div>
-    <!-- /ko -->
-    <!-- ko if: selectedServiceType -->
-    <div id="wo-description-modal" class="ui modal" style="display: none">
-      <div
-        class="header"
-        data-bind="text: selectedServiceType() ? selectedServiceType().Title : 'Oops, something went wrong'"
-      ></div>
-      <div class="content">
-        <div>
-          For
-          <span data-bind="text: selectedServiceType().Title"></span> requests,
-          please complete the following Work Order Form. Please have prepared
-          the following information:
-        </div>
-        <div
-          data-bind="html: selectedServiceType() ? selectedServiceType().Description : ''"
-        ></div>
-        <br />
-        <div
-          data-bind="html: selectedServiceType().AttachmentDescription"
-        ></div>
-        <div>
-          Once submitted, this request will be handled by a member of the
-          <!-- ko if: request.pipeline.allRequestOrgs().length -->
-          <span
-            data-bind="text: request.pipeline.allRequestOrgs()[0].get_lookupValue()"
-          ></span>
-          <!-- /ko -->
-          team.
-        </div>
-      </div>
-      <div class="actions">
-        <div class="actions">
-          <div class="ui black deny button" onclick="dismissDescription()">
-            Close
-          </div>
-          <div
-            class="ui positive right labeled icon button"
-            onclick="newWorkOrder()"
-          >
-            Create New
-            <i class="checkmark icon"></i>
->>>>>>> 7f3d87f9a63feeea61391dea2d721a261c567dbe
           </div>
           <!-- /ko -->
         </div>
