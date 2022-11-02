@@ -68,11 +68,11 @@
   vm.motorPoolDriverActionOpts = ko.observableArray(["Wait", "Drop Off"]);
 
   var motorPool = vm.configServiceTypes().find(function (stype) {
-    return stype.UID == "it_software";
+    return stype.UID == "motor_pool";
   });
 
   motorPool.validate = function () {
-    vm.requestIsSaveable(false);
+    //vm.requestIsSaveable(false);
   };
 </script>
 
@@ -146,11 +146,11 @@
           >Driver Required<span class="required">*</span>:
           <input
             type="checkbox"
-            data-bind="value: motorPoolDriverRqd, disable: currentView()=='view'"
+            data-bind="checked: motorPoolDriverRqd, disable: currentView()=='view'"
           />
         </label>
       </div>
-      <div class="eight wide field">
+      <div class="eight wide field" data-bind="visible: motorPoolDriverRqd ">
         <label
           >Driver Action<span class="required">*</span>:
           <select
