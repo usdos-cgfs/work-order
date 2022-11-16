@@ -15,42 +15,42 @@
         required: true,
         displayName: "Date and Time",
       },
-      DriverPOC: {
-        type: "Text",
-        koMap: "motorPoolDriverPoc",
-        required: false,
-        displayName: "Driver POC",
-      },
-      PickUpLoc: {
-        type: "Text",
-        koMap: "motorPoolPickUpLoc",
-        required: true,
-        displayName: "Pick Up Location",
-      },
-      DropOffLoc: {
-        type: "Text",
-        koMap: "motorPoolDropOffLoc",
-        required: true,
-        displayName: "Drop Off Location",
-      },
-      NumPassengers: {
-        type: "Text",
-        koMap: "motorPoolNumPassengers",
-        required: true,
-        displayName: "Number of Passengers",
-      },
-      DriverRqd: {
-        type: "Bool",
-        koMap: "motorPoolDriverRqd",
-        required: false,
-        displayName: "Driver Required",
-      },
-      DriverAction: {
-        type: "Text",
-        koMap: "motorPoolDriverAction",
-        required: false,
-        displayName: "Driver Wait or Drop Off",
-      },
+      // DriverPOC: {
+      //   type: "Text",
+      //   koMap: "motorPoolDriverPoc",
+      //   required: false,
+      //   displayName: "Driver POC",
+      // },
+      // PickUpLoc: {
+      //   type: "Text",
+      //   koMap: "motorPoolPickUpLoc",
+      //   required: true,
+      //   displayName: "Pick Up Location",
+      // },
+      // DropOffLoc: {
+      //   type: "Text",
+      //   koMap: "motorPoolDropOffLoc",
+      //   required: true,
+      //   displayName: "Drop Off Location",
+      // },
+      // NumPassengers: {
+      //   type: "Text",
+      //   koMap: "motorPoolNumPassengers",
+      //   required: true,
+      //   displayName: "Number of Passengers",
+      // },
+      // DriverRqd: {
+      //   type: "Bool",
+      //   koMap: "motorPoolDriverRqd",
+      //   required: false,
+      //   displayName: "Driver Required",
+      // },
+      // DriverAction: {
+      //   type: "Text",
+      //   koMap: "motorPoolDriverAction",
+      //   required: false,
+      //   displayName: "Driver Wait or Drop Off",
+      // },
     },
   });
 
@@ -72,7 +72,7 @@
   });
 
   motorPool.validate = function () {
-    vm.requestIsSaveable(false);
+    //vm.requestIsSaveable(false);
   };
 </script>
 
@@ -112,7 +112,7 @@
           />
         </label>
       </div>
-      <div class="eight wide field">
+      <!-- <div class="eight wide field">
         <label
           >Pick Up Location<span class="required">*</span>:
           <input
@@ -159,7 +159,7 @@
             options: motorPoolDriverActionOpts, optionsCaption: 'Select...', value: motorPoolDriverAction"
           ></select>
         </label>
-      </div>
+      </div> -->
     </div>
     <br />
   </div>
