@@ -1846,16 +1846,12 @@ function initUIComponents() {
   //   popup: ".ui.list-action-office.popup",
   //   on: "click",
   // });
-  if ($(".menu .item").length) {
-    $(".menu .item").tab();
-    $(".top.menu .item").tab({
-      onVisible: function () {
-        vm.tab(this.id);
-      },
-    });
-    $(".ui.secondary.menu").find(".item").tab("change tab", "my-open-orders");
-  }
-  //$(".ui.top.menu").find(".item").tab("change tab", "my-orders");
+  $(".top.menu > .item").tab({
+    onVisible: function () {
+      vm.tab(this.id);
+    },
+  });
+  $(".ui.secondary.menu > .item").tab("change tab", "my-open-orders");
 }
 
 $(document).ready(function () {
