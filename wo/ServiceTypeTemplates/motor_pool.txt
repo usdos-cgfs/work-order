@@ -15,12 +15,12 @@
         required: true,
         displayName: "Date and Time",
       },
-      // DriverPOC: {
-      //   type: "Text",
-      //   koMap: "motorPoolDriverPoc",
-      //   required: false,
-      //   displayName: "Driver POC",
-      // },
+      DriverPOC: {
+        type: "Text",
+        koMap: "motorPoolDriverPoc",
+        required: true,
+        displayName: "Driver POC",
+      },
       // PickUpLoc: {
       //   type: "Text",
       //   koMap: "motorPoolPickUpLoc",
