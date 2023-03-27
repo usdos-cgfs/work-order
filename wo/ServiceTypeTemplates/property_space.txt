@@ -91,10 +91,14 @@
     });
 
     serviceItem.validate = function () {
-      debugger;
       if (vm.propertySpacePropType() == propertyTypes.Loanable) {
         if (!vm.propertySpaceLoanAttest()) {
           vm.requestIsSaveable(false);
+          alert(
+            "Please type your name to confirm that you understand the loanable property usage restrictions."
+          );
+          document.getElementById("property-space-loan-attest").focus();
+          document.getElementById("service-type-form").scrollIntoView();
         }
       }
       //vm.requestIsSaveable(true);
@@ -237,6 +241,7 @@
             <span>
               <!-- ko if: currentView() != 'view' -->
               <input
+                id="property-space-loan-attest"
                 class="three wide field"
                 style="padding: 0"
                 size="120"
@@ -276,6 +281,21 @@
             Upon leaving the building with your loanable property, you should
             relinquish a copy of your DS-1953 Authorization for Removal of
             Property form to a DS Uniformed Protection Officer (UPO).
+          </div>
+          <div class="ui visible warning message">
+            <div class="ui header">End of Loan Return of Items</div>
+            <div>
+              All nonaccountable barcoded property which was borrowed must be
+              returned to the Bureau by the employee when the property is no
+              longer needed for the use for which it was originally provided 14
+              FAM 425 3-4. The employee must email the CGFS/EX/ADMIN team at
+              <a href="mailto:CGFS_EX_ADMIN@state.gov"
+                >CGFS_EX_ADMIN@state.gov</a
+              >
+              to coordinate return. Reminder, any lost or damaged property is
+              the responsibility of the borrowing employee. Any lost or damaged
+              property must be immediately reported to the CGFS/EX/ADMIN team.
+            </div>
           </div>
           <!-- /ko -->
         </div>
