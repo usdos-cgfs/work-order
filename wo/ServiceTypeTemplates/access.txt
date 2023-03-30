@@ -48,9 +48,8 @@
     "Other",
   ]);
   vm.accessEmployeeTypeOpts = ko.observable([
-    "CGFS Government",
-    "CGFS Contractor",
-    "Other",
+    "Contractor",
+    "FTE",
   ]);
 
   vm.accessType = ko.observable();
