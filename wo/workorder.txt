@@ -807,7 +807,8 @@
                     <!-- ko if: selectedServiceType().TemplateName -->
                     <div
                       id="service-type-form"
-                      data-bind="template: { name: selectedServiceTypeTemplate }"
+                      data-bind="template: { name: selectedServiceTypeTemplate, 
+                      afterRender: postTemplateRender }"
                     ></div>
                     <!-- /ko -->
                     <!-- Generic description field goes here -->

@@ -29,6 +29,11 @@
         koMap: "propertySpacePropertyType",
         required: false,
       },
+      PropertyTypeChoice: {
+        type: "Text",
+        koMap: "propertySpacePropertyChoiceType",
+        required: false,
+      },
       CurrentLocation: {
         type: "Text",
         koMap: "propertySpaceCurLoc",
@@ -71,46 +76,90 @@
    *    Declare Observables
    ***************************************************************/
   function PropertySpace() {
+    var self = this;
+
     const serviceTypes = {
       Property: "Property",
       Space: "Space",
     };
-    const propertyTypes = {
+    const propertySvcTypes = {
       Inventory: "Inventory Request",
       Move: "Property move from one space to another",
       Excess: "Property excess request",
       Loanable: "Loanable Property",
     };
-    const spaceTypes = {
+    const spaceSvcTypes = {
       Move: "Moving from one space to another",
       New: "Request for new office space",
     };
+
+    const propertyTypeOptions = [
+      "Computer Monitor",
+      "Keyboard",
+      "Headset",
+      "Web Camera",
+      "Computer Speakers",
+      "Mouse",
+    ];
 
     var serviceItem = vm.configServiceTypes().find(function (stype) {
       return stype.UID == "property_space";
     });
 
     serviceItem.validate = function () {
-      if (vm.propertySpacePropType() == propertyTypes.Loanable) {
-        if (!vm.propertySpaceLoanAttest()) {
-          vm.requestIsSaveable(false);
-          alert(
-            "Please type your name to confirm that you understand the loanable property usage restrictions."
-          );
-          document.getElementById("property-space-loan-attest").focus();
-          document.getElementById("service-type-form").scrollIntoView();
-        }
+      if (vm.propertySpacePropType() == propertySvcTypes.Loanable) {
+        // if (!vm.propertySpaceLoanAttest()) {
+        //   vm.requestIsSaveable(false);
+        //   alert(
+        //     "Please type your name to confirm that you understand the loanable property usage restrictions."
+        //   );
+        //   document.getElementById("property-space-loan-attest").focus();
+        //   document.getElementById("service-type-form").scrollIntoView();
+        // }
       }
       //vm.requestIsSaveable(true);
     };
 
+    var selectedPropertyTypes = ko.observableArray();
+
+    function selectPropertyType(propType, event) {
+      //debugger;
+      var val = event.target.selectedOptions[0].value;
+      if (val) {
+        console.log("adding type: ", val);
+        selectedPropertyTypes.push(val);
+        event.target.value = null;
+      }
+    }
+
+    var removePropertyType = (index) => {
+      //debugger;
+      console.log(index);
+      selectedPropertyTypes.splice(index, 1);
+    };
+
+    // var selectPlaceHolder = ko.pureComputed({
+    //   write: (value) => {
+    //     console.log(value);
+    //     if (value) {
+    //       this.selectedPropertyTypes.push(value);
+    //       //self.selectPropertyType(value);
+    //     }
+    //   },
+    //   read: () => null,
+    // });
+
     const publicmembers = {
       serviceTypes,
       serviceOptions: Object.values(serviceTypes),
-      propertyTypes,
-      propertyOptions: Object.values(propertyTypes),
-      spaceTypes,
-      spaceOptions: Object.values(spaceTypes),
+      propertySvcTypes,
+      propertySvcOptions: Object.values(propertySvcTypes),
+      spaceSvcTypes,
+      spaceSvcOptions: Object.values(spaceSvcTypes),
+      propertyTypeOptions,
+      selectPropertyType: selectPropertyType,
+      selectedPropertyTypes: selectedPropertyTypes,
+      removePropertyType,
     };
 
     return publicmembers;
@@ -119,19 +168,31 @@
   vm.propertySpace = new PropertySpace();
 
   vm.propertySpaceProp = ko.observable();
-  vm.propertySpacePropType = ko.observable();
 
   vm.propertySpaceSpaceType = ko.observable();
 
   vm.propertySpaceLoc = ko.observable();
   vm.propertySpaceNumItems = ko.observable();
   vm.propertySpaceNumEmployees = ko.observable();
-  vm.propertySpacePropertyType = ko.observable();
+  //vm.propertySpacePropertyType = ko.observable();
+  vm.propertySpacePropertyType = ko.pureComputed({
+    read: () => vm.propertySpace.selectedPropertyTypes().join(";"),
+    write: (stringVal) => {
+      if (stringVal) {
+        vm.propertySpace.selectedPropertyTypes(stringVal.split(";"));
+      } else vm.propertySpace.selectedPropertyTypes([]);
+    },
+  });
+
+  // Property type with multi choice
+  vm.propertySpacePropertyChoiceType = ko.observable();
+
   vm.propertySpaceCurLoc = ko.observable();
   vm.propertySpaceNewLoc = ko.observable();
   vm.propertySpaceLoanAttest = ko.observable();
   vm.propertySpaceTimeframe = ko.observable();
   vm.propertySpaceLoc = ko.observable();
+  // If this is a property, what type of propertyrequest? Loanable, move, etc
   vm.propertySpacePropType = ko.observable();
 </script>
 
@@ -142,7 +203,7 @@
         <label
           >Space or Property<span class="required">*</span>:
           <select
-            class="editable-field"
+            class="editable-field ui fluid dropdown"
             type="text"
             data-bind="value: propertySpaceProp,
             options: propertySpace.serviceOptions,
@@ -164,7 +225,7 @@
               class="editable-field"
               type="text"
               data-bind="value: propertySpacePropType,
-            options: propertySpace.propertyOptions,
+            options: propertySpace.propertySvcOptions,
             optionsCaption: 'Select...',
             disable: currentView() == 'view'"
             ></select>
@@ -172,12 +233,12 @@
         </div>
         <!-- ko if: propertySpacePropType() -->
         <div>
-          <!-- ko if: propertySpacePropType() == vm.propertySpace.propertyTypes.Inventory -->
+          <!-- ko if: propertySpacePropType() == vm.propertySpace.propertySvcTypes.Inventory -->
           <div class="eight wide field">
             <label
               >Location:
               <select
-                class="editable-field"
+                class="editable-field ui dropdown"
                 data-bind="value: propertySpaceLoc,
                 disable: currentView() == 'view'"
               >
@@ -188,7 +249,7 @@
           </div>
           <!-- /ko -->
           <div class="two fields">
-            <!-- ko if: propertySpacePropType() != vm.propertySpace.propertyTypes.Inventory -->
+            <!-- ko if: propertySpacePropType() != vm.propertySpace.propertySvcTypes.Inventory -->
             <div class="field">
               <label
                 >Current Location:
@@ -200,7 +261,7 @@
               </label>
             </div>
             <!-- /ko -->
-            <!-- ko if: propertySpacePropType() == vm.propertySpace.propertyTypes.Move-->
+            <!-- ko if: propertySpacePropType() == vm.propertySpace.propertySvcTypes.Move-->
             <div class="field">
               <label
                 >Proposed Location:
@@ -227,61 +288,33 @@
             <div class="field">
               <label
                 >Type of Property:
-                <input
-                  type="text"
-                  data-bind="value: propertySpacePropertyType,
-              disable: currentView() == 'view'"
-                />
+                <!-- ko if: currentView() != 'view' -->
+                <select
+                  class="editable-field ui fluid dropdown"
+                  data-bind="event: {change: $root.propertySpace.selectPropertyType },
+                        options: propertySpace.propertyTypeOptions,
+                        optionsCaption: 'Select...'"
+                ></select>
+                <!-- /ko -->
               </label>
+              <table>
+                <tbody data-bind="foreach: propertySpace.selectedPropertyTypes">
+                  <tr>
+                    <td>
+                      <span data-bind="text: $data"></span>
+                      <!-- ko if: $root.currentView() != 'view' -->
+                      <i
+                        class="times icon"
+                        data-bind="click: () => $root.propertySpace.removePropertyType($index())"
+                      ></i>
+                      <!-- /ko -->
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
-          <!-- ko if: propertySpacePropType() == propertySpace.propertyTypes.Loanable -->
-          <div>
-            I
-            <span>
-              <!-- ko if: currentView() != 'view' -->
-              <input
-                id="property-space-loan-attest"
-                class="three wide field"
-                style="padding: 0"
-                size="120"
-                type="text"
-                placeholder="First Name M.I. Last Name"
-                data-bind="value: propertySpaceLoanAttest,
-                  disable: currentView() == 'view'"
-              />
-              <!-- /ko -->
-              <!-- ko if: currentView() == 'view' -->
-              <span
-                style="font-weight: bold;"
-                data-bind="text: propertySpaceLoanAttest"
-              ></span>
-              <!-- /ko -->
-            </span>
-            <span class="required">*</span>
-            confirm, that any property provided to me in the performance of my
-            official duties belongs to the U.S. Government and may not be used
-            to conduct private business or any illegal or illicit activities.
-            <span>14 FAM 425 3-4</span>
-          </div>
-          <div class="ui visible info message">
-            <span style="font-weight: bold">Note: </span> Transportation and
-            packaging item(s) for transport is the responsibility of the
-            employee. The admin team will not be responsible for removing items
-            from an employee's workstation or shipping items.
-          </div>
-          <div class="ui visible warning message">
-            <span style="font-weight: bold">Note: </span> If your request is
-            approved, you will recieve a completed DS-1953 Authorization for
-            Removal of Property form.
-            <span style="font-weight: bold"
-              >You must print out the signed form and bring it with you on the
-              day and time of your pickup.</span
-            >
-            Upon leaving the building with your loanable property, you should
-            relinquish a copy of your DS-1953 Authorization for Removal of
-            Property form to a DS Uniformed Protection Officer (UPO).
-          </div>
+          <!-- ko if: propertySpacePropType() == propertySpace.propertySvcTypes.Loanable -->
           <div class="ui visible warning message">
             <div class="ui header">End of Loan Return of Items</div>
             <div>
@@ -312,14 +345,14 @@
               class="editable-field"
               type="text"
               data-bind="value: propertySpaceSpaceType,
-          options: propertySpace.spaceOptions,
+          options: propertySpace.spaceSvcOptions,
           optionsCaption: '--select--',
            disable: currentView() == 'view'"
             ></select>
           </label>
         </div>
-        <!-- ko if: vm.propertySpaceSpaceType() && 
-        vm.propertySpaceSpaceType() == vm.propertySpace.spaceTypes.Move -->
+        <!-- ko if: vm.propertySpaceSpaceType() &&
+        vm.propertySpaceSpaceType() == vm.propertySpace.spaceSvcTypes.Move -->
         <div class="two fields">
           <div class="field">
             <label
@@ -353,8 +386,8 @@
           </label>
         </div>
         <!-- /ko -->
-        <!-- ko if: vm.propertySpaceSpaceType() && 
-        vm.propertySpaceSpaceType()== vm.propertySpace.spaceTypes.New -->
+        <!-- ko if: vm.propertySpaceSpaceType() &&
+        vm.propertySpaceSpaceType()== vm.propertySpace.spaceSvcTypes.New -->
         <div class="two fields">
           <div class="field">
             <label

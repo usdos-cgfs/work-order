@@ -2194,6 +2194,19 @@ function koviewmodel() {
     },
   });
 
+  // ko template has loaded
+  self.postTemplateRender = function (elements) {
+    if ($(".ui.checkbox").length) {
+      $(".ui.checkbox").checkbox();
+    }
+    if ($(".ui.accordion").length) {
+      $(".ui.accordion").accordion();
+    }
+    if ($("#service-type-form .ui.dropdown").length) {
+      $("#service-type-form .ui.dropdown").dropdown();
+    }
+  };
+
   self.test = {};
   self.test.dateField = new DateField({
     type: "date",
