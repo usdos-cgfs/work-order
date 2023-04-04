@@ -10,7 +10,7 @@
 
 <script type="module">
   import { createApp } from "vue";
-  import WorkOrderDataBase from "./page_wo_db.js";
+  import WorkOrderDataBase from "../SiteAssets/wo/page_wo_db.js";
 
   createApp(WorkOrderDataBase).mount("#app");
 </script>
