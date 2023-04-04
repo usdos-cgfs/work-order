@@ -12,7 +12,7 @@
 />
 <link
   rel="stylesheet"
-  href="../SiteAssets/workorder/vendor/Semantic-UI-CSS-master/semantic.min.css"
+  href="../SiteAssets/workorder/vendor/fomantic-ui@2.8.8/dist/semantic.min.css"
 />
 <link
   rel="stylesheet"

@@ -113,15 +113,7 @@ function newWorkOrder() {
   //   })
   // );
   //Set the workorder request orgs.
-  vm.request.pipeline.allRequestOrgs().forEach(function (org) {
-    if (
-      !vm.requestOrgs().find(function (ro) {
-        return ro.ID == org.ID;
-      })
-    ) {
-      vm.requestOrgs.push(org);
-    }
-  });
+  vm.request.pipeline.allRequestOrgs().forEach(vm.requestOrgsPush);
 
   //Clear our requested fields.
   vm.requestHeader(new Object());
@@ -159,6 +151,8 @@ function refreshWorkOrderItem(woID, callback) {
     console.log("loading open orders", items);
     if (items[0]) {
       var req = items[0];
+      // If the item is in our all orders, update it with our response
+      // Otherwise, push it to the end
       if (
         vm.allOrders().find(function (order) {
           return order.Title == woID;
@@ -184,7 +178,7 @@ function refreshWorkOrderItem(woID, callback) {
   });
 }
 
-function viewWorkOrderItem(woID, callback) {
+async function viewWorkOrderItem(woID, callback) {
   callback = callback === undefined ? function () {} : callback;
 
   vm.busy.addTask(appBusyStates.view);
@@ -208,7 +202,7 @@ function viewWorkOrderItem(woID, callback) {
     console.log("workorder fetched - setting value pairs");
     //vm.selectedServiceType("");
     clearValuePairs(workOrderListDef.viewFields);
-    setValuePairs(workOrderListDef.viewFields, vm.requestHeader());
+    await setValuePairs(workOrderListDef.viewFields, vm.requestHeader());
 
     vm.requestAssignments(vm.allRequestAssignmentsMap()[woID]);
 
@@ -265,12 +259,12 @@ function viewServiceTypeItem(callback) {
     "</Value></Eq></And></Where></Query></View>";
   vm.selectedServiceType().listRef.getListItems(
     serviceTypeCaml,
-    function (items) {
+    async function (items) {
       if (items[0]) {
         var res = items[0];
         vm.serviceTypeHeader(res);
         console.log("service type fetched -- setting valuepairs", items);
-        setValuePairs(
+        await setValuePairs(
           vm.selectedServiceType().listDef.viewFields,
           vm.serviceTypeHeader()
         );
@@ -297,6 +291,7 @@ function onViewWorkOrderItemComplete(callback) {
   vm.requestLoaded(new Date());
   vm.tab("order-detail");
   vm.currentView("view");
+  $(".ui.dropdown").dropdown();
   vm.busy.finishTask(appBusyStates.view);
   callback();
   // dialog.close(dialog.view);
@@ -689,17 +684,17 @@ function getValuePairsHuman(listDef) {
             fieldValue = observable().title;
           }
           break;
+        case "Document":
+          if (observable.getValueHuman) {
+            fieldValue = observable.getValueHuman();
+          }
+          break;
         default:
           fieldValue = observable();
       }
-      // Check if this field is required
-      // TODO: highlight the offending field
-      if (obj.required && !fieldValue) {
-        missingFields.push(field);
-        //vm.requestIsSaveable(false);
-      } else {
-        valuePairs.push([field, fieldValue]);
-      }
+
+      let title = obj.displayName ? obj.displayName : field;
+      valuePairs.push([title, fieldValue]);
     }
   });
   return valuePairs;
@@ -742,6 +737,9 @@ function getValuePairs(listDef) {
             fieldValue = observable().ID;
           }
           break;
+        case "Document":
+          fieldValue = observable.getValue();
+          break;
         default:
           fieldValue = observable();
       }
@@ -768,18 +766,23 @@ function getValuePairs(listDef) {
   return valuePairs;
 }
 
-function setValuePairs(listDef, jObject) {
+async function setValuePairs(listDef, jObject) {
   // The inverse of our getValuePairs function, set the KO observables
   // from our returned object.
-  $.each(listDef, function (field, obj) {
+  // await $.each(listDef, async function (field, obj) {
+
+  for (const field of Object.keys(listDef)) {
+    var obj = listDef[field];
+
     //console.log(field + " " + obj.koMap + " " );
     console.log(
       "Setting " + obj.koMap + " to " + jObject[field] + " from " + field
     );
     var observable = vm[obj.koMap];
+    // TODO: This is a violation of the Open/Closed principle, need to refactor
     switch (obj.type) {
       case "Person":
-        observable.userId(jObject[field]);
+        await observable.setUser(jObject[field]);
         break;
       case "DateTime":
         if (observable.date) {
@@ -788,10 +791,13 @@ function setValuePairs(listDef, jObject) {
           observable(jObject[field]);
         }
         break;
+      case "Document":
+        observable.setValue(jObject[field]);
+        break;
       default:
         observable(jObject[field]);
     }
-  });
+  }
 }
 
 function clearValuePairs(listDef) {
@@ -807,6 +813,10 @@ function clearValuePairs(listDef) {
             observable.date(new Date());
             break;
           }
+          break;
+        case "Document":
+          observable.clearValue();
+          break;
         default:
           observable("");
       }
@@ -866,11 +876,21 @@ function fetchConfigListData(callback) {
       vm.incLoadedListItems();
     }
   );
+
   /* We won't filter our inactive service types just in case there are some open */
   vm.listRefConfigServiceType().getListItems(
-    "<Query></Query>",
+    "<Query><OrderBy><FieldRef Name='Title' Ascending='FALSE'/></OrderBy></Query>",
     function (items) {
-      vm.configServiceTypes(items);
+      const sorted = items.sort((a, b) => {
+        if (a.Title > b.Title) {
+          return 1;
+        }
+        if (a.Title < b.Title) {
+          return -1;
+        }
+        return 0;
+      });
+      vm.configServiceTypes(sorted);
       vm.incLoadedListItems();
     }
   );
@@ -939,7 +959,7 @@ function fetchAttachments() {
  ************************************************************/
 function newOfficeAssignment() {
   // Takes a new action office and adds it to the request assigned offices
-  vm.requestOrgs.push(vm.assignRequestOffice());
+  vm.requestOrgsPush(vm.assignRequestOffice());
 
   vm.listRefWO().updateListItem(
     vm.requestHeader().ID,
@@ -966,14 +986,15 @@ function newAssignmentForm(role) {
 }
 
 function createAssignment(role, notify) {
-  role =
+  var role =
     role === undefined ? assignmentListDef.viewFields.Role.opts.Resolver : role;
-  notify = notify === undefined ? false : notify;
+  var notify = notify === undefined ? false : notify;
   // Create a new assignment based off our set observables
   if (vm.assignActionOffice() || vm.assignAssignee()) {
     var vp = [
       ["Title", vm.requestID()],
       ["Role", role],
+      ["PipelineStage", vm.requestStageNum()],
     ];
     if (vm.assignActionOffice()) {
       vp.push(["ActionOffice", vm.assignActionOffice().ID]);
@@ -989,12 +1010,12 @@ function createAssignment(role, notify) {
     }
 
     // Check if this is a type of Assignment that needs to be completed
+    // E.g. Approver, Actiontaker
     var roleOpts = assignmentListDef.viewFields.Role.opts;
-    if (role == roleOpts.Approver.Name || role == roleOpts.Resolver.Name) {
-      vp.push(["IsActive", true]);
-    } else {
-      vp.push(["IsActive", true]);
-    }
+    vp.push([
+      "IsActive",
+      role == roleOpts.Approver.Name || role == roleOpts.Resolver.Name,
+    ]);
 
     vm.listRefAssignment().createListItem(
       vp,
@@ -1203,7 +1224,6 @@ function newApprovalCallback(result, value) {
         case "Approved":
           //let'do whatever we need for an approved record.
           alert("Record has been approved. You may now close this window.");
-          //TODO: Push to the next stage!!!!
           pipelineForward();
           break;
         case "Rejected":
@@ -1348,6 +1368,26 @@ function submitCommentCallback(id) {
   });
 }
 
+function sendCommentNotification(comment) {
+  // vm.busy.addTask(appBusyStates.notifyComment);
+  // 1. send notification
+  Workorder.Notifications.sendCommentNotification(comment);
+  // 2. set comment notified to true
+  vm.listRefComment().updateListItem(
+    comment.ID,
+    [["NotificationSent", true]],
+    function () {
+      // vm.busy.finishTask(appBusyStates.notifyComment)
+      // vm.busy.addTask(appBusyStates.newComment)
+      fetchComments(function () {
+        $("body").toast({
+          message: "Email sent! Please check your email to confirm.",
+        });
+      });
+    }
+  );
+}
+
 function fetchComments(callback) {
   var camlq =
     '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
@@ -1414,47 +1454,45 @@ function pipelineForward() {
 
   vm.busy.addTask(appBusyStates.pipeline);
 
-  // dialog.pipeline = SP.UI.ModalDialog.showWaitScreenWithNoClose(
-  //   "Progressing to Next Stage",
-  //   "Please wait..."
-  // );
-
   var valuePairs = new Array();
 
   /* Increment the current request stage num */
   var t = parseInt(vm.requestStageNum()) + 1;
   if (t > vm.selectedPipeline().length) {
-    // vm.requestStatus("Closed");
-    // valuePairs.push(["RequestStatus", "Closed"]);
+    // End of pipeline. Close work order.
+    vm.busy.finishTask(appBusyStates.pipeline);
+    closeWorkOrder();
+    return;
+  }
+  vm.requestStageNum(t);
+  if (
+    vm.selectedServiceType().pipelineLogic &&
+    vm.selectedServiceType().pipelineLogic.skipStage &&
+    vm.selectedServiceType().pipelineLogic.skipStage(t)
+  ) {
+    vm.busy.finishTask(appBusyStates.pipeline);
+    pipelineForward();
+    return;
+  }
+  valuePairs.push(["RequestStage", vm.requestStageNum()]);
+
+  vm.listRefWO().updateListItem(vm.requestHeader().ID, valuePairs, function () {
+    console.log("pipeline moved to next stage.");
+    if (vm.requestIsActive() && vm.requestStage()) {
+      /* let's create a new Action every time the item progresses */
+      createAction(
+        vm.requestStage().Title,
+        sal.globalConfig.currentUser.get_title() +
+          " has moved the request to stage " +
+          vm.requestStage().Step +
+          ": " +
+          vm.requestStage().Title
+      );
+      pipelineAssignments();
+    }
     vm.busy.finishTask(appBusyStates.pipeline);
     // dialog.close(dialog.pipeline);
-    closeWorkOrder();
-  } else {
-    vm.requestStageNum(t);
-    valuePairs.push(["RequestStage", vm.requestStageNum()]);
-
-    vm.listRefWO().updateListItem(
-      vm.requestHeader().ID,
-      valuePairs,
-      function () {
-        console.log("pipeline moved to next stage.");
-        if (vm.requestIsActive() && vm.requestStage()) {
-          pipelineAssignments();
-          /* let's create a new Action every time the item progresses */
-          createAction(
-            vm.requestStage().Title,
-            sal.globalConfig.currentUser.get_title() +
-              " has moved the request to stage " +
-              vm.requestStage().Step +
-              ": " +
-              vm.requestStage().Title
-          );
-        }
-        vm.busy.finishTask(appBusyStates.pipeline);
-        // dialog.close(dialog.pipeline);
-      }
-    );
-  }
+  });
 }
 
 function pipelineAssignments() {
@@ -1477,7 +1515,7 @@ function pipelineAssignments() {
   // in our pipeline.
 
   if (vm.requestStageOrg()) {
-    vm.requestOrgs.push(vm.requestStageOrg());
+    vm.requestOrgsPush(vm.requestStageOrg());
     valuePairs = [["RequestOrgs", vm.requestOrgIds()]];
   }
 
@@ -1492,14 +1530,18 @@ function pipelineAssignments() {
       createAssignment("Action Resolver");
       break;
     case "Notification":
-      pipelineNotifications();
-      pipelineForward();
+      Workorder.Notifications.recordStatusNotification();
+      // pipelineNotifications();
       createAction("Notification");
+      // clear the userAssignment before pushing forward.
+      vm.assignAssignee(null);
+      pipelineForward();
       break;
     case "Pending Resolution":
     case "Pending Assignment":
     default:
-      pipelineNotifications();
+      Workorder.Notifications.pipelineStageNotification();
+      //pipelineNotifications();
       break;
   }
 }
@@ -1630,10 +1672,10 @@ function initApp() {
   vm = new koviewmodel();
   var initTime = new Date();
   //vm.busy.addTask(appBusyStates.init);
-  dialog.init = SP.UI.ModalDialog.showWaitScreenWithNoClose(
-    "Initializing",
-    "Please Wait..."
-  );
+  // dialog.init = SP.UI.ModalDialog.showWaitScreenWithNoClose(
+  //   "Initializing",
+  //   "Please Wait..."
+  // );
   $(".non-editable-field").prop("disabled", true);
 
   console.log("initialized listeners");
@@ -1777,7 +1819,9 @@ function initComplete() {
   }
   */
   // vm.busy.finishTask(appBusyStates.init);
-  dialog.init.close();
+  // dialog.init.close();
+
+  document.getElementById('initial-loader').classList.remove('active')
   vm.timers.initComplete(new Date());
   //SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.Cancel);
 }
@@ -1795,20 +1839,19 @@ function initUIComponents() {
   if ($(".ui.accordion").length) {
     $(".ui.accordion").accordion();
   }
+  if ($(".ui.dropdown").length) {
+    $(".ui.dropdown").dropdown();
+  }
   // $(".view-action-office").popup({
   //   popup: ".ui.list-action-office.popup",
   //   on: "click",
   // });
-  if ($(".menu .item").length) {
-    $(".menu .item").tab();
-    $(".top.menu .item").tab({
-      onVisible: function () {
-        vm.tab(this.id);
-      },
-    });
-    $(".ui.secondary.menu").find(".item").tab("change tab", "my-open-orders");
-  }
-  //$(".ui.top.menu").find(".item").tab("change tab", "my-orders");
+  $(".top.menu > .item").tab({
+    onVisible: function () {
+      vm.tab(this.id);
+    },
+  });
+  $(".ui.secondary.menu > .item").tab("change tab", "my-open-orders");
 }
 
 $(document).ready(function () {

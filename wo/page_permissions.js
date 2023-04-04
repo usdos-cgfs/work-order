@@ -1,14 +1,3 @@
-var configRequestingOfficesListDef = {
-  name: "ConfigRequestingOffices",
-  title: "ConfigRequestingOffices",
-  viewFields: {
-    ID: { type: "Text", koMap: "empty" },
-    Title: { type: "Text", koMap: "empty" },
-    Active: { type: "Text", koMap: "empty" },
-    ROGroup: { type: "Person", koMap: "empty" },
-  },
-};
-
 var configActionOfficesListDef = {
   name: "ConfigActionOffices",
   title: "ConfigActionOffices",
@@ -25,6 +14,28 @@ var configActionOfficesListDef = {
   },
 };
 
+var configHolidaysListDef = {
+  name: "ConfigHolidays",
+  title: "ConfigHolidays",
+  viewFields: {},
+};
+var configPipelinesListDef = {
+  name: "ConfigPipelines",
+  title: "ConfigPipelines",
+  viewFields: {},
+};
+
+var configRequestingOfficesListDef = {
+  name: "ConfigRequestingOffices",
+  title: "ConfigRequestingOffices",
+  viewFields: {
+    ID: { type: "Text", koMap: "empty" },
+    Title: { type: "Text", koMap: "empty" },
+    Active: { type: "Text", koMap: "empty" },
+    ROGroup: { type: "Person", koMap: "empty" },
+  },
+};
+
 var configRequestOrgsListDef = {
   name: "ConfigRequestOrgs",
   title: "ConfigRequestOrgs",
@@ -38,12 +49,19 @@ var configRequestOrgsListDef = {
         ACTIONOFFICES: "Action Offices",
         REQUESTINGOFFICE: "Requesting Office",
         DEPARTMENT: "Department",
+        BUDGETPMO: "Budget PMO",
       },
     },
     BreakAccess: { type: "Bool", koMap: "empty" },
     UserGroup: { type: "Person", koMap: "empty" },
     ContactInfo: { type: "Text", koMap: "empty" },
   },
+};
+
+var configServiceTypesListDef = {
+  name: "ConfigServiceTypes",
+  title: "ConfigServiceTypes",
+  viewFields: {},
 };
 
 var configPagesListDef = {
@@ -131,7 +149,7 @@ Report.NewReport = async function () {
 
   await loadAllRecords();
 
-  function assignPagePermissions(pageName, role, userArr) {
+  async function assignPagePermissions(pageName, role, userArr) {
     console.log(`assigning ${role} on ${pageName} to`, userArr);
     var pageId = vm.allPages.find(function (page) {
       return page.FileLeafRef === pageName;
@@ -141,31 +159,72 @@ Report.NewReport = async function () {
     var permissionsArr = userArr.map(function (user) {
       return [user.get_lookupValue(), role];
     });
-    var clientContext = new SP.ClientContext("<subsite url>");
-    var ownerGroup = clientContext.get_web().get_associatedOwnerGroup();
-    permissionsArr.push([ownerGroup, sal.config.siteRoles.roles.FullControl]);
-    app.listRefs.pages.setItemPermissionsAsync(pageId, permissionsArr, false);
+    var ownerGroup = sal.globalConfig.defaultGroups.owners;
+    permissionsArr.push([
+      ownerGroup.get_title(),
+      sal.config.siteRoles.roles.FullControl,
+    ]);
+    await app.listRefs.pages.setItemPermissionsAsync(
+      pageId,
+      permissionsArr,
+      false
+    );
   }
 
   async function synchronize() {
     console.log("synchronizing");
     await loadAllRecords();
 
+    let actionOffices = vm.allRequestOrgs
+      .filter(function (org) {
+        return org.OrgType === ORGOPTS.ACTIONOFFICES && org.UserGroup !== null;
+      })
+      .map(function (org) {
+        return org.UserGroup;
+      });
+
+    let submittersViewers = vm.allRequestingOffices
+      .filter(function (org) {
+        return org.Active;
+      })
+      .map(function (org) {
+        return org.ROGroup;
+      });
+
     var restrictedRead = sal.config.siteRoles.roles.RestrictedRead;
 
-    assignPagePermissions(
-      PAGES.ADMIN,
-      restrictedRead,
-      vm.allRequestOrgs
-        .filter(function (org) {
-          return (
-            org.OrgType === ORGOPTS.ACTIONOFFICES && org.UserGroup !== null
-          );
-        })
-        .map(function (org) {
-          return org.UserGroup;
-        })
-    );
+    // PAGES
+    // ADMIN
+    //assignPagePermissions(PAGES.ADMIN, restrictedRead, actionOffices);
+
+    // APP
+    //assignPagePermissions(PAGES.APP, restrictedRead, submittersViewers);
+
+    // CONFIGURATION LISTS:
+    let permissionValuePairs = [];
+    let customLists = [];
+
+    actionOffices.concat(submittersViewers).map((user) => {
+      permissionValuePairs.push([user.get_lookupValue(), restrictedRead]);
+    });
+
+    // Add site owners
+    var ownerGroup = sal.globalConfig.defaultGroups.owners;
+    permissionValuePairs.push([
+      ownerGroup.get_title(),
+      sal.config.siteRoles.roles.FullControl,
+    ]);
+
+    customLists.push(new sal.NewSPList(configActionOfficesListDef));
+    customLists.push(new sal.NewSPList(configHolidaysListDef));
+    customLists.push(new sal.NewSPList(configPipelinesListDef));
+    customLists.push(new sal.NewSPList(configRequestingOfficesListDef));
+    customLists.push(new sal.NewSPList(configRequestOrgsListDef));
+
+    customLists.forEach(async (list) => {
+      console.log(list.config.title);
+      await list.setListPermissionsAsync(permissionValuePairs, false);
+    });
   }
   document.getElementById("sync").onclick = synchronize;
 };

@@ -68,6 +68,8 @@
         ></select>
       </div>
     </div>
+    <hr />
+
     <div class="two fields">
       <div class="field">
         <label>COR/Supervisor<span class="required">*</span>:</label>

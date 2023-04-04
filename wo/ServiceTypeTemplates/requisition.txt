@@ -3,7 +3,7 @@
    *    List Def: Requisition
    ************************************************************/
   vm.listDefs.push({
-    uid: "access",
+    uid: "requisition",
     name: "st_requisition",
     title: "st_requisition",
     viewFields: {
@@ -15,7 +15,7 @@
         required: true,
       },
       Quantity: { type: "Text", koMap: "requisitionQuantity", required: true },
-      Comments: { type: "Text", koMap: "requisitionComments", required: true },
+      Comments: { type: "Text", koMap: "requisitionComments", required: false },
     },
   });
 

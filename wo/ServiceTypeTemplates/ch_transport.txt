@@ -1,0 +1,147 @@
+<script>
+  /************************************************************
+   *    List Def:
+   ************************************************************/
+  vm.listDefs.push({
+    uid: "ch_transport",
+    name: "st_ch_transport",
+    title: "st_ch_transport",
+    viewFields: {
+      ID: { type: "Text", koMap: "empty", required: false },
+      Title: { type: "Text", koMap: "requestID", required: false },
+      InvoiceNum: {
+        type: "Text",
+        koMap: "transport_invoiceNum",
+        required: true,
+      },
+      InvoiceDate: {
+        type: "DateTime",
+        koMap: "transport_invoiceDate",
+        required: true,
+      },
+      InvoiceReceivedDate: {
+        type: "DateTime",
+        koMap: "transport_invoiceReceivedDate",
+        required: true,
+      },
+      InvoiceAmount: {
+        type: "Text",
+        koMap: "transport_invoiceAmount",
+        required: true,
+      },
+      Vendor: {
+        type: "Text",
+        koMap: "transport_vendor",
+        required: true,
+      },
+    },
+  });
+
+  /***************************************************************
+   *    Declare Observables
+   ***************************************************************/
+  vm.transport_invoiceNum = ko.observable();
+  vm.transport_invoiceDate = new DateField();
+  vm.transport_invoiceReceivedDate = new DateField();
+  vm.transport_invoiceAmount = ko.observable();
+  vm.transport_vendor = ko.observable();
+
+  // Invoice Date
+  // Date Invoice Received
+  // Vendor
+  // Dollar Amount
+  // Date Sent to GTM
+  // GTM Approval Date
+  // Post 196 Approval Date
+  // Date Invoice Certified
+  // Date Payment Disbursed
+</script>
+
+<script type="text/html" id="tmpl_ch_transport">
+  <div class="ui form">
+    <div class="two fields">
+      <div class="field">
+        <label>Invoice Num<span class="required">*</span>:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+                value: transport_invoiceNum"
+        />
+      </div>
+      <div class="field">
+        <label>Invoice Amount<span class="required">*</span>:</label>
+        <input
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+                value: transport_invoiceAmount"
+        />
+      </div>
+    </div>
+
+    <div class="two fields">
+      <div class="field">
+        <label>Invoice Date<span class="required">*</span>:</label>
+        <!-- ko if: currentView() == 'view' -->
+        <input
+          type="text"
+          data-bind="value: transport_invoiceDate.dateFormat(),
+          disable: true"
+        />
+        <!-- /ko -->
+        <!-- ko if: currentView() != 'view' -->
+        <div class="ui calendar">
+          <div class="ui fill input left icon">
+            <i class="calendar icon"></i>
+            <input
+              type="text"
+              placeholder="End"
+              data-bind="dateField: transport_invoiceDate"
+            />
+          </div>
+        </div>
+        <!-- /ko -->
+      </div>
+      <div class="field">
+        <label>Invoice Received Date<span class="required">*</span>:</label>
+        <!-- ko if: currentView() == 'view' -->
+        <input
+          type="text"
+          data-bind="value: transport_invoiceReceivedDate.dateFormat(),
+        disable: true"
+        />
+        <!-- /ko -->
+        <!-- ko if: currentView() != 'view' -->
+        <div class="ui calendar">
+          <div class="ui fill input left icon">
+            <i class="calendar icon"></i>
+            <input
+              type="text"
+              placeholder="End"
+              data-bind="dateField: transport_invoiceReceivedDate"
+            />
+          </div>
+        </div>
+        <!-- /ko -->
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label>Vendor<span class="required">*</span>:</label>
+        <input
+          list="transport-vendors"
+          class="editable-field"
+          type="text"
+          data-bind="disable: currentView() == 'view',
+                value: transport_vendor"
+        />
+        <datalist id="transport-vendors">
+          <option value="DHL"></option>
+          <option value="FedEx"></option>
+          <option value="UPS"></option>
+        </datalist>
+      </div>
+    </div>
+  </div>
+</script>

@@ -33,6 +33,30 @@
         required: true,
         displayName: "Cost",
       },
+      RequestType: {
+        type: "Text",
+        koMap: "itHardwareType",
+        required: true,
+        displayName: "Request Type",
+      },
+      PurchaseFrequency: {
+        type: "Text",
+        koMap: "itHardwarePurchaseFreq",
+        required: false,
+        displayName: "Purchase Frequency",
+      },
+      ApprovedPurchase: {
+        type: "Text",
+        koMap: "itHardwareApprovedPurchase",
+        required: false,
+        displayName: "Approved Purchase",
+      },
+      FundingSource: {
+        type: "Text",
+        koMap: "itHardwareFundSource",
+        required: false,
+        displayName: "Funding Source",
+      },
     },
   });
 
@@ -43,6 +67,41 @@
   vm.itHardwareQuantity = ko.observable();
   vm.itHardwarePOCName = ko.observable();
   vm.itHardwareCost = ko.observable();
+  vm.itHardwareCostThresh = ko.pureComputed(function () {
+    return parseInt(vm.itHardwareCost()) > 500;
+  });
+  vm.itHardwareType = ko.observable();
+  vm.itHardwareTypeOpts = ko.observableArray(["New", "Maintenance Renewal"]);
+  vm.itHardwarePRNum = ko.observable();
+  vm.itHardwareShowPRNum = ko.pureComputed(function () {
+    return vm.page() == "admin.aspx";
+  });
+  vm.itHardwarePurchaseFreq = ko.observable();
+  vm.itHardwareApprovedPurchase = ko.observable();
+  vm.itHardwareFundSource = ko.observable();
+
+  var itHardware = vm.configServiceTypes().find(function (stype) {
+    return stype.UID == "it_hardware";
+  });
+
+  itHardware.validate = function () {
+    if (vm.itHardwareCostThresh()) {
+      var message = "";
+      if (!vm.itHardwarePurchaseFreq()) {
+        message += "Purchase Frequency is required.\n";
+      }
+      if (!vm.itHardwareApprovedPurchase()) {
+        message += "Approved Purchase is required.\n";
+      }
+      if (!vm.itHardwareFundSource()) {
+        message += "Funding Source is required.\n";
+      }
+      if (message !== "") {
+        alert(message);
+        vm.requestIsSaveable(false);
+      }
+    }
+  };
 </script>
 
 <script type="text/html" id="tmpl_it_hardware">
@@ -75,6 +134,84 @@
           type="text"
           data-bind="value: itHardwareCost, disable: currentView()=='view'"
         />
+      </div>
+      <div class="eight wide field">
+        <label>Request Type<span class="required">*</span>: </label>
+        <select
+          type="text"
+          data-bind="disable: currentView() == 'view',
+            options: itHardwareTypeOpts, optionsCaption: 'Select...', value: itHardwareType"
+        ></select>
+      </div>
+
+      <!-- ko if: itHardwareShowPRNum -->
+      <div class="eight wide field">
+        <label>PR #: </label>
+        <input
+          type="text"
+          data-bind="value: itHardwarePRNum, disable: currentView()=='view'"
+        />
+      </div>
+      <!-- /ko -->
+      <div class="eight wide field">
+        <label
+          >Purchase Frequency<span
+            data-bind="visible: itHardwareCostThresh()"
+            class="required"
+            >*</span
+          >:
+        </label>
+        <select
+          data-bind="value: itHardwarePurchaseFreq,
+          disable: currentView()=='view',
+          optionsCaption: 'Select...'"
+          type="text"
+        >
+          <option value="" disabled selected hidden>Select...</option>
+          <option value="oneTime">One Time</option>
+          <option value="recurring">Recurring</option>
+        </select>
+      </div>
+
+      <div class="eight wide field">
+        <label
+          >Approved Purchase<span
+            data-bind="visible: itHardwareCostThresh()"
+            class="required"
+            >*</span
+          >:
+        </label>
+        <select
+          data-bind="value: itHardwareApprovedPurchase, 
+          disable: currentView()=='view',
+          optionsCaption: 'Select...'"
+          type="text"
+        >
+          <option value="" disabled selected hidden>Select...</option>
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+      </div>
+
+      <div class="eight wide field">
+        <label
+          >Funding Source<span
+            data-bind="visible: itHardwareCostThresh()"
+            class="required"
+            >*</span
+          >:
+        </label>
+        <select
+          data-bind="value: itHardwareFundSource, 
+          disable: currentView()=='view',
+          optionsCaption: 'Select...'"
+          type="text"
+        >
+          <option value="" disabled selected hidden>Select...</option>
+          <option value="project">Project</option>
+          <option value="contract">Contract</option>
+          <option value="other">Other</option>
+        </select>
       </div>
     </div>
   </div>

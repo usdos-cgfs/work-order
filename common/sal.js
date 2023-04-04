@@ -37,6 +37,16 @@ function initSal() {
   var web = currCtx.get_web();
   //sal.site = sal.siteConnection;
 
+  // Get default groups
+  sal.globalConfig.defaultGroups = {
+    owners: web.get_associatedOwnerGroup(),
+    members: web.get_associatedMemberGroup(),
+    visitors: web.get_associatedVisitorGroup(),
+  };
+  currCtx.load(sal.globalConfig.defaultGroups.owners);
+  currCtx.load(sal.globalConfig.defaultGroups.members);
+  currCtx.load(sal.globalConfig.defaultGroups.visitors);
+
   // Get Current User information
   var user = web.get_currentUser(); //must load this to access info.
   currCtx.load(user);
@@ -264,7 +274,50 @@ sal.NewUtilities = function () {
       Function.createDelegate(data, onGetUserFailed)
     );
   }
+
+  function copyFiles(sourceLib, destLib, callback, onError) {
+    var context = new SP.ClientContext.get_current();
+    var web = context.get_web();
+    var folderSrc = web.getFolderByServerRelativeUrl(sourceLib);
+    context.load(folderSrc, "Files");
+    context.executeQueryAsync(
+      function () {
+        console.log("Got the source folder right here!");
+        var files = folderSrc.get_files();
+        var e = files.getEnumerator();
+        var dest = [];
+        while (e.moveNext()) {
+          var file = e.get_current();
+          var destLibUrl = destLib + "/" + file.get_name();
+          dest.push(destLibUrl); //delete this when we're happy we got the file paths right
+          file.copyTo(destLibUrl, true);
+        }
+        console.log(dest); //delete this when we're happy we got the file paths right
+        context.executeQueryAsync(
+          function () {
+            console.log("Files moved successfully!");
+            callback();
+          },
+          function (sender, args) {
+            console.log("error: ") + args.get_message();
+            onError;
+          }
+        );
+      },
+      function (sender, args) {
+        console.log("Sorry, something messed up: " + args.get_message());
+      }
+    );
+  }
+
+  function copyFilesAsync(sourceFolder, destFolder) {
+    return new Promise((resolve, reject) => {
+      copyFiles(sourceFolder, destFolder, resolve, reject);
+    });
+  }
   var publicMembers = {
+    copyFiles: copyFiles,
+    copyFilesAsync: copyFilesAsync,
     createSiteGroup: createSiteGroup,
     getUserGroups: getUserGroups,
     getUsersWithGroup: getUsersWithGroup,
@@ -364,6 +417,39 @@ function ensureUserById(userId, callback) {
     Function.createDelegate(data, onRequestSuccess),
     Function.createDelegate(data, onRequestFail)
   );
+}
+
+function ensureUserByIdAsync(userId) {
+  return new Promise((resolve, reject) => {
+    // First check if this is a group
+    var group = sal.globalConfig.siteGroups.find(function (group) {
+      return group.ID == userId;
+    });
+
+    if (group) {
+      resolve(group.group);
+      return;
+    }
+
+    var context = new SP.ClientContext.get_current();
+    var user = context.get_web().getUserById(userId);
+
+    function onRequestSuccess() {
+      resolve(user);
+    }
+
+    function onRequestFail(sender, args) {
+      alert("Could not find user with id: ", userId);
+      reject(args);
+    }
+    data = { user: user, resolve: resolve, reject };
+
+    context.load(user);
+    context.executeQueryAsync(
+      Function.createDelegate(data, onRequestSuccess),
+      Function.createDelegate(data, onRequestFail)
+    );
+  });
 }
 
 ensureUserRest = function (userName) {
@@ -666,7 +752,7 @@ sal.NewSPList = function (listDef) {
 
   self.getLibGUID = function (callback) {
     self.callbackGUID = callback;
-    //self.updateConfig();
+
     self.config.currentContext.load(self.config.listRef);
     self.config.currentContext.executeQueryAsync(
       function () {
@@ -684,6 +770,115 @@ sal.NewSPList = function (listDef) {
   /*****************************************************************
                                 Common Public Methods       
     ******************************************************************/
+
+  function setListPermissionsAsync(valuePairs, reset) {
+    return new Promise((resolve, reject) => {
+      setListPermissions(valuePairs, resolve, reset);
+    });
+  }
+
+  function setListPermissions(valuePairs, callback, reset) {
+    reset = reset === undefined ? false : reset;
+
+    var users = new Array();
+    var resolvedGroups = new Array();
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+
+    var oList = web.get_lists().getByTitle(self.config.def.title);
+
+    valuePairs.forEach(function (vp) {
+      var resolvedGroup = sal.getSPSiteGroupByName(vp[0]);
+      if (resolvedGroup) {
+        resolvedGroups.push([resolvedGroup, vp[1]]);
+      } else {
+        users.push([currCtx.get_web().ensureUser(vp[0]), vp[1]]);
+      }
+    });
+
+    function onFindItemSucceeded() {
+      console.log("Successfully found item");
+      var currCtx = new SP.ClientContext.get_current();
+      var web = currCtx.get_web();
+
+      if (reset) {
+        oList.resetRoleInheritance();
+        oList.breakRoleInheritance(false, false);
+        oList
+          .get_roleAssignments()
+          .getByPrincipal(sal.globalConfig.currentUser)
+          .deleteObject();
+      } else {
+        oList.breakRoleInheritance(false, false);
+      }
+
+      //var oList = web.get_lists().getByTitle(self.config.def.title);
+
+      this.resolvedGroups.forEach(function (groupPairs) {
+        var roleDefBindingColl =
+          SP.RoleDefinitionBindingCollection.newObject(currCtx);
+        roleDefBindingColl.add(
+          web.get_roleDefinitions().getByName(groupPairs[1])
+        );
+        oList.get_roleAssignments().add(groupPairs[0], roleDefBindingColl);
+      });
+
+      this.users.forEach(function (userPairs) {
+        var roleDefBindingColl =
+          SP.RoleDefinitionBindingCollection.newObject(currCtx);
+        roleDefBindingColl.add(
+          web.get_roleDefinitions().getByName(userPairs[1])
+        );
+        oList.get_roleAssignments().add(userPairs[0], roleDefBindingColl);
+      });
+
+      var data = { oList: oList, callback: callback };
+
+      function onSetItemPermissionsSuccess() {
+        console.log("Successfully set permissions");
+        callback(oList);
+      }
+
+      function onSetItemPermissionsFailure(sender, args) {
+        console.error(
+          "Failed to update permissions on List: " +
+            this.oList.get_title() +
+            args.get_message() +
+            "\n",
+          args.get_stackTrace()
+        );
+      }
+
+      currCtx.load(oList);
+      currCtx.executeQueryAsync(
+        Function.createDelegate(data, onSetItemPermissionsSuccess),
+        Function.createDelegate(data, onSetItemPermissionsFailure)
+      );
+    }
+
+    function onFindItemFailed(sender, args) {
+      console.error(
+        "Failed to find List: " + this.oList.get_title + args.get_message(),
+        args.get_stackTrace()
+      );
+    }
+    var data = {
+      oList: oList,
+      users: users,
+      resolvedGroups: resolvedGroups,
+      callback: callback,
+    };
+    //let data = { title: oListItem.get_item("Title"), oListItem: oListItem };
+
+    currCtx.load(oList);
+    users.map(function (user) {
+      currCtx.load(user[0]);
+    });
+    currCtx.executeQueryAsync(
+      Function.createDelegate(data, onFindItemSucceeded),
+      Function.createDelegate(data, onFindItemFailed)
+    );
+  }
 
   self.generateEmptyItem = function () {
     /* Create an empty object that matches the viewfields */
@@ -771,7 +966,7 @@ sal.NewSPList = function (listDef) {
     /*
         Obtain all list items that match the querystring passed by caml.
         */
-    //self.updateConfig();
+
     //console.log("context loaded", self.config);
     var camlQuery = new SP.CamlQuery.createAllItemsQuery();
 
@@ -783,7 +978,7 @@ sal.NewSPList = function (listDef) {
 
     var collListItem = oList.getItems(camlQuery);
 
-    function onGetListItemsSucceeded(sender, args) {
+    function onGetListItemsSucceeded() {
       var self = this;
       var listItemEnumerator = self.collListItem.getEnumerator();
       self.focusedItems = [];
@@ -861,7 +1056,7 @@ sal.NewSPList = function (listDef) {
     ******************************************************************/
   function updateListItem(id, valuePairs, callback) {
     //[["ColName", "Value"], ["Col2", "Value2"]]
-    //self.updateConfig();
+
     var currCtx = new SP.ClientContext.get_current();
     var web = currCtx.get_web();
     var oList = web.get_lists().getByTitle(self.config.def.title);
@@ -874,7 +1069,7 @@ sal.NewSPList = function (listDef) {
     //oListItem.set_item('Title', 'My Updated Title');
     oListItem.update();
 
-    function onUpdateListItemsSucceeded(sender, args) {
+    function onUpdateListItemsSucceeded() {
       //alert('Item updated!');
       console.log("Successfully updated " + this.oListItem.get_item("Title"));
       this.callback();
@@ -894,13 +1089,19 @@ sal.NewSPList = function (listDef) {
     );
   }
 
+  function updateListItemAsync(id, valuePairs) {
+    return new Promise((resolve, reject) => {
+      updateListItem(id, valuePairs, resolve);
+    });
+  }
+
   /*****************************************************************
                             deleteListItem      
     ******************************************************************/
   function deleteListItem(id, callback) {
     //[["ColName", "Value"], ["Col2", "Value2"]]
     //self.callbackDeleteListItem = callback;
-    //self.updateConfig();
+
     var currCtx = new SP.ClientContext.get_current();
     var web = currCtx.get_web();
     var oList = web.get_lists().getByTitle(self.config.def.title);
@@ -943,8 +1144,8 @@ sal.NewSPList = function (listDef) {
   /**
    * Documentation - setItemPermissions
    * @param {number} id Item identifier, obtain using getListItems above
-   * @param {Array} valuePairs A 2d array containing groups and permission levels
-   *    e.g. [["Owners", "Full Control"], ["Members", "Contribute"]]
+   * @param {Array} valuePairs A 2d array containing groups/users and permission levels
+   *    e.g. [["Owners", "Full Control"], ["backlundpf", "Contribute"]]
    */
   function setItemPermissions(id, valuePairs, callback, reset) {
     reset = reset === undefined ? false : reset;
@@ -1161,13 +1362,14 @@ sal.NewSPList = function (listDef) {
     files = folder.get_files();
     //files.get_listItemAllFields();
 
-    function onGetListFilesSucceeded(sender, args) {
+    function onGetListFilesSucceeded() {
       var fileArr = [];
       var listItemEnumerator = this.files.getEnumerator();
       while (listItemEnumerator.moveNext()) {
         var file = listItemEnumerator.get_current();
         //console.log(file);
         var fileUrl = file.get_serverRelativeUrl();
+        currCtx.load(file, "ListItemAllFields");
         fileArr.push({
           fileUrl: fileUrl,
           title: file.get_title(),
@@ -1176,7 +1378,17 @@ sal.NewSPList = function (listDef) {
           file: file,
         });
       }
-      callback(fileArr);
+      currCtx.executeQueryAsync(
+        function () {
+          fileArr.forEach(function (file) {
+            file.ID = file.file.get_listItemAllFields().get_id();
+          });
+          callback(fileArr);
+        },
+        function (sender, args) {
+          console.warn("Unable to fetch file info");
+        }
+      );
     }
 
     function ongetListFilesFailed(sender, args) {
@@ -1188,11 +1400,17 @@ sal.NewSPList = function (listDef) {
 
     data = { files: files, callback: callback };
 
-    self.config.currentContext.load(files);
-    self.config.currentContext.executeQueryAsync(
+    currCtx.load(files);
+    currCtx.executeQueryAsync(
       Function.createDelegate(data, onGetListFilesSucceeded),
       Function.createDelegate(data, ongetListFilesFailed)
     );
+  }
+
+  function getFolderContentsAsync(folderName) {
+    return new Promise((resolve, reject) => {
+      getFolderContents(folderName, resolve);
+    });
   }
 
   /*****************************************************************
@@ -1578,15 +1796,19 @@ sal.NewSPList = function (listDef) {
 
   var publicMembers = {
     config: this.config,
+    setListPermissions: setListPermissions,
+    setListPermissionsAsync: setListPermissionsAsync,
     createListItem: createListItem,
     getListItems: getListItems,
     getListItemsAsync: getListItemsAsync,
     updateListItem: updateListItem,
+    updateListItemAsync: updateListItemAsync,
     deleteListItem: deleteListItem,
     setItemPermissions: setItemPermissions,
     setItemPermissionsAsync: setItemPermissionsAsync,
     getItemPermissions: getItemPermissions,
     getFolderContents: getFolderContents,
+    getFolderContentsAsync: getFolderContentsAsync,
     showModal: showModal,
     uploadNewDocument: uploadNewDocument,
     upsertListFolderPath: upsertListFolderPath,

@@ -48,9 +48,8 @@
     "Other",
   ]);
   vm.accessEmployeeTypeOpts = ko.observable([
-    "CGFS Government",
-    "CGFS Contractor",
-    "Other",
+    "Contractor",
+    "Government",
   ]);
 
   vm.accessType = ko.observable();
@@ -110,6 +109,15 @@
         </div>
         <!-- /ko -->
       </div>
+       <div class="field">
+        <label>Employee Type<span class="required">*</span>: </label>
+        <select
+          data-bind="value: accessEmployeeType, options: accessEmployeeTypeOpts, 
+          optionsCaption: 'Select...',
+          disable: currentView()=='view'"
+        ></select>
+      </div>
+    </div>
       <div class="field">
         <label> Locations<span class="required">*</span>: </label>
         <input
@@ -117,6 +125,5 @@
           data-bind="value: accessLocations, disable: currentView()=='view'"
         />
       </div>
-    </div>
   </div>
 </script>

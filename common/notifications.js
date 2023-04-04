@@ -8,7 +8,7 @@ Workorder.NewNotifications = function () {
   function newWorkorderEmailUser() {
     // 2. Send email to user, letting them know their request has been created
     var toUser = [sal.globalConfig.currentUser];
-    var toString = [];
+    var toStringArr = [];
     var ccString = [];
 
     var subject =
@@ -45,7 +45,7 @@ Workorder.NewNotifications = function () {
       "<br><br>" +
       vm.requestLink();
 
-    createEmail(toUser, toString, [], ccString, [], subject, bodyUser);
+    createEmail(toUser, toStringArr, [], ccString, [], subject, bodyUser);
   }
 
   function newWorkorderEmailActionOffices() {
@@ -65,7 +65,7 @@ Workorder.NewNotifications = function () {
       return ao.PreferredEmail ? ao.PreferredEmail : ao.UserAddress;
     });
 
-    var toString = [];
+    var toStringArr = [];
     var ccString = [];
 
     var subject =
@@ -93,7 +93,7 @@ Workorder.NewNotifications = function () {
       "<br><br>" +
       vm.requestLinkAdmin();
 
-    createEmail(to, toString, [], ccString, [], subject, body);
+    createEmail(to, toStringArr, [], ccString, [], subject, body);
   }
 
   function workorderReminderEmails(id) {
@@ -103,7 +103,7 @@ Workorder.NewNotifications = function () {
         return ao.PreferredEmail ? ao.PreferredEmail : ao.UserAddress;
       });
 
-      var toString = [];
+      var toStringArr = [];
       var ccString = [];
 
       var days = vm.selectedServiceType().ReminderDays.split(",");
@@ -144,7 +144,7 @@ Workorder.NewNotifications = function () {
 
           createEmail(
             to,
-            toString,
+            toStringArr,
             [],
             ccString,
             [],
@@ -169,14 +169,14 @@ Workorder.NewNotifications = function () {
       to.push(vm.assignAssignee().lookupUser());
     } else if (vm.assignActionOffice() && vm.assignActionOffice().UserAddress) {
       // if tha action office has a preferred email, use it.
-      if (vm.assignActionOffice().PreferredEmail) {
-        to.push(vm.assignActionOffice().PreferredEmail);
-      } else {
-        to.push(vm.assignActionOffice().UserAddress);
-      }
+      to.push(
+        vm.assignActionOffice().PreferredEmail
+          ? vm.assignActionOffice().PreferredEmail
+          : vm.assignActionOffice().UserAddress
+      );
     }
 
-    var toString = [];
+    var toStringArr = [];
     var ccString = [];
 
     var subject =
@@ -215,7 +215,8 @@ Workorder.NewNotifications = function () {
     }
     addendum += "</ul>";
 
-    if (role == "Approver") {
+    // TODO: Fix quick approval
+    if (role == "Approver" && false) {
       addendum +=
         "<br>Click the link below to quick approve this request:<br> " +
         '<a href="' +
@@ -232,7 +233,7 @@ Workorder.NewNotifications = function () {
         "</a><br><br>";
     }
 
-    createEmail(to, toString, [], ccString, [], subject, body + addendum);
+    createEmail(to, toStringArr, [], ccString, [], subject, body + addendum);
   }
 
   function workorderPipelineAssignees() {
@@ -267,7 +268,7 @@ Workorder.NewNotifications = function () {
 
   function workorderClosedEmail(reason) {
     var to = [vm.requestHeader().Author, vm.requestor.lookupUser()];
-    var toString = [];
+    var toStringArr = [];
 
     var cc = [];
     var ccString = [];
@@ -328,38 +329,16 @@ Workorder.NewNotifications = function () {
       "<b>Note:</b> This request cannot be reactivated. " +
       "To reinitiate, please create a new service request.<br><br>";
 
-    createEmail(to, toString, cc, ccString, [], subject, body);
+    createEmail(to, toStringArr, cc, ccString, [], subject, body);
   }
 
   function pipelineStageNotification() {
-    var to = [];
-    var toString = [];
-    if (!vm.requestStageOffice()) {
-    } else if (vm.requestStageOffice().PreferredEmail) {
-      toString.push(vm.requestStageOffice().PreferredEmail);
-    } else if (vm.requestStageOffice().UserAddress) {
-      to.push(vm.requestStageOffice().UserAddress);
-    }
-
-    if (vm.requestStage().WildCardAssignee) {
-      var personName = vm.requestStage().WildCardAssignee;
-      // This should be a person field
-      try {
-        var personObservable = vm[personName];
-        to.push(personObservable.lookupUser());
-      } catch (err) {
-        console.error(
-          "Something went wrong fetching " + personName + " from viewmodel: ",
-          err
-        );
-      }
-    }
+    var emails = getCurrentEmailOffice();
+    var to = emails.email;
+    var toStringArr = emails.emailString;
 
     var cc = [];
     var ccString = [];
-    // if (vm.requestStageOrg()) {
-    //   cc.push(vm.requestStageOrg().UserGroup);
-    // }
 
     var subject =
       "Work Order -" +
@@ -382,6 +361,7 @@ Workorder.NewNotifications = function () {
       "or copy and paste the below URL into your browser: <br> " +
       vm.requestLinkAdmin();
 
+    // Append our valuepairs
     var addendum = new String();
     var valuePairs = [];
     if (vm.selectedServiceType().listDef) {
@@ -395,16 +375,138 @@ Workorder.NewNotifications = function () {
         addendum += "<li>" + vp[0] + " - " + vp[1] + "</li>";
       });
     }
+    addendum += "</ul><br>";
+
+    // append our comments
+    addendum += "Comments:<br><ul>";
+    vm.requestComments().forEach(function (comment) {
+      addendum += "<li>" + comment.Comment + "</li>";
+    });
     addendum += "</ul>";
 
     body += addendum;
 
-    createEmail(to, toString, cc, ccString, [], subject, body);
+    createEmail(to, toStringArr, cc, ccString, [], subject, body);
+  }
+
+  /**
+   * Get's the current pipeline stages action office either preferred email
+   * or their user address,
+   * If there's a wildcard assignee, add them too.
+   * @returns email [], emailString []
+   */
+  function getCurrentEmailOffice() {
+    var email = [];
+    var emailString = [];
+    if (!vm.requestStageOffice()) {
+    } else if (vm.requestStageOffice().PreferredEmail) {
+      emailString.push(vm.requestStageOffice().PreferredEmail);
+    } else if (vm.requestStageOffice().UserAddress) {
+      email.push(vm.requestStageOffice().UserAddress);
+    }
+
+    if (vm.requestStage().WildCardAssignee) {
+      var personName = vm.requestStage().WildCardAssignee;
+      // This should be a person field
+      try {
+        var personObservable = vm[personName];
+        email.push(personObservable.lookupUser());
+      } catch (err) {
+        console.error(
+          "Something went wrong fetching " + personName + " from viewmodel: ",
+          err
+        );
+      }
+    }
+    return { email, emailString };
+  }
+
+  /**
+   * recordStatusNotification
+   *
+   * Intended for "Notification" pipeline stages. Link to app page.
+   */
+  function recordStatusNotification() {
+    var emails = getCurrentEmailOffice();
+    var to = emails.email;
+    var toStringArr = emails.emailString;
+
+    var cc = [];
+    var ccString = [];
+
+    var subject =
+      "Work Order -" +
+      vm.requestStage().Title +
+      "- " +
+      vm.selectedServiceType().Title +
+      " - " +
+      vm.requestID();
+
+    var body =
+      "Greetings Colleagues,<br><br> This is a courtesy notification for the following record. No action is required:<br> " +
+      '<a href="' +
+      vm.requestLink() +
+      '" target="blank">' +
+      vm.requestID() +
+      "</a> - " +
+      vm.selectedServiceType().Title +
+      "<br><br>" +
+      "To view the request, please click the link above, " +
+      "or copy and paste the below URL into your browser: <br> " +
+      vm.requestLink();
+
+    // Append our valuepairs
+    var addendum = new String();
+    var valuePairs = [];
+    if (vm.selectedServiceType().listDef) {
+      valuePairs = getValuePairsHuman(
+        vm.selectedServiceType().listDef.viewFields
+      );
+    }
+    addendum += "<br><br><ul>";
+    if (valuePairs.length) {
+      valuePairs.forEach(function (vp) {
+        addendum += "<li>" + vp[0] + " - " + vp[1] + "</li>";
+      });
+    }
+    addendum += "</ul><br>";
+
+    // append our comments
+    addendum += "Comments:<br><ul>";
+    vm.requestComments().forEach(function (comment) {
+      addendum += "<li>" + comment.Comment + "</li>";
+    });
+    addendum += "</ul>";
+
+    body += addendum;
+
+    createEmail(to, toStringArr, cc, ccString, [], subject, body);
+  }
+
+  function sendCommentNotification(comment) {
+    var emails = getCurrentEmailOffice();
+    var to = emails.email;
+    var toStringArr = emails.emailString;
+
+    to.push(sal.globalConfig.currentUser);
+    to.push(vm.requestor.lookupUser());
+
+    var subject =
+      "Work Order -New Comment- " +
+      vm.selectedServiceType().Title +
+      " - " +
+      vm.requestID();
+
+    var body = `${sal.globalConfig.currentUser.get_title()} has left a new comment on <a href="${vm.requestLink()}" target="blank">${vm.requestID()}</a>:<br><br>`;
+
+    body += comment.Comment;
+
+    createEmail(to, toStringArr, [], [], [], subject, body);
   }
 
   function createEmail(
     to,
-    toString,
+    toStringArr,
     cc,
     ccString,
     bcc,
@@ -422,7 +524,7 @@ Workorder.NewNotifications = function () {
 
     var vp = [
       ["To", toArr],
-      ["ToString", toString.join(";")],
+      ["ToString", toStringArr.join(";")],
       ["CC", ccArr],
       ["CCString", ccString.join(";")],
       ["BCC", bccArr],
@@ -483,6 +585,8 @@ Workorder.NewNotifications = function () {
     newAssignmentNotification: newAssignmentNotification,
     workorderClosedEmail: workorderClosedEmail,
     pipelineStageNotification: pipelineStageNotification,
+    recordStatusNotification: recordStatusNotification,
+    sendCommentNotification: sendCommentNotification,
   };
 
   return publicMembers;

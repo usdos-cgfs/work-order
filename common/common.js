@@ -28,6 +28,7 @@ Workorder.Common = Workorder.Common || {};
 
 function InitCommon() {
   Workorder.Common.Utilities = new Workorder.Common.NewUtilities();
+  Workorder.Common.Components = new Workorder.Common.NewComponents();
 }
 
 Workorder.Common.NewUtilities = function () {
@@ -57,7 +58,7 @@ Workorder.Common.NewUtilities = function () {
       SPClientPeoplePicker.SPClientPeoplePickerDict[id + "_TopSpan"];
 
     // Check if this has been set, if so, remove
-    if (pickerControl.HasResolvedUsers()) {
+    while (pickerControl.HasResolvedUsers()) {
       pickerControl.DeleteProcessedUser();
     }
     var editId = "#" + pickerControl.EditorElementId;
@@ -67,10 +68,165 @@ Workorder.Common.NewUtilities = function () {
     pickerControl.AddUnresolvedUserFromEditor(true);
   }
 
+  function createElementFromHTML(htmlString) {
+    var div = document.createElement("div");
+    div.innerHTML = htmlString.trim();
+
+    // Change this to div.childNodes to support multiple top-level nodes.
+    return div.firstChild;
+  }
+
   publicMembers = {
     queries: queries,
     peoplePickerIsEmpty: peoplePickerIsEmpty,
     setPeoplePicker: setPeoplePicker,
+    createElementFromHTML: createElementFromHTML,
+  };
+
+  return publicMembers;
+};
+
+Workorder.Common.NewComponents = function () {
+  /**
+   * TODO: This needs to be reorganized, the
+   * @returns DocumentStore types for getting/setting column values.
+   */
+  function DocumentStore({ recordArr }) {
+    // var doc = ko.observableArray([]);
+
+    function setValue(initialValue) {
+      if (initialValue) {
+        recordArr(JSON.parse(initialValue));
+        return;
+      }
+      recordArr([]);
+    }
+
+    function getValue() {
+      return JSON.stringify(recordArr());
+    }
+
+    function clearValue() {
+      recordArr([]);
+    }
+
+    function getValueHuman() {
+      // Overload this in your component object, see DateTable
+      if (!this.getValueHumanImplementation) {
+        return getValue();
+      }
+      return this.getValueHumanImplementation();
+    }
+
+    // function commitChanges() {
+    //   var currCtx = new SP.ClientContext.get_current();
+    //   var web = currCtx.get_web();
+    //   //Now push to the request item:
+    //   var requestList = web.get_lists().getByTitle(listTitle);
+    //   oListItem = requestList.getItemById(itemId);
+    //   oListItem.set_item(columnName, JSON.stringify(recordArr()));
+    //   oListItem.update();
+
+    //   currCtx.load(oListItem);
+
+    //   currCtx.executeQueryAsync(
+    //     function onSuccess() {
+    //       // console.log("Added User");
+    //     },
+    //     function onFailure(args, sender) {
+    //       console.error("Failed to commit changes - " + columnName, args);
+    //     }
+    //   );
+    // }
+
+    var publicMembers = {
+      setValue,
+      getValue,
+      getValueHuman,
+      clearValue,
+      // commitChanges,
+    };
+    return publicMembers;
+  }
+
+  /**
+   * Builds a simple Date Table with DocumentStore type composition.
+   * @returns DateTableDocumentStore
+   */
+  function DateTable() {
+    let self = this;
+    let state = {
+      recordArr: ko.observableArray(),
+    };
+    // let newDate = new DateComponent();
+    // let documentStore = new DocumentStore();
+
+    var getValueHumanImplementation = function () {
+      let body =
+        "<table><thead><tr><th>Date</th><th>Hours</th><th>Label</th></tr></thead><tbody>";
+      state.recordArr().forEach((entry) => {
+        body +=
+          `<tr><td>${new Date(entry.date).toDateString()}</td>` +
+          `<td>${entry.hours}</td>` +
+          `<td>${entry.label}</td></tr>`;
+      });
+      body += "</tbody></table>";
+      return body;
+    };
+
+    var deleteEntry = function (entryToDelete) {
+      let tempArr = state.recordArr().filter(function (dateEntry) {
+        return dateEntry.identifier != entryToDelete.identifier;
+      });
+
+      state.recordArr(tempArr);
+    };
+
+    var publicMembers = {
+      recordArr: state.recordArr,
+      ...DocumentStore(state),
+      newDate: DateComponent(state),
+      deleteEntry,
+      getValueHumanImplementation,
+    };
+    return publicMembers;
+  }
+
+  function DateComponent({ recordArr }) {
+    var date = new DateField();
+    var label = ko.observable();
+    var hours = ko.observable();
+    var isSaveable = function () {
+      if (!hours() || !date.date()) {
+        return false;
+      }
+      return true;
+    };
+    var save = function () {
+      if (!isSaveable()) {
+        alert("Please provide Date and Hours.");
+        return;
+      }
+      recordArr.push({
+        identifier: Date.now(),
+        date: date.date(),
+        hours: hours() ? hours() : "",
+        label: label() ? label() : "",
+      });
+    };
+    var publicMembers = {
+      date,
+      hours,
+      label,
+      save,
+      isSaveable,
+    };
+    return publicMembers;
+  }
+
+  var publicMembers = {
+    DateTable,
+    DocumentStore: DocumentStore,
   };
 
   return publicMembers;
@@ -119,58 +275,115 @@ var linkViewModel = ["Title", "LinkType", "LinkUrl"];
 function makeDataTable(id) {
   if ($(id).length) {
     $(id).DataTable({
+      dom:
+        "<'ui stackable grid'" +
+        "<'row'" +
+        "<'eight wide column'l>" +
+        "<'right aligned eight wide column'f>" +
+        ">" +
+        "<'row dt-table'" +
+        "<'sixteen wide column'tr>" +
+        ">" +
+        "<'row'" +
+        "<'six wide column'i>" +
+        "<'center aligned four wide column'B>" +
+        "<'right aligned six wide column'p>" +
+        ">" +
+        ">",
+      buttons: ["copy", "csv", "excel", "pdf", "print"],
       order: [[0, "desc"]],
       iDisplayLength: 25,
       deferRender: true,
       bDestroy: true,
-      columnDefs: [{ width: "10%", targets: 0 }],
+      // columnDefs: [{ width: "10%", targets: 0 }],
       initComplete: function () {
-        //this.api().columns([1, 3, 4]).every( function () {
-        // this.api()
-        //   .columns()
-        //   .every(function () {
-        //     var tempCol = this;
-        //     $("").appendTo($(tempCol.header()));
-        //   });
         this.api()
           .columns()
           .every(function () {
-            //this.api().columns([0, 2, 5]).every( function () {
-            // colum filtering from https://datatables.net/examples/api/multi_filter_select.html
             var column = this;
-            if (
-              ["Assignees", "Description"].indexOf($(column.header()).html()) <
-              0
-            ) {
-              var className = "";
-              if ($(column.header()).html()) {
-                className =
-                  "dataTableSelect" +
-                  $(column.header()).html().replace(/\s+/g, "");
-              }
-              //var columnValues = [];
-              //var columnTitle = $(column.header()).html();
-              // $(column.header()).append("<br>");
-              var select = $(
-                '<select class="' +
-                  className +
-                  '"><option value=""></option></select>'
-              )
-                .appendTo($(column.footer()).empty())
-                //.appendTo($(column.header()))
-                .on("change", function () {
-                  var val = $.fn.dataTable.util.escapeRegex($(this).val());
+            var tbl = $(column.header()).closest("table");
+            // Set the row we want our filter to show up in
+            // var filterCell = tbl.find("thead tr:eq(1) th").eq(column.index());
+            var filterCell = $(column.footer());
 
-                  column.search(val ? "^" + val + "$" : "", true, false).draw();
+            var select = $(
+              '<select class="ui long compact dropdown search selection multiple"><option value=""></option></select>'
+            );
+            switch (filterCell.attr("data-filter")) {
+              case "select-filter":
+                select.attr("multiple", "true");
+              case "single-select-filter":
+                select.appendTo(filterCell.empty()).on("change", function () {
+                  var vals = $(this).val();
+                  if (!vals) {
+                    vals = [];
+                  } else {
+                    vals = vals.map(function (value) {
+                      return value
+                        ? "^" + $.fn.dataTable.util.escapeRegex(value) + "$"
+                        : null;
+                    });
+                  }
+                  var val = vals.join("|");
+                  column.search(val, true, false).draw();
                 });
+                // Populate our select option values based on column cells.
+                column
+                  .data()
+                  .unique()
+                  .sort()
+                  .each(function (optionText, j) {
+                    // first try to parse html
+                    try {
+                      let parsedElement = $(optionText);
 
-              column
-                .data()
-                .unique()
-                .sort()
-                .each(function (d, j) {
-                  select.append('<option value="' + d + '">' + d + "</option>");
-                });
+                      if (parsedElement.is("a")) {
+                        optionText = parsedElement.text();
+                      }
+                    } catch (e) {
+                      //Nothing to do here, it's not valid html
+                    }
+                    select.append(
+                      '<option value="' +
+                        optionText +
+                        '">' +
+                        optionText +
+                        "</option>"
+                    );
+                  });
+                break;
+              case "search-filter":
+                $(
+                  '<div class="ui fluid input">' +
+                    '<input type="text" placeholder="Search..." style="width: 100%"/>' +
+                    "</div>"
+                )
+                  .appendTo(filterCell.empty())
+                  .on("keyup change clear", function () {
+                    const inputSearchText =
+                      this.getElementsByTagName("input")[0].value;
+                    if (column.search() !== inputSearchText) {
+                      column.search(inputSearchText).draw();
+                    }
+                  });
+                break;
+              case "bool-filter":
+                // Does this row contain data?
+                var checkbox = $('<input type="checkbox"></input>')
+                  .appendTo(filterCell.empty())
+                  .change(function () {
+                    if (this.checked) {
+                      column.search("true").draw();
+                    } else {
+                      column.search("").draw();
+                    }
+                  });
+                break;
+              default:
+            }
+            if (filterCell.attr("clear-width")) {
+              // Clear width to contents
+              tbl.find("thead tr:eq(0) th").eq(column.index()).width("");
             }
           });
       },

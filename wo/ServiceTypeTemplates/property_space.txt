@@ -29,6 +29,11 @@
         koMap: "propertySpacePropertyType",
         required: false,
       },
+      PropertyTypeChoice: {
+        type: "Text",
+        koMap: "propertySpacePropertyChoiceType",
+        required: false,
+      },
       CurrentLocation: {
         type: "Text",
         koMap: "propertySpaceCurLoc",
@@ -59,35 +64,136 @@
         koMap: "propertySpaceSpaceType",
         required: false,
       },
+      LoanAttest: {
+        type: "Text",
+        koMap: "propertySpaceLoanAttest",
+        required: false,
+      },
     },
   });
 
   /***************************************************************
    *    Declare Observables
    ***************************************************************/
+  function PropertySpace() {
+    var self = this;
+
+    const serviceTypes = {
+      Property: "Property",
+      Space: "Space",
+    };
+    const propertySvcTypes = {
+      Inventory: "Inventory Request",
+      Move: "Property move from one space to another",
+      Excess: "Property excess request",
+      Loanable: "Loanable Property",
+    };
+    const spaceSvcTypes = {
+      Move: "Moving from one space to another",
+      New: "Request for new office space",
+    };
+
+    const propertyTypeOptions = [
+      "Computer Monitor",
+      "Keyboard",
+      "Headset",
+      "Web Camera",
+      "Computer Speakers",
+      "Mouse",
+    ];
+
+    var serviceItem = vm.configServiceTypes().find(function (stype) {
+      return stype.UID == "property_space";
+    });
+
+    serviceItem.validate = function () {
+      if (vm.propertySpacePropType() == propertySvcTypes.Loanable) {
+        // if (!vm.propertySpaceLoanAttest()) {
+        //   vm.requestIsSaveable(false);
+        //   alert(
+        //     "Please type your name to confirm that you understand the loanable property usage restrictions."
+        //   );
+        //   document.getElementById("property-space-loan-attest").focus();
+        //   document.getElementById("service-type-form").scrollIntoView();
+        // }
+      }
+      //vm.requestIsSaveable(true);
+    };
+
+    var selectedPropertyTypes = ko.observableArray();
+
+    function selectPropertyType(propType, event) {
+      //debugger;
+      var val = event.target.selectedOptions[0].value;
+      if (val) {
+        console.log("adding type: ", val);
+        selectedPropertyTypes.push(val);
+        event.target.value = null;
+      }
+    }
+
+    var removePropertyType = (index) => {
+      //debugger;
+      console.log(index);
+      selectedPropertyTypes.splice(index, 1);
+    };
+
+    // var selectPlaceHolder = ko.pureComputed({
+    //   write: (value) => {
+    //     console.log(value);
+    //     if (value) {
+    //       this.selectedPropertyTypes.push(value);
+    //       //self.selectPropertyType(value);
+    //     }
+    //   },
+    //   read: () => null,
+    // });
+
+    const publicmembers = {
+      serviceTypes,
+      serviceOptions: Object.values(serviceTypes),
+      propertySvcTypes,
+      propertySvcOptions: Object.values(propertySvcTypes),
+      spaceSvcTypes,
+      spaceSvcOptions: Object.values(spaceSvcTypes),
+      propertyTypeOptions,
+      selectPropertyType: selectPropertyType,
+      selectedPropertyTypes: selectedPropertyTypes,
+      removePropertyType,
+    };
+
+    return publicmembers;
+  }
+
+  vm.propertySpace = new PropertySpace();
 
   vm.propertySpaceProp = ko.observable();
-  vm.propertySpacePropOpts = ko.observableArray(["Property", "Space"]);
-  vm.propertySpacePropType = ko.observable();
-  vm.propertySpacePropTypeOpts = ko.observableArray([
-    "Inventory Request",
-    "Property move from one space to another",
-    "Property excess request",
-  ]);
+
   vm.propertySpaceSpaceType = ko.observable();
-  vm.propertySpaceSpaceTypeOpts = ko.observableArray([
-    "Moving from one space to another",
-    "Request for new office space",
-  ]);
 
   vm.propertySpaceLoc = ko.observable();
   vm.propertySpaceNumItems = ko.observable();
   vm.propertySpaceNumEmployees = ko.observable();
-  vm.propertySpacePropertyType = ko.observable();
+  //vm.propertySpacePropertyType = ko.observable();
+  vm.propertySpacePropertyType = ko.pureComputed({
+    read: () => vm.propertySpace.selectedPropertyTypes().join(";"),
+    write: (stringVal) => {
+      if (stringVal) {
+        vm.propertySpace.selectedPropertyTypes(stringVal.split(";"));
+      } else vm.propertySpace.selectedPropertyTypes([]);
+    },
+  });
+
+  // Property type with multi choice
+  vm.propertySpacePropertyChoiceType = ko.observable();
+
   vm.propertySpaceCurLoc = ko.observable();
   vm.propertySpaceNewLoc = ko.observable();
+  vm.propertySpaceLoanAttest = ko.observable();
   vm.propertySpaceTimeframe = ko.observable();
   vm.propertySpaceLoc = ko.observable();
+  // If this is a property, what type of propertyrequest? Loanable, move, etc
+  vm.propertySpacePropType = ko.observable();
 </script>
 
 <script type="text/html" id="tmpl_property_space">
@@ -97,177 +203,219 @@
         <label
           >Space or Property<span class="required">*</span>:
           <select
-            class="editable-field"
+            class="editable-field ui fluid dropdown"
             type="text"
             data-bind="value: propertySpaceProp,
-            options: propertySpacePropOpts,
+            options: propertySpace.serviceOptions,
             optionsCaption: 'Select...',
              disable: currentView() == 'view'"
           ></select>
         </label>
       </div>
     </div>
-    <!-- ko if: vm.propertySpaceProp() && 
-      vm.propertySpaceProp() == vm.propertySpacePropOpts()[0] -->
-    <!-- if this is a property request -->
-    <div class="eight wide field">
-      <label
-        >Property Request Type<span class="required">*</span>:
-        <select
-          class="editable-field"
-          type="text"
-          data-bind="value: propertySpacePropType,
-            options: propertySpacePropTypeOpts,
+    <!-- ko if: vm.propertySpaceProp() -->
+    <div>
+      <!-- ko if: vm.propertySpaceProp() == vm.propertySpace.serviceTypes.Property -->
+      <!-- if this is a Property request -->
+      <div>
+        <div class="eight wide field">
+          <label
+            >Property Request Type<span class="required">*</span>:
+            <select
+              class="editable-field"
+              type="text"
+              data-bind="value: propertySpacePropType,
+            options: propertySpace.propertySvcOptions,
             optionsCaption: 'Select...',
             disable: currentView() == 'view'"
-        ></select>
-      </label>
-    </div>
-    <!-- ko if: propertySpacePropType() -->
-    <!-- ko if: propertySpacePropType() == vm.propertySpacePropTypeOpts()[0] -->
-    <div class="eight wide field">
-      <label
-        >Location:
-        <select
-          class="editable-field"
-          data-bind="value: propertySpaceLoc,
-            disable: currentView() == 'view'"
-        >
-          <option value="OnPremise">On Premise</option>
-          <option value="OffPremise">Off Premise</option>
-        </select>
-      </label>
-    </div>
-    <!-- /ko -->
-    <div class="two fields">
-      <!-- ko if: propertySpacePropType() != vm.propertySpacePropTypeOpts()[0] -->
-      <div class="field">
-        <label
-          >Current Location:
-          <input
-            type="text"
-            data-bind="value: propertySpaceCurLoc,
-           disable: currentView() == 'view'"
-          />
-        </label>
+            ></select>
+          </label>
+        </div>
+        <!-- ko if: propertySpacePropType() -->
+        <div>
+          <!-- ko if: propertySpacePropType() == vm.propertySpace.propertySvcTypes.Inventory -->
+          <div class="eight wide field">
+            <label
+              >Location:
+              <select
+                class="editable-field ui dropdown"
+                data-bind="value: propertySpaceLoc,
+                disable: currentView() == 'view'"
+              >
+                <option value="OnPremise">On Premise</option>
+                <option value="OffPremise">Off Premise</option>
+              </select>
+            </label>
+          </div>
+          <!-- /ko -->
+          <div class="two fields">
+            <!-- ko if: propertySpacePropType() != vm.propertySpace.propertySvcTypes.Inventory && propertySpacePropType() != vm.propertySpace.propertySvcTypes.Loanable -->
+            <div class="field">
+              <label
+                >Current Location:
+                <input
+                  type="text"
+                  data-bind="value: propertySpaceCurLoc,
+              disable: currentView() == 'view'"
+                />
+              </label>
+            </div>
+            <!-- /ko -->
+            <!-- ko if: propertySpacePropType() == vm.propertySpace.propertySvcTypes.Move-->
+            <div class="field">
+              <label
+                >Proposed Location:
+                <input
+                  type="text"
+                  data-bind="value: propertySpaceNewLoc,
+              disable: currentView() == 'view'"
+                />
+              </label>
+            </div>
+            <!-- /ko -->
+          </div>
+          <div class="two fields">
+            <div class="field">
+              <label
+                >Number of items:
+                <input
+                  type="text"
+                  data-bind="value: propertySpaceNumItems,
+                    disable: currentView() == 'view'"
+                />
+              </label>
+            </div>
+            <div class="field">
+              <label
+                >Type of Property:
+                <!-- ko if: currentView() != 'view' -->
+                <select
+                  class="editable-field ui fluid dropdown"
+                  data-bind="event: {change: $root.propertySpace.selectPropertyType },
+                        options: propertySpace.propertyTypeOptions,
+                        optionsCaption: 'Select...'"
+                ></select>
+                <!-- /ko -->
+              </label>
+              <table>
+                <tbody data-bind="foreach: propertySpace.selectedPropertyTypes">
+                  <tr>
+                    <td>
+                      <span data-bind="text: $data"></span>
+                      <!-- ko if: $root.currentView() != 'view' -->
+                      <i
+                        class="times icon"
+                        data-bind="click: () => $root.propertySpace.removePropertyType($index())"
+                      ></i>
+                      <!-- /ko -->
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <!-- ko if: propertySpacePropType() == propertySpace.propertySvcTypes.Loanable -->
+          <div class="ui visible warning message">
+            <div class="ui header">End of Loan Return of Items</div>
+            <div>
+              All property which was borrowed must be
+              returned to the Bureau by the employee when the property is no
+              longer needed for the use for which it was originally provided 14
+              FAM 425 3-4. The employee must email the CGFS/EX/ADMIN team at
+              <a href="mailto:CGFS_EX_ADMIN@state.gov"
+                >CGFS_EX_ADMIN@state.gov</a
+              >
+              to coordinate return. Reminder, any lost or damaged property is
+              the responsibility of the borrowing employee. Any lost or damaged
+              property must be immediately reported to the CGFS/EX/ADMIN team.
+            </div>
+          </div>
+          <!-- /ko -->
+        </div>
+        <!-- /ko -->
       </div>
       <!-- /ko -->
-      <!-- ko if: propertySpacePropType() && 
-        propertySpacePropType() == vm.propertySpacePropTypeOpts()[1]-->
-      <div class="field">
-        <label
-          >Proposed Location:
-          <input
-            type="text"
-            data-bind="value: propertySpaceNewLoc,
-           disable: currentView() == 'view'"
-          />
-        </label>
-      </div>
-      <!-- /ko -->
-    </div>
-    <div class="two fields">
-      <div class="field">
-        <label
-          >Number of items:
-          <input
-            type="text"
-            data-bind="value: propertySpaceNumItems,
-             disable: currentView() == 'view'"
-          />
-        </label>
-      </div>
-      <div class="field">
-        <label
-          >Type of Property:
-          <input
-            type="text"
-            data-bind="value: propertySpacePropertyType,
-             disable: currentView() == 'view'"
-          />
-        </label>
-      </div>
-    </div>
-    <!-- /ko -->
-    <!-- /ko -->
-    <!-- ko if: vm.propertySpaceProp() && 
-      vm.propertySpaceProp() == vm.propertySpacePropOpts()[1] -->
-    <!-- if this is a Space request -->
-    <div class="eight wide field">
-      <label
-        >Space Request Type<span class="required">*</span>:
-        <select
-          class="editable-field"
-          type="text"
-          data-bind="value: propertySpaceSpaceType,
-          options: propertySpaceSpaceTypeOpts,
+      <!-- ko if: vm.propertySpaceProp() == vm.propertySpace.serviceTypes.Space -->
+      <!-- if this is a Space request -->
+      <div>
+        <div class="eight wide field">
+          <label
+            >Space Request Type<span class="required">*</span>:
+            <select
+              class="editable-field"
+              type="text"
+              data-bind="value: propertySpaceSpaceType,
+          options: propertySpace.spaceSvcOptions,
           optionsCaption: '--select--',
            disable: currentView() == 'view'"
-        ></select>
-      </label>
-    </div>
-    <!-- ko if: vm.propertySpaceSpaceType() && 
-      vm.propertySpaceSpaceType() == vm.propertySpaceSpaceTypeOpts()[0] -->
-    <div class="two fields">
-      <div class="field">
-        <label
-          >Current Location:
-          <input
-            type="text"
-            data-bind="value: propertySpaceCurLoc,
+            ></select>
+          </label>
+        </div>
+        <!-- ko if: vm.propertySpaceSpaceType() &&
+        vm.propertySpaceSpaceType() == vm.propertySpace.spaceSvcTypes.Move -->
+        <div class="two fields">
+          <div class="field">
+            <label
+              >Current Location:
+              <input
+                type="text"
+                data-bind="value: propertySpaceCurLoc,
               disable: currentView() == 'view'"
-          />
-        </label>
-      </div>
-      <div class="field">
-        <label
-          >Proposed Location:
-          <input
-            type="text"
-            data-bind="value: propertySpaceNewLoc,
+              />
+            </label>
+          </div>
+          <div class="field">
+            <label
+              >Proposed Location:
+              <input
+                type="text"
+                data-bind="value: propertySpaceNewLoc,
               disable: currentView() == 'view'"
-          />
-        </label>
-      </div>
-    </div>
-    <div class="eight wide field">
-      <label
-        >Number of items being moved:
-        <input
-          type="text"
-          data-bind="value: propertySpaceNumItems,
+              />
+            </label>
+          </div>
+        </div>
+        <div class="eight wide field">
+          <label
+            >Number of items being moved:
+            <input
+              type="text"
+              data-bind="value: propertySpaceNumItems,
          disable: currentView() == 'view'"
-        />
-      </label>
-    </div>
-    <!-- /ko -->
-    <!-- ko if: vm.propertySpaceSpaceType() && 
-      vm.propertySpaceSpaceType()== vm.propertySpaceSpaceTypeOpts()[1] -->
-    <div class="two fields">
-      <div class="field">
-        <label
-          >Number of employees:
-          <input
-            type="text"
-            data-bind="value: propertySpaceNumEmployees,
+            />
+          </label>
+        </div>
+        <!-- /ko -->
+        <!-- ko if: vm.propertySpaceSpaceType() &&
+        vm.propertySpaceSpaceType()== vm.propertySpace.spaceSvcTypes.New -->
+        <div class="two fields">
+          <div class="field">
+            <label
+              >Number of employees:
+              <input
+                type="text"
+                data-bind="value: propertySpaceNumEmployees,
               disable: currentView() == 'view'"
-          />
-        </label>
-      </div>
-    </div>
-    <!-- /ko -->
-    <!-- ko if: vm.propertySpaceSpaceType() -->
-    <div class="eight wide field">
-      <label
-        >Timeframe:
-        <input
-          type="text"
-          data-bind="value: propertySpaceTimeframe,
+              />
+            </label>
+          </div>
+        </div>
+        <!-- /ko -->
+        <!-- ko if: vm.propertySpaceSpaceType() -->
+        <div class="eight wide field">
+          <label
+            >Timeframe:
+            <input
+              type="text"
+              data-bind="value: propertySpaceTimeframe,
         disable: currentView() == 'view'"
-        />
-      </label>
+            />
+          </label>
+        </div>
+        <!-- /ko -->
+      </div>
+      <!-- /ko -->
     </div>
-    <!-- /ko -->
     <!-- /ko -->
   </div>
 </script>

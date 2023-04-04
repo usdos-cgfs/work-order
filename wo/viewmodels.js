@@ -98,6 +98,7 @@ var assignmentListDef = {
     CanDelegate: { type: "Bool" },
     Comment: { type: "Text", koMap: "empty" },
     IsActive: { type: "Bool", koMap: "empty" },
+    PipelineStage: { type: "Text", koMap: "empty" },
     Role: {
       type: "Text",
       opts: {
@@ -129,6 +130,7 @@ var commentListDef = {
     ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", koMap: "empty" },
     Comment: { type: "Text", koMap: "empty" },
+    NotificationSent: { type: "Bool", koMap: "empty" },
     Author: { type: "Text", koMap: "empty" },
     Created: { type: "Text", koMap: "empty" },
   },
@@ -210,6 +212,7 @@ var configRequestOrgsListDef = {
         ACTIONOFFICES: "Action Offices",
         REQUESTINGOFFICE: "Requesting Office",
         DEPARTMENT: "Department",
+        BUDGETPMO: "Budget PMO",
       },
     },
     BreakAccess: { type: "Bool", koMap: "empty" },
@@ -305,6 +308,7 @@ var appBusyStates = {
   closing: "Closing Request...",
   pipeline: "Progressing to Next Stage...",
   newComment: "Refreshing Comments...",
+  notifyComment: "Sending Comment Email...",
   newAction: "Refreshing Actions...",
   approve: "Approving Request...",
 };
@@ -340,43 +344,43 @@ function Incremental(entry, target, next) {
   };
 }
 
-function EnsuredUserOrGroup(userOrGroup, isGroup) {
-  var self = {};
-  if (isGroup) {
-    // Assume this is coming from sal.globalConfig.siteGroups
-    self.id = userOrGroup.ID;
-    self.title = userOrGroup.title;
-    self.loginName = userOrGroup.loginName;
-  } else {
-    self.id = userOrGroup.get_id();
-    self.title = userOrGroup.get_title();
-    self.loginName = userOrGroup.get_loginName();
-  }
-  return self;
-}
+// function EnsuredUserOrGroup(userOrGroup, isGroup) {
+//   var self = {};
+//   if (isGroup) {
+//     // Assume this is coming from sal.globalConfig.siteGroups
+//     self.id = userOrGroup.ID;
+//     self.title = userOrGroup.title;
+//     self.loginName = userOrGroup.loginName;
+//   } else {
+//     self.id = userOrGroup.get_id();
+//     self.title = userOrGroup.get_title();
+//     self.loginName = userOrGroup.get_loginName();
+//   }
+//   return self;
+// }
 
-function GroupField() {
-  var self = {};
-  self.EnsuredGroup = ko.observable();
-  return ko.pureComputed({
-    read: function () {
-      return self.EnsuredGroup();
-    },
-    write: function (val) {
-      if (!val) {
-        self.EnsuredGroup(null);
-        return;
-      }
-      var foundGroup = sal.globalConfig.siteGroups.find(function (group) {
-        return group.ID == val.get_lookupId();
-      });
-      // if (!foundGroup){
-      //   return null;
-      // }
-      self.EnsuredGroup(foundGroup);
-    },
-  });
-}
+// function GroupField() {
+//   var self = {};
+//   self.EnsuredGroup = ko.observable();
+//   return ko.pureComputed({
+//     read: function () {
+//       return self.EnsuredGroup();
+//     },
+//     write: function (val) {
+//       if (!val) {
+//         self.EnsuredGroup(null);
+//         return;
+//       }
+//       var foundGroup = sal.globalConfig.siteGroups.find(function (group) {
+//         return group.ID == val.get_lookupId();
+//       });
+//       // if (!foundGroup){
+//       //   return null;
+//       // }
+//       self.EnsuredGroup(foundGroup);
+//     },
+//   });
+// }
 
 function PeopleField(schemaOpts) {
   // We need to refactor this whole thing to support groups/arrays.
@@ -409,45 +413,51 @@ function PeopleField(schemaOpts) {
         }
         return "";
       },
-      write: function (value) {
-        self.loading(true);
-        if (value) {
-          var user = {};
-          switch (value.constructor.getName()) {
-            case "SP.FieldUserValue":
-              ensureUserById(value.get_lookupId(), function (ensuredUser) {
-                user.ID = ensuredUser.get_id();
-                user.userName = ensuredUser.get_loginName();
-                user.title = ensuredUser.get_title();
-                user.isEnsured = false;
-                self.user(user);
-                self.lookupUser(value);
-                self.loading(false);
-              });
-              break;
-            case "SP.User":
-              user.ID = value.get_id();
-              user.userName = value.get_loginName();
-              user.title = value.get_title();
-              user.isEnsured = false;
-              self.user(user);
-              self.lookupUser(value);
-              self.loading(false);
-              break;
-            default:
-              break;
-          }
-        } else {
-          self.user(null);
-          self.lookupUser(null);
-          self.loading(false);
-        }
+      write: async function (value) {
+        await this.setUser(value);
       },
     },
     this
   );
   this.lookupUser = ko.observable();
   this.ensuredUser = ko.observable();
+  this.setUser = async function (value) {
+    return new Promise(async (resolve) => {
+      self.loading(true);
+      if (value) {
+        var user = {};
+        switch (value.constructor.getName()) {
+          case "SP.FieldUserValue":
+            var ensuredUser = await ensureUserByIdAsync(value.get_lookupId());
+            user.ID = ensuredUser.get_id();
+            user.userName = ensuredUser.get_loginName();
+            user.title = ensuredUser.get_title();
+            user.isEnsured = false;
+            self.user(user);
+            self.lookupUser(value);
+            self.loading(false);
+
+            break;
+          case "SP.User":
+            user.ID = value.get_id();
+            user.userName = value.get_loginName();
+            user.title = value.get_title();
+            user.isEnsured = false;
+            self.user(user);
+            self.lookupUser(value);
+            self.loading(false);
+            break;
+          default:
+            break;
+        }
+      } else {
+        self.user(null);
+        self.lookupUser(null);
+        self.loading(false);
+      }
+      resolve();
+    });
+  };
 }
 
 function DateField(newOpts, newDate) {
@@ -457,7 +467,12 @@ function DateField(newOpts, newDate) {
           type: "date",
         }
       : newOpts;
-  newDate = newDate === undefined ? new Date() : newDate;
+  // Default new date to today
+  var d = new Date();
+  newDate =
+    newDate === undefined
+      ? new Date(d.getFullYear(), d.getMonth(), d.getDate())
+      : newDate;
 
   var self = this;
   this.opts = newOpts; // These are the options sent to the datepicker
@@ -477,13 +492,13 @@ function DateField(newOpts, newDate) {
   };
 }
 
-function DateRange(name) {
-  var opts = { minTimeGap: 15 };
+function DateRange(name, opts) {
+  var newOpts = opts ? opts : { minTimeGap: 15 };
   var self = this;
   this.name = ko.observable(name);
   this.label = ko.observable();
-  this.start = new DateField(opts);
-  this.end = new DateField(opts);
+  this.start = new DateField(newOpts);
+  this.end = new DateField(newOpts);
   this.save = function () {
     createDateRange(self);
   };
@@ -497,7 +512,7 @@ function DateRange(name) {
   return publicMembers;
 }
 
-function DateRangeTable(name) {
+function DateRangeTable(name, opts = null) {
   var self = this;
   this.testDate = new DateField();
   this.name = name;
@@ -507,7 +522,13 @@ function DateRangeTable(name) {
       return (dateRange.name = self.name);
     });
   });
-  self.new = new DateRange(self.name);
+  self.formatColumnDate = function (date) {
+    if (opts && opts.type == "date") {
+      return date.toDateString();
+    }
+    return date.toLocaleString();
+  };
+  self.new = new DateRange(self.name, opts);
 }
 
 function timers() {
@@ -558,7 +579,7 @@ function koviewmodel() {
   //
   self.busy = {};
   self.busy.addTask = function (task) {
-    newTask = {
+    var newTask = {
       id: Math.floor(Math.random() * 100000 + 1),
       task: task,
       active: ko.observable(true),
@@ -638,7 +659,7 @@ function koviewmodel() {
    * ADMIN: Authorize Current user to take actions
    ************************************************************/
   self.userRole = ko.observable(); // Determine whether the user is in the admin group or not.
-  self.userRecordRole = ko.observable(); // Determine how the user is associated to the selected record.
+  // self.userRecordRole = ko.observable(); // Determine how the user is associated to the selected record.
 
   self.userActionOfficeMembership = ko.pureComputed(function () {
     // Return the configActionOffice offices this user is a part of
@@ -680,6 +701,19 @@ function koviewmodel() {
       }
     });
 
+    //
+    var userGroupIds = vm.userGroupMembership().map((group) => group.ID);
+
+    self.configRequestOrgs().forEach(function (reqOrg) {
+      if (!reqOrg.UserGroup) return;
+      if (userGroupIds.includes(reqOrg.UserGroup.get_lookupId())) {
+        // User is a member of this request org, add if not
+        if (!reqOrgIds.includes(reqOrg.ID)) {
+          reqOrgIds.push(reqOrg.ID);
+        }
+      }
+    });
+
     return self.configRequestOrgs().filter(function (reqOrg) {
       return reqOrgIds.indexOf(reqOrg.ID) >= 0;
     });
@@ -693,14 +727,14 @@ function koviewmodel() {
       : false;
   });
 
-  self.assignmentCurUserActions = ko.pureComputed(function () {
-    return self.request;
-  });
+  // self.assignmentCurUserActions = ko.pureComputed(function () {
+  //   return self.request;
+  // });
 
-  // Can the current user take action on the record?
-  self.requestCurUserAction = ko.pureComputed(function () {
-    return true;
-  });
+  // // Can the current user take action on the record?
+  // self.requestCurUserAction = ko.pureComputed(function () {
+  //   return true;
+  // });
 
   /************************************************************
    * ADMIN: Assignment
@@ -808,7 +842,8 @@ function koviewmodel() {
       isAssignee =
         assignment.Assignee.get_lookupId() ==
         sal.globalConfig.currentUser.get_id();
-    } else if (assignment.ActionOffice) {
+    }
+    if (assignment.ActionOffice) {
       isAO =
         self
           .userActionOfficeMembership()
@@ -944,6 +979,9 @@ function koviewmodel() {
     if (!vm.requestIsActive()) {
       return false;
     }
+    if (!assignment.IsActive) {
+      return false;
+    }
     return (
       self.assignments
         .assigneeOpts()
@@ -1003,7 +1041,7 @@ function koviewmodel() {
     } else {
       return (
         "<p>All the required actions have been completed for current stage.</p>" +
-        "<p> This request is ready to be advanced.</p>"
+        "<p>Please click advance to move this request to the next stage.</p>"
       );
     }
   });
@@ -1030,22 +1068,36 @@ function koviewmodel() {
           case actionOpts.Resolution:
             var allCompleted = true;
             var userAssignmentCnt = 0;
+            if (
+              vm
+                .userActionOfficeMembership()
+                .includes(vm.requestStageOffice()) ||
+              vm.user.requestOrgMembership().includes(vm.requestStageOrg())
+            ) {
+              userAssignmentCnt++;
+            }
+
             // Is the user listed as an action office in the assignments?
             self.requestAssignments().forEach(function (assignment) {
-              var user = self.requestAssignmentUser(assignment);
+              // Take into account existing assignments that don't have
+              // a designated stage.
+              // We're only looking for assignees for the current stage.
               if (
-                user &&
-                user.get_lookupId() == sal.globalConfig.currentUser.get_id()
+                assignment.PipelineStage &&
+                assignment.PipelineStage != vm.requestStageNum()
               ) {
-                // we are the user assigned to this assignment
-                if (
-                  assignment.Role == roleOpts.Resolver.Name ||
-                  assignment.Role == roleOpts.Approver.Name
-                ) {
-                  userAssignmentCnt += 1;
-                  if (assignment.IsActive) {
-                    allCompleted = false;
-                  }
+                return;
+              }
+              if (!self.assignmentCurUserIsAOorAssignee(assignment)) {
+                return;
+              }
+              if (
+                assignment.Role == roleOpts.Resolver.Name ||
+                assignment.Role == roleOpts.Approver.Name
+              ) {
+                userAssignmentCnt += 1;
+                if (assignment.IsActive) {
+                  allCompleted = false;
                 }
               }
             });
@@ -1081,6 +1133,7 @@ function koviewmodel() {
       if (newPage == "order-detail") {
         console.log("Activate Accordion");
         $(".ui.accordion").accordion();
+        $(".ui.dropdown").dropdown();
         var elmnt = document.getElementById("tabs");
         elmnt.scrollIntoView({ behavior: "smooth" });
       }
@@ -1224,6 +1277,7 @@ function koviewmodel() {
    * allOpenOrders Table Handlers
    ************************************************************/
   self.showWorkOrder = function (request) {
+    // TODO: Preven default click of element.
     console.log("clicked", request);
     viewWorkOrderItem(request.Title);
   };
@@ -1321,18 +1375,7 @@ function koviewmodel() {
       newServiceTable.stype = stype;
 
       newServiceTable.cols = new Array();
-      newServiceTable.requests = new Array();
-
-      if (stype.listDef) {
-        var lookupKeys = Object.keys(stype.listDef.viewFields).filter(function (
-          col
-        ) {
-          return col != "ID" && col != "Title";
-        });
-
-        newServiceTable.cols = lookupKeys;
-        newServiceTable.viewFields = stype.listDef.viewFields;
-      }
+      newServiceTable.requests = [];
 
       var camlq =
         '<View Scope="RecursiveAll"><Query><Where><Eq>' +
@@ -1344,39 +1387,43 @@ function koviewmodel() {
 
       self.listRefWO().getListItems(camlq, function (lookupOrdersTemp) {
         if (stype.listDef) {
-          // If this request type has related orders, let's query those
-          var count = lookupOrdersTemp.length - 1;
-          var i = 0;
-          lookupOrdersTemp.forEach(function (order) {
-            var camlq =
-              '<View Scope="RecursiveAll"><Query><Where><And>' +
-              '<Eq><FieldRef Name="FSObjType"/><Value Type="int">0</Value></Eq>' +
-              "<Eq>" +
-              '<FieldRef Name="Title"/>' +
-              '<Value Type="Text">' +
-              order.Title +
-              "</Value>" +
-              "</Eq></And></Where></Query></View>";
+          // If this request type has related orders
+          // 1. Add the additional columns to the table
+          var lookupKeys = Object.keys(stype.listDef.viewFields).filter(
+            function (col) {
+              return col != "ID" && col != "Title";
+            }
+          );
 
-            stype.listRef.getListItems(camlq, function (val) {
-              order.ServiceItem = val[0];
-              //self.lookupOrders.push(order);
-              newServiceTable.requests.push(order);
+          newServiceTable.cols = lookupKeys;
+          newServiceTable.viewFields = stype.listDef.viewFields;
 
-              if (i == count) {
-                self.lookupTables.push(newServiceTable);
-                makeDataTable("#" + newServiceTable.id);
-              } else {
-                console.log(i + "/" + count);
-                i++;
-              }
+          // 2. Get the related service type items.
+          var camlq =
+            '<View Scope="RecursiveAll"><Query><Where>' +
+            '<Eq><FieldRef Name="FSObjType"/><Value Type="int">0</Value></Eq>' +
+            "</Where></Query></View>";
+
+          stype.listRef.getListItems(camlq, function (serviceTypeItems) {
+            lookupOrdersTemp.forEach(function (order) {
+              var serviceItem = serviceTypeItems.find(function (
+                serviceTypeItem
+              ) {
+                return serviceTypeItem.Title == order.Title;
+              });
+              order.ServiceItem = serviceItem;
             });
+            // Need to do this twice since we're making another async call here
+            newServiceTable.requests = lookupOrdersTemp;
+            self.lookupTables.push(newServiceTable);
+            makeDataTable("#" + newServiceTable.id);
+            $(".dropdown").dropdown();
           });
         } else {
           newServiceTable.requests = lookupOrdersTemp;
-
           self.lookupTables.push(newServiceTable);
           makeDataTable("#" + newServiceTable.id);
+          $(".dropdown").dropdown();
         }
       });
     }
@@ -1399,7 +1446,7 @@ function koviewmodel() {
           return new Date(targetValue).toLocaleDateString();
           break;
         case "Person":
-          return targetValue.userName();
+          return targetValue.get_lookupValue();
           break;
         default:
           return targetValue;
@@ -1600,6 +1647,7 @@ function koviewmodel() {
    ************************************************************/
 
   self.commentNew = ko.observable();
+
   /************************************************************
    * Declare our form input computed functions
    ************************************************************/
@@ -1675,6 +1723,18 @@ function koviewmodel() {
     }
   });
 
+  self.pipelineStageClass = function (stage) {
+    var curStage = parseInt(self.requestStageNum());
+    var status = "disabled";
+    if (stage.Step < curStage) {
+      status = "completed";
+    } else if (stage.Step == curStage) {
+      status = "active";
+    }
+
+    return status;
+  };
+
   self.selectedPipelineElement = ko.pureComputed(function () {
     if (!self.selectedServiceType()) return "<div>No Service Selected</div>";
     // TODO: Fix all this for the current pipeline.
@@ -1685,7 +1745,7 @@ function koviewmodel() {
     var inDraft = self.requestStatus() == "Draft" ? "active" : "completed";
 
     pipeline +=
-      '<div class="step completed"><div class="conent"><i class="fa fa-4x ' +
+      '<div class="step completed"><div class="content"><i class="fa fa-4x ' +
       self.selectedServiceType().Icon +
       '"/></div></div>';
 
@@ -1771,6 +1831,15 @@ function koviewmodel() {
     return link + id;
   });
 
+  self.requestLinkGenerator = function (request) {
+    var link =
+      _spPageContextInfo.webAbsoluteUrl +
+      "/Pages/app.aspx?tab=order-detail&reqid=";
+
+    var id = request.Title ? request.Title : "";
+    return link + id;
+  };
+
   self.requestLinkAdmin = ko.pureComputed(function () {
     var link =
       _spPageContextInfo.webAbsoluteUrl +
@@ -1834,6 +1903,8 @@ function koviewmodel() {
 
     self.selectedPipeline().forEach(function (stage) {
       // first get the action office
+      // TODO: DEPRECATE action office
+
       var assignedOffice = self.configActionOffices().find(function (ao) {
         return ao.ID == stage.ActionOffice.get_lookupId();
       });
@@ -1970,6 +2041,16 @@ function koviewmodel() {
 
   self.requestOrgs = ko.observableArray([]);
 
+  self.requestOrgsPush = function (newOrg) {
+    if (
+      !self.requestOrgs().find(function (existingOrg) {
+        return existingOrg.ID == newOrg.ID;
+      })
+    ) {
+      self.requestOrgs.push(newOrg);
+    }
+  };
+
   self.requestOrgIds = ko.pureComputed({
     read: function () {
       var vps = new Array();
@@ -1990,15 +2071,7 @@ function koviewmodel() {
         });
         // Now add each org to our requestOrgs if if isn't already
         // in the array
-        orgs.forEach(function (newOrg) {
-          if (
-            !self.requestOrgs().find(function (existingOrg) {
-              return existingOrg.ID == newOrg.ID;
-            })
-          ) {
-            self.requestOrgs.push(newOrg);
-          }
-        });
+        orgs.forEach(self.requestOrgsPush);
         //self.requestOrgs(orgs);
       } else {
         self.requestOrgs([]);
@@ -2120,6 +2193,19 @@ function koviewmodel() {
       }
     },
   });
+
+  // ko template has loaded
+  self.postTemplateRender = function (elements) {
+    if ($(".ui.checkbox").length) {
+      $(".ui.checkbox").checkbox();
+    }
+    if ($(".ui.accordion").length) {
+      $(".ui.accordion").accordion();
+    }
+    if ($("#service-type-form .ui.dropdown").length) {
+      $("#service-type-form .ui.dropdown").dropdown();
+    }
+  };
 
   self.test = {};
   self.test.dateField = new DateField({

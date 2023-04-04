@@ -82,26 +82,41 @@ Workorder.Report.NewReportPage = function () {
       });
     });
 
+    self.nonCancelledRequests = ko.pureComputed(function () {
+      return vm.allOrders().filter(function (request) {
+        return request.RequestStatus != "Cancelled";
+      });
+    });
+
     self.filteredRequests = ko.pureComputed(function () {
       if (self.requestOrg()) {
         self.timerStart(new Date());
         console.log("Applying Filter");
+
         let filteredRequests = [];
         // Filter by Open or Closed
         if (self.view() == "Open") {
-          filteredRequests = vm.allOrders().filter(function (request) {
-            return request.ClosedDate == null;
-          });
+          filteredRequests = self
+            .nonCancelledRequests()
+            .filter(function (request) {
+              return request.ClosedDate == null;
+            });
         } else if (self.allDates()) {
           // Filter by Date
-          filteredRequests = vm.allOrders().filter(function (request) {
-            return request.ClosedDate != null;
-          });
+          filteredRequests = self
+            .nonCancelledRequests()
+            .filter(function (request) {
+              return request.ClosedDate != null;
+            });
         } else {
-          filteredRequests = vm.allOrders().filter(function (request) {
-            let closeDate = new Date(request.ClosedDate);
-            return self.startDate() <= closeDate && closeDate <= self.endDate();
-          });
+          filteredRequests = self
+            .nonCancelledRequests()
+            .filter(function (request) {
+              let closeDate = new Date(request.ClosedDate);
+              return (
+                self.startDate() <= closeDate && closeDate <= self.endDate()
+              );
+            });
         }
 
         // Filter by config Service Type assignments
@@ -150,116 +165,114 @@ Workorder.Report.NewReportPage = function () {
     self.tableResults = ko.pureComputed(function () {
       // Run through the filtered results and build our case
       var serviceTypes = self.requestOrgServiceTypesFiltered();
-      if (serviceTypes.length > 0) {
-        self.completedTotalWO.reset();
-        self.completedTotalMtgStandard.reset();
-        self.completedTotalNotMtgStandard.reset();
-        self.completedTotalDays.reset();
-        self.completedTotalMtgStandardPerc(0);
-        self.completedTotalAvgDays(0);
-        self.completedTotalAvgDaysFloat(0);
-
-        var masterMap = {};
-
-        serviceTypes.forEach(function (serviceType) {
-          // Use object literal constructors as best practice.
-          let serviceObject = {};
-
-          serviceObject.serviceType = serviceType;
-          serviceObject.title = serviceType.Title;
-          serviceObject.uid = serviceType.UID;
-          serviceObject.standard = serviceType.DaysToCloseBusiness;
-          serviceObject.completedWO = 0;
-          serviceObject.completedTotalDays = 0;
-          serviceObject.completedDays = 0;
-          serviceObject.completedMeetingStandard = 0;
-          serviceObject.completedNotMeetingStandard = 0;
-          serviceObject.completedPercMeetingStandard = 0;
-          serviceObject.lateIDs = new Array();
-          serviceObject.completedAvgTime = 0;
-          serviceObject.completedAvgTimeFloat = 0;
-
-          masterMap[serviceObject.title] = serviceObject;
-        });
-
-        self.filteredRequests().forEach(function (request) {
-          mapObj = masterMap[request.ServiceType.get_lookupValue()];
-          if (mapObj != null) {
-            //Increment Count
-            mapObj.completedWO += 1;
-
-            //Get time to complete this workorder
-            var dateEffectiveRequested = new Date(request.RequestSubmitted);
-            // Days open up to today.
-            var dateClosed = request.ClosedDate
-              ? new Date(request.ClosedDate)
-              : new Date();
-            var daysToComplete = businessDays(
-              dateEffectiveRequested,
-              dateClosed
-            );
-            mapObj.completedDays = daysToComplete;
-
-            mapObj.completedTotalDays += daysToComplete;
-
-            if (daysToComplete <= mapObj.standard) {
-              mapObj.completedMeetingStandard++;
-            } else {
-              mapObj.completedNotMeetingStandard++;
-              var lateObj = {};
-              lateObj.ID = request.ID;
-              lateObj.days = daysToComplete;
-              lateObj.title = request.Title;
-
-              mapObj.lateIDs.push(lateObj);
-            }
-
-            if (mapObj.completedWO > 0) {
-              mapObj.completedPercMeetingStandard = Math.round(
-                (mapObj.completedMeetingStandard / mapObj.completedWO) * 100
-              );
-              mapObj.completedAvgTime = Math.ceil(
-                mapObj.completedTotalDays / mapObj.completedWO
-              );
-              mapObj.completedAvgTimeFloat =
-                mapObj.completedTotalDays / mapObj.completedWO;
-            }
-          }
-        });
-
-        arrServices = [];
-        serviceTypes.forEach(function (serviceType) {
-          arrServices.push(masterMap[serviceType.Title]);
-
-          mapObj = masterMap[serviceType.Title];
-
-          self.completedTotalWO.inc(mapObj.completedWO);
-          self.completedTotalMtgStandard.inc(mapObj.completedMeetingStandard);
-          self.completedTotalNotMtgStandard.inc(
-            mapObj.completedNotMeetingStandard
-          );
-          self.completedTotalDays.inc(mapObj.completedTotalDays);
-        });
-
-        if (self.completedTotalWO.val() > 0) {
-          self.completedTotalMtgStandardPerc(
-            Math.round(
-              (self.completedTotalMtgStandard.val() /
-                self.completedTotalWO.val()) *
-                100
-            )
-          );
-
-          self.completedTotalAvgDaysFloat(
-            self.completedTotalDays.val() / self.completedTotalWO.val()
-          );
-          self.completedTotalAvgDays(
-            Math.ceil(self.completedTotalAvgDaysFloat())
-          );
-        }
-        self.timerEnd(new Date());
-        return arrServices;
+      if (!serviceTypes.length) {
+        return [];
       }
+      self.completedTotalWO.reset();
+      self.completedTotalMtgStandard.reset();
+      self.completedTotalNotMtgStandard.reset();
+      self.completedTotalDays.reset();
+      self.completedTotalMtgStandardPerc(0);
+      self.completedTotalAvgDays(0);
+      self.completedTotalAvgDaysFloat(0);
+
+      var masterMap = {};
+
+      serviceTypes.forEach(function (serviceType) {
+        // Use object literal constructors as best practice.
+        let serviceObject = {};
+
+        serviceObject.serviceType = serviceType;
+        serviceObject.title = serviceType.Title;
+        serviceObject.uid = serviceType.UID;
+        serviceObject.standard = serviceType.DaysToCloseBusiness;
+        serviceObject.completedWO = 0;
+        serviceObject.completedTotalDays = 0;
+        serviceObject.completedDays = 0;
+        serviceObject.completedMeetingStandard = 0;
+        serviceObject.completedNotMeetingStandard = 0;
+        serviceObject.completedPercMeetingStandard = 0;
+        serviceObject.lateIDs = new Array();
+        serviceObject.completedAvgTime = 0;
+        serviceObject.completedAvgTimeFloat = 0;
+
+        masterMap[serviceObject.title] = serviceObject;
+      });
+
+      self.filteredRequests().forEach(function (request) {
+        mapObj = masterMap[request.ServiceType.get_lookupValue()];
+        if (mapObj != null) {
+          //Increment Count
+          mapObj.completedWO += 1;
+
+          //Get time to complete this workorder
+          var dateEffectiveRequested = new Date(request.RequestSubmitted);
+          // Days open up to today.
+          var dateClosed = request.ClosedDate
+            ? new Date(request.ClosedDate)
+            : new Date();
+          var daysToComplete = businessDays(dateEffectiveRequested, dateClosed);
+          mapObj.completedDays = daysToComplete;
+
+          mapObj.completedTotalDays += daysToComplete;
+
+          if (daysToComplete <= mapObj.standard) {
+            mapObj.completedMeetingStandard++;
+          } else {
+            mapObj.completedNotMeetingStandard++;
+            var lateObj = {};
+            lateObj.ID = request.ID;
+            lateObj.days = daysToComplete;
+            lateObj.title = request.Title;
+
+            mapObj.lateIDs.push(lateObj);
+          }
+
+          if (mapObj.completedWO > 0) {
+            mapObj.completedPercMeetingStandard = Math.round(
+              (mapObj.completedMeetingStandard / mapObj.completedWO) * 100
+            );
+            mapObj.completedAvgTime = Math.ceil(
+              mapObj.completedTotalDays / mapObj.completedWO
+            );
+            mapObj.completedAvgTimeFloat =
+              mapObj.completedTotalDays / mapObj.completedWO;
+          }
+        }
+      });
+
+      arrServices = [];
+      serviceTypes.forEach(function (serviceType) {
+        arrServices.push(masterMap[serviceType.Title]);
+
+        mapObj = masterMap[serviceType.Title];
+
+        self.completedTotalWO.inc(mapObj.completedWO);
+        self.completedTotalMtgStandard.inc(mapObj.completedMeetingStandard);
+        self.completedTotalNotMtgStandard.inc(
+          mapObj.completedNotMeetingStandard
+        );
+        self.completedTotalDays.inc(mapObj.completedTotalDays);
+      });
+
+      if (self.completedTotalWO.val() > 0) {
+        self.completedTotalMtgStandardPerc(
+          Math.round(
+            (self.completedTotalMtgStandard.val() /
+              self.completedTotalWO.val()) *
+              100
+          )
+        );
+
+        self.completedTotalAvgDaysFloat(
+          self.completedTotalDays.val() / self.completedTotalWO.val()
+        );
+        self.completedTotalAvgDays(
+          Math.ceil(self.completedTotalAvgDaysFloat())
+        );
+      }
+      self.timerEnd(new Date());
+      return arrServices;
     });
   }
 
