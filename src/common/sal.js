@@ -90,6 +90,10 @@ function initSal() {
   // console.log()
 }
 
+//ExecuteOrDelayUntilScriptLoaded(initSal, "sp.js");
+
+//initSal();
+
 sal.NewAppConfig = function () {
   var siteRoles = {};
   siteRoles.roles = {
@@ -419,7 +423,7 @@ function ensureUserById(userId, callback) {
   );
 }
 
-function ensureUserByIdAsync(userId) {
+export function EnsureUserByIdAsync(userId) {
   return new Promise((resolve, reject) => {
     // First check if this is a group
     var group = sal.globalConfig.siteGroups.find(function (group) {
@@ -689,19 +693,7 @@ export function SPList(listDef) {
       Expecting a list definition object in the following format:
         var assignmentListDef = {
         name: "Assignment",
-        title: "Assignment",
-        viewFields: {
-          ID: { type: "Text"},
-          Title: { type: "Text"},
-          Assignee: { type: "Person"},
-          ActionOffice: { type: "Lookup"},
-          Comment: { type: "Text"},
-          IsActive: { type: "Bool"},
-          Role: { type: "Text"},
-          Status: { type: "Text"},
-          Author: { type: "Text"},
-          Created: { type: "Text"},
-        },
+        title: "Assignment"
       };
     */
 
@@ -725,7 +717,7 @@ export function SPList(listDef) {
   /*****************************************************************
                                 Common Private Methods       
     ******************************************************************/
-  onQueryFailed = function (sender, args) {
+  self.onQueryFailed = function (sender, args) {
     console.log("unsuccessful read", sender);
     // alert(
     //   "Request failed: " + args.get_message() + "\n" + args.get_stackTrace()
@@ -761,11 +753,11 @@ export function SPList(listDef) {
         self.callbackGUID(self.config.guid);
         //console.log('item count: ', self.config.itemCount)
       }.bind(this),
-      onQueryFailed
+      self.onQueryFailed
     );
   };
 
-  self.updateConfig();
+  //self.updateConfig();
 
   /*****************************************************************
                                 Common Public Methods       
@@ -811,8 +803,6 @@ export function SPList(listDef) {
       } else {
         oList.breakRoleInheritance(false, false);
       }
-
-      //var oList = web.get_lists().getByTitle(self.config.def.title);
 
       this.resolvedGroups.forEach(function (groupPairs) {
         var roleDefBindingColl =
@@ -880,19 +870,6 @@ export function SPList(listDef) {
     );
   }
 
-  self.generateEmptyItem = function () {
-    /* Create an empty object that matches the viewfields */
-    var focusedItems = [{}];
-    var keys = [];
-    $.each(this.config.def.viewFields, function (field, obj) {
-      keys.push(field);
-    });
-    $.each(keys, function (item) {
-      focusedItems[0][item] = 0;
-    });
-    return focusedItems;
-  };
-
   self.getItemCount = function (callback) {
     self.callbackItemCount = callback;
     self.updateConfig();
@@ -903,7 +880,7 @@ export function SPList(listDef) {
         self.callbackItemCount(self.config.itemCount);
         //console.log('item count: ', self.config.itemCount)
       }.bind(this),
-      onQueryFailed
+      self.onQueryFailed
     );
   };
 
@@ -962,7 +939,7 @@ export function SPList(listDef) {
   /*****************************************************************
                                 getListItems      
     ******************************************************************/
-  function getListItems(caml, callback) {
+  function getListItems(caml, viewFields, callback) {
     /*
         Obtain all list items that match the querystring passed by caml.
         */
@@ -984,7 +961,7 @@ export function SPList(listDef) {
       self.focusedItems = [];
       //console.log("Get list succeeded");
       var keys = [];
-      $.each(this.def.viewFields, function (field, obj) {
+      $.each(viewFields, function (field, obj) {
         keys.push(field);
       });
       while (listItemEnumerator.moveNext()) {
@@ -1044,10 +1021,10 @@ export function SPList(listDef) {
     );
   }
 
-  function getListItemsAsync(caml) {
+  function getListItemsAsync(caml, viewFields) {
     viewFields = typeof viewFields !== "undefined" ? viewFields : null;
     return new Promise((resolve, reject) => {
-      getListItems(caml, resolve);
+      getListItems(caml, viewFields, resolve);
     });
   }
 

@@ -8,9 +8,23 @@
 
 <div id="app"></div>
 
-<script type="module">
-  import { createApp } from "vue";
-  import WorkOrderDataBase from "../SiteAssets/wo/page_wo_db.js";
+<script
+  type="text/javascript"
+  src="../Apps/_layouts/15/clienttemplates.js"
+></script>
+<script
+  type="text/javascript"
+  src="../Apps/_layouts/15/clientforms.js"
+></script>
+<script
+  type="text/javascript"
+  src="../Apps/_layouts/15/clientpeoplepicker.js"
+></script>
+<script type="text/javascript" src="../Apps/_layouts/15/autofill.js"></script>
 
-  createApp(WorkOrderDataBase).mount("#app");
+<script defer type="module" src="../SiteAssets/wo/page_wo_db.js">
+  // // import { createApp } from "vue";
+  // import WorkOrderDataBase from "../SiteAssets/wo/page_wo_db.js";
+
+  // createApp(WorkOrderDataBase).mount("#app");
 </script>
