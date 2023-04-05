@@ -725,7 +725,13 @@ sal.addUsersToGroup = function (userNameArr, groupName) {
 
 export function MapListItem(listItem, fieldMap) {
   Object.keys(fieldMap).forEach((key) => {
-    fieldMap[key].koMap(listItem.get_item(key));
+    if (typeof fieldMap[key].obs == "function") {
+      fieldMap[key].obs(listItem.get_item(key));
+    } else if (fieldMap[key].obs.SPMap) {
+      fieldMap[key].obs.SPMap(listItem.get_item(key));
+    } else {
+      console.error("Unable to Map Field");
+    }
   });
 }
 

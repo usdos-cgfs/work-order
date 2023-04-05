@@ -1,12 +1,26 @@
 <div id="app">
   <h1>Work Order System</h1>
-  <p>Test 1</p>
-  <p data-bind="text: workorder.testObs"></p>
-  <p>Test 2</p>
-  <p data-bind="text: test"></p>
+
   <p>Person</p>
-  <p data-bind="text: workorder.requestHeader.AuthorField.IsLoading"></p>
-  <p data-bind="text: workorder.requestHeader.AuthorField.User()?.title"></p>
+  <p
+    data-bind="text: workorder.requestHeader.FieldMap.Author.obs.IsLoading"
+  ></p>
+  <p
+    data-bind="text: workorder.requestHeader.FieldMap.Author.obs.User()?.title"
+  ></p>
+  <p
+    data-bind="text: workorder.requestHeader.FieldMap.ManagingDirector.obs.IsLoading"
+  ></p>
+  <p
+    data-bind="text: workorder.requestHeader.FieldMap.ManagingDirector.obs.User()?.title"
+  ></p>
+  <div data-bind="using: workorder.requestHeader.FieldMap">
+    <h1>Using</h1>
+    <p data-bind="text: Title.obs"></p>
+    <ul data-bind="foreach: RequestOrgs.obs.Arr">
+      <ul data-bind="text: Title"></ul>
+    </ul>
+  </div>
 </div>
 
 <script
