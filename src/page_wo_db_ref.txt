@@ -1,12 +1,13 @@
-<script type="importmap">
-  {
-    "imports": {
-      "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
-    }
-  }
-</script>
-
-<div id="app"></div>
+<div id="app">
+  <h1>Work Order System</h1>
+  <p>Test 1</p>
+  <p data-bind="text: workorder.testObs"></p>
+  <p>Test 2</p>
+  <p data-bind="text: test"></p>
+  <p>Person</p>
+  <p data-bind="text: workorder.requestHeader.AuthorField.IsLoading"></p>
+  <p data-bind="text: workorder.requestHeader.AuthorField.User()?.title"></p>
+</div>
 
 <script
   type="text/javascript"
@@ -21,6 +22,8 @@
   src="../Apps/_layouts/15/clientpeoplepicker.js"
 ></script>
 <script type="text/javascript" src="../Apps/_layouts/15/autofill.js"></script>
+
+<script src="../SiteAssets/workorder/vendor/knockout/knockout-3.5.0.js"></script>
 
 <script defer type="module" src="../SiteAssets/wo/page_wo_db.js">
   // // import { createApp } from "vue";

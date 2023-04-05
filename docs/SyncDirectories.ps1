@@ -1,0 +1,1 @@
+robocopy ..\src Y:\SiteAssets\wo /mir /fft

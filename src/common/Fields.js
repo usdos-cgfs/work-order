@@ -1,5 +1,52 @@
 import { EnsureUserByIdAsync } from "./sal.js";
 
+export function PersonField(schemaOpts) {
+  const IsLoading = ko.observable();
+  const User = ko.observable();
+
+  // SPMap Can be written from a SharePoint item
+  // and when read will return a SP compatible result
+  const SPMap = ko.pureComputed({
+    write: async function (value) {
+      if (!value) {
+        User(null);
+        return;
+      }
+      IsLoading(true);
+      var ensuredUser;
+      switch (value.constructor.getName()) {
+        case "SP.FieldUserValue":
+          ensuredUser = await EnsureUserByIdAsync(value.get_lookupId());
+          break;
+        case "SP.User":
+          ensuredUser = value;
+          break;
+        default:
+          break;
+      }
+      if (!ensuredUser) {
+        console.warn("Can't find user", value);
+        return;
+      }
+      var tempUser = {
+        id: ensuredUser.get_id(),
+        userName: ensuredUser.get_loginName(),
+        title: ensuredUser.get_title(),
+        isEnsured: true,
+      };
+      User(tempUser);
+      IsLoading(false);
+    },
+    read: function () {},
+  });
+
+  return {
+    SPMap,
+    IsLoading,
+    User,
+  };
+}
+
 export function PeopleField(schemaOpts) {
   // We need to refactor this whole thing to support groups/arrays.
   var self = this;

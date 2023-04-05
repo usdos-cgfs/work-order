@@ -19,7 +19,14 @@ sal.site = sal.site || {};
 
 //ExecuteOrDelayUntilScriptLoaded(InitSal, "sp.js");
 
-function initSal() {
+export function GetSiteGroups() {
+  if (sal.globalConfig.siteGroups) {
+    return sal.globalConfig.siteGroups;
+  }
+  sal.globalConfig.siteGroups = [];
+}
+
+export async function InitSal() {
   sal.globalConfig.siteGroups = [];
 
   console.log("we are initing sal");
@@ -60,33 +67,37 @@ function initSal() {
   var oRoleDefinitions = currCtx.get_web().get_roleDefinitions();
   currCtx.load(oRoleDefinitions);
 
-  currCtx.executeQueryAsync(
-    function () {
-      sal.globalConfig.currentUser = user;
-      getUserProperties();
+  await new Promise((resolve, reject) => {
+    currCtx.executeQueryAsync(
+      function () {
+        sal.globalConfig.currentUser = user;
+        // getUserProperties();
 
-      sal.globalConfig.siteGroups = m_fnLoadSiteGroups(siteGroupCollection);
-      sal.globalConfig.siteGroups.forEach(function (group) {
-        sal.getUsersWithGroup(group.group, function (users) {
-          group.users = users;
+        sal.globalConfig.siteGroups = m_fnLoadSiteGroups(siteGroupCollection);
+        sal.globalConfig.siteGroups.forEach(function (group) {
+          sal.getUsersWithGroup(group.group, function (users) {
+            group.users = users;
+          });
         });
-      });
-      //alert("User is: " + user.get_title()); //there is also id, email, so this is pretty useful.
+        //alert("User is: " + user.get_title()); //there is also id, email, so this is pretty useful.
 
-      // Role Definitions
-      var oEnumerator = oRoleDefinitions.getEnumerator();
-      while (oEnumerator.moveNext()) {
-        var oRoleDefinition = oEnumerator.get_current();
-        sal.globalConfig.roles.push(oRoleDefinition.get_name());
+        // Role Definitions
+        var oEnumerator = oRoleDefinitions.getEnumerator();
+        while (oEnumerator.moveNext()) {
+          var oRoleDefinition = oEnumerator.get_current();
+          sal.globalConfig.roles.push(oRoleDefinition.get_name());
+        }
+
+        sal.config = new sal.NewAppConfig();
+        sal.utilities = new sal.NewUtilities();
+        resolve();
+      },
+      function () {
+        alert("Error initializing SAL");
+        reject();
       }
-
-      sal.config = new sal.NewAppConfig();
-      sal.utilities = new sal.NewUtilities();
-    },
-    function () {
-      alert(":(");
-    }
-  );
+    );
+  });
   // console.log()
 }
 
@@ -330,6 +341,30 @@ sal.NewUtilities = function () {
   return publicMembers;
 };
 
+async function FetchUserProperties() {
+  var headers = {
+    "Content-Type": "application/json;odata=verbose",
+    "X-RequestDigest": document.getElementById("__REQUESTDIGEST").value,
+  };
+  try {
+    var response = await fetch(
+      _spPageContextInfo.webAbsoluteUrl +
+        "/_api/SP.UserProfiles.PeopleManager/GetMyProperties",
+      {
+        method: "GET",
+        headers,
+      }
+    );
+    if (!response.ok) {
+      throw new Error(response.status);
+    }
+
+    const data = await response.json();
+  } catch (error) {
+    console.error("Unable to fetch User Properties:", error);
+  }
+}
+
 function getUserProperties() {
   var requestHeaders = {
     Accept: "application/json;odata=verbose",
@@ -446,7 +481,7 @@ export function EnsureUserByIdAsync(userId) {
       alert("Could not find user with id: ", userId);
       reject(args);
     }
-    data = { user: user, resolve: resolve, reject };
+    const data = { user: user, resolve: resolve, reject };
 
     context.load(user);
     context.executeQueryAsync(
@@ -687,6 +722,12 @@ sal.addUsersToGroup = function (userNameArr, groupName) {
     Function.createDelegate(data, onQueryFailed)
   );
 };
+
+export function MapListItem(listItem, fieldMap) {
+  Object.keys(fieldMap).forEach((key) => {
+    fieldMap[key].koMap(listItem.get_item(key));
+  });
+}
 
 export function SPList(listDef) {
   /*
@@ -939,12 +980,10 @@ export function SPList(listDef) {
   /*****************************************************************
                                 getListItems      
     ******************************************************************/
-  function getListItems(caml, viewFields, callback) {
+  function getListItems(caml, callback) {
     /*
         Obtain all list items that match the querystring passed by caml.
         */
-
-    //console.log("context loaded", self.config);
     var camlQuery = new SP.CamlQuery.createAllItemsQuery();
 
     camlQuery.set_viewXml(caml);
@@ -958,42 +997,20 @@ export function SPList(listDef) {
     function onGetListItemsSucceeded() {
       var self = this;
       var listItemEnumerator = self.collListItem.getEnumerator();
-      self.focusedItems = [];
-      //console.log("Get list succeeded");
-      var keys = [];
-      $.each(viewFields, function (field, obj) {
-        keys.push(field);
-      });
+
+      const foundObjects = [];
+
       while (listItemEnumerator.moveNext()) {
         var oListItem = listItemEnumerator.get_current();
-        //console.log(oListItem);
         var listObj = {};
-        //console.log("keys", keys);
-        $.each(keys, function (idx, item) {
-          try {
-            var getItem = oListItem.get_item(item);
-            //console.log("getting: " + item + " " + getItem);
-            //console.log(getItem)
-            //console.log(item + ' item: ', getItem)
-            listObj[item] = getItem;
-          } catch (err) {
-            console.error(
-              "Unable to retrieve " +
-                item +
-                " from " +
-                self.def.name +
-                ". Does this column exist?\n\n",
-              err
-            );
-          }
-        });
+
         //listObj.fileUrl = oListItem.get_item("FileRef");
         listObj.oListItem = oListItem;
-        self.focusedItems.push(listObj);
+        foundObjects.push(listObj);
       }
       //this.setState({ focusedItems })
       //console.log("calling callback get list");
-      callback(self.focusedItems);
+      callback(foundObjects);
     }
 
     function onGetListItemsFailed(sender, args) {
@@ -1011,11 +1028,10 @@ export function SPList(listDef) {
     var data = {
       collListItem: collListItem,
       callback: callback,
-      def: self.config.def,
     };
 
-    self.config.currentContext.load(collListItem);
-    self.config.currentContext.executeQueryAsync(
+    currCtx.load(collListItem);
+    currCtx.executeQueryAsync(
       Function.createDelegate(data, onGetListItemsSucceeded),
       Function.createDelegate(data, onGetListItemsFailed)
     );
@@ -1028,6 +1044,19 @@ export function SPList(listDef) {
     });
   }
 
+  function findByTitleAsync(title) {
+    var caml =
+      '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
+      '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
+      "</Eq><Eq>" +
+      '<FieldRef Name="Title"/><Value Type="Text">' +
+      title +
+      "</Value>" +
+      "</Eq></And></Where></Query><RowLimit>1</RowLimit></View>";
+    return new Promise((resolve, reject) => {
+      getListItems(caml, resolve);
+    });
+  }
   /*****************************************************************
                             updateListItem      
     ******************************************************************/
@@ -1778,6 +1807,7 @@ export function SPList(listDef) {
     createListItem: createListItem,
     getListItems: getListItems,
     getListItemsAsync: getListItemsAsync,
+    findByTitleAsync,
     updateListItem: updateListItem,
     updateListItemAsync: updateListItemAsync,
     deleteListItem: deleteListItem,
