@@ -19,7 +19,9 @@ async function InitDB() {
 }
 
 WorkOrder.NewReport = async function () {
-  const requestDetail = await RequestDetail({ title: "230330-6165" });
+  const requestDetail = await RequestDetail.viewRequest({
+    title: "230330-6165",
+  });
 
   const publicMembers = {
     requestDetail,

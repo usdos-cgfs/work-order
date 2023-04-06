@@ -1,38 +1,41 @@
 import { SPList, MapListItem } from "../common/sal.js";
-import { RequestOrg, CreateRequestOrg } from "./RequestOrg.js";
+import { RequestOrg } from "./RequestOrg.js";
 import { FieldArray, PersonField } from "../common/fields.js";
+import { MapObjectsToViewFields } from "../common/Common.js";
+import { Person } from "./Person.js";
 
 export const WorkOrderListDef = {
   name: "WorkOrder",
   title: "Work Order",
 };
 
-export const WorkOrderListRef = new SPList(WorkOrderListDef);
+//export const WorkOrderListRef = new SPList(WorkOrderListDef);
 
-export function RequestHeader() {
-  const RequestingOrg = new RequestOrg(1, "Person 1");
-  const SubmittingOrg = new RequestOrg(2, "Submitting Org");
+export class RequestHeader {
+  static ListRef = new SPList(WorkOrderListDef);
+  // const RequestingOrg = new RequestOrg(1, "Person 1");
+  // const SubmittingOrg = new RequestOrg(2, "Submitting Org");
 
-  console.log(RequestingOrg);
-  console.log(SubmittingOrg);
+  // console.log(RequestingOrg);
+  // console.log(SubmittingOrg);
 
-  const FieldMap = {
+  constructor() {
+    //this.FieldMap.Title.obs(title);
+  }
+
+  FieldMap = {
     //ID: { type: "Text", koMap: "empty" },
-    Title: { type: "Text", obs: ko.observable() },
+    Title: { obs: ko.observable() },
     // EstClosedDate: { type: "Date", koMap: "requestEstClosed" },
-    IsActive: { type: "Bool", obs: ko.observable() },
+    IsActive: { obs: ko.observable() },
     // //RequestAssignments: { type: "Text", koMap: "requestAssignmentIds" },
     //RequestDescription: { type: "Text", obs: ko.observable() },
     // RequestOrgs: { type: "Lookup", koMap: "requestOrgIds" },
-    Requestor: { type: "Person", koMap: "requestor" },
+    //Requestor: { type: "Person", koMap: "requestor" },
     // RequestorEmail: { type: "Text", koMap: "requestorEmail" },
     // RequestorName: { type: "Text", koMap: "requestorName" },
-    RequestorOffice: { type: "LookUp", obs: RequestingOrg },
-    //RequestOrgs: {
-    //   type: "LookUp",
-    //   array: true,
-    //   obs: new FieldArray(CreateRequestOrg),
-    // },
+    RequestorOffice: { factory: RequestOrg.factory, obs: ko.observable() },
+    RequestOrgs: { factory: RequestOrg.factory, obs: ko.observableArray() },
     // RequestorPhone: { type: "Text", koMap: "requestorTelephone" },
     // RequestorSupervisor: { type: "Person", koMap: "requestorSupervisor" },
     // RequestStage: { type: "Text", koMap: "requestStageNum" },
@@ -41,33 +44,31 @@ export function RequestHeader() {
     // RequestSubmitted: { type: "DateTime", koMap: "requestSubmittedDate" },
     // ServiceType: { type: "Text", koMap: "requestServiceTypeLookupId" },
     // ClosedDate: { type: "Text", koMap: "requestClosedDate" },
-    // Author: { type: "Person", obs: new PersonField({}) },
+    Author: { factory: Person.factory, obs: ko.observable() },
     // ManagingDirector: { type: "Person", obs: new PersonField({}) },
     // Created: { type: "Date", koMap: "empty" },
   };
-  const publicMembers = {
-    FieldMap,
-    // Fields,
-  };
 
-  return publicMembers;
+  loadByTitle = async function (title) {
+    var servicerequest = await RequestHeader.ListRef.findByTitleAsync(
+      title,
+      Object.keys(this.FieldMap)
+    );
+    MapObjectsToViewFields(servicerequest[0], this.FieldMap);
+  };
 }
 
-export async function RequestDetail({ title }) {
-  const requestHeader = RequestHeader();
-  if (title) {
-    // If we are passing in a title, try to find it
-    var servicerequest = await WorkOrderListRef.findByTitleAsync(
-      title,
-      Object.keys(requestHeader.FieldMap)
-    );
-    console.log("ServiceRequest", servicerequest);
-    //MapListItem(servicerequest[0].oListItem, requestHeader.FieldMap);
-  }
+export class RequestDetail {
+  requestHeader = new RequestHeader();
 
-  const publicMembers = {
-    requestHeader,
+  constructor({ title }) {}
+
+  static newRequest = async function () {};
+
+  static viewRequest = async function ({ title }) {
+    var newRequest = new RequestDetail({ title });
+    await newRequest.requestHeader.loadByTitle(title);
+
+    return newRequest;
   };
-
-  return publicMembers;
 }

@@ -1010,18 +1010,10 @@ export function SPList(listDef) {
         var oListItem = listItemEnumerator.get_current();
         var listObj = {};
         fields.forEach((field) => {
-          var val = oListItem.get_item(field);
-          switch (val.constructor.getName()) {
-            case "SP.FieldLookupValue":
-            case "SP.FieldUserValue":
-              listObj[field] = {
-                id: val.get_lookupId(),
-                value: val.get_lookupValue(),
-              };
-              break;
-            default:
-              listObj[field] = val;
-          }
+          var colVal = oListItem.get_item(field);
+          listObj[field] = Array.isArray(colVal)
+            ? colVal.map((val) => mapListItemToObject(val))
+            : mapListItemToObject(colVal);
         });
         //listObj.fileUrl = oListItem.get_item("FileRef");
         listObj.oListItem = oListItem;
@@ -1030,6 +1022,22 @@ export function SPList(listDef) {
       //this.setState({ focusedItems })
       //console.log("calling callback get list");
       callback(foundObjects);
+    }
+
+    function mapListItemToObject(val) {
+      var out;
+      switch (val.constructor.getName()) {
+        case "SP.FieldLookupValue":
+        case "SP.FieldUserValue":
+          out = {
+            id: val.get_lookupId(),
+            value: val.get_lookupValue(),
+          };
+          break;
+        default:
+          out = val;
+      }
+      return out;
     }
 
     function onGetListItemsFailed(sender, args) {

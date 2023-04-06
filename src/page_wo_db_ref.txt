@@ -17,6 +17,14 @@
 <script type="text/html" id="tmpl-request-header">
   <div>
     <h3>Service Request Header</h3>
+    <!-- ko if: $data -->
+    <div data-bind="using: FieldMap">
+      <div data-bind="text: Author.obs()?.title"></div>
+    </div>
+    <!-- /ko -->
+    <!-- ko if: !$data -->
+    <div>Nothing to see here</div>
+    <!-- /ko -->
   </div>
 </script>
 
