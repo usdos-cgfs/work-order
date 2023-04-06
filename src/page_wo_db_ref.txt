@@ -1,27 +1,24 @@
 <div id="app">
   <h1>Work Order System</h1>
-
-  <p>Person</p>
-  <p
-    data-bind="text: workorder.requestHeader.FieldMap.Author.obs.IsLoading"
-  ></p>
-  <p
-    data-bind="text: workorder.requestHeader.FieldMap.Author.obs.User()?.title"
-  ></p>
-  <p
-    data-bind="text: workorder.requestHeader.FieldMap.ManagingDirector.obs.IsLoading"
-  ></p>
-  <p
-    data-bind="text: workorder.requestHeader.FieldMap.ManagingDirector.obs.User()?.title"
-  ></p>
-  <div data-bind="using: workorder.requestHeader.FieldMap">
-    <h1>Using</h1>
-    <p data-bind="text: Title.obs"></p>
-    <ul data-bind="foreach: RequestOrgs.obs.Arr">
-      <ul data-bind="text: Title"></ul>
-    </ul>
-  </div>
+  <div
+    data-bind="template: {name: 'tmpl-request-detail', data: requestDetail}"
+  ></div>
 </div>
+
+<script type="text/html" id="tmpl-request-detail">
+  <div>
+    <h2>Service Request Detail</h2>
+    <div
+      data-bind="template: {name: 'tmpl-request-header', data: requestHeader}"
+    ></div>
+  </div>
+</script>
+
+<script type="text/html" id="tmpl-request-header">
+  <div>
+    <h3>Service Request Header</h3>
+  </div>
+</script>
 
 <script
   type="text/javascript"

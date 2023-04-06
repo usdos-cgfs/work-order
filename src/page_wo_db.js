@@ -19,20 +19,11 @@ async function InitDB() {
 }
 
 WorkOrder.NewReport = async function () {
-  const workorder = await RequestDetail({ title: "230330-6165" });
-  const test = ko.observable("test 2");
+  const requestDetail = await RequestDetail({ title: "230330-6165" });
 
   const publicMembers = {
-    workorder,
-    test,
+    requestDetail,
   };
 
   return publicMembers;
 };
-
-// export default {
-//   data() {
-//     return { count: 0, workOrder: new WorkOrder() };
-//   },
-//   template: `<div>count is {{ count }}</div>`,
-// };

@@ -2,7 +2,7 @@ export function CreateRequestOrg(instData) {
   return new RequestOrg(instData.get_lookupId(), instData.get_lookupValue());
 }
 
-export function RequestOrg(id, title) {
+export function DequestOrg(id, title) {
   const Id = ko.observable(id);
   const Title = ko.observable(title);
 
@@ -18,5 +18,16 @@ export function RequestOrg(id, title) {
     Id,
     Title,
     SPMap,
+  };
+}
+
+export class RequestOrg {
+  constructor({ id, title }) {
+    this.id = id;
+    this.title = title;
+  }
+
+  static factory = function ({ id, title }) {
+    return new RequestOrg({ id, title });
   };
 }

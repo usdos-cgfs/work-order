@@ -17,22 +17,22 @@ export function RequestHeader() {
   console.log(SubmittingOrg);
 
   const FieldMap = {
-    // ID: { type: "Text", koMap: "empty" },
+    //ID: { type: "Text", koMap: "empty" },
     Title: { type: "Text", obs: ko.observable() },
     // EstClosedDate: { type: "Date", koMap: "requestEstClosed" },
     IsActive: { type: "Bool", obs: ko.observable() },
     // //RequestAssignments: { type: "Text", koMap: "requestAssignmentIds" },
-    RequestDescription: { type: "Text", obs: ko.observable() },
+    //RequestDescription: { type: "Text", obs: ko.observable() },
     // RequestOrgs: { type: "Lookup", koMap: "requestOrgIds" },
-    // Requestor: { type: "Person", koMap: "requestor" },
+    Requestor: { type: "Person", koMap: "requestor" },
     // RequestorEmail: { type: "Text", koMap: "requestorEmail" },
     // RequestorName: { type: "Text", koMap: "requestorName" },
     RequestorOffice: { type: "LookUp", obs: RequestingOrg },
-    RequestOrgs: {
-      type: "LookUp",
-      array: true,
-      obs: new FieldArray(CreateRequestOrg),
-    },
+    //RequestOrgs: {
+    //   type: "LookUp",
+    //   array: true,
+    //   obs: new FieldArray(CreateRequestOrg),
+    // },
     // RequestorPhone: { type: "Text", koMap: "requestorTelephone" },
     // RequestorSupervisor: { type: "Person", koMap: "requestorSupervisor" },
     // RequestStage: { type: "Text", koMap: "requestStageNum" },
@@ -41,8 +41,8 @@ export function RequestHeader() {
     // RequestSubmitted: { type: "DateTime", koMap: "requestSubmittedDate" },
     // ServiceType: { type: "Text", koMap: "requestServiceTypeLookupId" },
     // ClosedDate: { type: "Text", koMap: "requestClosedDate" },
-    Author: { type: "Person", obs: new PersonField({}) },
-    ManagingDirector: { type: "Person", obs: new PersonField({}) },
+    // Author: { type: "Person", obs: new PersonField({}) },
+    // ManagingDirector: { type: "Person", obs: new PersonField({}) },
     // Created: { type: "Date", koMap: "empty" },
   };
   const publicMembers = {
@@ -57,9 +57,12 @@ export async function RequestDetail({ title }) {
   const requestHeader = RequestHeader();
   if (title) {
     // If we are passing in a title, try to find it
-    var servicerequest = await WorkOrderListRef.findByTitleAsync(title);
+    var servicerequest = await WorkOrderListRef.findByTitleAsync(
+      title,
+      Object.keys(requestHeader.FieldMap)
+    );
     console.log("ServiceRequest", servicerequest);
-    MapListItem(servicerequest[0].oListItem, requestHeader.FieldMap);
+    //MapListItem(servicerequest[0].oListItem, requestHeader.FieldMap);
   }
 
   const publicMembers = {

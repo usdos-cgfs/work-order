@@ -986,7 +986,7 @@ export function SPList(listDef) {
   /*****************************************************************
                                 getListItems      
     ******************************************************************/
-  function getListItems(caml, callback) {
+  function getListItems(caml, fields, callback) {
     /*
         Obtain all list items that match the querystring passed by caml.
         */
@@ -1009,7 +1009,20 @@ export function SPList(listDef) {
       while (listItemEnumerator.moveNext()) {
         var oListItem = listItemEnumerator.get_current();
         var listObj = {};
-
+        fields.forEach((field) => {
+          var val = oListItem.get_item(field);
+          switch (val.constructor.getName()) {
+            case "SP.FieldLookupValue":
+            case "SP.FieldUserValue":
+              listObj[field] = {
+                id: val.get_lookupId(),
+                value: val.get_lookupValue(),
+              };
+              break;
+            default:
+              listObj[field] = val;
+          }
+        });
         //listObj.fileUrl = oListItem.get_item("FileRef");
         listObj.oListItem = oListItem;
         foundObjects.push(listObj);
@@ -1034,9 +1047,10 @@ export function SPList(listDef) {
     var data = {
       collListItem: collListItem,
       callback: callback,
+      fields,
     };
 
-    currCtx.load(collListItem);
+    currCtx.load(collListItem, `Include(${fields.join(", ")})`);
     currCtx.executeQueryAsync(
       Function.createDelegate(data, onGetListItemsSucceeded),
       Function.createDelegate(data, onGetListItemsFailed)
@@ -1050,7 +1064,13 @@ export function SPList(listDef) {
     });
   }
 
-  function findByTitleAsync(title) {
+  /**
+   *
+   * @param {string} title
+   * @param {Array} fields
+   * @returns promise. Resolves to Object with fields and values.
+   */
+  function findByTitleAsync(title, fields) {
     var caml =
       '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
       '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
@@ -1060,7 +1080,7 @@ export function SPList(listDef) {
       "</Value>" +
       "</Eq></And></Where></Query><RowLimit>1</RowLimit></View>";
     return new Promise((resolve, reject) => {
-      getListItems(caml, resolve);
+      getListItems(caml, fields, resolve);
     });
   }
   /*****************************************************************
