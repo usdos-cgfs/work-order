@@ -1,4 +1,4 @@
-import { EnsureUserByIdAsync } from "./sal.js";
+import { EnsureUserByIdAsync } from "../infrastructure/SAL.js";
 
 export function FieldArray(creator) {
   const Arr = ko.observableArray();

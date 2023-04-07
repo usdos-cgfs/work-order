@@ -1,16 +1,74 @@
+<link
+  href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+  rel="stylesheet"
+  integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+  crossorigin="anonymous"
+/>
+
 <div id="app">
-  <h1>Work Order System</h1>
-  <div
-    data-bind="template: {name: 'tmpl-request-detail', data: requestDetail}"
-  ></div>
+  <ul class="nav nav-tabs" id="section-tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button
+        class="nav-link active"
+        id="my-requests-tab"
+        data-bs-toggle="tab"
+        data-bs-target="#my-requests"
+        type="button"
+        role="tab"
+        aria-controls="my-requests"
+        aria-selected="true"
+      >
+        My Orders
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button
+        class="nav-link"
+        id="request-detail-tab"
+        data-bs-toggle="tab"
+        data-bs-target="#request-detail"
+        type="button"
+        role="tab"
+        aria-controls="request-detail"
+        aria-selected="false"
+      >
+        Detail View
+      </button>
+    </li>
+  </ul>
+  <div class="tab-content">
+    <div
+      class="tab-pane active"
+      role="tabpanel"
+      aria-labelledby="my-requests-tab"
+      id="my-requests"
+    >
+      <button data-bind="click: viewRequest">View Request</button>
+    </div>
+    <div
+      id="request-detail"
+      class="tab-pane"
+      role="tabpanel"
+      aria-labelledby="request-detail-tab"
+    >
+      <div
+        data-bind="template: {name: 'tmpl-request-detail', data: requestDetail}"
+      ></div>
+    </div>
+  </div>
 </div>
 
 <script type="text/html" id="tmpl-request-detail">
   <div>
     <h2>Service Request Detail</h2>
+    <!-- ko if: !$data -->
+    <div>Nothing to see here</div>
+    <!-- /ko -->
+    <!-- ko if: $data -->
     <div
-      data-bind="template: {name: 'tmpl-request-header', data: requestHeader}"
+      data-bind="template: {name: 'tmpl-request-header', data: RequestHeader}"
     ></div>
+    <!-- /ko -->
   </div>
 </script>
 
@@ -43,6 +101,12 @@
 <script type="text/javascript" src="../Apps/_layouts/15/autofill.js"></script>
 
 <script src="../SiteAssets/workorder/vendor/knockout/knockout-3.5.0.js"></script>
+
+<script
+  src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+  crossorigin="anonymous"
+></script>
 
 <script defer type="module" src="../SiteAssets/wo/page_wo_db.js">
   // // import { createApp } from "vue";

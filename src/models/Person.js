@@ -6,7 +6,7 @@ export class Person {
 
   login = ko.observable();
 
-  static factory = function ({ id, value }) {
+  static Create = function ({ id, value }) {
     return new Person({ id, title: value });
   };
 }

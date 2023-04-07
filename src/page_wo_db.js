@@ -1,5 +1,8 @@
 import { RequestDetail } from "./models/ServiceRequest.js";
-import { InitSal } from "./common/sal.js";
+import { InitSal } from "./infrastructure/SAL.js";
+import { RequestOrg } from "./entities/RequestOrg.js";
+import "./infrastructure/ApplicationDbContext.js";
+import ApplicationDbContext from "./infrastructure/ApplicationDbContext.js";
 
 var WorkOrder = window.WorkOrder || {};
 
@@ -19,12 +22,28 @@ async function InitDB() {
 }
 
 WorkOrder.NewReport = async function () {
-  const requestDetail = await RequestDetail.viewRequest({
-    title: "230330-6165",
-  });
+  const requestDetail = ko.observable();
+  const openRequests = ko.observableArray();
+
+  const _context = new ApplicationDbContext();
+
+  const config = {
+    RequestOrgs: await _context.ConfigRequestOrgs.FindAll(RequestOrg.Fields),
+  };
+
+  async function viewRequest() {
+    var title = "230330-6165";
+    requestDetail(
+      await RequestDetail.viewRequest({
+        title,
+        _context,
+      })
+    );
+  }
 
   const publicMembers = {
     requestDetail,
+    viewRequest,
   };
 
   return publicMembers;

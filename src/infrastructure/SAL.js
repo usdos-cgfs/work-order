@@ -986,6 +986,25 @@ export function SPList(listDef) {
   /*****************************************************************
                                 getListItems      
     ******************************************************************/
+  function mapListItemToObject(val) {
+    if (!val) {
+      return null;
+    }
+    var out;
+    switch (val.constructor.getName()) {
+      case "SP.FieldLookupValue":
+      case "SP.FieldUserValue":
+        out = {
+          id: val.get_lookupId(),
+          value: val.get_lookupValue(),
+        };
+        break;
+      default:
+        out = val;
+    }
+    return out;
+  }
+
   function getListItems(caml, fields, callback) {
     /*
         Obtain all list items that match the querystring passed by caml.
@@ -1011,6 +1030,7 @@ export function SPList(listDef) {
         var listObj = {};
         fields.forEach((field) => {
           var colVal = oListItem.get_item(field);
+          //console.log(`SAL: Setting ${field} to`, colVal);
           listObj[field] = Array.isArray(colVal)
             ? colVal.map((val) => mapListItemToObject(val))
             : mapListItemToObject(colVal);
@@ -1022,22 +1042,6 @@ export function SPList(listDef) {
       //this.setState({ focusedItems })
       //console.log("calling callback get list");
       callback(foundObjects);
-    }
-
-    function mapListItemToObject(val) {
-      var out;
-      switch (val.constructor.getName()) {
-        case "SP.FieldLookupValue":
-        case "SP.FieldUserValue":
-          out = {
-            id: val.get_lookupId(),
-            value: val.get_lookupValue(),
-          };
-          break;
-        default:
-          out = val;
-      }
-      return out;
     }
 
     function onGetListItemsFailed(sender, args) {
@@ -1065,10 +1069,15 @@ export function SPList(listDef) {
     );
   }
 
-  function getListItemsAsync(caml, viewFields) {
-    viewFields = typeof viewFields !== "undefined" ? viewFields : null;
+  function getListItemsAsync({ fields = null, caml = null }) {
+    if (!caml) {
+      var caml =
+        '<View Scope="RecursiveAll"><Query><Where><Eq>' +
+        '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
+        "</Eq></Where></Query></View>";
+    }
     return new Promise((resolve, reject) => {
-      getListItems(caml, viewFields, resolve);
+      getListItems(caml, fields, resolve);
     });
   }
 
@@ -1078,7 +1087,7 @@ export function SPList(listDef) {
    * @param {Array} fields
    * @returns promise. Resolves to Object with fields and values.
    */
-  function findByTitleAsync(title, fields) {
+  async function findByTitleAsync(title, fields) {
     var caml =
       '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
       '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
@@ -1087,10 +1096,58 @@ export function SPList(listDef) {
       title +
       "</Value>" +
       "</Eq></And></Where></Query><RowLimit>1</RowLimit></View>";
-    return new Promise((resolve, reject) => {
+    var listItem = await new Promise((resolve, reject) => {
       getListItems(caml, fields, resolve);
     });
+    return listItem ? listItem[0] : null;
   }
+
+  function findListItemByIdAsync(id, fields) {
+    return new Promise((resolve, reject) => {
+      try {
+        findListItemById(id, fields, resolve);
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+
+  function findListItemById(id, fields, callback) {
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+    var oList = web.get_lists().getByTitle(self.config.def.title);
+    var oListItem = oList.getItemById(id);
+
+    function onGetListItemSucceeded() {
+      listObj = {};
+      fields.forEach((field) => {
+        var colVal = oListItem.get_item(field);
+        console.log(`Setting ${field} to`, colVal);
+        listObj[field] = Array.isArray(colVal)
+          ? colVal.map((val) => mapListItemToObject(val))
+          : mapListItemToObject(colVal);
+      });
+      resolve(listObj);
+    }
+
+    function onGetListItemFailed(sender, args) {
+      console.error("Update Failed - List: " + self.config.def.name);
+      console.error("ValuePairs", valuePairs);
+      console.error(sender, args);
+    }
+
+    var data = {
+      oListItem,
+      callback,
+      fields,
+    };
+    currCtx.load(oListItem, `Include(${fields.join(", ")})`);
+    currCtx.executeQueryAsync(
+      Function.createDelegate(data, onGetListItemSucceeded),
+      Function.createDelegate(data, onGetListItemFailed)
+    );
+  }
+
   /*****************************************************************
                             updateListItem      
     ******************************************************************/
@@ -1842,6 +1899,7 @@ export function SPList(listDef) {
     getListItems: getListItems,
     getListItemsAsync: getListItemsAsync,
     findByTitleAsync,
+    findListItemByIdAsync,
     updateListItem: updateListItem,
     updateListItemAsync: updateListItemAsync,
     deleteListItem: deleteListItem,
