@@ -68,11 +68,24 @@
     <div>Nothing to see here</div>
     <!-- /ko -->
     <!-- ko if: $data -->
-    <div
-      data-bind="template: {name: 'tmpl-request-header', data: RequestHeader}"
-    ></div>
+    <div>
+      <div
+        data-bind="template: {name: 'tmpl-request-header', data: RequestHeader}"
+      ></div>
 
-    <button type="button" data-bind="click: SaveRequest">Save</button>
+      <!-- ko if: DisplayMode() == DisplayModes.New -->
+      <button type="button" data-bind="click: SubmitNewRequest">Submit</button>
+      <!-- /ko -->
+      <!-- ko if: DisplayMode() == DisplayModes.View -->
+      <button type="button" data-bind="click: EditRequest">Edit</button>
+      <!-- /ko -->
+      <!-- ko if: DisplayMode() == DisplayModes.Edit -->
+      <button type="button" data-bind="click: UpdateRequest">
+        Save Changes
+      </button>
+      <button type="button" data-bind="click: CancelChanges">Cancel</button>
+      <!-- /ko -->
+    </div>
     <!-- /ko -->
   </div>
 </script>
@@ -82,6 +95,7 @@
   <div>
     <h3>Service Request Header</h3>
     <!-- ko if: $data -->
+    <!-- ko if: DisplayMode() == DisplayModes.View -->
     <div data-bind="using: FieldMap">
       <div>
         <p data-bind="text: Title.obs()"></p>
@@ -89,6 +103,7 @@
       </div>
       <!-- <div data-bind="text: Author.obs()?.title"></div> -->
     </div>
+    <!-- /ko -->
     <!-- /ko -->
     <!-- ko if: !$data -->
     <div>Nothing to see here</div>

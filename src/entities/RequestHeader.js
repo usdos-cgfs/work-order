@@ -1,16 +1,29 @@
 import { Person } from "../models/Person.js";
+import { DisplayModes } from "../models/RequestDetail.js";
 import { RequestOrg } from "./RequestOrg.js";
 
+const templates = {
+  New: "tmpl-request-header-new",
+  View: "tmpl-request-header-view",
+  Edit: "tmpl-request-header-edit",
+};
+
 export class RequestHeader {
+  DisplayModes = DisplayModes;
+
   // const RequestingOrg = new RequestOrg(1, "Person 1");
   // const SubmittingOrg = new RequestOrg(2, "Submitting Org");
 
   // console.log(RequestingOrg);
   // console.log(SubmittingOrg);
+  DisplayMode = ko.observable();
+  Template = ko.observable();
 
-  constructor({ id = null, title = null }) {
+  constructor({ displayMode = DisplayModes.View, id = null, title = null }) {
     this.id = id;
     this.title = title;
+    this.DisplayMode(displayMode);
+    this.Template(templates[displayMode]);
     //this.FieldMap.Title.obs(title);
   }
 
