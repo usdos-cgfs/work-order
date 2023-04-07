@@ -6,6 +6,8 @@
 />
 
 <div id="app">
+  <button data-bind="click: NewRequest">New Request</button>
+  <button data-bind="click: ViewRequest">View Request</button>
   <ul class="nav nav-tabs" id="section-tabs" role="tablist">
     <li class="nav-item" role="presentation">
       <button
@@ -21,7 +23,7 @@
         My Orders
       </button>
     </li>
-    <li class="nav-item" role="presentation">
+    <li class="nav-item active" role="presentation">
       <button
         class="nav-link"
         id="request-detail-tab"
@@ -43,7 +45,7 @@
       aria-labelledby="my-requests-tab"
       id="my-requests"
     >
-      <button data-bind="click: viewRequest">View Request</button>
+      <p>Open Requests Here</p>
     </div>
     <div
       id="request-detail"
@@ -52,13 +54,14 @@
       aria-labelledby="request-detail-tab"
     >
       <div
-        data-bind="template: {name: 'tmpl-request-detail', data: requestDetail}"
+        data-bind="template: {name: 'tmpl-request-detail', data: RequestDetail}"
       ></div>
     </div>
   </div>
 </div>
 
 <script type="text/html" id="tmpl-request-detail">
+  <!-- Report.RequestDetail -->
   <div>
     <h2>Service Request Detail</h2>
     <!-- ko if: !$data -->
@@ -68,16 +71,23 @@
     <div
       data-bind="template: {name: 'tmpl-request-header', data: RequestHeader}"
     ></div>
+
+    <button type="button" data-bind="click: SaveRequest">Save</button>
     <!-- /ko -->
   </div>
 </script>
 
 <script type="text/html" id="tmpl-request-header">
+  <!-- Report.RequestDetail.RequestHeader -->
   <div>
     <h3>Service Request Header</h3>
     <!-- ko if: $data -->
     <div data-bind="using: FieldMap">
-      <div data-bind="text: Author.obs()?.title"></div>
+      <div>
+        <p data-bind="text: Title.obs()"></p>
+        <input data-bind="value: Title.obs" />
+      </div>
+      <!-- <div data-bind="text: Author.obs()?.title"></div> -->
     </div>
     <!-- /ko -->
     <!-- ko if: !$data -->

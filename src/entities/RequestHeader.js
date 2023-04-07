@@ -15,11 +15,11 @@ export class RequestHeader {
   }
 
   FieldMap = {
-    ID: { obs: ko.observable() },
+    // ID: { obs: ko.observable() },
     Title: { obs: ko.observable() },
     // EstClosedDate: { type: "Date", koMap: "requestEstClosed" },
     IsActive: { obs: ko.observable() },
-    // //RequestAssignments: { type: "Text", koMap: "requestAssignmentIds" },
+    //RequestAssignments: { type: "Text", koMap: "requestAssignmentIds" },
     //RequestDescription: { type: "Text", obs: ko.observable() },
     Requestor: { factory: Person.Create, obs: ko.observable() },
     // RequestorEmail: { type: "Text", koMap: "requestorEmail" },
@@ -29,13 +29,14 @@ export class RequestHeader {
     // RequestorPhone: { type: "Text", koMap: "requestorTelephone" },
     // RequestorSupervisor: { type: "Person", koMap: "requestorSupervisor" },
     // RequestStage: { type: "Text", koMap: "requestStageNum" },
-    // RequestStatus: { type: "Text", koMap: "requestStatus" },
+    RequestStatus: { obs: ko.observable() },
+    MultiChoice: { obs: ko.observableArray() },
     // RequestSubject: { type: "Text", koMap: "requestSubject" },
-    // RequestSubmitted: { type: "DateTime", koMap: "requestSubmittedDate" },
+    RequestSubmitted: { obs: ko.observable() },
     // ServiceType: { type: "Text", koMap: "requestServiceTypeLookupId" },
     ClosedDate: { obs: ko.observable() },
-    Author: { factory: Person.Create, obs: ko.observable() },
+    // Author: { factory: Person.Create, obs: ko.observable() },
     ManagingDirector: { factory: Person.Create, obs: ko.observable() },
-    Created: { obs: ko.observable() },
+    // Created: { obs: ko.observable() },
   };
 }

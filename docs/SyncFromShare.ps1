@@ -1,1 +1,1 @@
-robocopy Y:\SiteAssets\wo ..\src /mir /fft /mon:1
+robocopy Y:\SiteAssets\wo ..\src /mir /fft 

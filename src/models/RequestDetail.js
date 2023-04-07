@@ -11,13 +11,16 @@ export class RequestDetail {
   DisplayMode = ko.observable();
 
   constructor({ displayMode = DisplayModes.New, title = null, _context }) {
-    this.RequestHeader = new RequestHeader({ title });
+    this._context = _context;
+    this.RequestHeader = new RequestHeader({ title, displayMode });
     this.DisplayMode(displayMode);
   }
 
-  static newRequest = async function () {};
+  SaveRequest = async () => {
+    await this._context.RequestHeaders.Add(this.RequestHeader);
+  };
 
-  static viewRequest = async function ({ title, _context }) {
+  static ViewRequest = async function ({ title, _context }) {
     var newRequest = new RequestDetail({
       displayMode: DisplayModes.View,
       title,

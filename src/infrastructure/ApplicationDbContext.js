@@ -12,6 +12,11 @@ export default class ApplicationDbContext {
     name: "ConfigRequestOrgs",
     title: "ConfigRequestOrgs",
   });
+
+  ConfigPipelines = new EntitySet({
+    name: "ConfigPipelines",
+    title: "ConfigPipelines",
+  });
 }
 
 class EntitySet {
@@ -19,12 +24,18 @@ class EntitySet {
     this.ListRef = new SPList(listDef);
   }
 
+  Add = async function (entity, folderPath) {
+    var vp = MapViewFieldsToValuePairs(entity.FieldMap);
+    console.log(vp);
+    return this.ListRef.createListItemAsync(vp, folderPath);
+  };
+
   FindAll = async function (fields) {
     return await this.ListRef.getListItemsAsync({ fields });
   };
 
   Find = async function (entity, fields) {
-    if (!entity.id == null && !entity.title) {
+    if (!entity.id && !entity.title) {
       console.error("entity missing Id or title", entity);
       return null;
     }
@@ -71,4 +82,23 @@ function MapObjectToViewField(inVal, fieldMap) {
 function GenerateObject(inVal, fieldMap) {
   // If the fieldMap provides a factory, use that, otherwise return the value
   return fieldMap.factory ? fieldMap.factory(inVal) : inVal;
+}
+
+function MapViewFieldsToValuePairs(fieldMappings) {
+  // Expects array of arrays: [[col1, val1], [col2, val2]]
+  return Object.keys(fieldMappings).map((key) => {
+    return [key, MapViewFieldToValuePair(fieldMappings[key])];
+  });
+}
+
+function MapViewFieldToValuePair(fieldMap) {
+  var val = fieldMap.obs();
+  if (!val) {
+    return null;
+  }
+  return Array.isArray(val)
+    ? val.map((item) => (item.id ? { id: item.id, title: item.title } : item))
+    : val.id
+    ? { id: val.id, title: val.title }
+    : val;
 }

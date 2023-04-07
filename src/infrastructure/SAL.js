@@ -934,6 +934,33 @@ export function SPList(listDef) {
   /*****************************************************************
                                 createListItem      
     ******************************************************************/
+  function mapObjectToListItem(val) {
+    if (!val) {
+      return null;
+    }
+    if (!Array.isArray(val)) {
+      return mapItemToListItem(val);
+    }
+    return val
+      .map((item) => {
+        return mapItemToListItem(item);
+      })
+      .join(";#");
+  }
+
+  function mapItemToListItem(item) {
+    if (item.id) {
+      //var lookupValue = new SP.FieldLookupValue();
+      //lookupValue.set_lookupId(item.id);
+      //return lookupValue;
+      return `${item.id};#${item.title}`;
+    }
+    if (item.constructor.getName() == "Date") {
+      return item.toISOString();
+    }
+    return item;
+  }
+
   function createListItem(valuePairs, callback, folderName) {
     folderName = folderName === undefined ? "" : folderName;
 
@@ -955,9 +982,9 @@ export function SPList(listDef) {
     }
 
     var oListItem = oList.addItem(itemCreateInfo);
-    for (i = 0; i < valuePairs.length; i++) {
-      oListItem.set_item(valuePairs[i][0], valuePairs[i][1]);
-    }
+    valuePairs.forEach((pair) => {
+      oListItem.set_item(pair[0], mapObjectToListItem(pair[1]));
+    });
 
     oListItem.update();
 
@@ -967,20 +994,24 @@ export function SPList(listDef) {
     }
 
     function onCreateListItemFailed(sender, args) {
-      alert(
-        "Failed to create new item :" +
-          args.get_message() +
-          "\n" +
-          args.get_stackTrace()
-      );
+      console.error("Update Failed - List: " + self.config.def.name);
+      console.error("ValuePairs", valuePairs);
+      console.error(sender, args);
     }
-    data = { oListItem: oListItem, callback: callback };
 
-    self.config.currentContext.load(oListItem);
-    self.config.currentContext.executeQueryAsync(
+    var data = { oListItem: oListItem, callback: callback };
+
+    currCtx.load(oListItem);
+    currCtx.executeQueryAsync(
       Function.createDelegate(data, onCreateListItemSucceeded),
       Function.createDelegate(data, onCreateListItemFailed)
     );
+  }
+
+  function createListItemAsync(valuePairs, folderPath) {
+    return new Promise((resolve, reject) => {
+      createListItem(valuePairs, resolve, folderPath);
+    });
   }
 
   /*****************************************************************
@@ -1896,6 +1927,7 @@ export function SPList(listDef) {
     setListPermissions: setListPermissions,
     setListPermissionsAsync: setListPermissionsAsync,
     createListItem: createListItem,
+    createListItemAsync,
     getListItems: getListItems,
     getListItemsAsync: getListItemsAsync,
     findByTitleAsync,

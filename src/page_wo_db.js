@@ -1,8 +1,9 @@
-import { RequestDetail } from "./models/ServiceRequest.js";
+import { RequestDetail } from "./models/RequestDetail.js";
 import { InitSal } from "./infrastructure/SAL.js";
 import { RequestOrg } from "./entities/RequestOrg.js";
 import "./infrastructure/ApplicationDbContext.js";
 import ApplicationDbContext from "./infrastructure/ApplicationDbContext.js";
+import { PipelineStage } from "./entities/Pipelines.js";
 
 var WorkOrder = window.WorkOrder || {};
 
@@ -17,34 +18,47 @@ document.addEventListener("DOMContentLoaded", function (event) {
 async function InitDB() {
   //const { WorkOrder } = await import("./models/WorkOrder.js");
   await InitSal();
-  WorkOrder.Report = await WorkOrder.NewReport();
+  WorkOrder.Report = new NewReport();
+  await WorkOrder.Report.Init();
   ko.applyBindings(WorkOrder.Report);
 }
 
-WorkOrder.NewReport = async function () {
-  const requestDetail = ko.observable();
-  const openRequests = ko.observableArray();
+class NewReport {
+  constructor() {
+    this._context = new ApplicationDbContext();
+  }
+  Config = {};
+  Tab = ko.observable();
+  RequestDetail = ko.observable();
+  OpenRequests = ko.observableArray();
 
-  const _context = new ApplicationDbContext();
+  Init = async function () {
+    configLists: {
+      var requestOrgsPromise = this._context.ConfigRequestOrgs.FindAll(
+        RequestOrg.Fields
+      ).then((val) => (this.Config.RequestOrgs = val));
 
-  const config = {
-    RequestOrgs: await _context.ConfigRequestOrgs.FindAll(RequestOrg.Fields),
+      var pipelinesPromise = this._context.ConfigPipelines.FindAll(
+        PipelineStage.Fields
+      ).then((val) => (this.Config.PipelineStages = val));
+
+      const configResults = await Promise.all([
+        requestOrgsPromise,
+        pipelinesPromise,
+      ]);
+    }
   };
 
-  async function viewRequest() {
+  NewRequest = function () {
+    this.RequestDetail(new RequestDetail({ _context: this._context }));
+  };
+  ViewRequest = async function () {
     var title = "230330-6165";
-    requestDetail(
-      await RequestDetail.viewRequest({
+    this.RequestDetail(
+      await RequestDetail.ViewRequest({
         title,
-        _context,
+        _context: this._context,
       })
     );
-  }
-
-  const publicMembers = {
-    requestDetail,
-    viewRequest,
   };
-
-  return publicMembers;
-};
+}
