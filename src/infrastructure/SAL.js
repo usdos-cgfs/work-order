@@ -26,6 +26,11 @@ export function GetSiteGroups() {
   sal.globalConfig.siteGroups = [];
 }
 
+export const siteRoot =
+  _spPageContextInfo.webServerRelativeUrl == "/"
+    ? ""
+    : _spPageContextInfo.webServerRelativeUrl;
+
 export async function InitSal() {
   sal.globalConfig.siteGroups = [];
 

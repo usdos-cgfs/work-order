@@ -1,5 +1,5 @@
 import { Person } from "../components/Person.js";
-import { DisplayModes } from "../views/RequestDetail.js";
+import { DisplayModes } from "../views/RequestDetailView.js";
 import { RequestOrg } from "./RequestOrg.js";
 
 const templates = {

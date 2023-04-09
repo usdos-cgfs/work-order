@@ -18,3 +18,5 @@ export class PipelineStage {
     "WildCardAssignee",
   ];
 }
+
+export const pipelineStageStore = ko.observableArray();

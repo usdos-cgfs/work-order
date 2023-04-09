@@ -1,6 +1,9 @@
-const getTemplateId = (uid) => `tmpl-${uid}`;
+import { siteRoot } from "../infrastructure/SAL.js";
 
-const assetsPath = (uid) => `./serviceTypeTemplates/${uid}/`;
+const getTemplateElmId = (uid) => `tmpl-${uid}`;
+
+const assetsPath = (uid) =>
+  `${siteRoot}/SiteAssets/wo/entities/serviceTypeTemplates/${uid}/`;
 const templatePath = (uid) => assetsPath(uid) + `${uid}-template.html`;
 const modulePath = (uid) => assetsPath(uid) + `${uid}-module.js`;
 
@@ -11,6 +14,7 @@ export class ServiceType {
   }
 
   static Fields = [
+    "ID",
     "Title",
     "Active",
     "st_list",
@@ -35,27 +39,48 @@ export class ServiceType {
 }
 
 export class ServiceTypeTemplate {
-  constructor(uid) {
-    this.UID = uid;
-    this.TemplateId = getTemplateId(uid);
+  IsLoading = ko.observable();
+
+  UID = null;
+  TemplateElmId = null;
+
+  TemplateViewModel = ko.observable();
+
+  constructor(serviceType) {
+    this.UID = serviceType.UID;
+    this.TemplateElmId = getTemplateElmId(serviceType.UID);
+    this.ServiceType = serviceType;
   }
 
+  Load = async function () {
+    this.IsLoading(true);
+    if (!document.getElementById(this.TemplateElmId)) {
+      await loadServiceTypeTemplate(this.UID);
+    }
+    const service = await import(modulePath(this.UID));
+    if (!service) {
+      console.logError("Could not find service module");
+    }
+    this.TemplateViewModel(service.default);
+    this.IsLoading(false);
+  };
+
   static Create = async function (uid) {
-    const serviceType = new ServiceType(uid);
-    if (!document.getElementById(serviceType.TemplateId)) {
+    const serviceTypeTemplate = new ServiceTypeTemplate(uid);
+    if (!document.getElementById(serviceTypeTemplate.TemplateElmId)) {
       await loadServiceTypeTemplate(uid);
     }
     const service = await import(modulePath(uid));
     if (!service) {
       console.logError("Could not find service module");
     }
-    serviceType.ViewModel = service.default;
-    return serviceType;
+    serviceTypeTemplate.TemplateViewModel = service.default;
+    return serviceTypeTemplate;
   };
 }
 
 async function loadServiceTypeTemplate(uid) {
-  const templateId = getTemplateId(uid);
+  const templateId = getTemplateElmId(uid);
   const response = await fetch(templatePath(uid));
 
   if (!response.ok) {
@@ -63,6 +88,7 @@ async function loadServiceTypeTemplate(uid) {
       `Fetching the HTML file went wrong - ${response.statusText}`
     );
   }
+
   const text = await response.text();
 
   const element = document.createElement("script");

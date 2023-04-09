@@ -5,6 +5,11 @@
   crossorigin="anonymous"
 />
 
+<link
+  rel="stylesheet"
+  href="../SiteAssets/workorder/vendor/fontawesome-5.9.0/css/all.min.css"
+/>
+
 <div id="app">
   <button data-bind="click: NewRequest">New Request</button>
   <button data-bind="click: ViewRequest">View Request</button>
@@ -22,6 +27,21 @@
         aria-selected="true"
       >
         My Orders
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button
+        class="nav-link"
+        id="new-request-tab"
+        data-bs-toggle="tab"
+        data-bs-target="#new-request"
+        data-bind="click: TabClicked"
+        type="button"
+        role="tab"
+        aria-controls="new-request"
+        aria-selected="true"
+      >
+        New Order
       </button>
     </li>
     <li class="nav-item active" role="presentation">
@@ -53,70 +73,112 @@
       </ul>
     </div>
     <div
+      class="tab-pane"
+      role="tabpanel"
+      aria-labelledby="new-request"
+      id="new-request"
+    >
+      <div
+        data-bind="template: {name: 'tmpl-new-request-view', data: NewRequestView}"
+      ></div>
+    </div>
+    <div
       id="request-detail"
       class="tab-pane"
       role="tabpanel"
       aria-labelledby="request-detail-tab"
     >
       <div
-        data-bind="template: {name: 'tmpl-request-detail', data: RequestDetail}"
+        data-bind="template: {name: 'tmpl-request-detail', data: RequestDetailView}"
       ></div>
     </div>
   </div>
 </div>
 <div id="service-type-templates"></div>
 
-<script type="text/html" id="tmpl-request-detail">
-  <!-- Report.RequestDetail -->
-  <div>
-    <h2>Service Request Detail</h2>
-    <!-- ko if: !$data -->
-    <div>Nothing to see here</div>
-    <!-- /ko -->
-    <!-- ko if: $data -->
-    <div>
-      <div
-        data-bind="template: {name: 'tmpl-request-header', data: RequestHeader}"
-      ></div>
-
-      <!-- ko if: DisplayMode() == DisplayModes.New -->
-      <button type="button" data-bind="click: SubmitNewRequest">Submit</button>
-      <!-- /ko -->
-      <!-- ko if: DisplayMode() == DisplayModes.View -->
-      <button type="button" data-bind="click: EditRequest">Edit</button>
-      <!-- /ko -->
-      <!-- ko if: DisplayMode() == DisplayModes.Edit -->
-      <button type="button" data-bind="click: UpdateRequest">
-        Save Changes
-      </button>
-      <button type="button" data-bind="click: CancelChanges">Cancel</button>
-      <!-- /ko -->
-    </div>
-    <!-- /ko -->
-  </div>
-</script>
-
-<script type="text/html" id="tmpl-request-header">
-  <!-- Report.RequestDetail.RequestHeader -->
-  <div>
-    <h3>Service Request Header</h3>
-    <!-- ko if: $data -->
-    <!-- ko if: DisplayMode() == DisplayModes.View -->
-    <div data-bind="using: FieldMap">
-      <div>
-        <p data-bind="text: Title.obs()"></p>
-        <input data-bind="value: Title.obs" />
+<div id="tmpl-views">
+  <script type="text/html" id="tmpl-new-request-view">
+    <h2>Select the type of work order you would like to open:</h2>
+    <div class="container text-center">
+      <div class="row row-cols-4" data-bind="foreach: ServiceTypeStore">
+        <div class="col">
+          <div class="card text-center" data-bind="click: $root.NewRequest">
+            <div class="card-body">
+              <i class="fa fa-5x" data-bind="class: Icon"></i>
+            </div>
+            <div class="card-body">
+              <h5 class="card-title" data-bind="text: Title"></h5>
+            </div>
+          </div>
+        </div>
       </div>
-      <!-- <div data-bind="text: Author.obs()?.title"></div> -->
     </div>
-    <!-- /ko -->
-    <!-- /ko -->
-    <!-- ko if: !$data -->
-    <div>Nothing to see here</div>
-    <!-- /ko -->
-  </div>
-</script>
+  </script>
+  <script type="text/html" id="tmpl-request-detail">
+    <!-- Report.RequestDetailView -->
+    <div>
+      <h2>Service Request Detail</h2>
+      <!-- ko if: !$data -->
+      <div>Nothing to see here</div>
+      <!-- /ko -->
+      <!-- ko if: $data -->
+      <div>
+        <div>
+          <div
+            data-bind="template: {name: 'tmpl-request-header', data: RequestHeader}"
+          ></div>
+        </div>
+        <!-- ko if: ServiceTypeTemplate() && !ServiceTypeTemplate().IsLoading() -->
+        <div class="card" data-bind="using: ServiceTypeTemplate">
+          <div class="card-body">
+            <h3 class="card-title" data-bind="text: ServiceType.Title"></h3>
 
+            <div
+              data-bind="template: {name: TemplateElmId, data: TemplateViewModel}"
+            ></div>
+          </div>
+        </div>
+        <!-- /ko -->
+        <!-- ko if: DisplayMode() == DisplayModes.New -->
+        <button type="button" data-bind="click: SubmitNewRequest">
+          Submit
+        </button>
+        <!-- /ko -->
+        <!-- ko if: DisplayMode() == DisplayModes.View -->
+        <button type="button" data-bind="click: EditRequest">Edit</button>
+        <!-- /ko -->
+        <!-- ko if: DisplayMode() == DisplayModes.Edit -->
+        <button type="button" data-bind="click: UpdateRequest">
+          Save Changes
+        </button>
+        <button type="button" data-bind="click: CancelChanges">Cancel</button>
+        <!-- /ko -->
+      </div>
+      <!-- /ko -->
+    </div>
+  </script>
+  <script type="text/html" id="tmpl-request-header">
+    <!-- Report.RequestDetail.RequestHeader -->
+    <div class="card">
+      <div class="card-body">
+        <h3 class="card-title">Requestor Information</h3>
+        <!-- ko if: $data -->
+        <!-- ko if: DisplayMode() == DisplayModes.New -->
+        <div data-bind="using: FieldMap">
+          <div>
+            <p data-bind="text: Title.obs()"></p>
+            <input data-bind="value: Title.obs" />
+          </div>
+        </div>
+        <!-- /ko -->
+        <!-- /ko -->
+        <!-- ko if: !$data -->
+        <div>Nothing to see here</div>
+        <!-- /ko -->
+      </div>
+    </div>
+  </script>
+</div>
 <script
   type="text/javascript"
   src="../Apps/_layouts/15/clienttemplates.js"
