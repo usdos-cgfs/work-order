@@ -17,3 +17,5 @@ export class RequestOrg {
     "BreakAccess",
   ];
 }
+
+export const requestOrgStore = ko.observableArray([]);

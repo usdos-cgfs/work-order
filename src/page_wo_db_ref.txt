@@ -15,6 +15,7 @@
         id="my-requests-tab"
         data-bs-toggle="tab"
         data-bs-target="#my-requests"
+        data-bind="click: TabClicked"
         type="button"
         role="tab"
         aria-controls="my-requests"
@@ -29,6 +30,7 @@
         id="request-detail-tab"
         data-bs-toggle="tab"
         data-bs-target="#request-detail"
+        data-bind="click: TabClicked"
         type="button"
         role="tab"
         aria-controls="request-detail"
@@ -46,6 +48,9 @@
       id="my-requests"
     >
       <p>Open Requests Here</p>
+      <ul data-bind="foreach: Config.requestOrgStore">
+        <li data-bind="text: ID"></li>
+      </ul>
     </div>
     <div
       id="request-detail"
@@ -59,6 +64,7 @@
     </div>
   </div>
 </div>
+<div id="service-type-templates"></div>
 
 <script type="text/html" id="tmpl-request-detail">
   <!-- Report.RequestDetail -->

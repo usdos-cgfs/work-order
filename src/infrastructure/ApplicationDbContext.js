@@ -17,6 +17,11 @@ export default class ApplicationDbContext {
     name: "ConfigPipelines",
     title: "ConfigPipelines",
   });
+
+  ConfigServiceTypes = new EntitySet({
+    name: "ConfigServiceTypes",
+    title: "ConfigServiceTypes",
+  });
 }
 
 class EntitySet {
