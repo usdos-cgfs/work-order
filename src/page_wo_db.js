@@ -1,11 +1,15 @@
 import { RequestDetailView, DisplayModes } from "./views/RequestDetailView.js";
 import { NewRequestView } from "./views/NewRequestView.js";
+import { MyRequestsView } from "./views/MyRequestsView.js";
+
 import { InitSal } from "./infrastructure/SAL.js";
 import { RequestOrg, requestOrgStore } from "./entities/RequestOrg.js";
 import "./infrastructure/ApplicationDbContext.js";
 import ApplicationDbContext from "./infrastructure/ApplicationDbContext.js";
 import { PipelineStage, pipelineStageStore } from "./entities/Pipelines.js";
 import { ServiceType, serviceTypeStore } from "./entities/ServiceType.js";
+
+import { getUrlParam, setUrlParam } from "./common/Router.js";
 
 var WorkOrder = window.WorkOrder || {};
 
@@ -48,6 +52,7 @@ class NewReport {
   };
 
   // Views
+  MyRequests = new MyRequestsView();
   NewRequestView = new NewRequestView();
   RequestDetailView = ko.observable();
 
@@ -71,6 +76,14 @@ class NewReport {
         serviceTypePromise,
       ]);
     }
+
+    routing: {
+      this.Tab(getUrlParam("tab"));
+      var reqId = getUrlParam("reqId");
+      if (reqId) {
+        this.ViewRequest({ title: reqId });
+      }
+    }
   };
 
   static Create = async function () {
@@ -84,17 +97,23 @@ class NewReport {
   NewRequest = (data, e) => {
     const props = { _context: this._context, displayMode: DisplayModes.New };
     if (data && data.ID) {
-      props.serviceType = { id: data.ID, title: data.Title };
+      props.serviceType = data;
     }
     this.RequestDetailView(new RequestDetailView(props));
     this.Tab(Tabs.RequestDetail);
   };
 
-  ViewRequest = async function () {
-    var title = "230330-6165";
+  ViewRequest = async function (request) {
+    //var title = "230330-6165";
+    request = {
+      ID: 539,
+      Title: "230330-6165",
+    };
+    setUrlParam("reqId", request.Title);
     this.RequestDetailView(
-      await RequestDetailView.ViewRequest({
-        title,
+      new RequestDetailView({
+        ID: request.ID,
+        Title: request.Title,
         _context: this._context,
       })
     );
@@ -102,8 +121,12 @@ class NewReport {
 }
 
 const tabHasChanged = (newTab) => {
+  if (!newTab) {
+    return;
+  }
   var tabTriggerElement = document.getElementById(newTab);
   var tab = new bootstrap.Tab(tabTriggerElement);
+  setUrlParam("tab", newTab);
   tab.show();
 };
 

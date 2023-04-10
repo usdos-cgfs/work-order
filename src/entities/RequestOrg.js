@@ -1,11 +1,12 @@
 export class RequestOrg {
-  constructor({ id, title }) {
-    this.id = id;
-    this.title = title;
+  constructor({ ID: ID, Title: Title }) {
+    this.ID = ID;
+    this.Title = Title;
+    this.LookupValue = Title;
   }
 
-  static Create = function ({ id, value }) {
-    return new RequestOrg({ id, title: value });
+  static Create = function ({ ID, LookupValue }) {
+    return new RequestOrg({ ID, Title: LookupValue });
   };
 
   static Fields = [

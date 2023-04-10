@@ -1,12 +1,11 @@
-export class Person {
+export class RequestEntity {
   constructor({ ID, Title }) {
     this.ID = ID;
     this.Title = Title;
+    this.LookupValue = Title;
   }
 
-  login = ko.observable();
-
   static Create = function ({ ID, LookupValue }) {
-    return new Person({ ID, Title: LookupValue });
+    return new ServiceType({ ID, title: LookupValue });
   };
 }

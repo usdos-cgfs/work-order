@@ -40,21 +40,22 @@ class EntitySet {
   };
 
   Find = async function (entity, fields) {
-    if (!entity.id && !entity.title) {
+    if (!entity.ID && !entity.Title) {
       console.error("entity missing Id or title", entity);
       return null;
     }
     var item;
-    if (entity.id) {
-      item = await this.ListRef.findByIdAsync(entity.id, fields);
+    if (entity.ID) {
+      // Prefer find by Id
+      item = await this.ListRef.findByIdAsync(entity.ID, fields);
     } else if (entity.title) {
-      item = await this.ListRef.findByTitleAsync(entity.title, fields);
+      item = await this.ListRef.findByTitleAsync(entity.Title, fields);
     }
     return item;
   };
 
   Load = async function (entity) {
-    if (!entity.id == null && !entity.title) {
+    if (!entity.ID == null && !entity.Title) {
       console.error("entity missing Id or title", entity);
       return false;
     }

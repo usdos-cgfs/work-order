@@ -7,11 +7,38 @@ const assetsPath = (uid) =>
 const templatePath = (uid) => assetsPath(uid) + `${uid}-template.html`;
 const modulePath = (uid) => assetsPath(uid) + `${uid}-module.js`;
 
+export const serviceTypeStore = ko.observableArray();
+
 export class ServiceType {
-  constructor({ id, title }) {
-    this.id = id;
-    this.title = title;
+  constructor({ ID, Title }) {
+    this.ID = ID;
+    this.Title = Title;
+    this.LookupValue = Title;
+
+    this.Loaded = false;
   }
+
+  LoadFromStore = () => {
+    if (this.Loaded) {
+      return;
+    }
+    this.Loaded = true;
+    const storedEntity = serviceTypeStore().find(
+      (service) => service.ID == this.ID
+    );
+    if (!storedEntity) {
+      console.warn("Entity was not stored");
+      return;
+    }
+
+    Object.assign(this, storedEntity);
+  };
+
+  static Create = function ({ ID, LookupValue }) {
+    const newServiceType = new ServiceType({ ID, Title: LookupValue });
+    const serviceType = serviceTypeStore().find((service) => service.ID == ID);
+    return Object.assign(newServiceType, serviceType);
+  };
 
   static Fields = [
     "ID",
@@ -101,5 +128,3 @@ async function loadServiceTypeTemplate(uid) {
 
   document.getElementById("service-type-templates").append(element);
 }
-
-export const serviceTypeStore = ko.observableArray();

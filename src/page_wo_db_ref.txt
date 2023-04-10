@@ -126,7 +126,64 @@
       <div>
         <div class="card mb-3 w-100">
           <div class="card-body">
-            <h5 class="card-title">Pipeline</h5>
+            <h4 class="card-title">Pipeline</h4>
+          </div>
+        </div>
+        <div data-bind="template: {name: 'tmpl-request-header'}"></div>
+        <div class="card mb-3 w-100">
+          <div class="card-body">
+            <h3
+              class="card-title"
+              data-bind="text: Fields.ServiceType.obs()?.Title"
+            ></h3>
+            <!-- ko if: ServiceTypeTemplate -->
+            <div data-bind="using: ServiceTypeTemplate">
+              <!-- ko if: IsLoading() -->
+              <div class="d-flex justify-content-center">
+                <div class="spinner-border" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+              </div>
+              <!-- /ko -->
+              <!-- ko if: !IsLoading() && TemplateViewModel()  -->
+              <div
+                data-bind="template: {name: TemplateElmId, data: TemplateViewModel}"
+              ></div>
+              <!-- /ko -->
+            </div>
+            <!-- /ko -->
+            <div></div>
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-4">
+            <div class="card">
+              <div class="card-body">
+                <h3 class="card-title">Attachments</h3>
+                <div class="d-flex justify-content-center">
+                  <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-8">
+            <div class="card">
+              <div class="card-body">
+                <h3 class="card-title">Approvals and Actions Log</h3>
+                <div class="d-flex justify-content-center">
+                  <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card mb-3 w-100">
+          <div class="card-body">
+            <h3 class="card-title">Comments</h3>
             <div class="d-flex justify-content-center">
               <div class="spinner-border" role="status">
                 <span class="visually-hidden">Loading...</span>
@@ -134,33 +191,22 @@
             </div>
           </div>
         </div>
-        <div data-bind="template: {name: 'tmpl-request-header'}"></div>
-        <!-- ko if: ServiceTypeTemplate() && !ServiceTypeTemplate().IsLoading() -->
-        <div class="card mb-3 w-100" data-bind="using: ServiceTypeTemplate">
-          <div class="card-body">
-            <h3 class="card-title" data-bind="text: ServiceType.Title"></h3>
-            <!-- ko if: TemplateViewModel -->
-            <div
-              data-bind="template: {name: TemplateElmId, data: TemplateViewModel}"
-            ></div>
-            <!-- /ko -->
-          </div>
+        <div>
+          <!-- ko if: DisplayMode() == DisplayModes.New -->
+          <button type="button" data-bind="click: SubmitNewRequest">
+            Submit
+          </button>
+          <!-- /ko -->
+          <!-- ko if: DisplayMode() == DisplayModes.View -->
+          <button type="button" data-bind="click: EditRequest">Edit</button>
+          <!-- /ko -->
+          <!-- ko if: DisplayMode() == DisplayModes.Edit -->
+          <button type="button" data-bind="click: UpdateRequest">
+            Save Changes
+          </button>
+          <button type="button" data-bind="click: CancelChanges">Cancel</button>
+          <!-- /ko -->
         </div>
-        <!-- /ko -->
-        <!-- ko if: DisplayMode() == DisplayModes.New -->
-        <button type="button" data-bind="click: SubmitNewRequest">
-          Submit
-        </button>
-        <!-- /ko -->
-        <!-- ko if: DisplayMode() == DisplayModes.View -->
-        <button type="button" data-bind="click: EditRequest">Edit</button>
-        <!-- /ko -->
-        <!-- ko if: DisplayMode() == DisplayModes.Edit -->
-        <button type="button" data-bind="click: UpdateRequest">
-          Save Changes
-        </button>
-        <button type="button" data-bind="click: CancelChanges">Cancel</button>
-        <!-- /ko -->
       </div>
       <!-- /ko -->
     </div>
@@ -171,18 +217,97 @@
     <div class="card mb-3 w-100">
       <div class="card-body">
         <h3 class="card-title">Requestor Information</h3>
-        <!-- ko if: $data -->
         <!-- ko if: DisplayMode() == DisplayModes.New -->
-        <div data-bind="using: Fields">
-          <div>
-            <p data-bind="text: Title.obs()"></p>
-            <input data-bind="value: Title.obs" />
+        <div class="container-fluid" data-bind="using: Fields">
+          <div class="row">
+            <div class="col-6">
+              <h6>Request Status:</h6>
+              <p data-bind="text: RequestStatus.obs()"></p>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-6">
+              <h6>Request ID:</h6>
+              <p data-bind="text: Title.obs()"></p>
+            </div>
+            <div class="col-6">
+              <h6>Requestor Office:</h6>
+              <select
+                data-bind="value: RequestorOffice.obs(), 
+                options: $root.Config.requestOrgStore,
+                optionsText: (ro) => ro.Title"
+              ></select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-6">
+              <h6>Requestor:</h6>
+              <p data-bind="text: Requestor.obs()?.Title"></p>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-6">
+              <h6>Requestor Phone:</h6>
+              <p data-bind="text: RequestorPhone.obs()"></p>
+            </div>
+            <div class="col-6">
+              <h6>Requestor Email:</h6>
+              <p data-bind="text: RequestorEmail.obs()"></p>
+            </div>
+            <div class="col-6">
+              <h6>Submitted Date:</h6>
+              <p data-bind="text: RequestSubmitted.obs()?.toLocaleString()"></p>
+            </div>
+            <div class="col-6">
+              <h6>Service Type:</h6>
+              <p data-bind="text: ServiceType.obs()?.Title"></p>
+            </div>
           </div>
         </div>
         <!-- /ko -->
-        <!-- /ko -->
-        <!-- ko if: !$data -->
-        <div>Nothing to see here</div>
+        <!-- ko if: DisplayMode() != DisplayModes.New -->
+        <div class="container-fluid" data-bind="using: Fields">
+          <div class="row">
+            <div class="col-6">
+              <h6>Request Status:</h6>
+              <p data-bind="text: RequestStatus.obs()"></p>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-6">
+              <h6>Request ID:</h6>
+              <p data-bind="text: Title.obs()"></p>
+            </div>
+            <div class="col-6">
+              <h6>Requestor Office:</h6>
+              <p data-bind="text: RequestorOffice.obs()?.Title"></p>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-6">
+              <h6>Requestor:</h6>
+              <p data-bind="text: Requestor.obs()?.Title"></p>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-6">
+              <h6>Requestor Phone:</h6>
+              <p data-bind="text: RequestorPhone.obs()"></p>
+            </div>
+            <div class="col-6">
+              <h6>Requestor Email:</h6>
+              <p data-bind="text: RequestorEmail.obs()"></p>
+            </div>
+            <div class="col-6">
+              <h6>Submitted Date:</h6>
+              <p data-bind="text: RequestSubmitted.obs()?.toLocaleString()"></p>
+            </div>
+            <div class="col-6">
+              <h6>Service Type:</h6>
+              <p data-bind="text: ServiceType.obs()?.Title"></p>
+            </div>
+          </div>
+        </div>
         <!-- /ko -->
       </div>
     </div>

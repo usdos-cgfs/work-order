@@ -1,11 +1,12 @@
 export class PipelineStage {
-  constructor({ id, title }) {
-    this.id = id;
-    this.title = title;
+  constructor({ ID, Title }) {
+    this.ID = ID;
+    this.Title = Title;
+    this.LookupValue = Title;
   }
 
-  static Create = function ({ id, value }) {
-    return new PipelineStage({ id, title: value });
+  static Create = function ({ ID, LookupValue }) {
+    return new PipelineStage({ ID, Title: LookupValue });
   };
 
   static Fields = [

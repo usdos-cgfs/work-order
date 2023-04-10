@@ -3,6 +3,7 @@ import { RequestOrg } from "../entities/RequestOrg.js";
 import {
   serviceTypeStore,
   ServiceTypeTemplate,
+  ServiceType,
 } from "../entities/ServiceType.js";
 
 export const DisplayModes = {
@@ -43,7 +44,7 @@ export class RequestDetailView {
 
     RequestOrgs: { factory: RequestOrg.Create, obs: ko.observableArray() },
 
-    ServiceType: { obs: ko.observable() }, // {id, title},
+    ServiceType: { factory: ServiceType.Create, obs: ko.observable() }, // {id, title},
   };
 
   FieldMap = this.Fields; // This is a one to one for this entity
@@ -56,7 +57,7 @@ export class RequestDetailView {
 
     const serviceTypeLookup = this.Fields.ServiceType.obs();
     const serviceType = serviceTypeStore().find(
-      (service) => service.ID == serviceTypeLookup.id
+      (service) => service.ID == serviceTypeLookup.ID
     );
 
     return ServiceTypeTemplate.Create(this, serviceType);
@@ -91,32 +92,29 @@ export class RequestDetailView {
 
   constructor({
     displayMode = DisplayModes.View,
-    id = null,
-    title = null,
+    ID = null,
+    Title = null,
     serviceType = null,
     _context,
   }) {
     this._context = _context;
-    this.id = id;
-    this.title = title;
-    this.Fields.ID.obs(id);
-    this.Fields.Title.obs(title);
-    this.Fields.ServiceType.obs(serviceType);
+    this.ID = ID;
+    this.Title = Title;
+    this.LookupValue = Title;
+
+    this.Fields.ID.obs(ID);
+    this.Fields.Title.obs(Title);
+
+    if (serviceType) {
+      this.Fields.ServiceType.obs(
+        serviceTypeStore().find((service) => service.ID == serviceType.ID)
+      );
+    }
+
     this.DisplayMode(displayMode);
 
     if (displayMode == DisplayModes.View) {
       this.Refresh();
     }
   }
-
-  static ViewRequest = async function ({ id, title, _context }) {
-    var viewRequest = new RequestDetailView({
-      id,
-      displayMode: DisplayModes.View,
-      title,
-      _context,
-    });
-
-    return viewRequest;
-  };
 }

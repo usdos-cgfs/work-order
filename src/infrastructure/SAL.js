@@ -954,11 +954,11 @@ export function SPList(listDef) {
   }
 
   function mapItemToListItem(item) {
-    if (item.id) {
+    if (item.ID) {
       //var lookupValue = new SP.FieldLookupValue();
       //lookupValue.set_lookupId(item.id);
       //return lookupValue;
-      return `${item.id};#${item.title}`;
+      return `${item.ID};#${item.LookupValue ?? ""}`;
     }
     if (item.constructor.getName() == "Date") {
       return item.toISOString();
@@ -1031,8 +1031,8 @@ export function SPList(listDef) {
       case "SP.FieldLookupValue":
       case "SP.FieldUserValue":
         out = {
-          id: val.get_lookupId(),
-          value: val.get_lookupValue(),
+          ID: val.get_lookupId(),
+          LookupValue: val.get_lookupValue(),
         };
         break;
       default:
@@ -1138,32 +1138,32 @@ export function SPList(listDef) {
     return listItem ? listItem[0] : null;
   }
 
-  function findListItemByIdAsync(id, fields) {
+  function findByIdAsync(id, fields) {
     return new Promise((resolve, reject) => {
       try {
-        findListItemById(id, fields, resolve);
+        findById(id, fields, resolve);
       } catch (e) {
         reject(e);
       }
     });
   }
 
-  function findListItemById(id, fields, callback) {
+  function findById(id, fields, callback) {
     var currCtx = new SP.ClientContext.get_current();
     var web = currCtx.get_web();
     var oList = web.get_lists().getByTitle(self.config.def.title);
     var oListItem = oList.getItemById(id);
 
     function onGetListItemSucceeded() {
-      listObj = {};
+      const listObj = {};
       fields.forEach((field) => {
         var colVal = oListItem.get_item(field);
-        console.log(`Setting ${field} to`, colVal);
+        //console.log(`SAL: Setting ${field} to`, colVal);
         listObj[field] = Array.isArray(colVal)
           ? colVal.map((val) => mapListItemToObject(val))
           : mapListItemToObject(colVal);
       });
-      resolve(listObj);
+      callback(listObj);
     }
 
     function onGetListItemFailed(sender, args) {
@@ -1177,7 +1177,8 @@ export function SPList(listDef) {
       callback,
       fields,
     };
-    currCtx.load(oListItem, `Include(${fields.join(", ")})`);
+    currCtx.load(oListItem);
+    // currCtx.load(oListItem, `Include(${fields.join(", ")})`);
     currCtx.executeQueryAsync(
       Function.createDelegate(data, onGetListItemSucceeded),
       Function.createDelegate(data, onGetListItemFailed)
@@ -1936,7 +1937,7 @@ export function SPList(listDef) {
     getListItems: getListItems,
     getListItemsAsync: getListItemsAsync,
     findByTitleAsync,
-    findListItemByIdAsync,
+    findByIdAsync,
     updateListItem: updateListItem,
     updateListItemAsync: updateListItemAsync,
     deleteListItem: deleteListItem,
