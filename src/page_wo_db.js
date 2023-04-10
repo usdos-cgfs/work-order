@@ -79,10 +79,12 @@ class NewReport {
     return report;
   };
 
+  SelectNewRequestButton = (data, e) => {};
+
   NewRequest = (data, e) => {
     const props = { _context: this._context, displayMode: DisplayModes.New };
     if (data && data.ID) {
-      props.serviceType = data;
+      props.serviceType = { id: data.ID, title: data.Title };
     }
     this.RequestDetailView(new RequestDetailView(props));
     this.Tab(Tabs.RequestDetail);

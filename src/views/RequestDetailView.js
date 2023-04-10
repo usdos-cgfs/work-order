@@ -1,4 +1,5 @@
-import { RequestHeader } from "../entities/RequestHeader.js";
+import { Person } from "../components/Person.js";
+import { RequestOrg } from "../entities/RequestOrg.js";
 import {
   serviceTypeStore,
   ServiceTypeTemplate,
@@ -9,45 +10,70 @@ export const DisplayModes = {
   Edit: "Edit",
   View: "View",
 };
-//export const WorkOrderListRef = new SPList(WorkOrderListDef);
+
+const templates = {
+  New: "tmpl-request-header-new",
+  View: "tmpl-request-header-view",
+  Edit: "tmpl-request-header-edit",
+};
 
 export class RequestDetailView {
-  DisplayModes = DisplayModes;
+  Fields = {
+    ID: { obs: ko.observable() },
+    Title: { obs: ko.observable() },
+    RequestSubject: { obs: ko.observable() },
+    RequestDescription: { obs: ko.observable() },
+    Requestor: { factory: Person.Create, obs: ko.observable() },
+    RequestorName: { obs: ko.observable() },
+    RequestorPhone: { obs: ko.observable() },
+    RequestorEmail: { obs: ko.observable() },
+    RequestorSupervisor: { factory: Person.Create, obs: ko.observable() },
+    RequestorOffice: { factory: RequestOrg.Create, obs: ko.observable() },
+    ManagingDirector: { factory: Person.Create, obs: ko.observable() },
 
-  constructor({
-    displayMode = DisplayModes.New,
-    serviceType = null,
-    title = null,
-    _context,
-  }) {
-    this._context = _context;
-    this.RequestHeader = new RequestHeader({ title, displayMode });
+    IsActive: { obs: ko.observable() },
+    RequestStage: { obs: ko.observable() },
+    RequestStagePrev: { obs: ko.observable() },
+    RequestStatus: { obs: ko.observable() },
+    RequestStatusPrev: { obs: ko.observable() },
+    InternalStatus: { obs: ko.observable() },
+    RequestSubmitted: { obs: ko.observable() },
+    EstClosedDate: { obs: ko.observable() },
+    ClosedDate: { obs: ko.observable() },
 
-    this.DisplayMode(displayMode);
+    RequestOrgs: { factory: RequestOrg.Create, obs: ko.observableArray() },
 
-    if (serviceType) {
-      this.ServiceType(serviceType);
-    }
-  }
+    ServiceType: { obs: ko.observable() }, // {id, title},
+  };
 
-  Title = ko.observable();
+  FieldMap = this.Fields; // This is a one to one for this entity
 
-  ServiceType = ko.observable();
   ServiceTypeTemplate = ko.computed(() => {
-    console.log("checking service type", this.ServiceType());
-    if (!this.ServiceType()) {
+    console.log("checking service type", this.Fields.ServiceType.obs());
+    if (!this.Fields.ServiceType.obs()) {
       return null;
     }
-    const serviceTypeTemplate = new ServiceTypeTemplate(this.ServiceType());
-    serviceTypeTemplate.Load();
 
-    return serviceTypeTemplate;
+    const serviceTypeLookup = this.Fields.ServiceType.obs();
+    const serviceType = serviceTypeStore().find(
+      (service) => service.ID == serviceTypeLookup.id
+    );
+
+    return ServiceTypeTemplate.Create(this, serviceType);
   });
 
+  IsLoading = ko.observable();
+  DisplayModes = DisplayModes;
   DisplayMode = ko.observable();
 
+  Refresh = async () => {
+    this.IsLoading(true);
+    await this._context.Requests.Load(this);
+    this.IsLoading(false);
+  };
+
   SubmitNewRequest = async () => {
-    await this._context.RequestHeaders.Add(this.RequestHeader);
+    await this._context.Requests.Add(this);
   };
 
   EditRequest = async () => {
@@ -63,15 +89,25 @@ export class RequestDetailView {
     this.DisplayMode(DisplayModes.Edit);
   };
 
-  Init = async function () {
-    // Load related items
-    if (this.DisplayMode() != DisplayMode.New && !this.Title()) {
-    }
+  constructor({
+    displayMode = DisplayModes.View,
+    id = null,
+    title = null,
+    serviceType = null,
+    _context,
+  }) {
+    this._context = _context;
+    this.id = id;
+    this.title = title;
+    this.Fields.ID.obs(id);
+    this.Fields.Title.obs(title);
+    this.Fields.ServiceType.obs(serviceType);
+    this.DisplayMode(displayMode);
 
-    // if (this.ServiceType()?.UID) {
-    //   await ServiceTypeTemplate.Create(this.ServiceType()?.UID);
-    // }
-  };
+    if (displayMode == DisplayModes.View) {
+      this.Refresh();
+    }
+  }
 
   static ViewRequest = async function ({ id, title, _context }) {
     var viewRequest = new RequestDetailView({
@@ -80,22 +116,7 @@ export class RequestDetailView {
       title,
       _context,
     });
-    if (!(await _context.RequestHeaders.Load(viewRequest.RequestHeader))) {
-      console.error("RequestDetail Could not find request", title);
-    }
 
     return viewRequest;
-  };
-
-  static NewRequest = async function ({ serviceType = null, _context }) {
-    var newRequest = new RequestDetailView({
-      displayMode: DisplayModes.New,
-      serviceType: serviceType,
-      _context,
-    });
-
-    if (serviceType) {
-      newRequest.ServiceType(serviceType);
-    }
   };
 }

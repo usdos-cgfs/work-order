@@ -17,6 +17,7 @@ export class ServiceType {
     "ID",
     "Title",
     "Active",
+    "HasTemplate",
     "st_list",
     "DescriptionRequired",
     "DescriptionTitle",
@@ -39,6 +40,12 @@ export class ServiceType {
 }
 
 export class ServiceTypeTemplate {
+  constructor(request, serviceType) {
+    this.UID = serviceType.UID;
+    this.TemplateElmId = getTemplateElmId(serviceType.UID);
+    this.ServiceType = serviceType;
+  }
+
   IsLoading = ko.observable();
 
   UID = null;
@@ -46,13 +53,10 @@ export class ServiceTypeTemplate {
 
   TemplateViewModel = ko.observable();
 
-  constructor(serviceType) {
-    this.UID = serviceType.UID;
-    this.TemplateElmId = getTemplateElmId(serviceType.UID);
-    this.ServiceType = serviceType;
-  }
-
   Load = async function () {
+    if (!this.ServiceType.HasTemplate) {
+      return;
+    }
     this.IsLoading(true);
     if (!document.getElementById(this.TemplateElmId)) {
       await loadServiceTypeTemplate(this.UID);
@@ -65,16 +69,15 @@ export class ServiceTypeTemplate {
     this.IsLoading(false);
   };
 
-  static Create = async function (uid) {
-    const serviceTypeTemplate = new ServiceTypeTemplate(uid);
-    if (!document.getElementById(serviceTypeTemplate.TemplateElmId)) {
-      await loadServiceTypeTemplate(uid);
-    }
-    const service = await import(modulePath(uid));
-    if (!service) {
-      console.logError("Could not find service module");
-    }
-    serviceTypeTemplate.TemplateViewModel = service.default;
+  static Create = function (request, serviceType) {
+    var serviceTypeTemplate = new ServiceTypeTemplate(request, serviceType);
+    serviceTypeTemplate.Load();
+    return serviceTypeTemplate;
+  };
+
+  static CreateAsync = async function () {
+    var serviceTypeTemplate = new ServiceTypeTemplate(request, serviceType);
+    await serviceTypeTemplate.Load();
     return serviceTypeTemplate;
   };
 }

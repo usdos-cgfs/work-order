@@ -3,7 +3,7 @@ import { SPList } from "./SAL.js";
 export default class ApplicationDbContext {
   constructor() {}
 
-  RequestHeaders = new EntitySet({
+  Requests = new EntitySet({
     name: "WorkOrder",
     title: "Work Order",
   });
@@ -64,6 +64,7 @@ class EntitySet {
       return false;
     }
     MapObjectsToViewFields(item, entity.FieldMap);
+
     return true;
   };
 }
@@ -76,6 +77,10 @@ function MapObjectsToViewFields(inputObject, fieldMappings) {
 }
 
 function MapObjectToViewField(inVal, fieldMap) {
+  if (!inVal) {
+    fieldMap.obs(null);
+    return;
+  }
   // If the input value is an array, then we are putting an array into the observable.
   var outVal = Array.isArray(inVal)
     ? inVal.map((item) => GenerateObject(item, fieldMap))
