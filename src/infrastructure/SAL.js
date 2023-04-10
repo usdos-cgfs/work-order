@@ -463,6 +463,44 @@ function ensureUserById(userId, callback) {
   );
 }
 
+export async function ensureUserByKeyAsync(userName) {
+  return new Promise((resolve, reject) => {
+    var group = sal.globalConfig.siteGroups.find(function (group) {
+      return group.loginName == userName;
+    });
+
+    if (group) {
+      callback(group.group);
+      return;
+    }
+
+    var context = new SP.ClientContext.get_current();
+    var user = context.get_web().ensureUser(userName);
+
+    function onEnsureUserSucceeded(sender, args) {
+      var self = this;
+      self.callback(user);
+    }
+
+    function onEnsureUserFailed(sender, args) {
+      console.error(
+        "Failed to ensure user :" +
+          args.get_message() +
+          "\n" +
+          args.get_stackTrace()
+      );
+      reject(args);
+    }
+    const data = { user: user, callback: resolve, reject };
+
+    context.load(user);
+    context.executeQueryAsync(
+      Function.createDelegate(data, onEnsureUserSucceeded),
+      Function.createDelegate(data, onEnsureUserFailed)
+    );
+  });
+}
+
 export function EnsureUserByIdAsync(userId) {
   return new Promise((resolve, reject) => {
     // First check if this is a group

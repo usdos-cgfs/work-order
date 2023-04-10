@@ -1,3 +1,4 @@
+import "./common/KnockoutExtensions.js";
 import { RequestDetailView, DisplayModes } from "./views/RequestDetailView.js";
 import { NewRequestView } from "./views/NewRequestView.js";
 import { MyRequestsView } from "./views/MyRequestsView.js";
