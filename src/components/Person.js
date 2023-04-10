@@ -2,6 +2,7 @@ export class Person {
   constructor({ ID, Title }) {
     this.ID = ID;
     this.Title = Title;
+    this.LookupValue = Title;
   }
 
   login = ko.observable();

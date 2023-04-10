@@ -30,6 +30,7 @@ async function InitDB() {
 
 export const Tabs = {
   MyRequests: "my-requests-tab",
+  NewRequest: "new-request-tab",
   RequestDetail: "request-detail-tab",
 };
 
@@ -78,11 +79,14 @@ class NewReport {
     }
 
     routing: {
-      this.Tab(getUrlParam("tab"));
+      var startTab = getUrlParam("tab");
       var reqId = getUrlParam("reqId");
       if (reqId) {
         this.ViewRequest({ title: reqId });
+      } else if (startTab == Tabs.RequestDetail) {
+        startTab = Tabs.NewRequest;
       }
+      this.Tab(startTab);
     }
   };
 
@@ -99,6 +103,7 @@ class NewReport {
     if (data && data.ID) {
       props.serviceType = data;
     }
+    setUrlParam("reqId", "");
     this.RequestDetailView(new RequestDetailView(props));
     this.Tab(Tabs.RequestDetail);
   };
@@ -117,6 +122,7 @@ class NewReport {
         _context: this._context,
       })
     );
+    this.Tab(Tabs.RequestDetail);
   };
 }
 

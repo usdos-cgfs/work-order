@@ -50,7 +50,7 @@ export class RequestDetailView {
   FieldMap = this.Fields; // This is a one to one for this entity
 
   ServiceTypeTemplate = ko.computed(() => {
-    console.log("checking service type", this.Fields.ServiceType.obs());
+    console.log("Loading Template for:", this.Fields.ServiceType.obs());
     if (!this.Fields.ServiceType.obs()) {
       return null;
     }
