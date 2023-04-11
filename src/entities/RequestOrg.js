@@ -4,6 +4,7 @@ export const OrgTypes = {
   Department: "Department",
   Budget: "Budget PMO",
 };
+
 export class RequestOrg {
   constructor({ ID: ID, Title: Title }) {
     this.ID = ID;

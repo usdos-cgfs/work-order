@@ -19,13 +19,9 @@ ko.bindingHandlers.people = {
       var userJSObject = pickerElement.GetControlValueAsJSObject()[0];
       if (userJSObject) {
         var user = await ensureUserByKeyAsync(userJSObject.Key);
-        const userObj = {
-          ID: user.get_id(),
-          Title: user.get_title(),
-          LoginName: user.get_loginName(),
-          IsEnsured: true,
-        };
-        observable(new People(userObj));
+        var person = new People(user);
+        person.SetPeoplePickers.push(element.id);
+        observable(person);
       } else {
         observable(null);
       }
@@ -50,7 +46,7 @@ ko.bindingHandlers.people = {
     //debugger;
     //  Force to Ensure User
     var userValue = ko.utils.unwrapObservable(valueAccessor());
-    if (userValue && !userValue.IsEnsured) {
+    if (userValue && !userValue.isInPicker(element.id)) {
       var pickerControl =
         SPClientPeoplePicker.SPClientPeoplePickerDict[element.id + "_TopSpan"];
       //var editId = "#" + pickerControl.EditorElementId;

@@ -1,24 +1,86 @@
 <div>
-  <div class="row">
-    <div class="col-6 pb-2">
-      <label for="ch_overtime-people-contractor"><h6>Contractor:</h6></label>
-      <div id="ch_overtime-people-contractor" data-bind="people: "></div>
+  <!-- ko if: Request.DisplayMode() != Request.DisplayModes.View -->
+  <div data-bind="using: Fields">
+    <div class="row">
+      <div class="col-6 pb-2">
+        <label for="ch_overtime-people-contractor"><h6>Contractor:</h6></label>
+        <div
+          id="ch_overtime-people-contractor"
+          data-bind="people: FullName.obs"
+        ></div>
+      </div>
+      <div class="col-6 pb-2">
+        <label for="ch_overtime-people-gov-manager"
+          ><h6>Gov Manager:</h6></label
+        >
+        <div
+          id="ch_overtime-people-gov-manager"
+          data-bind="people: ManagerDept.obs"
+        ></div>
+      </div>
     </div>
-    <div class="col-6 pb-2">
-      <label for="ch_overtime-people-gov-manager"><h6>Gov Manager:</h6></label>
-      <div id="ch_overtime-people-gov-manager" data-bind="people: "></div>
+    <div class="row">
+      <div class="col-6 pb-2">
+        <label for=""><h6>Overtime Dates (within month estimate):</h6></label>
+        <input class="form-control" type="date" data-bind="value: Date.obs" />
+      </div>
+      <div class="col-6 pb-2">
+        <label for=""><h6>Overtime Hours (not to exceed):</h6></label>
+        <input
+          class="form-control"
+          type="number"
+          data-bind="value: Hours.obs"
+        />
+      </div>
     </div>
   </div>
-  <div class="row">
-    <div class="col-6 pb-2">
-      <label for=""><h6>Overtime Dates (within month estimate):</h6></label>
-      <input class="form-control" type="date" />
+  <!-- /ko -->
+  <!-- ko if: Request.DisplayMode() == Request.DisplayModes.View -->
+  <div data-bind="using: Fields">
+    <div class="row">
+      <div class="col-6 pb-2">
+        <h6>Contractor:</h6>
+        <div data-bind="text: FullName.obs()?.Title"></div>
+      </div>
+      <div class="col-6 pb-2">
+        <h6>Gov Manager:</h6>
+        <div data-bind="text: ManagerDept.obs()?.Title"></div>
+      </div>
     </div>
-    <div class="col-6 pb-2">
-      <label for=""><h6>Overtime Hours (not to exceed):</h6></label>
-      <input class="form-control" type="number" />
+    <div class="row">
+      <div class="col-6 pb-2">
+        <h6>Overtime Dates (within month estimate):</h6>
+        <p data-bind="text: Date.obs"></p>
+      </div>
+      <div class="col-6 pb-2">
+        <h6>Overtime Hours (not to exceed):</h6>
+        <p data-bind="text: Hours.obs"></p>
+      </div>
     </div>
   </div>
+
+  <!-- ko if: Request.Fields.RequestStage.obs() == 1 -->
+  <div class="col-6 pb-2">
+    <label for="ch_overtime-people-gtm"><h6>GTM:</h6></label>
+    <div id="ch_overtime-people-gtm" data-bind="people: Fields.GTM.obs"></div>
+  </div>
+  <button type="button" data-bind="click: Submit">Approve</button>
+  <button type="button" class="btn btn-danger">Reject</button>
+  <!-- /ko -->
+  <!-- ko if: Request.Fields.RequestStage.obs() == 2 -->
+  <div class="col-6 pb-2">
+    <h6>Gov Manager:</h6>
+    <div data-bind="text: Fields.GTM.obs()?.Title"></div>
+  </div>
+  <div class="col-6 pb-2">
+    <label for="ch_overtime-people-gtm"><h6>APM:</h6></label>
+    <div id="ch_overtime-people-gtm" data-bind="people: Fields.APM.obs"></div>
+  </div>
+  <button type="button" data-bind="click: Submit">Approve</button>
+  <button type="button" class="btn btn-danger">Reject</button>
+  <!-- /ko -->
+
+  <!-- /ko -->
 </div>
 
 <!-- 
@@ -34,30 +96,19 @@
   
   Justification - field 
   
+
   
-  New Workflow – 2nd Screen:  DOS Manager > Task Manager (GTM)  
   
-  The 2nd approver will now be the DOS Manager Approval. On this screen, the following fields are required: 
+1st Approval:  Government Manager > IFAS Contract Manager (APM) 
   
-  Task Manager (GTM) – DOS Manager reviews information, enters GTM name and approve.   
+  The 2nd approver will now be the Government Manager Approval. On this screen, the following fields are required: 
   
-   
+  IFAS Contract Manager (APM) – Government Manager reviews information, enters APM name and approves 
   
-   
+  GTM Field is Available but not required.
+     
   
-   
-  
-  New Workflow – 3rd Screen:  Task Manager (GTM) > IFAS Contract Manager (APM) 
-  
-  The 2nd approver will now be the DOS Manager Approval. On this screen, the following fields are required: 
-  
-  IFAS Contract Manager (APM) – GTM reviews information, enters APM name and approves 
-  
-   
-  
-   
-  
-  New Workflow – 4th Screen:  IFAS Contract Manager (APM) > DOS Program Analyst (Contracting)   
+2nd Approval:  IFAS Contract Manager (APM) > Budget
   
   The 2nd approver will now be the DOS Manager Approval. On this screen, the following fields are required: 
   
@@ -69,11 +120,24 @@
   
   Labor Category – field 
   
-  Contractor Type (SCA or Non-SCA) – field 
+  Contractor Type (SCA or Non-SCA) – field
+
+  GTM Field is Available and required.
+
   
-   
+3rd Approval: Budget > Government Task Manager (GTM) 
+
+
+
+4th Approval:  Government Task Manager (GTM)  > DOS Program Analyst (Contracting)   
   
-  5-6. No Change in Workflow for the remainder of the Required Approvals 
+  The 2nd approver will now be the DOS Manager Approval. On this screen, the following fields are required: 
+  
+  Task Manager (GTM) – DOS Manager reviews information, enters GTM name and approve.   
+  
+ 
+  
+5-6. No Change in Workflow for the remainder of the Required Approvals 
   
   DOS Program Analyst (Contracting) > DOS IFAS COR Approval   
   
@@ -83,6 +147,9 @@
   
   7.   New – Final Notification:  Overtime Approval/Denial Notification to All Parties  
   
-  Once DOS Budget reviews the form, the final notification (approved or denied) is sent back to the Requester. We would like to see Approved Overtime Request or Denied Overtime Request versus open or closed.  No information on the form should be visible to the Requester other than approved/denied   
+  Once DOS Budget reviews the form, the final notification (approved or denied) is sent back to the 
+  Requestor.
+  We would like to see Approved Overtime Request or Denied Overtime Request versus open or closed.  
+  No information on the form should be visible to the Requester other than approved/denied   
   
   -->

@@ -68,6 +68,7 @@ export class RequestDetailView {
 
   Pipeline = ko.pureComputed(() => {
     return {
+      currentStage: this.Fields.RequestStage.obs,
       stages: pipelineStageStore()
         .filter(
           (stage) => stage.ServiceType.ID == this.Fields.ServiceType.obs().ID
@@ -87,7 +88,9 @@ export class RequestDetailView {
   };
 
   SubmitNewRequest = async () => {
-    await this._context.Requests.Add(this);
+    //await this._context.Requests.Add(this);
+    this.Fields.RequestStage.obs(1);
+    this.DisplayMode(DisplayModes.View);
   };
 
   EditRequest = async () => {
@@ -130,6 +133,7 @@ export class RequestDetailView {
 
     switch (displayMode) {
       case DisplayModes.New:
+        this.Fields.Requestor.obs(new People(currentUser));
         this.Fields.Title.obs(createNewRequestID());
         break;
       case DisplayModes.View:

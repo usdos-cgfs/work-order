@@ -162,10 +162,15 @@
                   >:
                 </h6>
               </label>
+              <!-- ko if: DisplayMode() != DisplayModes.View -->
               <textarea
                 class="form-control"
                 data-bind="value: Fields.RequestDescription.obs"
               ></textarea>
+              <!-- /ko -->
+              <!-- ko if: DisplayMode() == DisplayModes.View -->
+              <div data-bind="text: Fields.RequestDescription.obs"></div>
+              <!-- /ko -->
             </div>
           </div>
         </div>
@@ -236,7 +241,10 @@
   <script type="text/html" id="tmpl-request-pipeline">
     <div class="row">
       <ol class="list-group-horizontal d-flex" data-bind="foreach: stages">
-        <li class="list-group-item">
+        <li
+          class="list-group-item"
+          data-bind="css: {'list-group-item-secondary': Step == $parent.currentStage()}"
+        >
           <div class="d-flex align-items-center">
             <h4 class="" data-bind="text: Step"></h4>
             <div class="mx-2"></div>
@@ -276,7 +284,7 @@
                 <select
                   class="form-control"
                   data-bind="value: RequestorOffice.obs,
-                options: $root.Config.requestOrgStore,
+                options: $root.currentUser.RequestOrgs,
                 optionsText: (ro) => ro.Title"
                 ></select>
                 <p>

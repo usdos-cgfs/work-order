@@ -68,6 +68,7 @@ export class ServiceType {
 
 export class ServiceTypeTemplate {
   constructor(request, serviceType) {
+    this.Request = request;
     this.UID = serviceType.UID;
     this.TemplateElmId = getTemplateElmId(serviceType.UID);
     this.ServiceType = serviceType;
@@ -92,7 +93,7 @@ export class ServiceTypeTemplate {
     if (!service) {
       console.logError("Could not find service module");
     }
-    this.TemplateViewModel(service.default);
+    this.TemplateViewModel(new service.default(this.Request));
     this.IsLoading(false);
   };
 
