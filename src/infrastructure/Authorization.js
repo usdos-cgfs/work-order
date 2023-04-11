@@ -1,6 +1,6 @@
 import { People } from "../components/People.js";
 import { OrgTypes, requestOrgStore } from "../entities/RequestOrg.js";
-import { getUserPropsAsync } from "./SAL.js";
+import { getCurrentUserPropertiesAsync, getUserPropsAsync } from "./SAL.js";
 
 export class User {
   Groups = null;
@@ -34,7 +34,12 @@ export class User {
 
   static Create = async function () {
     const userProps = await getUserPropsAsync();
+    //const userProps2 = await UserManager.getUserPropertiesAsync();
 
     return new User(userProps);
   };
+}
+
+export class UserManager {
+  static getUserPropertiesAsync = getCurrentUserPropertiesAsync;
 }

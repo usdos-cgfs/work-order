@@ -1,5 +1,6 @@
 import { People } from "../components/People.js";
 import { RequestOrg } from "../entities/RequestOrg.js";
+import { RequestAssignments } from "../components/RequestAssignments.js";
 import { pipelineStageStore } from "../entities/Pipelines.js";
 import { createNewRequestID, sortByField } from "../common/EntityUtilities.js";
 import {
@@ -75,6 +76,14 @@ export class RequestDetailView {
         )
         .sort(sortByField("Step")),
     };
+  });
+
+  Assignments = new RequestAssignments({
+    request: {
+      ID: this.Fields.ID.obs(),
+      Title: this.Fields.Title.obs(),
+    },
+    context: this._context,
   });
 
   IsLoading = ko.observable();

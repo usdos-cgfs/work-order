@@ -3,6 +3,11 @@ import { SPList } from "./SAL.js";
 export default class ApplicationDbContext {
   constructor() {}
 
+  Assigments = new EntitySet({
+    name: "Assignment",
+    title: "Assignment",
+  });
+
   Requests = new EntitySet({
     name: "WorkOrder",
     title: "Work Order",

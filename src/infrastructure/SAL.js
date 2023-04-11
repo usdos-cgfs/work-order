@@ -399,7 +399,7 @@ sal.NewUtilities = function () {
   return publicMembers;
 };
 
-async function FetchUserProperties() {
+export async function getCurrentUserPropertiesAsync() {
   var headers = {
     "Content-Type": "application/json;odata=verbose",
     "X-RequestDigest": document.getElementById("__REQUESTDIGEST").value,
@@ -418,6 +418,12 @@ async function FetchUserProperties() {
     }
 
     const data = await response.json();
+    sal.globalConfig.currentUserProfile = data.d;
+    const requestorPhone = data.d.UserProfileProperties.results.find(function (
+      prop
+    ) {
+      return prop.Key == "WorkPhone";
+    }).Value;
   } catch (error) {
     console.error("Unable to fetch User Properties:", error);
   }
