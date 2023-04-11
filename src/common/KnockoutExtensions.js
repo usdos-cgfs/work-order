@@ -1,7 +1,7 @@
-import { Person } from "../components/Person.js";
+import { People } from "../components/People.js";
 import { ensureUserByKeyAsync } from "../infrastructure/SAL.js";
 
-ko.bindingHandlers.person = {
+ko.bindingHandlers.people = {
   init: function (element, valueAccessor, allBindingsAccessor) {
     var schema = {};
     schema["PrincipalAccountType"] = "User";
@@ -25,7 +25,7 @@ ko.bindingHandlers.person = {
           LoginName: user.get_loginName(),
           IsEnsured: true,
         };
-        observable(new Person(userObj));
+        observable(new People(userObj));
       } else {
         observable(null);
       }

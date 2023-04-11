@@ -1,5 +1,7 @@
-import { Person } from "../components/Person.js";
+import { People } from "../components/People.js";
 import { RequestOrg } from "../entities/RequestOrg.js";
+import { pipelineStageStore } from "../entities/Pipelines.js";
+import { createNewRequestID, sortByField } from "../common/EntityUtilities.js";
 import {
   serviceTypeStore,
   ServiceTypeTemplate,
@@ -24,13 +26,13 @@ export class RequestDetailView {
     Title: { obs: ko.observable() },
     RequestSubject: { obs: ko.observable() },
     RequestDescription: { obs: ko.observable() },
-    Requestor: { factory: Person.Create, obs: ko.observable() },
+    Requestor: { factory: People.Create, obs: ko.observable() },
     RequestorName: { obs: ko.observable() },
     RequestorPhone: { obs: ko.observable() },
     RequestorEmail: { obs: ko.observable() },
-    RequestorSupervisor: { factory: Person.Create, obs: ko.observable() },
+    RequestorSupervisor: { factory: People.Create, obs: ko.observable() },
     RequestorOffice: { factory: RequestOrg.Create, obs: ko.observable() },
-    ManagingDirector: { factory: Person.Create, obs: ko.observable() },
+    ManagingDirector: { factory: People.Create, obs: ko.observable() },
 
     IsActive: { obs: ko.observable() },
     RequestStage: { obs: ko.observable() },
@@ -49,6 +51,7 @@ export class RequestDetailView {
 
   FieldMap = this.Fields; // This is a one to one for this entity
 
+  // TODO: Move this to ServiceType
   ServiceTypeTemplate = ko.computed(() => {
     console.log("Loading Template for:", this.Fields.ServiceType.obs());
     if (!this.Fields.ServiceType.obs()) {
@@ -61,6 +64,16 @@ export class RequestDetailView {
     );
 
     return ServiceTypeTemplate.Create(this, serviceType);
+  });
+
+  Pipeline = ko.pureComputed(() => {
+    return {
+      stages: pipelineStageStore()
+        .filter(
+          (stage) => stage.ServiceType.ID == this.Fields.ServiceType.obs().ID
+        )
+        .sort(sortByField("Step")),
+    };
   });
 
   IsLoading = ko.observable();
@@ -95,9 +108,11 @@ export class RequestDetailView {
     ID = null,
     Title = null,
     serviceType = null,
-    _context,
+    context,
+    currentUser,
   }) {
-    this._context = _context;
+    this._context = context;
+    this._currentUser = currentUser;
     this.ID = ID;
     this.Title = Title;
     this.LookupValue = Title;
@@ -113,8 +128,14 @@ export class RequestDetailView {
 
     this.DisplayMode(displayMode);
 
-    if (displayMode == DisplayModes.View) {
-      this.Refresh();
+    switch (displayMode) {
+      case DisplayModes.New:
+        this.Fields.Title.obs(createNewRequestID());
+        break;
+      case DisplayModes.View:
+        this.Refresh();
+        break;
+      default:
     }
   }
 }

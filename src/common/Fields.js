@@ -21,7 +21,7 @@ export function FieldArray(creator) {
   };
 }
 
-export function PersonField(schemaOpts) {
+export function PeopleField(schemaOpts) {
   const IsLoading = ko.observable();
   const User = ko.observable();
 

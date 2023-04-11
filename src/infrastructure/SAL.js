@@ -151,6 +151,59 @@ sal.NewAppConfig = function () {
   return publicMembers;
 };
 
+export async function getUserPropsAsync() {
+  return new Promise((resolve, reject) => {
+    var currCtx = new SP.ClientContext.get_current();
+    var web = currCtx.get_web();
+
+    var oUser = web.get_currentUser();
+    var oGroups = oUser.get_groups();
+
+    function onQueryGroupsSucceeded() {
+      const user = {
+        ID: oUser.get_id(),
+        Title: oUser.get_title(),
+        LoginName: oUser.get_loginName(),
+        IsEnsured: true,
+        IsGroup: false,
+        Groups: [],
+      };
+
+      var groupsEnumerator = oGroups.getEnumerator();
+      while (groupsEnumerator.moveNext()) {
+        var oGroup = groupsEnumerator.get_current();
+        var group = {
+          ID: oGroup.get_id(),
+          Title: oGroup.get_title(),
+          LoginName: oGroup.get_loginName(),
+          IsEnsured: true,
+          IsGroup: false,
+        };
+        user.Groups.push(group);
+      }
+      resolve(user);
+    }
+
+    function onQueryGroupsFailed(sender, args) {
+      console.error(
+        " Everyone - Query Everyone group failed. " +
+          args.get_message() +
+          "\n" +
+          args.get_stackTrace()
+      );
+      reject(args);
+    }
+    currCtx.load(oUser);
+    currCtx.load(oGroups);
+    const data = { oUser, oGroups, resolve, reject };
+
+    currCtx.executeQueryAsync(
+      Function.createDelegate(data, onQueryGroupsSucceeded),
+      Function.createDelegate(data, onQueryGroupsFailed)
+    );
+  });
+}
+
 sal.NewUtilities = function () {
   function createSiteGroup(groupName, permissions, callback) {
     /* groupName: the name of the new SP Group
@@ -470,16 +523,23 @@ export async function ensureUserByKeyAsync(userName) {
     });
 
     if (group) {
-      callback(group.group);
+      resolve(group.group);
       return;
     }
 
     var context = new SP.ClientContext.get_current();
-    var user = context.get_web().ensureUser(userName);
+    var oUser = context.get_web().ensureUser(userName);
 
     function onEnsureUserSucceeded(sender, args) {
       var self = this;
-      self.callback(user);
+      const user = {
+        ID: oUser.get_id(),
+        Title: oUser.get_title(),
+        LoginName: oUser.get_loginName(),
+        IsEnsured: true,
+        IsGroup: false,
+      };
+      resolve(user);
     }
 
     function onEnsureUserFailed(sender, args) {
@@ -491,9 +551,9 @@ export async function ensureUserByKeyAsync(userName) {
       );
       reject(args);
     }
-    const data = { user: user, callback: resolve, reject };
+    const data = { oUser, resolve, reject };
 
-    context.load(user);
+    context.load(oUser);
     context.executeQueryAsync(
       Function.createDelegate(data, onEnsureUserSucceeded),
       Function.createDelegate(data, onEnsureUserFailed)

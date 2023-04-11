@@ -9,8 +9,9 @@ import "./infrastructure/ApplicationDbContext.js";
 import ApplicationDbContext from "./infrastructure/ApplicationDbContext.js";
 import { PipelineStage, pipelineStageStore } from "./entities/Pipelines.js";
 import { ServiceType, serviceTypeStore } from "./entities/ServiceType.js";
-
+import { sortByTitle } from "./common/EntityUtilities.js";
 import { getUrlParam, setUrlParam } from "./common/Router.js";
+import { User } from "./infrastructure/Authorization.js";
 
 var WorkOrder = window.WorkOrder || {};
 
@@ -37,7 +38,7 @@ export const Tabs = {
 
 class NewReport {
   constructor() {
-    this._context = new ApplicationDbContext();
+    this.context = new ApplicationDbContext();
     this.Tab.subscribe(tabHasChanged);
   }
 
@@ -60,15 +61,15 @@ class NewReport {
 
   Init = async function () {
     configLists: {
-      var pipelinesPromise = this._context.ConfigPipelines.FindAll(
+      var pipelinesPromise = this.context.ConfigPipelines.FindAll(
         PipelineStage.Fields
-      ).then((val) => this.Config.pipelineStageStore);
+      ).then(this.Config.pipelineStageStore);
 
-      var requestOrgsPromise = this._context.ConfigRequestOrgs.FindAll(
+      var requestOrgsPromise = this.context.ConfigRequestOrgs.FindAll(
         RequestOrg.Fields
-      ).then(this.Config.requestOrgStore);
+      ).then((arr) => this.Config.requestOrgStore(arr.sort(sortByTitle)));
 
-      var serviceTypePromise = this._context.ConfigServiceTypes.FindAll(
+      var serviceTypePromise = this.context.ConfigServiceTypes.FindAll(
         ServiceType.Fields
       ).then((arr) => this.Config.serviceTypeStore(arr.sort(sortByTitle)));
 
@@ -77,6 +78,10 @@ class NewReport {
         pipelinesPromise,
         serviceTypePromise,
       ]);
+    }
+
+    user: {
+      this.currentUser = await User.Create();
     }
 
     routing: {
@@ -100,7 +105,11 @@ class NewReport {
   SelectNewRequestButton = (data, e) => {};
 
   NewRequest = (data, e) => {
-    const props = { _context: this._context, displayMode: DisplayModes.New };
+    const props = {
+      currentUser: this.currentUser,
+      context: this.context,
+      displayMode: DisplayModes.New,
+    };
     if (data && data.ID) {
       props.serviceType = data;
     }
@@ -120,7 +129,7 @@ class NewReport {
       new RequestDetailView({
         ID: request.ID,
         Title: request.Title,
-        _context: this._context,
+        context: this.context,
       })
     );
     this.Tab(Tabs.RequestDetail);
@@ -135,14 +144,4 @@ const tabHasChanged = (newTab) => {
   var tab = new bootstrap.Tab(tabTriggerElement);
   setUrlParam("tab", newTab);
   tab.show();
-};
-
-const sortByTitle = (a, b) => {
-  if (a.Title > b.Title) {
-    return 1;
-  }
-  if (a.Title < b.Title) {
-    return -1;
-  }
-  return 0;
 };
