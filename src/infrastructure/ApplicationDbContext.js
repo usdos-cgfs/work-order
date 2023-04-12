@@ -54,10 +54,12 @@ class EntitySet {
       // Prefer find by Id
       item = await this.ListRef.findByIdAsync(entity.ID, fields);
     } else if (entity.title) {
-      item = await this.ListRef.findByTitleAsync(entity.Title, fields);
+      item = await this.ListRef.findByTitleAsync(entity.Title, fields, 1);
     }
     return item;
   };
+
+  Where = async function (filterArr, fields) {};
 
   Load = async function (entity) {
     if (!entity.ID == null && !entity.Title) {

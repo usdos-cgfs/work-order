@@ -1,6 +1,6 @@
 import { siteRoot } from "../infrastructure/SAL.js";
 
-const getTemplateElmId = (uid) => `tmpl-${uid}`;
+const getElementId = (uid) => `tmpl-${uid}`;
 
 const assetsPath = (uid) =>
   `${siteRoot}/SiteAssets/wo/entities/serviceTypeTemplates/${uid}/`;
@@ -70,30 +70,30 @@ export class ServiceTypeTemplate {
   constructor(request, serviceType) {
     this.Request = request;
     this.UID = serviceType.UID;
-    this.TemplateElmId = getTemplateElmId(serviceType.UID);
+    this.ElementId = getElementId(serviceType.UID);
     this.ServiceType = serviceType;
   }
 
   IsLoading = ko.observable();
 
   UID = null;
-  TemplateElmId = null;
+  ElementId = null;
 
-  TemplateViewModel = ko.observable();
+  ViewModel = ko.observable();
 
   Load = async function () {
     if (!this.ServiceType.HasTemplate) {
       return;
     }
     this.IsLoading(true);
-    if (!document.getElementById(this.TemplateElmId)) {
+    if (!document.getElementById(this.ElementId)) {
       await loadServiceTypeTemplate(this.UID);
     }
     const service = await import(modulePath(this.UID));
     if (!service) {
       console.logError("Could not find service module");
     }
-    this.TemplateViewModel(new service.default(this.Request));
+    this.ViewModel(new service.default(this.Request));
     this.IsLoading(false);
   };
 
@@ -111,7 +111,7 @@ export class ServiceTypeTemplate {
 }
 
 async function loadServiceTypeTemplate(uid) {
-  const templateId = getTemplateElmId(uid);
+  const templateId = getElementId(uid);
   const response = await fetch(templatePath(uid));
 
   if (!response.ok) {

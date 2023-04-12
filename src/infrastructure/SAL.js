@@ -1227,7 +1227,7 @@ export function SPList(listDef) {
    * @param {Array} fields
    * @returns promise. Resolves to Object with fields and values.
    */
-  async function findByTitleAsync(title, fields) {
+  async function findByTitleAsync(title, fields, count) {
     var caml =
       '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
       '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
@@ -1235,7 +1235,9 @@ export function SPList(listDef) {
       '<FieldRef Name="Title"/><Value Type="Text">' +
       title +
       "</Value>" +
-      "</Eq></And></Where></Query><RowLimit>1</RowLimit></View>";
+      `</Eq></And></Where></Query>${
+        count ?? "<RowLimit>" + count + "</RowLimit>"
+      }</View>`;
     var listItem = await new Promise((resolve, reject) => {
       getListItems(caml, fields, resolve);
     });

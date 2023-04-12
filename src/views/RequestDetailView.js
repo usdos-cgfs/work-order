@@ -8,6 +8,7 @@ import {
   ServiceTypeTemplate,
   ServiceType,
 } from "../entities/ServiceType.js";
+import { ServiceTypeComponent } from "../components/ServiceTypeComponent.js";
 
 export const DisplayModes = {
   New: "New",
@@ -22,6 +23,7 @@ const templates = {
 };
 
 export class RequestDetailView {
+  // Request Properties
   Fields = {
     ID: { obs: ko.observable() },
     Title: { obs: ko.observable() },
@@ -31,9 +33,10 @@ export class RequestDetailView {
     RequestorName: { obs: ko.observable() },
     RequestorPhone: { obs: ko.observable() },
     RequestorEmail: { obs: ko.observable() },
+
     RequestorSupervisor: { factory: People.Create, obs: ko.observable() },
-    RequestorOffice: { factory: RequestOrg.Create, obs: ko.observable() },
     ManagingDirector: { factory: People.Create, obs: ko.observable() },
+    RequestorOffice: { factory: RequestOrg.Create, obs: ko.observable() },
 
     IsActive: { obs: ko.observable() },
     RequestStage: { obs: ko.observable() },
@@ -48,24 +51,31 @@ export class RequestDetailView {
     RequestOrgs: { factory: RequestOrg.Create, obs: ko.observableArray() },
 
     ServiceType: { factory: ServiceType.Create, obs: ko.observable() }, // {id, title},
+    AssignmentsBlob: {
+      obs: ko.observable(),
+    },
   };
 
   FieldMap = this.Fields; // This is a one to one for this entity
 
-  // TODO: Move this to ServiceType
-  ServiceTypeTemplate = ko.computed(() => {
-    console.log("Loading Template for:", this.Fields.ServiceType.obs());
-    if (!this.Fields.ServiceType.obs()) {
-      return null;
-    }
-
-    const serviceTypeLookup = this.Fields.ServiceType.obs();
-    const serviceType = serviceTypeStore().find(
-      (service) => service.ID == serviceTypeLookup.ID
-    );
-
-    return ServiceTypeTemplate.Create(this, serviceType);
+  ServiceTypeComponent = new ServiceTypeComponent({
+    request: this,
+    serviceType: this.Fields.ServiceType.obs,
   });
+  // // TODO: Move this to ServiceType
+  // ServiceTypeTemplate = ko.computed(() => {
+  //   console.log("Loading Template for:", this.Fields.ServiceType.obs());
+  //   if (!this.Fields.ServiceType.obs()) {
+  //     return null;
+  //   }
+
+  //   const serviceTypeLookup = this.Fields.ServiceType.obs();
+  //   const serviceType = serviceTypeStore().find(
+  //     (service) => service.ID == serviceTypeLookup.ID
+  //   );
+
+  //   return ServiceTypeTemplate.Create(this, serviceType);
+  // });
 
   Pipeline = ko.pureComputed(() => {
     return {
@@ -80,8 +90,9 @@ export class RequestDetailView {
 
   Assignments = new RequestAssignments({
     request: {
-      ID: this.Fields.ID.obs(),
-      Title: this.Fields.Title.obs(),
+      ID: this.Fields.ID.obs,
+      Title: this.Fields.Title.obs,
+      AssignmentsBlob: this.AssignmentsBlob,
     },
     context: this._context,
   });
@@ -90,14 +101,37 @@ export class RequestDetailView {
   DisplayModes = DisplayModes;
   DisplayMode = ko.observable();
 
-  Refresh = async () => {
+  // Request Methods
+  validateRequest = () => {
+    if (this.ServiceTypeTemplate()?.ViewModel()?.Validate) {
+      const validationResult = this.ServiceTypeTemplate()
+        ?.ViewModel()
+        ?.Validate();
+      if (!validationResult.Success) {
+        alert(validationResult.Message);
+        return false;
+      }
+    }
+  };
+
+  // Controls
+  RefreshAll = async () => {
+    this.RefreshRequest();
+    this.Assignments.Refresh();
+  };
+
+  RefreshRequest = async () => {
     this.IsLoading(true);
     await this._context.Requests.Load(this);
     this.IsLoading(false);
   };
 
   SubmitNewRequest = async () => {
-    //await this._context.Requests.Add(this);
+    // Validate Request
+    if (!this.validateRequest()) return;
+
+    //1. Save Request Header in Folder
+    await this._context.Requests.Add(this);
     this.Fields.RequestStage.obs(1);
     this.DisplayMode(DisplayModes.View);
   };
@@ -146,7 +180,7 @@ export class RequestDetailView {
         this.Fields.Title.obs(createNewRequestID());
         break;
       case DisplayModes.View:
-        this.Refresh();
+        this.RefreshAll();
         break;
       default:
     }

@@ -131,49 +131,7 @@
           data-bind="template: {name: 'tmpl-request-pipeline', data: Pipeline}"
         ></div>
         <div data-bind="template: {name: 'tmpl-request-header'}"></div>
-        <div class="card mb-3 w-100">
-          <div class="card-body">
-            <h3
-              class="card-title"
-              data-bind="text: Fields.ServiceType.obs()?.Title"
-            ></h3>
-            <!-- ko if: ServiceTypeTemplate -->
-            <div data-bind="using: ServiceTypeTemplate">
-              <!-- ko if: IsLoading() -->
-              <div class="d-flex justify-content-center">
-                <div class="spinner-border" role="status">
-                  <span class="visually-hidden">Loading...</span>
-                </div>
-              </div>
-              <!-- /ko -->
-              <!-- ko if: !IsLoading() && TemplateViewModel()  -->
-              <div
-                data-bind="template: {name: TemplateElmId, data: TemplateViewModel}"
-              ></div>
-              <!-- /ko -->
-            </div>
-            <!-- /ko -->
-            <div class="col-12 pb-6">
-              <label for=""
-                ><h6>
-                  <span
-                    data-bind="text: Fields.ServiceType.obs()?.DescriptionTitle"
-                  ></span
-                  >:
-                </h6>
-              </label>
-              <!-- ko if: DisplayMode() != DisplayModes.View -->
-              <textarea
-                class="form-control"
-                data-bind="value: Fields.RequestDescription.obs"
-              ></textarea>
-              <!-- /ko -->
-              <!-- ko if: DisplayMode() == DisplayModes.View -->
-              <div data-bind="text: Fields.RequestDescription.obs"></div>
-              <!-- /ko -->
-            </div>
-          </div>
-        </div>
+        <div data-bind="template: {name: 'tmpl-service-type-component'}"></div>
         <div class="row mb-3">
           <div class="col-4">
             <div class="card">
@@ -380,6 +338,40 @@
           </div>
         </div>
         <!-- /ko -->
+      </div>
+    </div>
+  </script>
+
+  <script type="text/html" id="tmpl-service-type-component">
+    <div class="card mb-3 w-100" data-bind="using: ServiceTypeComponent">
+      <div class="card-body">
+        <h3 class="card-title" data-bind="text: ServiceType()?.Title"></h3>
+        <!-- ko if: ComponentsAreLoading() -->
+        <div class="d-flex justify-content-center">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+        <!-- /ko -->
+        <!-- ko if: !ComponentsAreLoading() && ViewModel() -->
+        <div data-bind="template: {name: ElementId, data: ViewModel}"></div>
+        <!-- /ko -->
+        <div class="col-12 pb-6">
+          <label for=""
+            ><h6>
+              <span data-bind="text: ServiceType()?.DescriptionTitle"></span>:
+            </h6>
+          </label>
+          <!-- ko if: Request.DisplayMode() != Request.DisplayModes.View -->
+          <textarea
+            class="form-control"
+            data-bind="value: Request.Fields.RequestDescription.obs"
+          ></textarea>
+          <!-- /ko -->
+          <!-- ko if: Request.DisplayMode() == Request.DisplayModes.View -->
+          <div data-bind="text: Request.Fields.RequestDescription.obs"></div>
+          <!-- /ko -->
+        </div>
       </div>
     </div>
   </script>
