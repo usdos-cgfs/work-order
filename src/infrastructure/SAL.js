@@ -26,6 +26,24 @@ export function GetSiteGroups() {
   sal.globalConfig.siteGroups = [];
 }
 
+function groupItemToObj(oListItem) {
+  return {
+    ID: oListItem.get_id(),
+    Title: oListItem.get_title(),
+    LoginName: oListItem.get_loginName(),
+    IsGroup: true,
+  };
+}
+
+export function getDefaultGroups() {
+  const defaultGroups = sal.globalConfig.defaultGroups;
+  const result = {};
+  Object.keys(defaultGroups).forEach((key) => {
+    result[key] = groupItemToObj(defaultGroups[key]);
+  });
+  return result;
+}
+
 export const siteRoot =
   _spPageContextInfo.webServerRelativeUrl == "/"
     ? ""

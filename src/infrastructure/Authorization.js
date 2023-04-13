@@ -1,6 +1,26 @@
 import { People } from "../components/People.js";
 import { OrgTypes, requestOrgStore } from "../entities/RequestOrg.js";
-import { getCurrentUserPropertiesAsync, getUserPropsAsync } from "./SAL.js";
+import {
+  getCurrentUserPropertiesAsync,
+  getUserPropsAsync,
+  getDefaultGroups,
+} from "./SAL.js";
+
+var roles = {
+  FullControl: "Full Control",
+  Design: "Design",
+  Edit: "Edit",
+  Contribute: "Contribute",
+  Read: "Read",
+  LimitedAccess: "Limited Access",
+  RestrictedRead: "Restricted Read",
+  RestrictedContribute: "Restricted Contribute",
+  InitialCreate: "Initial Create",
+};
+
+var staticGroups = {
+  RestrictedReaders: "Restricted Readers",
+};
 
 export class User {
   Groups = null;
@@ -33,6 +53,7 @@ export class User {
   );
 
   static Create = async function () {
+    // TODO: Switch to getUserPropertiesAsync since that includes phone # etc
     const userProps = await getUserPropsAsync();
     //const userProps2 = await UserManager.getUserPropertiesAsync();
 
@@ -43,3 +64,60 @@ export class User {
 export class UserManager {
   static getUserPropertiesAsync = getCurrentUserPropertiesAsync;
 }
+
+export function getRequestFolderPermissions(request) {
+  const defaultGroups = getDefaultGroups();
+  const requestor = request.Requestor();
+  const requestorOffice = request.RequestorOffice(); // this should be set during validation
+
+  const folderPermissions = [
+    [defaultGroups.owners.LoginName, roles.FullControl],
+    [staticGroups.RestrictedReaders, roles.RestrictedRead],
+  ];
+
+  folderPermissions.push([requestor.Title, roles.RestrictedContribute]);
+
+  if (requestorOffice && !requestorOffice.BreakAccess) {
+    folderPermissions.push([requestorOffice.Title, roles.RestrictedContribute]);
+  }
+
+  // break pipeline stages at front?
+  request.Pipeline().stages.forEach((stage) => {
+    const stageOrg = requestOrgStore().find(
+      (org) => org.ID == stage.RequestOrg.ID
+    );
+    if (stageOrg) {
+      folderPermissions.push([
+        stageOrg.UserGroup.LookupValue,
+        roles.RestrictedContribute,
+      ]);
+    }
+
+    if (
+      stage.AssignmentFunction &&
+      AssignmentFunctions[stage.AssignmentFunction]
+    ) {
+      const boundAssignmenttFunc =
+        AssignmentFunctions[stage.AssignmentFunction].bind(request);
+      const people = boundAssignmenttFunc();
+      if (people && people.Title) {
+        folderPermissions.push([people.Title, roles.RestrictedContribute]);
+      }
+    }
+  });
+
+  return folderPermissions;
+}
+
+/**
+ * Assignment functions are function that can be called by pipeline stages
+ * Each function is bound to the current request (i.e. "this" refers to the RequestDetailView)
+ * Functions should return a valuepair of permissions.
+ */
+
+export const AssignmentFunctions = {
+  TestFunc: function () {
+    console.log("Hello", this);
+    return { Title: "Test User" };
+  },
+};

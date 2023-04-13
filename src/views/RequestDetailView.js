@@ -1,6 +1,6 @@
 import { People } from "../components/People.js";
 import { RequestOrg } from "../entities/RequestOrg.js";
-import { RequestAssignments } from "../components/RequestAssignments.js";
+import { RequestAssignmentsComponent } from "../components/RequestAssignmentsComponent.js";
 import { pipelineStageStore } from "../entities/Pipelines.js";
 import { createNewRequestID, sortByField } from "../common/EntityUtilities.js";
 import {
@@ -10,6 +10,7 @@ import {
 } from "../entities/ServiceType.js";
 import { ServiceTypeComponent } from "../components/ServiceTypeComponent.js";
 import { addTask, taskDefs } from "../stores/Tasks.js";
+import { getRequestFolderPermissions } from "../infrastructure/Authorization.js";
 
 export const DisplayModes = {
   New: "New",
@@ -24,20 +25,24 @@ const templates = {
 };
 
 export class RequestDetailView {
+  Requestor = ko.observable();
+  RequestorOffice = ko.observable();
+  ServiceType = ko.observable();
+
   // Request Properties
   Fields = {
     ID: { obs: ko.observable() },
     Title: { obs: ko.observable() },
     RequestSubject: { obs: ko.observable() },
     RequestDescription: { obs: ko.observable() },
-    Requestor: { factory: People.Create, obs: ko.observable() },
+    Requestor: { factory: People.Create, obs: this.Requestor },
     RequestorName: { obs: ko.observable() },
     RequestorPhone: { obs: ko.observable() },
     RequestorEmail: { obs: ko.observable() },
 
     RequestorSupervisor: { factory: People.Create, obs: ko.observable() },
     ManagingDirector: { factory: People.Create, obs: ko.observable() },
-    RequestorOffice: { factory: RequestOrg.Create, obs: ko.observable() },
+    RequestorOffice: { factory: RequestOrg.Create, obs: this.RequestorOffice },
 
     IsActive: { obs: ko.observable() },
     RequestStage: { obs: ko.observable() },
@@ -51,7 +56,7 @@ export class RequestDetailView {
 
     RequestOrgs: { factory: RequestOrg.Create, obs: ko.observableArray() },
 
-    ServiceType: { factory: ServiceType.Create, obs: ko.observable() }, // {id, title},
+    ServiceType: { factory: ServiceType.Create, obs: this.ServiceType }, // {id, title},
     AssignmentsBlob: {
       obs: ko.observable(),
     },
@@ -61,7 +66,7 @@ export class RequestDetailView {
 
   ServiceTypeComponent = new ServiceTypeComponent({
     request: this,
-    serviceType: this.Fields.ServiceType.obs,
+    serviceType: this.ServiceType,
   });
 
   Pipeline = ko.pureComputed(() => {
@@ -75,7 +80,7 @@ export class RequestDetailView {
     };
   });
 
-  Assignments = new RequestAssignments({
+  Assignments = new RequestAssignmentsComponent({
     request: {
       ID: this.Fields.ID.obs,
       Title: this.Fields.Title.obs,
@@ -90,22 +95,22 @@ export class RequestDetailView {
 
   // Request Methods
   validateRequest = () => {
-    if (this.ServiceTypeTemplate()?.ViewModel()?.Validate) {
-      const validationResult = this.ServiceTypeTemplate()
-        ?.ViewModel()
-        ?.Validate();
+    if (this.ServiceTypeComponent.ViewModel()?.Validate) {
+      const validationResult =
+        this.ServiceTypeComponent?.ViewModel()?.Validate();
       if (!validationResult.Success) {
         alert(validationResult.Message);
         return false;
       }
     }
+    return true;
   };
 
-  folderPath = ko.pureComputed(
+  getFolderPath = ko.pureComputed(
     () => `${this.Fields.RequestorOffice.obs()}/${this.Fields.Title.obs()}`
   );
 
-  targetPermissions = ko.pureComputed();
+  getFolderPermissions = () => getRequestFolderPermissions(this);
 
   // Controls
   RefreshAll = async () => {
@@ -121,13 +126,14 @@ export class RequestDetailView {
 
   SubmitNewRequest = async () => {
     // Validate Request
-    if (!this.validateRequest()) return;
+    //if (!this.validateRequest()) return;
 
-    const saveTaskId = addTask(taskDefs.save);
+    //const saveTaskId = addTask(taskDefs.save);
     //1. Save Request Header in Folder
-    await this._context.Requests.AddInFolder(this);
-    this.Fields.RequestStage.obs(1);
-    this.DisplayMode(DisplayModes.View);
+    const folderPerms = this.getFolderPermissions();
+    // await this._context.Requests.AddInFolder(this);
+    // this.Fields.RequestStage.obs(1);
+    // this.DisplayMode(DisplayModes.View);
   };
 
   EditRequest = async () => {

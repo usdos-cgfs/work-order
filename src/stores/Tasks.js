@@ -1,4 +1,4 @@
-export const runningTasks = ko.observable();
+export const runningTasks = ko.observableArray();
 
 export const blockingTasks = ko.pureComputed(() => {
   return runningTasks.filter((task) => task.def.blocking);
@@ -22,7 +22,7 @@ export const taskDefs = {
 export const addTask = (taskDef) => {
   var newTask = {
     id: Math.floor(Math.random() * 100000 + 1),
-    def,
+    def: taskDef,
   };
 
   newTask.timeout = window.setTimeout(function () {
@@ -47,7 +47,7 @@ export const finishTask = function (taskId) {
   }
 };
 
-removeTask = function (taskToRemove) {
+const removeTask = function (taskToRemove) {
   runningTasks(
     runningTasks().filter(function (task) {
       return task.id != taskToRemove.id;

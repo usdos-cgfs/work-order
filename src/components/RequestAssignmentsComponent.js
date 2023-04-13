@@ -1,6 +1,6 @@
 import { Assignment } from "../entities/Assignment.js";
 
-export class RequestAssignments {
+export class RequestAssignmentsComponent {
   constructor({ request, context }) {
     this.RequestId = request.ID;
     this.RequestTitle = request.Title;
@@ -28,11 +28,5 @@ export class RequestAssignments {
     );
     this.Assignments(assignments);
     this.IsLoading(false);
-  };
-
-  static Create = function (props) {
-    const requestAssignments = new RequestAssignments(props);
-    requestAssignments.Refresh();
-    return requestAssignments;
   };
 }
