@@ -9,6 +9,7 @@ import {
   ServiceType,
 } from "../entities/ServiceType.js";
 import { ServiceTypeComponent } from "../components/ServiceTypeComponent.js";
+import { addTask, taskDefs } from "../stores/Tasks.js";
 
 export const DisplayModes = {
   New: "New",
@@ -62,20 +63,6 @@ export class RequestDetailView {
     request: this,
     serviceType: this.Fields.ServiceType.obs,
   });
-  // // TODO: Move this to ServiceType
-  // ServiceTypeTemplate = ko.computed(() => {
-  //   console.log("Loading Template for:", this.Fields.ServiceType.obs());
-  //   if (!this.Fields.ServiceType.obs()) {
-  //     return null;
-  //   }
-
-  //   const serviceTypeLookup = this.Fields.ServiceType.obs();
-  //   const serviceType = serviceTypeStore().find(
-  //     (service) => service.ID == serviceTypeLookup.ID
-  //   );
-
-  //   return ServiceTypeTemplate.Create(this, serviceType);
-  // });
 
   Pipeline = ko.pureComputed(() => {
     return {
@@ -114,6 +101,12 @@ export class RequestDetailView {
     }
   };
 
+  folderPath = ko.pureComputed(
+    () => `${this.Fields.RequestorOffice.obs()}/${this.Fields.Title.obs()}`
+  );
+
+  targetPermissions = ko.pureComputed();
+
   // Controls
   RefreshAll = async () => {
     this.RefreshRequest();
@@ -130,8 +123,9 @@ export class RequestDetailView {
     // Validate Request
     if (!this.validateRequest()) return;
 
+    const saveTaskId = addTask(taskDefs.save);
     //1. Save Request Header in Folder
-    await this._context.Requests.Add(this);
+    await this._context.Requests.AddInFolder(this);
     this.Fields.RequestStage.obs(1);
     this.DisplayMode(DisplayModes.View);
   };

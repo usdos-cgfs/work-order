@@ -346,7 +346,8 @@
     <div class="card mb-3 w-100" data-bind="using: ServiceTypeComponent">
       <div class="card-body">
         <h3 class="card-title" data-bind="text: ServiceType()?.Title"></h3>
-        <!-- ko if: ComponentsAreLoading() -->
+        <!-- ko if: ServiceType()?.HasTemplate -->
+        <!-- ko if: ComponentsAreLoading -->
         <div class="d-flex justify-content-center">
           <div class="spinner-border" role="status">
             <span class="visually-hidden">Loading...</span>
@@ -356,10 +357,14 @@
         <!-- ko if: !ComponentsAreLoading() && ViewModel() -->
         <div data-bind="template: {name: ElementId, data: ViewModel}"></div>
         <!-- /ko -->
+        <!-- /ko -->
         <div class="col-12 pb-6">
           <label for=""
             ><h6>
-              <span data-bind="text: ServiceType()?.DescriptionTitle"></span>:
+              <span
+                data-bind="text: ServiceType()?.DescriptionTitle ?? 'Description'"
+              ></span
+              >:
             </h6>
           </label>
           <!-- ko if: Request.DisplayMode() != Request.DisplayModes.View -->

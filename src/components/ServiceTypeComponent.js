@@ -12,32 +12,31 @@ export class ServiceTypeComponent {
     this.ServiceType = serviceType;
     this.ElementId = this.ServiceType()?.UID;
     this.Request = request;
+    this.ServiceType.subscribe(this.serviceTypeWatcher);
   }
 
   ElementId = null;
   ComponentsAreLoading = ko.observable();
 
-  ViewModel = ko.pureComputed(async () => {
-    const stype = this.ServiceType ? this.ServiceType() : null;
+  ViewModel = ko.observable();
 
-    if (!stype?.HasTemplate) {
-      return false;
-    }
+  serviceTypeWatcher = async (newSvcType) => {
+    if (!newSvcType?.HasTemplate) return;
 
     this.ComponentsAreLoading(true);
 
-    this.ElementId = getElementId(stype.UID);
+    this.ElementId = getElementId(newSvcType.UID);
     if (!document.getElementById(this.ElementId)) {
-      await loadServiceTypeTemplate(stype.UID);
+      await loadServiceTypeTemplate(newSvcType.UID);
     }
-    const service = await import(modulePath(stype.UID));
+    const service = await import(modulePath(newSvcType.UID));
     if (!service) {
       console.logError("Could not find service module");
     }
     // this.ViewModel();
+    this.ViewModel(new service.default(this.Request));
     this.ComponentsAreLoading(false);
-    return new service.default(this.Request);
-  });
+  };
 }
 
 async function loadServiceTypeTemplate(uid) {
