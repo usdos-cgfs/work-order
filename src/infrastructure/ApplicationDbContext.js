@@ -3,9 +3,14 @@ import { SPList } from "./SAL.js";
 export default class ApplicationDbContext {
   constructor() {}
 
-  Assigments = new EntitySet({
+  Assignments = new EntitySet({
     name: "Assignment",
     title: "Assignment",
+  });
+
+  Notifications = new EntitySet({
+    name: "WorkOrderEmails",
+    title: "WorkOrderEmails",
   });
 
   Requests = new EntitySet({
@@ -59,8 +64,6 @@ class EntitySet {
     return item;
   };
 
-  Where = async function (filterArr, fields) {};
-
   Load = async function (entity) {
     if (!entity.ID == null && !entity.Title) {
       console.error("entity missing Id or title", entity);
@@ -74,6 +77,10 @@ class EntitySet {
     MapObjectsToViewFields(item, entity.FieldMap);
 
     return true;
+  };
+
+  UpsertFolderPath = async function (folderPath) {
+    return this.ListRef.upsertListFolderPathAsync(folderPath);
   };
 }
 

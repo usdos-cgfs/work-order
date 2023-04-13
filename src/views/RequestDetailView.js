@@ -125,12 +125,17 @@ export class RequestDetailView {
   };
 
   SubmitNewRequest = async () => {
-    // Validate Request
+    // 1. Validate Request
     //if (!this.validateRequest()) return;
 
     //const saveTaskId = addTask(taskDefs.save);
-    //1. Save Request Header in Folder
+
+    // 2. Create Folder Structure
     const folderPerms = this.getFolderPermissions();
+
+    const listRefs = [this._context.Requests, this._context.Assignments];
+    await Promise.all();
+
     // await this._context.Requests.AddInFolder(this);
     // this.Fields.RequestStage.obs(1);
     // this.DisplayMode(DisplayModes.View);

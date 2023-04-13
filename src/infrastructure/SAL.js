@@ -1784,6 +1784,13 @@ export function SPList(listDef) {
     };
     upsertListFolderInner("", folderArr, idx, callback);
   }
+
+  async function upsertListFolderPathAsync(folderPath) {
+    return new Promise((resolve, reject) =>
+      upsertListFolderPath(folderPath, resolve)
+    );
+  }
+
   /**
    * CreateListFolder
    * Creates a folder at the specified path
@@ -2073,6 +2080,7 @@ export function SPList(listDef) {
     showModal: showModal,
     uploadNewDocument: uploadNewDocument,
     upsertListFolderPath: upsertListFolderPath,
+    upsertListFolderPathAsync,
     ensureListFolder: ensureListFolder,
     createFolderRec: createFolderRec,
     setLibFolderPermissions: setLibFolderPermissions,
