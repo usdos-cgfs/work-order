@@ -12,6 +12,7 @@ import { ServiceType, serviceTypeStore } from "./entities/ServiceType.js";
 import { sortByTitle } from "./common/EntityUtilities.js";
 import { getUrlParam, setUrlParam } from "./common/Router.js";
 import { User } from "./infrastructure/Authorization.js";
+import { holidayStore, Holiday } from "./entities/Holidays.js";
 
 var WorkOrder = window.WorkOrder || {};
 
@@ -52,6 +53,7 @@ class NewReport {
     pipelineStageStore,
     requestOrgStore,
     serviceTypeStore,
+    holidayStore,
   };
 
   // Views
@@ -62,21 +64,26 @@ class NewReport {
   Init = async function () {
     configLists: {
       var pipelinesPromise = this.context.ConfigPipelines.FindAll(
-        PipelineStage.Fields
+        PipelineStage.Views.All
       ).then(this.Config.pipelineStageStore);
 
       var requestOrgsPromise = this.context.ConfigRequestOrgs.FindAll(
-        RequestOrg.Fields
+        RequestOrg.Views.All
       ).then((arr) => this.Config.requestOrgStore(arr.sort(sortByTitle)));
 
       var serviceTypePromise = this.context.ConfigServiceTypes.FindAll(
-        ServiceType.Fields
+        ServiceType.Views.All
       ).then((arr) => this.Config.serviceTypeStore(arr.sort(sortByTitle)));
+
+      const holidaysPromise = this.context.ConfigHolidays.FindAll(
+        Holiday.Views.All
+      ).then(this.Config.holidayStore);
 
       const configResults = await Promise.all([
         requestOrgsPromise,
         pipelinesPromise,
         serviceTypePromise,
+        holidaysPromise,
       ]);
     }
 

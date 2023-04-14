@@ -1155,6 +1155,7 @@ export function SPList(listDef) {
         out = {
           ID: val.get_lookupId(),
           LookupValue: val.get_lookupValue(),
+          Title: val.get_lookupValue(),
         };
         break;
       default:
@@ -1409,20 +1410,20 @@ export function SPList(listDef) {
     reset = reset === undefined ? false : reset;
 
     //TODO: Validate that the groups and permissions exist on the site.
-    var users = new Array();
-    var resolvedGroups = new Array();
-    var currCtx = new SP.ClientContext.get_current();
-    var web = currCtx.get_web();
+    const users = [];
+    const resolvedGroups = [];
+    const currCtx = new SP.ClientContext.get_current();
+    const web = currCtx.get_web();
 
-    var oList = web.get_lists().getByTitle(self.config.def.title);
+    const oList = web.get_lists().getByTitle(self.config.def.title);
 
-    var oListItem = oList.getItemById(id);
+    const oListItem = oList.getItemById(id);
 
     valuePairs.forEach(function (vp) {
       // var roleDefBindingColl = SP.RoleDefinitionBindingCollection.newObject(
       //   currCtx
       // );
-      var resolvedGroup = sal.getSPSiteGroupByName(vp[0]);
+      const resolvedGroup = sal.getSPSiteGroupByName(vp[0]);
       if (resolvedGroup) {
         resolvedGroups.push([resolvedGroup, vp[1]]);
 
@@ -1438,8 +1439,8 @@ export function SPList(listDef) {
 
     function onFindItemSucceeded() {
       console.log("Successfully found item");
-      var currCtx = new SP.ClientContext.get_current();
-      var web = currCtx.get_web();
+      const currCtx = new SP.ClientContext.get_current();
+      const web = currCtx.get_web();
 
       if (reset) {
         oListItem.resetRoleInheritance();
@@ -1454,7 +1455,7 @@ export function SPList(listDef) {
       //var oList = web.get_lists().getByTitle(self.config.def.title);
 
       this.resolvedGroups.forEach(function (groupPairs) {
-        var roleDefBindingColl =
+        const roleDefBindingColl =
           SP.RoleDefinitionBindingCollection.newObject(currCtx);
         roleDefBindingColl.add(
           web.get_roleDefinitions().getByName(groupPairs[1])
@@ -1463,7 +1464,7 @@ export function SPList(listDef) {
       });
 
       this.users.forEach(function (userPairs) {
-        var roleDefBindingColl =
+        const roleDefBindingColl =
           SP.RoleDefinitionBindingCollection.newObject(currCtx);
         roleDefBindingColl.add(
           web.get_roleDefinitions().getByName(userPairs[1])
@@ -1748,6 +1749,17 @@ export function SPList(listDef) {
     SP.UI.ModalDialog.showModalDialog(options);
   }
 
+  async function upsertListFolderPathAsync(folderPath) {
+    return new Promise((resolve, reject) =>
+      upsertListFolderPath(folderPath, resolve)
+    );
+  }
+
+  /*****************************************************************
+                        Folder Creation          
+    ******************************************************************/
+  // TODO: There should probably only be one entry point to create a folder
+
   function upsertListFolderPath(folderPath, callback) {
     var folderArr = folderPath.split("/");
     var idx = 0;
@@ -1769,10 +1781,10 @@ export function SPList(listDef) {
         function () {
           self.createListFolder(
             folderName,
-            function (iFolder) {
+            function (folderId) {
               if (idx >= folderArr.length) {
                 //We've reached the innermost folder and found it exists
-                success(iFolder);
+                success(folderId);
               } else {
                 upsertListFolderInner(curPath, folderArr, idx, success);
               }
@@ -1783,12 +1795,6 @@ export function SPList(listDef) {
       );
     };
     upsertListFolderInner("", folderArr, idx, callback);
-  }
-
-  async function upsertListFolderPathAsync(folderPath) {
-    return new Promise((resolve, reject) =>
-      upsertListFolderPath(folderPath, resolve)
-    );
   }
 
   /**
@@ -1802,11 +1808,11 @@ export function SPList(listDef) {
     path = path === undefined ? "" : path;
 
     // Used for lists, duh
-    var currCtx = new SP.ClientContext.get_current();
-    var web = currCtx.get_web();
-    var oList = web.get_lists().getByTitle(self.config.def.title);
-    var folderUrl = "";
-    var itemCreateInfo = new SP.ListItemCreationInformation();
+    const currCtx = new SP.ClientContext.get_current();
+    const web = currCtx.get_web();
+    const oList = web.get_lists().getByTitle(self.config.def.title);
+    let folderUrl = "";
+    const itemCreateInfo = new SP.ListItemCreationInformation();
     itemCreateInfo.set_underlyingObjectType(SP.FileSystemObjectType.folder);
     itemCreateInfo.set_leafName(folderName);
     if (path) {
@@ -1819,7 +1825,7 @@ export function SPList(listDef) {
       itemCreateInfo.set_folderUrl(folderUrl);
     }
 
-    var newItem = oList.addItem(itemCreateInfo);
+    const newItem = oList.addItem(itemCreateInfo);
     newItem.set_item("Title", folderName);
 
     newItem.update();
@@ -1839,10 +1845,14 @@ export function SPList(listDef) {
       );
     }
 
-    var data = { folderName: folderName, callback: callback, newItem: newItem };
+    const data = {
+      folderName: folderName,
+      callback: callback,
+      newItem: newItem,
+    };
 
-    self.config.currentContext.load(newItem);
-    self.config.currentContext.executeQueryAsync(
+    currCtx.load(newItem);
+    currCtx.executeQueryAsync(
       Function.createDelegate(data, onCreateFolderSucceeded),
       Function.createDelegate(data, onCreateFolderFailed)
     );
@@ -1914,7 +1924,7 @@ export function SPList(listDef) {
     );
   }
 
-  function createFolderRec(folderUrl, success) {
+  function createLibFolder(folderUrl, success) {
     var ctx = SP.ClientContext.get_current();
     var list = self.config.listRef;
     var createFolderInternal = function (parentFolder, folderUrl, success) {
@@ -2073,7 +2083,7 @@ export function SPList(listDef) {
     updateListItemAsync: updateListItemAsync,
     deleteListItem: deleteListItem,
     setItemPermissions: setItemPermissions,
-    setItemPermissionsAsync: setItemPermissionsAsync,
+    setItemPermissionsAsync,
     getItemPermissions: getItemPermissions,
     getFolderContents: getFolderContents,
     getFolderContentsAsync: getFolderContentsAsync,
@@ -2082,7 +2092,7 @@ export function SPList(listDef) {
     upsertListFolderPath: upsertListFolderPath,
     upsertListFolderPathAsync,
     ensureListFolder: ensureListFolder,
-    createFolderRec: createFolderRec,
+    createFolderRec: createLibFolder,
     setLibFolderPermissions: setLibFolderPermissions,
     showListView: showListView,
   };

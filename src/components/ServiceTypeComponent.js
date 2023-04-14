@@ -1,11 +1,8 @@
-import { appRoot } from "../common/Router.js";
-
-const getElementId = (uid) => `tmpl-${uid}`;
-
-const assetsPath = (uid) =>
-  `${appRoot}/SiteAssets/wo/entities/serviceTypeTemplates/${uid}/`;
-const templatePath = (uid) => assetsPath(uid) + `${uid}-template.html`;
-const modulePath = (uid) => assetsPath(uid) + `${uid}-module.js`;
+import {
+  getTemplateElementId,
+  templatePath,
+  modulePath,
+} from "../entities/ServiceType.js";
 
 export class ServiceTypeComponent {
   constructor({ request, serviceType }) {
@@ -25,7 +22,7 @@ export class ServiceTypeComponent {
 
     this.ComponentsAreLoading(true);
 
-    this.ElementId = getElementId(newSvcType.UID);
+    this.ElementId = getTemplateElementId(newSvcType.UID);
     if (!document.getElementById(this.ElementId)) {
       await loadServiceTypeTemplate(newSvcType.UID);
     }
@@ -40,7 +37,7 @@ export class ServiceTypeComponent {
 }
 
 async function loadServiceTypeTemplate(uid) {
-  const templateId = getElementId(uid);
+  const templateId = getTemplateElementId(uid);
   const response = await fetch(templatePath(uid));
 
   if (!response.ok) {
@@ -50,8 +47,8 @@ async function loadServiceTypeTemplate(uid) {
   }
 
   const text = await response.text();
-
   const element = document.createElement("script");
+
   element.setAttribute("type", "text/html");
   element.setAttribute("id", templateId);
   element.text = text;

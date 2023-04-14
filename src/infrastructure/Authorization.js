@@ -19,7 +19,7 @@ var roles = {
 };
 
 var staticGroups = {
-  RestrictedReaders: "Restricted Readers",
+  RestrictedReaders: { Title: "Restricted Readers" },
 };
 
 export class User {
@@ -71,14 +71,17 @@ export function getRequestFolderPermissions(request) {
   const requestorOffice = request.RequestorOffice(); // this should be set during validation
 
   const folderPermissions = [
-    [defaultGroups.owners.LoginName, roles.FullControl],
+    [defaultGroups.owners, roles.FullControl],
     [staticGroups.RestrictedReaders, roles.RestrictedRead],
   ];
 
-  folderPermissions.push([requestor.Title, roles.RestrictedContribute]);
+  folderPermissions.push([requestor, roles.RestrictedContribute]);
 
   if (requestorOffice && !requestorOffice.BreakAccess) {
-    folderPermissions.push([requestorOffice.Title, roles.RestrictedContribute]);
+    folderPermissions.push([
+      requestorOffice.UserGroup,
+      roles.RestrictedContribute,
+    ]);
   }
 
   // break pipeline stages at front?
@@ -87,10 +90,7 @@ export function getRequestFolderPermissions(request) {
       (org) => org.ID == stage.RequestOrg.ID
     );
     if (stageOrg) {
-      folderPermissions.push([
-        stageOrg.UserGroup.LookupValue,
-        roles.RestrictedContribute,
-      ]);
+      folderPermissions.push([stageOrg.UserGroup, roles.RestrictedContribute]);
     }
 
     if (
@@ -101,7 +101,7 @@ export function getRequestFolderPermissions(request) {
         AssignmentFunctions[stage.AssignmentFunction].bind(request);
       const people = boundAssignmenttFunc();
       if (people && people.Title) {
-        folderPermissions.push([people.Title, roles.RestrictedContribute]);
+        folderPermissions.push([people, roles.RestrictedContribute]);
       }
     }
   });
@@ -118,6 +118,7 @@ export function getRequestFolderPermissions(request) {
 export const AssignmentFunctions = {
   TestFunc: function () {
     console.log("Hello", this);
-    return { Title: "Test User" };
+    return;
+    return this.Requestor();
   },
 };

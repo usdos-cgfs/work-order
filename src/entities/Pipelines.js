@@ -9,16 +9,18 @@ export class PipelineStage {
     return new PipelineStage({ ID, Title: LookupValue });
   };
 
-  static Fields = [
-    "ID",
-    "Title",
-    "ServiceType",
-    "Step",
-    "ActionType",
-    "RequestOrg",
-    "WildCardAssignee",
-    "AssignmentFunction",
-  ];
+  static Views = {
+    All: [
+      "ID",
+      "Title",
+      "ServiceType",
+      "Step",
+      "ActionType",
+      "RequestOrg",
+      "WildCardAssignee",
+      "AssignmentFunction",
+    ],
+  };
 }
 
 export const pipelineStageStore = ko.observableArray();

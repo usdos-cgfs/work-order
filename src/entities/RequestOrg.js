@@ -18,6 +18,18 @@ export class RequestOrg {
     return Object.assign(newRequestOrg, requestOrg);
   };
 
+  static Views = {
+    All: [
+      "ID",
+      "Title",
+      "UserGroup",
+      "ContactInfo",
+      "OrgType",
+      "GTM",
+      "BreakAccess",
+    ],
+  };
+
   static Fields = [
     "ID",
     "Title",

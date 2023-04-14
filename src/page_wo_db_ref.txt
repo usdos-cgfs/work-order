@@ -269,7 +269,7 @@
               <input
                 type="tel"
                 class="form-control"
-                data-bind="text: RequestorPhone.obs()"
+                data-bind="value: RequestorPhone.obs"
               />
             </div>
             <div class="col-6 pb-2">
@@ -278,7 +278,7 @@
                 type="email"
                 class="form-control"
                 class="fluid"
-                data-bind="text: RequestorEmail.obs()"
+                data-bind="value: RequestorEmail.obs"
               />
             </div>
             <div class="col-12 pb-2">
@@ -299,13 +299,13 @@
           <div class="row">
             <div class="col-6">
               <h6>Request Status:</h6>
-              <p data-bind="text: RequestStatus.obs()"></p>
+              <p data-bind="text: RequestStatus.obs"></p>
             </div>
           </div>
           <div class="row">
             <div class="col-6">
               <h6>Request ID:</h6>
-              <p data-bind="text: Title.obs()"></p>
+              <p data-bind="text: Title.obs"></p>
             </div>
             <div class="col-6">
               <h6>Requestor Office:</h6>
@@ -321,11 +321,11 @@
           <div class="row">
             <div class="col-6">
               <h6>Requestor Phone:</h6>
-              <p data-bind="text: RequestorPhone.obs()"></p>
+              <p data-bind="text: RequestorPhone.obs"></p>
             </div>
             <div class="col-6">
               <h6>Requestor Email:</h6>
-              <p data-bind="text: RequestorEmail.obs()"></p>
+              <p data-bind="text: RequestorEmail.obs"></p>
             </div>
             <div class="col-6">
               <h6>Submitted Date:</h6>

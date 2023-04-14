@@ -18,6 +18,11 @@ export default class ApplicationDbContext {
     title: "Work Order",
   });
 
+  ConfigHolidays = new EntitySet({
+    name: "ConfigHolidays",
+    title: "ConfigHolidays",
+  });
+
   ConfigRequestOrgs = new EntitySet({
     name: "ConfigRequestOrgs",
     title: "ConfigRequestOrgs",
@@ -32,18 +37,16 @@ export default class ApplicationDbContext {
     name: "ConfigServiceTypes",
     title: "ConfigServiceTypes",
   });
+
+  Set = (listDef) => new EntitySet(listDef);
 }
 
 class EntitySet {
   constructor(listDef) {
+    this.Title = listDef.title;
+    this.Name = listDef.name;
     this.ListRef = new SPList(listDef);
   }
-
-  Add = async function (entity, folderPath) {
-    var vp = MapViewFieldsToValuePairs(entity.FieldMap);
-    console.log(vp);
-    return this.ListRef.createListItemAsync(vp, folderPath);
-  };
 
   FindAll = async function (fields) {
     return await this.ListRef.getListItemsAsync({ fields });
@@ -64,7 +67,13 @@ class EntitySet {
     return item;
   };
 
-  Load = async function (entity) {
+  AddEntity = async function (entity, folderPath) {
+    var vp = mapViewFieldsToValuePairs(entity.FieldMap);
+    console.log(vp);
+    return this.ListRef.createListItemAsync(vp, folderPath);
+  };
+
+  LoadEntity = async function (entity) {
     if (!entity.ID == null && !entity.Title) {
       console.error("entity missing Id or title", entity);
       return false;
@@ -74,49 +83,60 @@ class EntitySet {
       console.warn("ApplicationDbContext Could not find entity", entity);
       return false;
     }
-    MapObjectsToViewFields(item, entity.FieldMap);
+    mapObjectPropsToViewFields(item, entity.FieldMap);
 
     return true;
   };
 
+  // hoisting
   UpsertFolderPath = async function (folderPath) {
     return this.ListRef.upsertListFolderPathAsync(folderPath);
   };
+
+  SetItemPermissions = async function (entityId, valuePairs, reset = false) {
+    const salValuePairs = valuePairs.map((vp) => [
+      vp[0].LoginName ?? vp[0].Title,
+      vp[1],
+    ]);
+    return this.ListRef.setItemPermissionsAsync(entityId, salValuePairs, reset);
+  };
 }
 
-function MapObjectsToViewFields(inputObject, fieldMappings) {
+function mapObjectPropsToViewFields(inputObject, fieldMappings) {
   Object.keys(fieldMappings).forEach((key) => {
     console.log(`ORM Setting ${key} to`, inputObject[key]);
-    MapObjectToViewField(inputObject[key], fieldMappings[key]);
+    mapObjectToViewField(inputObject[key], fieldMappings[key]);
   });
 }
 
-function MapObjectToViewField(inVal, fieldMap) {
+function mapObjectToViewField(inVal, fieldMap) {
   if (!inVal) {
     fieldMap.obs(null);
     return;
   }
   // If the input value is an array, then we are putting an array into the observable.
   var outVal = Array.isArray(inVal)
-    ? inVal.map((item) => GenerateObject(item, fieldMap))
-    : GenerateObject(inVal, fieldMap);
+    ? inVal.map((item) => generateObject(item, fieldMap))
+    : generateObject(inVal, fieldMap);
 
   fieldMap.obs(outVal);
 }
 
-function GenerateObject(inVal, fieldMap) {
+function generateObject(inVal, fieldMap) {
   // If the fieldMap provides a factory, use that, otherwise return the value
   return fieldMap.factory ? fieldMap.factory(inVal) : inVal;
 }
 
-function MapViewFieldsToValuePairs(fieldMappings) {
+function mapViewFieldsToValuePairs(fieldMappings) {
   // Expects array of arrays: [[col1, val1], [col2, val2]]
-  return Object.keys(fieldMappings).map((key) => {
-    return [key, MapViewFieldToValuePair(fieldMappings[key])];
-  });
+  return Object.keys(fieldMappings)
+    .filter((key) => key != "ID")
+    .map((key) => {
+      return [key, mapViewFieldToValuePair(fieldMappings[key])];
+    });
 }
 
-function MapViewFieldToValuePair(fieldMap) {
+function mapViewFieldToValuePair(fieldMap) {
   var val = fieldMap.obs();
   if (!val) {
     return null;

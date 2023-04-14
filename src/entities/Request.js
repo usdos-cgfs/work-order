@@ -1,3 +1,9 @@
+export const requestStates = {
+  draft: "Draft",
+  open: "Open",
+  closed: "Closed",
+};
+
 export class RequestEntity {
   constructor({ ID, Title }) {
     this.ID = ID;

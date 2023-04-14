@@ -5,12 +5,17 @@ import { pipelineStageStore } from "../entities/Pipelines.js";
 import { createNewRequestID, sortByField } from "../common/EntityUtilities.js";
 import {
   serviceTypeStore,
-  ServiceTypeTemplate,
   ServiceType,
+  getRepositoryListName,
 } from "../entities/ServiceType.js";
 import { ServiceTypeComponent } from "../components/ServiceTypeComponent.js";
-import { addTask, taskDefs } from "../stores/Tasks.js";
+import { addTask, finishTask, taskDefs } from "../stores/Tasks.js";
 import { getRequestFolderPermissions } from "../infrastructure/Authorization.js";
+import {
+  calculateEffectiveSubmissionDate,
+  businessDaysFromDate,
+} from "../common/DateUtilities.js";
+import { requestStates } from "../entities/Request.js";
 
 export const DisplayModes = {
   New: "New",
@@ -107,7 +112,7 @@ export class RequestDetailView {
   };
 
   getFolderPath = ko.pureComputed(
-    () => `${this.Fields.RequestorOffice.obs()}/${this.Fields.Title.obs()}`
+    () => `${this.RequestorOffice().Title}/${this.Fields.Title.obs()}`
   );
 
   getFolderPermissions = () => getRequestFolderPermissions(this);
@@ -128,14 +133,66 @@ export class RequestDetailView {
     // 1. Validate Request
     //if (!this.validateRequest()) return;
 
+    this.DisplayMode(DisplayModes.View);
     //const saveTaskId = addTask(taskDefs.save);
 
     // 2. Create Folder Structure
-    const folderPerms = this.getFolderPermissions();
+    const folderPath = this.getFolderPath();
+    createFolders: {
+      //const breakingPermissionsTask = addTask(taskDefs.permissions);
+      const folderPerms = this.getFolderPermissions();
 
-    const listRefs = [this._context.Requests, this._context.Assignments];
-    await Promise.all();
+      const listRefs = [
+        this._context.Requests,
+        this._context.Assignments,
+        this._context.Notifications,
+      ];
 
+      if (this.ServiceType()?.HasTemplate) {
+        const listName = getRepositoryListName(this.ServiceType());
+        listRefs.push(this._context.Set({ title: listName, name: listName }));
+      }
+
+      await Promise.all(
+        listRefs.map(async (listRef) => {
+          // Create folder
+          const folderId = await listRef.UpsertFolderPath(folderPath);
+          if (!folderId) {
+            alert(`Could not create ${listRef.Title} folder ` + folderPath);
+            return;
+          }
+          // Apply folder permissions
+          const result = await listRef.SetItemPermissions(
+            folderId,
+            folderPerms
+          );
+        })
+      );
+      //finishTask(breakingPermissionsTask);
+    }
+
+    // Initialize dates
+    const effectiveSubmissionDate = calculateEffectiveSubmissionDate();
+    this.Fields.RequestSubmitted.obs(effectiveSubmissionDate);
+    this.Fields.EstClosedDate.obs(
+      businessDaysFromDate(
+        effectiveSubmissionDate,
+        this.ServiceType().DaysToCloseBusiness
+      )
+    );
+
+    this.Fields.RequestStatus.obs(requestStates.open);
+    this.Fields.IsActive.obs(true);
+
+    createItems: {
+      const newRequestItemId = await this._context.Requests.AddEntity(
+        this,
+        folderPath
+      );
+
+      if (this.ServiceTypeComponent?.ViewModel) {
+      }
+    }
     // await this._context.Requests.AddInFolder(this);
     // this.Fields.RequestStage.obs(1);
     // this.DisplayMode(DisplayModes.View);
@@ -183,6 +240,7 @@ export class RequestDetailView {
       case DisplayModes.New:
         this.Fields.Requestor.obs(new People(currentUser));
         this.Fields.Title.obs(createNewRequestID());
+        this.Fields.RequestStatus.obs(requestStates.draft);
         break;
       case DisplayModes.View:
         this.RefreshAll();
