@@ -30,36 +30,78 @@ const templates = {
 };
 
 export class RequestDetailView {
-  Requestor = ko.observable();
-  RequestorOffice = ko.observable();
+  ID;
+  Title;
+  ObservableID = ko.observable();
+  ObservableTitle = ko.observable();
+
+  RequestSubject = ko.observable();
+  RequestDescription = ko.observable();
+
+  RequestorInfo = {
+    Requestor: ko.observable(),
+    Name: ko.observable(),
+    Phone: ko.observable(),
+    Email: ko.observable(),
+    Office: ko.observable(),
+    Supervisor: ko.observable(),
+    ManagingDirector: ko.observable(),
+  };
+
+  State = {
+    IsActive: ko.observable(),
+    Stage: ko.observable(),
+    PreviousStage: ko.observable(),
+    Status: ko.observable(),
+    PreviousStatus: ko.observable(),
+    InternalStatus: ko.observable(),
+  };
+
+  Dates = {
+    Submitted: ko.observable(),
+    EstClosed: ko.observable(),
+    Closed: ko.observable(),
+  };
+
   ServiceType = ko.observable();
+
+  RequestOrgs = ko.observable();
 
   // Request Properties
   Fields = {
-    ID: { obs: ko.observable() },
-    Title: { obs: ko.observable() },
-    RequestSubject: { obs: ko.observable() },
-    RequestDescription: { obs: ko.observable() },
-    Requestor: { factory: People.Create, obs: this.Requestor },
-    RequestorName: { obs: ko.observable() },
-    RequestorPhone: { obs: ko.observable() },
-    RequestorEmail: { obs: ko.observable() },
+    ID: { obs: this.ObservableID },
+    Title: { obs: this.ObservableTitle },
+    RequestSubject: { obs: this.RequestSubject },
+    RequestDescription: { obs: this.RequestDescription },
+    Requestor: { factory: People.Create, obs: this.RequestorInfo.Requestor },
+    RequestorName: { obs: this.RequestorInfo.Name },
+    RequestorPhone: { obs: this.RequestorInfo.Phone },
+    RequestorEmail: { obs: this.RequestorInfo.Email },
 
-    RequestorSupervisor: { factory: People.Create, obs: ko.observable() },
-    ManagingDirector: { factory: People.Create, obs: ko.observable() },
-    RequestorOffice: { factory: RequestOrg.Create, obs: this.RequestorOffice },
+    RequestorSupervisor: {
+      factory: People.Create,
+      obs: this.RequestorInfo.Supervisor,
+    },
+    ManagingDirector: {
+      factory: People.Create,
+      obs: this.RequestorInfo.ManagingDirector,
+    },
+    RequestorOffice: {
+      factory: RequestOrg.Create,
+      obs: this.RequestorInfo.Office,
+    },
 
-    IsActive: { obs: ko.observable() },
-    RequestStage: { obs: ko.observable() },
-    RequestStagePrev: { obs: ko.observable() },
-    RequestStatus: { obs: ko.observable() },
-    RequestStatusPrev: { obs: ko.observable() },
-    InternalStatus: { obs: ko.observable() },
-    RequestSubmitted: { obs: ko.observable() },
-    EstClosedDate: { obs: ko.observable() },
-    ClosedDate: { obs: ko.observable() },
+    IsActive: { obs: this.State.IsActive },
+    RequestStage: { obs: this.State.Stage },
+    RequestStagePrev: { obs: this.State.PreviousStage },
+    RequestStatus: { obs: this.State.Status },
+    RequestStatusPrev: { obs: this.State.PreviousStatus },
+    InternalStatus: { obs: this.State.InternalStatus },
+    RequestSubmitted: { obs: this.Dates.Submitted },
+    EstClosedDate: { obs: this.Dates.EstClosed },
+    ClosedDate: { obs: this.Dates.Closed },
 
-    RequestOrgs: { factory: RequestOrg.Create, obs: ko.observableArray() },
+    RequestOrgs: { factory: RequestOrg.Create, obs: this.RequestOrgs },
 
     ServiceType: { factory: ServiceType.Create, obs: this.ServiceType }, // {id, title},
     AssignmentsBlob: {
@@ -112,7 +154,7 @@ export class RequestDetailView {
   };
 
   getFolderPath = ko.pureComputed(
-    () => `${this.RequestorOffice().Title}/${this.Fields.Title.obs()}`
+    () => `${this.RequestorInfo.Office().Title}/${this.Fields.Title.obs()}`
   );
 
   getFolderPermissions = () => getRequestFolderPermissions(this);
