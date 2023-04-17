@@ -48,8 +48,8 @@ class EntitySet {
     this.ListRef = new SPList(listDef);
   }
 
-  FindAll = async function (fields) {
-    return await this.ListRef.getListItemsAsync({ fields });
+  FindAll = async function (fields, filter = null) {
+    return await this.ListRef.getListItemsAsync({ fields, caml: filter });
   };
 
   Find = async function (entity, fields) {

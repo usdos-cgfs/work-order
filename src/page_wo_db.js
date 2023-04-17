@@ -39,9 +39,10 @@ export const Tabs = {
 
 class NewReport {
   constructor() {
-    this.context = new ApplicationDbContext();
-    this.Tab.subscribe(tabHasChanged);
+    this.Tab.subscribe(tabWatcher);
   }
+
+  context = new ApplicationDbContext();
 
   Tab = ko.observable();
   TabClicked = (data, e) => this.Tab(e.target.getAttribute("id"));
@@ -57,7 +58,7 @@ class NewReport {
   };
 
   // Views
-  MyRequests = new MyRequestsView();
+  MyRequestsView = new MyRequestsView({ context: this.context });
   NewRequestView = new NewRequestView();
   RequestDetailView = ko.observable();
 
@@ -147,7 +148,7 @@ class NewReport {
   };
 }
 
-const tabHasChanged = (newTab) => {
+const tabWatcher = (newTab) => {
   if (!newTab) {
     return;
   }

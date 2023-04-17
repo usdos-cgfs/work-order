@@ -42,7 +42,7 @@
         New Order
       </button>
     </li>
-    <li class="nav-item active" role="presentation">
+    <li class="nav-item" role="presentation">
       <button
         class="nav-link"
         id="request-detail-tab"
@@ -65,14 +65,9 @@
       aria-labelledby="my-requests-tab"
       id="my-requests"
     >
-      <p>Open Requests Here</p>
-      <p class="card-text placeholder">
-        <span class="placeholder col-7"></span>
-        <span class="placeholder col-4"></span>
-        <span class="placeholder col-4"></span>
-        <span class="placeholder col-6"></span>
-        <span class="placeholder col-8"></span>
-      </p>
+      <div
+        data-bind="template: {name: 'tmpl-my-requests-view', data: MyRequestsView}"
+      ></div>
     </div>
     <div
       class="tab-pane"
@@ -99,6 +94,63 @@
 <div id="service-type-templates"></div>
 
 <div id="tmpl-views">
+  <script type="text/html" id="tmpl-my-requests-view">
+    <h2>My Requests</h2>
+    <div class="d-flex">
+      <div class="list-group" id="section-my-requests-tabs">
+        <button
+          class="list-group-item list-group-action"
+          id="my-open-requests-tab"
+          data-target="open"
+          data-bind="click: viewTabClicked, 
+            css: {'active': views.open == View()}"
+          type="button"
+        >
+          Open
+        </button>
+        <button
+          class="list-group-item list-group-action"
+          id="my-closed-requests-tab"
+          data-target="closed"
+          data-bind="click: viewTabClicked, 
+            css: {'active': views.closed == View()}"
+          type="button"
+        >
+          Closed
+        </button>
+        <button
+          class="list-group-item list-group-action"
+          id="my-cancelled-requests-tab"
+          data-target="cancelled"
+          data-bind="click: viewTabClicked, 
+            css: {'active': views.cancelled == View()}"
+          type="button"
+        >
+          Cancelled
+        </button>
+      </div>
+      <div>
+        <!-- ko if: ActiveComponent -->
+        <div
+          data-bind="template: {name: ActiveComponent().TemplateId, data: ActiveComponent()} "
+        ></div>
+        <!-- /ko -->
+      </div>
+    </div>
+  </script>
+
+  <script type="text/html" id="tmpl-my-open-requests">
+    <h2>Hello Open</h2>
+  </script>
+
+  <script type="text/html" id="tmpl-my-closed-requests">
+    <h2>Hello Closed</h2>
+  </script>
+
+  <script type="text/html" id="tmpl-requests-by-status">
+    <h2 data-bind="text: filter"></h2>
+  </script>
+
   <script type="text/html" id="tmpl-new-request-view">
     <h2>Select the type of work order you would like to open:</h2>
     <div class="container text-center">
