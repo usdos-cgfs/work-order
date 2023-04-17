@@ -73,7 +73,11 @@ class NewReport {
 
       var serviceTypePromise = this.context.ConfigServiceTypes.FindAll(
         ServiceType.Views.All
-      ).then((arr) => this.Config.serviceTypeStore(arr.sort(sortByTitle)));
+      ).then((arr) =>
+        this.Config.serviceTypeStore(
+          arr.sort(sortByTitle).map((val) => new ServiceType(val))
+        )
+      );
 
       const holidaysPromise = this.context.ConfigHolidays.FindAll(
         Holiday.Views.All

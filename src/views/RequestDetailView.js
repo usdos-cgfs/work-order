@@ -2,7 +2,10 @@ import { People } from "../components/People.js";
 import { RequestOrg } from "../entities/RequestOrg.js";
 import { RequestAssignmentsComponent } from "../components/RequestAssignmentsComponent.js";
 import { pipelineStageStore } from "../entities/Pipelines.js";
-import { createNewRequestID, sortByField } from "../common/EntityUtilities.js";
+import {
+  createNewRequestTitle,
+  sortByField,
+} from "../common/EntityUtilities.js";
 import {
   serviceTypeStore,
   ServiceType,
@@ -30,6 +33,8 @@ const templates = {
 };
 
 export class RequestDetailView {
+  _context = {};
+
   ID;
   Title;
   ObservableID = ko.observable();
@@ -67,70 +72,70 @@ export class RequestDetailView {
 
   RequestOrgs = ko.observable();
 
-  // Request Properties
-  Fields = {
-    ID: { obs: this.ObservableID },
-    Title: { obs: this.ObservableTitle },
-    RequestSubject: { obs: this.RequestSubject },
-    RequestDescription: { obs: this.RequestDescription },
-    Requestor: { factory: People.Create, obs: this.RequestorInfo.Requestor },
-    RequestorName: { obs: this.RequestorInfo.Name },
-    RequestorPhone: { obs: this.RequestorInfo.Phone },
-    RequestorEmail: { obs: this.RequestorInfo.Email },
-
+  // FieldMap defines how to store and retrieve this viewmodel
+  FieldMap = {
+    ID: this.ObservableID,
+    Title: this.ObservableTitle,
+    RequestSubject: this.RequestSubject,
+    RequestDescription: this.RequestDescription,
+    Requestor: {
+      set: (val) => this.RequestorInfo.Requestor(People.Create(val)),
+      get: this.RequestorInfo.Requestor,
+    },
+    RequestorName: this.RequestorInfo.Name,
+    RequestorPhone: this.RequestorInfo.Phone,
+    RequestorEmail: this.RequestorInfo.Email,
     RequestorSupervisor: {
-      factory: People.Create,
-      obs: this.RequestorInfo.Supervisor,
+      set: (val) => this.RequestorInfo.Supervisor(People.Create(val)),
+      get: this.RequestorInfo.Supervisor,
     },
     ManagingDirector: {
-      factory: People.Create,
-      obs: this.RequestorInfo.ManagingDirector,
+      set: (val) => this.RequestorInfo.ManagingDirector(People.Create(val)),
+      get: this.RequestorInfo.ManagingDirector,
     },
     RequestorOffice: {
-      factory: RequestOrg.Create,
-      obs: this.RequestorInfo.Office,
+      set: (val) => this.RequestorInfo.Office(RequestOrg.Create(val)),
+      get: this.RequestorInfo.Office,
     },
-
-    IsActive: { obs: this.State.IsActive },
-    RequestStage: { obs: this.State.Stage },
-    RequestStagePrev: { obs: this.State.PreviousStage },
-    RequestStatus: { obs: this.State.Status },
-    RequestStatusPrev: { obs: this.State.PreviousStatus },
-    InternalStatus: { obs: this.State.InternalStatus },
-    RequestSubmitted: { obs: this.Dates.Submitted },
-    EstClosedDate: { obs: this.Dates.EstClosed },
-    ClosedDate: { obs: this.Dates.Closed },
-
-    RequestOrgs: { factory: RequestOrg.Create, obs: this.RequestOrgs },
-
-    ServiceType: { factory: ServiceType.Create, obs: this.ServiceType }, // {id, title},
-    AssignmentsBlob: {
-      obs: ko.observable(),
+    IsActive: this.State.IsActive,
+    RequestStage: this.State.Stage,
+    RequestStagePrev: this.State.PreviousStage,
+    RequestStatus: this.State.Status,
+    RequestStatusPrev: this.State.PreviousStatus,
+    InternalStatus: this.State.InternalStatus,
+    RequestSubmitted: this.Dates.Submitted,
+    EstClosedDate: this.Dates.EstClosed,
+    ClosedDate: this.Dates.Closed,
+    RequestOrgs: {
+      set: (inputArr) =>
+        this.RequestOrgs(inputArr.map((val) => RequestOrg.Create(val))),
+      get: this.RequestOrgs,
     },
+    ServiceType: {
+      set: (val) => this.ServiceType(ServiceType.Create(val)),
+      get: this.ServiceType,
+    }, // {id, title},
   };
-
-  FieldMap = this.Fields; // This is a one to one for this entity
 
   ServiceTypeComponent = new ServiceTypeComponent({
     request: this,
     serviceType: this.ServiceType,
+    context: this._context,
   });
 
   Pipeline = ko.pureComputed(() => {
     return {
-      currentStage: this.Fields.RequestStage.obs,
+      currentStage: this.State.Stage,
       stages: pipelineStageStore()
-        .filter(
-          (stage) => stage.ServiceType.ID == this.Fields.ServiceType.obs().ID
-        )
+        .filter((stage) => stage.ServiceType.ID == this.ServiceType().ID)
         .sort(sortByField("Step")),
     };
   });
 
   Assignments = new RequestAssignmentsComponent({
     request: {
-      ID: this.Fields.ID.obs,
-      Title: this.Fields.Title.obs,
+      ID: this.ObservableID,
+      Title: this.ObservableTitle,
       AssignmentsBlob: this.AssignmentsBlob,
     },
     context: this._context,
@@ -153,8 +158,8 @@ export class RequestDetailView {
     return true;
   };
 
-  getFolderPath = ko.pureComputed(
-    () => `${this.RequestorInfo.Office().Title}/${this.Fields.Title.obs()}`
+  getRelativeFolderPath = ko.pureComputed(
+    () => `${this.RequestorInfo.Office().Title}/${this.ObservableTitle()}`
   );
 
   getFolderPermissions = () => getRequestFolderPermissions(this);
@@ -175,11 +180,17 @@ export class RequestDetailView {
     // 1. Validate Request
     //if (!this.validateRequest()) return;
 
+    const serviceType = this.ServiceType();
+    if (!serviceType) {
+      // We should have caught this in validation.
+      throw "no service type provided";
+    }
     this.DisplayMode(DisplayModes.View);
     //const saveTaskId = addTask(taskDefs.save);
 
     // 2. Create Folder Structure
-    const folderPath = this.getFolderPath();
+    const folderPath = this.getRelativeFolderPath();
+
     createFolders: {
       //const breakingPermissionsTask = addTask(taskDefs.permissions);
       const folderPerms = this.getFolderPermissions();
@@ -190,9 +201,8 @@ export class RequestDetailView {
         this._context.Notifications,
       ];
 
-      if (this.ServiceType()?.HasTemplate) {
-        const listName = getRepositoryListName(this.ServiceType());
-        listRefs.push(this._context.Set({ title: listName, name: listName }));
+      if (serviceType.getListRef()) {
+        listRefs.push(serviceType.getListRef());
       }
 
       await Promise.all(
@@ -215,16 +225,16 @@ export class RequestDetailView {
 
     // Initialize dates
     const effectiveSubmissionDate = calculateEffectiveSubmissionDate();
-    this.Fields.RequestSubmitted.obs(effectiveSubmissionDate);
-    this.Fields.EstClosedDate.obs(
+    this.Dates.Submitted(effectiveSubmissionDate);
+    this.Dates.EstClosed(
       businessDaysFromDate(
         effectiveSubmissionDate,
-        this.ServiceType().DaysToCloseBusiness
+        serviceType.DaysToCloseBusiness
       )
     );
 
-    this.Fields.RequestStatus.obs(requestStates.open);
-    this.Fields.IsActive.obs(true);
+    this.State.Status(requestStates.open);
+    this.State.IsActive(true);
 
     createItems: {
       const newRequestItemId = await this._context.Requests.AddEntity(
@@ -232,11 +242,13 @@ export class RequestDetailView {
         folderPath
       );
 
-      if (this.ServiceTypeComponent?.ViewModel) {
+      if (this.ServiceTypeComponent.ViewModel()) {
+        const newSvcTypeItemId = await serviceType
+          .getListRef()
+          .AddEntity(this.ServiceTypeComponent.ViewModel(), folderPath);
       }
     }
     // await this._context.Requests.AddInFolder(this);
-    // this.Fields.RequestStage.obs(1);
     // this.DisplayMode(DisplayModes.View);
   };
 
@@ -267,11 +279,11 @@ export class RequestDetailView {
     this.Title = Title;
     this.LookupValue = Title;
 
-    this.Fields.ID.obs(ID);
-    this.Fields.Title.obs(Title);
+    this.ObservableID(ID);
+    this.ObservableTitle(Title);
 
     if (serviceType) {
-      this.Fields.ServiceType.obs(
+      this.ServiceType(
         serviceTypeStore().find((service) => service.ID == serviceType.ID)
       );
     }
@@ -280,9 +292,9 @@ export class RequestDetailView {
 
     switch (displayMode) {
       case DisplayModes.New:
-        this.Fields.Requestor.obs(new People(currentUser));
-        this.Fields.Title.obs(createNewRequestID());
-        this.Fields.RequestStatus.obs(requestStates.draft);
+        this.RequestorInfo.Requestor(new People(currentUser));
+        this.ObservableTitle(createNewRequestTitle());
+        this.State.Status(requestStates.draft);
         break;
       case DisplayModes.View:
         this.RefreshAll();

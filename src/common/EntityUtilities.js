@@ -18,7 +18,7 @@ export const sortByField = (field) => (a, b) => {
   return 0;
 };
 
-export const createNewRequestID = () => {
+export const createNewRequestTitle = () => {
   const ts = new Date();
   return ts.format("yyMMdd") + "-" + (ts.getTime() % 100000);
 };

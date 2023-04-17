@@ -176,7 +176,7 @@
           </div>
         </div>
         <div>
-          <!-- ko if: DisplayMode() == DisplayModes.New -->
+          <!-- ko if: DisplayMode() -->
           <button type="button" data-bind="click: SubmitNewRequest">
             Submit
           </button>
@@ -217,12 +217,12 @@
   </script>
 
   <script type="text/html" id="tmpl-request-header">
-    <!-- Report.RequestDetail.Fields -->
+    <!-- Report.RequestDetailView -->
     <div class="card mb-3 w-100">
       <div class="card-body">
         <h3 class="card-title">Requestor Information</h3>
         <!-- ko if: DisplayMode() == DisplayModes.New -->
-        <div class="container-fluid" data-bind="using: Fields">
+        <div class="container-fluid">
           <div class="row">
             <div class="col-6 pb-2">
               <h6>Request Status:</h6>
@@ -233,7 +233,7 @@
             <div class="col-6 pb-2">
               <label
                 ><h6>Request ID:</h6>
-                <p data-bind="text: Title.obs()"></p
+                <p data-bind="text: ObservableTitle"></p
               ></label>
             </div>
             <div class="col-6 pb-2">
@@ -241,14 +241,14 @@
                 <label><h6>Requestor Office:</h6></label>
                 <select
                   class="form-control"
-                  data-bind="value: RequestorOffice.obs,
+                  data-bind="value: RequestorInfo.Office,
                 options: $root.currentUser.RequestOrgs,
                 optionsText: (ro) => ro.Title"
                 ></select>
                 <p>
                   GTM:
                   <span
-                    data-bind="text: RequestorOffice.obs()?.GTM?.LookupValue"
+                    data-bind="text: RequestorInfo.Office()?.GTM?.LookupValue"
                   ></span>
                 </p>
               </div>
@@ -259,7 +259,7 @@
               <h6>Requestor:</h6>
               <div
                 id="people-requestor"
-                data-bind="people: Requestor.obs"
+                data-bind="people: RequestorInfo.Requestor"
               ></div>
             </div>
           </div>
@@ -269,7 +269,7 @@
               <input
                 type="tel"
                 class="form-control"
-                data-bind="value: RequestorPhone.obs"
+                data-bind="value: RequestorInfo.Phone"
               />
             </div>
             <div class="col-6 pb-2">
@@ -278,7 +278,7 @@
                 type="email"
                 class="form-control"
                 class="fluid"
-                data-bind="value: RequestorEmail.obs"
+                data-bind="value: RequestorInfo.Email"
               />
             </div>
             <div class="col-12 pb-2">
@@ -286,7 +286,7 @@
               <select
                 class="form-control"
                 class="fluid"
-                data-bind="value: ServiceType.obs,
+                data-bind="value: ServiceType,
               options: $root.Config.serviceTypeStore,
               optionsText: (st) => st.Title"
               ></select>
@@ -295,45 +295,45 @@
         </div>
         <!-- /ko -->
         <!-- ko if: DisplayMode() != DisplayModes.New -->
-        <div class="container-fluid" data-bind="using: Fields">
+        <div class="container-fluid" data-bind="">
           <div class="row">
             <div class="col-6">
               <h6>Request Status:</h6>
-              <p data-bind="text: RequestStatus.obs"></p>
+              <p data-bind="text: State.Status"></p>
             </div>
           </div>
           <div class="row">
             <div class="col-6">
               <h6>Request ID:</h6>
-              <p data-bind="text: Title.obs"></p>
+              <p data-bind="text: ObservableTitle"></p>
             </div>
             <div class="col-6">
               <h6>Requestor Office:</h6>
-              <p data-bind="text: RequestorOffice.obs()?.Title"></p>
+              <p data-bind="text: RequestorInfo.Office()?.Title"></p>
             </div>
           </div>
           <div class="row">
             <div class="col-6">
               <h6>Requestor:</h6>
-              <p data-bind="text: Requestor.obs()?.Title"></p>
+              <p data-bind="text: RequestorInfo.Requestor()?.Title"></p>
             </div>
           </div>
           <div class="row">
             <div class="col-6">
               <h6>Requestor Phone:</h6>
-              <p data-bind="text: RequestorPhone.obs"></p>
+              <p data-bind="text: RequestorInfo.Phone"></p>
             </div>
             <div class="col-6">
               <h6>Requestor Email:</h6>
-              <p data-bind="text: RequestorEmail.obs"></p>
+              <p data-bind="text: RequestorInfo.Email"></p>
             </div>
             <div class="col-6">
               <h6>Submitted Date:</h6>
-              <p data-bind="text: RequestSubmitted.obs()?.toLocaleString()"></p>
+              <p data-bind="text: Dates.Submitted()?.toLocaleString()"></p>
             </div>
             <div class="col-6">
               <h6>Service Type:</h6>
-              <p data-bind="text: ServiceType.obs()?.Title"></p>
+              <p data-bind="text: ServiceType()?.Title"></p>
             </div>
           </div>
         </div>
@@ -370,11 +370,11 @@
           <!-- ko if: Request.DisplayMode() != Request.DisplayModes.View -->
           <textarea
             class="form-control"
-            data-bind="value: Request.Fields.RequestDescription.obs"
+            data-bind="value: Request.RequestDescription"
           ></textarea>
           <!-- /ko -->
           <!-- ko if: Request.DisplayMode() == Request.DisplayModes.View -->
-          <div data-bind="text: Request.Fields.RequestDescription.obs"></div>
+          <div data-bind="text: Request.RequestDescription"></div>
           <!-- /ko -->
         </div>
       </div>

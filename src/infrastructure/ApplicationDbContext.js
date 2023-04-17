@@ -38,7 +38,7 @@ export default class ApplicationDbContext {
     title: "ConfigServiceTypes",
   });
 
-  Set = (listDef) => new EntitySet(listDef);
+  static Set = (listDef) => new EntitySet(listDef);
 }
 
 class EntitySet {
@@ -110,16 +110,35 @@ function mapObjectPropsToViewFields(inputObject, fieldMappings) {
 }
 
 function mapObjectToViewField(inVal, fieldMap) {
-  if (!inVal) {
-    fieldMap.obs(null);
+  // Fieldmap has Three options for setting,
+  // 1. observable - the fieldmap represents an observable
+  // 2. setter - the fieldmap exposes a setter
+  // 3. factory/obs - the fieldmap exposes a factory and an observable to put the result.
+
+  if (typeof fieldMap == "function") {
+    fieldMap.obs(inVal);
     return;
   }
-  // If the input value is an array, then we are putting an array into the observable.
-  var outVal = Array.isArray(inVal)
-    ? inVal.map((item) => generateObject(item, fieldMap))
-    : generateObject(inVal, fieldMap);
 
-  fieldMap.obs(outVal);
+  if (fieldMap.set && typeof fieldMap.set == "function") {
+    fieldMap.set(inVal);
+    return;
+  }
+
+  if (fieldMap.obs) {
+    if (!inVal) {
+      fieldMap.obs(null);
+      return;
+    }
+    // If the input value is an array, then we are putting an array into the observable.
+    var outVal = Array.isArray(inVal)
+      ? inVal.map((item) => generateObject(item, fieldMap))
+      : generateObject(inVal, fieldMap);
+
+    fieldMap.obs(outVal);
+    return;
+  }
+  throw "Error setting fieldmap?";
 }
 
 function generateObject(inVal, fieldMap) {
@@ -127,23 +146,37 @@ function generateObject(inVal, fieldMap) {
   return fieldMap.factory ? fieldMap.factory(inVal) : inVal;
 }
 
-function mapViewFieldsToValuePairs(fieldMappings) {
-  // Expects array of arrays: [[col1, val1], [col2, val2]]
+function mapViewFieldsToValuePairs(fieldMappings, fields = null) {
+  // Returns array of arrays: [[col1, val1], [col2, val2]]
+  // Restricted fields for writing:
+  const restrictedFields = ["ID", "Author", "Created", "Editor", "Modified"];
   return Object.keys(fieldMappings)
-    .filter((key) => key != "ID")
+    .filter(
+      (key) =>
+        !restrictedFields.includes(key) &&
+        (fields ? fields.includes(key) : true)
+    )
     .map((key) => {
       return [key, mapViewFieldToValuePair(fieldMappings[key])];
     });
 }
 
 function mapViewFieldToValuePair(fieldMap) {
-  var val = fieldMap.obs();
-  if (!val) {
-    return null;
+  // Fieldmap has Three options for getting,
+  // 1. observable - the fieldmap represents an observable or other function that returns a value
+  // 2. get - the fieldmap is an object that exposes a getter function
+  // 3. factory/obs - the fieldmap is an object exposes a factory and an observable.
+  if (typeof fieldMap == "function") {
+    return fieldMap();
   }
-  return Array.isArray(val)
-    ? val.map((item) => (item.id ? { id: item.id, title: item.title } : item))
-    : val.id
-    ? { id: val.id, title: val.title }
-    : val;
+  if (fieldMap.get && typeof fieldMap.get == "function") {
+    return fieldMap.get();
+  }
+
+  if (fieldMap.obs) {
+    return fieldMap.obs();
+  }
+
+  console.error("Error setting fieldMap", fieldMap);
+  throw "Error getting fieldmap";
 }

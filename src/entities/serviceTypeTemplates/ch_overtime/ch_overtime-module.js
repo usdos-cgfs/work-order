@@ -5,29 +5,37 @@ export default class CH_OverTime {
     this.Request = request;
   }
 
-  Fields = {
+  Contractor = ko.observable();
+  DepartmentManager = ko.observable();
+  GTM = ko.observable();
+  APM = ko.observable();
+
+  DateStart = ko.observable();
+  DateEnd = ko.observable();
+  Hours = ko.observable();
+
+  FieldMap = {
     FullName: {
-      obs: ko.observable(),
+      obs: this.Contractor,
       factory: People.Create,
     },
     ManagerDept: {
-      obs: ko.observable(),
+      obs: this.DepartmentManager,
       factory: People.Create,
     },
     GTM: {
-      obs: ko.observable(),
+      obs: this.GTM,
       factory: People.Create,
     },
     APM: {
-      obs: ko.observable(),
+      obs: this.APM,
       factory: People.Create,
     },
-    Date: {
-      obs: ko.observable(),
+    DateStart: {
+      set: this.DateStart,
+      get: () => new Date(this.DateStart()).toISOString(),
     },
-    Hours: {
-      obs: ko.observable(),
-    },
+    Hours: this.Hours,
   };
 
   Submit = () => this.Request.Fields.RequestStage.obs(2);

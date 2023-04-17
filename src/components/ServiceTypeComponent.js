@@ -5,7 +5,7 @@ import {
 } from "../entities/ServiceType.js";
 
 export class ServiceTypeComponent {
-  constructor({ request, serviceType }) {
+  constructor({ request, serviceType, context }) {
     this.ServiceType = serviceType;
     this.ElementId = this.ServiceType()?.UID;
     this.Request = request;
@@ -18,8 +18,10 @@ export class ServiceTypeComponent {
   ViewModel = ko.observable();
 
   serviceTypeWatcher = async (newSvcType) => {
-    if (!newSvcType?.HasTemplate) return;
-
+    if (!newSvcType?.HasTemplate) {
+      this.ViewModel(null);
+      return;
+    }
     this.ComponentsAreLoading(true);
 
     this.ElementId = getTemplateElementId(newSvcType.UID);
@@ -30,7 +32,7 @@ export class ServiceTypeComponent {
     if (!service) {
       console.logError("Could not find service module");
     }
-    // this.ViewModel();
+
     this.ViewModel(new service.default(this.Request));
     this.ComponentsAreLoading(false);
   };

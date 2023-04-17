@@ -67,8 +67,8 @@ export class UserManager {
 
 export function getRequestFolderPermissions(request) {
   const defaultGroups = getDefaultGroups();
-  const requestor = request.Requestor();
-  const requestorOffice = request.RequestorOffice(); // this should be set during validation
+  const requestor = request.RequestorInfo.Requestor();
+  const requestorOffice = request.RequestorInfo.Office(); // this should be set during validation
 
   const folderPermissions = [
     [defaultGroups.owners, roles.FullControl],

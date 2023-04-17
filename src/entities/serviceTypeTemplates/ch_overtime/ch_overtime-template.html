@@ -1,12 +1,12 @@
 <div>
   <!-- ko if: Request.DisplayMode() != Request.DisplayModes.View -->
-  <div data-bind="using: Fields">
+  <div data-bind="">
     <div class="row">
       <div class="col-6 pb-2">
         <label for="ch_overtime-people-contractor"><h6>Contractor:</h6></label>
         <div
           id="ch_overtime-people-contractor"
-          data-bind="people: FullName.obs"
+          data-bind="people: Contractor"
         ></div>
       </div>
       <div class="col-6 pb-2">
@@ -15,42 +15,38 @@
         >
         <div
           id="ch_overtime-people-gov-manager"
-          data-bind="people: ManagerDept.obs"
+          data-bind="people: DepartmentManager"
         ></div>
       </div>
     </div>
     <div class="row">
       <div class="col-6 pb-2">
         <label for=""><h6>Overtime Dates (within month estimate):</h6></label>
-        <input class="form-control" type="date" data-bind="value: Date.obs" />
+        <input class="form-control" type="date" data-bind="value: DateStart" />
       </div>
       <div class="col-6 pb-2">
         <label for=""><h6>Overtime Hours (not to exceed):</h6></label>
-        <input
-          class="form-control"
-          type="number"
-          data-bind="value: Hours.obs"
-        />
+        <input class="form-control" type="number" data-bind="value: Hours" />
       </div>
     </div>
   </div>
   <!-- /ko -->
   <!-- ko if: Request.DisplayMode() == Request.DisplayModes.View -->
-  <div data-bind="using: Fields">
+  <div data-bind="">
     <div class="row">
       <div class="col-6 pb-2">
         <h6>Contractor:</h6>
-        <div data-bind="text: FullName.obs()?.Title"></div>
+        <div data-bind="text: Contractor()?.Title"></div>
       </div>
       <div class="col-6 pb-2">
         <h6>Gov Manager:</h6>
-        <div data-bind="text: ManagerDept.obs()?.Title"></div>
+        <div data-bind="text: DepartmentManager()?.Title"></div>
       </div>
     </div>
     <div class="row">
       <div class="col-6 pb-2">
         <h6>Overtime Dates (within month estimate):</h6>
-        <p data-bind="text: Date.obs"></p>
+        <p data-bind="text: DateStart"></p>
       </div>
       <div class="col-6 pb-2">
         <h6>Overtime Hours (not to exceed):</h6>
@@ -59,22 +55,22 @@
     </div>
   </div>
 
-  <!-- ko if: Request.Fields.RequestStage.obs() == 1 -->
+  <!-- ko if: Request.State.Stage() == 1 -->
   <div class="col-6 pb-2">
     <label for="ch_overtime-people-gtm"><h6>GTM:</h6></label>
-    <div id="ch_overtime-people-gtm" data-bind="people: Fields.GTM.obs"></div>
+    <div id="ch_overtime-people-gtm" data-bind="people: GTM"></div>
   </div>
   <button type="button" data-bind="click: Submit">Approve</button>
   <button type="button" class="btn btn-danger">Reject</button>
   <!-- /ko -->
-  <!-- ko if: Request.Fields.RequestStage.obs() == 2 -->
+  <!-- ko if: Request.State.Stage() == 2 -->
   <div class="col-6 pb-2">
     <h6>Gov Manager:</h6>
-    <div data-bind="text: Fields.GTM.obs()?.Title"></div>
+    <div data-bind="text: GTM()?.Title"></div>
   </div>
   <div class="col-6 pb-2">
     <label for="ch_overtime-people-gtm"><h6>APM:</h6></label>
-    <div id="ch_overtime-people-gtm" data-bind="people: Fields.APM.obs"></div>
+    <div id="ch_overtime-people-gtm" data-bind="people: APM"></div>
   </div>
   <button type="button" data-bind="click: Submit">Approve</button>
   <button type="button" class="btn btn-danger">Reject</button>

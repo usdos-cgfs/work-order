@@ -1,5 +1,6 @@
 import { siteRoot } from "../infrastructure/SAL.js";
 import { appRoot } from "../common/Router.js";
+import ApplicationDbContext from "../infrastructure/ApplicationDbContext.js";
 
 export const getTemplateElementId = (uid) => `tmpl-${uid}`;
 
@@ -15,28 +16,28 @@ export const getRepositoryListName = (serviceType) => `st_${serviceType.UID}`;
 export const serviceTypeStore = ko.observableArray();
 
 export class ServiceType {
-  constructor({ ID, Title }) {
-    this.ID = ID;
-    this.Title = Title;
-    this.LookupValue = Title;
+  constructor(serviceType) {
+    this.ID = serviceType.ID;
+    this.Title = serviceType.Title;
+    this.LookupValue = serviceType.Title;
 
     this.Loaded = false;
+    Object.assign(this, serviceType);
   }
 
-  LoadFromStore = () => {
-    if (this.Loaded) {
-      return;
+  getListDef = () => {
+    if (!this.HasTemplate) {
+      return null;
     }
-    this.Loaded = true;
-    const storedEntity = serviceTypeStore().find(
-      (service) => service.ID == this.ID
-    );
-    if (!storedEntity) {
-      console.warn("Entity was not stored");
-      return;
-    }
+    const listName = getRepositoryListName(this);
+    return { title: listName, name: listName };
+  };
 
-    Object.assign(this, storedEntity);
+  getListRef = () => {
+    if (!this.HasTemplate) {
+      return null;
+    }
+    return ApplicationDbContext.Set(this.getListDef());
   };
 
   static Create = function ({ ID, LookupValue }) {
