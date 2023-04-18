@@ -72,7 +72,7 @@ export class RequestDetailView {
 
   RequestOrgs = ko.observable();
 
-  // FieldMap defines how to store and retrieve this viewmodel
+  // FieldMap defines how to store and retrieve this ServiceTypeEntity
   FieldMap = {
     ID: this.ObservableID,
     Title: this.ObservableTitle,
@@ -129,9 +129,9 @@ export class RequestDetailView {
 
   // Request Methods
   validateRequest = () => {
-    if (this.ServiceTypeComponent.ViewModel()?.Validate) {
+    if (this.ServiceTypeComponent.ServiceTypeEntity()?.Validate) {
       const validationResult =
-        this.ServiceTypeComponent?.ViewModel()?.Validate();
+        this.ServiceTypeComponent?.ServiceTypeEntity()?.Validate();
       if (!validationResult.Success) {
         alert(validationResult.Message);
         return false;
@@ -228,8 +228,10 @@ export class RequestDetailView {
       this.ID = newRequestItemId;
       this.ObservableID(newRequestItemId);
 
-      await this.ServiceTypeComponent.submitViewModelData();
+      await this.ServiceTypeComponent.submitServiceTypeEntity();
     }
+
+    setUrlParam("reqId", this.ObservableTitle());
     // await this._context.Requests.AddInFolder(this);
     // this.DisplayMode(DisplayModes.View);
   };

@@ -23,7 +23,15 @@ export class DateField {
   };
 
   inputBinding = ko.pureComputed({
-    read: () => this.ObservableDateTime()?.format("yyyy-MM-dd"),
+    read: () => {
+      if (!this.ObservableDateTime()) return null;
+      const d = this.ObservableDateTime();
+      return [
+        d.getUTCFullYear(),
+        d.getUTCMonth().toString().padStart(2, "0"),
+        d.getUTCDate().toString().padStart(2, "0"),
+      ].join("-");
+    },
     write: (val) => {
       //writes in format
       this.ObservableDateTime(new Date(val));

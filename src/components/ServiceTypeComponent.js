@@ -20,14 +20,14 @@ export class ServiceTypeComponent {
   ElementId = null;
   ComponentsAreLoading = ko.observable();
 
-  ViewModel = ko.observable();
+  ServiceTypeEntity = ko.observable();
 
   IsLoading = ko.observable();
 
-  refreshViewModelData = async () => {
+  refreshServiceTypeEntity = async () => {
     console.log("ServiceTypeComponent: refresh Triggered");
     this.IsLoading(true);
-    var template = this.ViewModel();
+    var template = this.ServiceTypeEntity();
     template.Title = this.Request.ObservableTitle();
     await this.ServiceType()
       ?.getListRef()
@@ -35,10 +35,10 @@ export class ServiceTypeComponent {
     this.IsLoading(false);
   };
 
-  submitViewModelData = async () => {
-    if (!this.ViewModel()) return;
+  submitServiceTypeEntity = async () => {
+    if (!this.ServiceTypeEntity()) return;
 
-    const newEntity = this.ViewModel();
+    const newEntity = this.ServiceTypeEntity();
     newEntity.Title = this.Request.ObservableTitle();
 
     const folderPath = this.Request.getRelativeFolderPath();
@@ -54,7 +54,7 @@ export class ServiceTypeComponent {
     if (!requestId) {
       return;
     }
-    this.refreshViewModelData();
+    this.refreshServiceTypeEntity();
   };
 
   serviceTypeWatcher = async (newSvcType) => {
@@ -62,7 +62,7 @@ export class ServiceTypeComponent {
     // This should only be triggered when a new RequestDetailView is created
     // or when the user changes the request from the drop down.
     if (!newSvcType?.HasTemplate) {
-      this.ViewModel(null);
+      this.ServiceTypeEntity(null);
       return;
     }
     this.ComponentsAreLoading(true);
@@ -76,10 +76,10 @@ export class ServiceTypeComponent {
       console.logError("Could not find service module");
     }
 
-    this.ViewModel(new service.default(this.Request));
+    this.ServiceTypeEntity(new service.default(this.Request));
     this.ComponentsAreLoading(false);
 
-    if (this.Request.ObservableID()) this.refreshViewModelData();
+    if (this.Request.ObservableID()) this.refreshServiceTypeEntity();
   };
 }
 

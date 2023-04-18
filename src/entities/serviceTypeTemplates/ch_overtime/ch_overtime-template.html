@@ -23,7 +23,11 @@
       <div class="col-6 pb-2">
         <label for=""><h6>Overtime Dates (within month estimate):</h6></label>
         <div class="fw-semibold">Start Date:</div>
-        <input class="form-control" type="date" data-bind="value: DateStart" />
+        <input
+          class="form-control"
+          type="date"
+          data-bind="value: DateStart.inputBinding"
+        />
         <div class="fw-semibold">End Date:</div>
         <input
           class="form-control"
@@ -58,7 +62,7 @@
           class="form-control"
           type="date"
           disabled
-          data-bind="value: DateStart"
+          data-bind="value: DateStart.inputBinding"
         />
         <div class="fw-semibold">End Date:</div>
         <input

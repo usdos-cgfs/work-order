@@ -97,11 +97,11 @@ export async function InitSal() {
         // getUserProperties();
 
         sal.globalConfig.siteGroups = m_fnLoadSiteGroups(siteGroupCollection);
-        sal.globalConfig.siteGroups.forEach(function (group) {
-          sal.getUsersWithGroup(group.group, function (users) {
-            group.users = users;
-          });
-        });
+        // sal.globalConfig.siteGroups.forEach(function (group) {
+        //   sal.getUsersWithGroup(group.group, function (users) {
+        //     group.users = users;
+        //   });
+        // });
         //alert("User is: " + user.get_title()); //there is also id, email, so this is pretty useful.
 
         // Role Definitions
@@ -1627,9 +1627,9 @@ export function SPList(listDef) {
   }
 
   /*****************************************************************
-                            getFolderContents          
+                            getLibFolderContents          
     ******************************************************************/
-  function getFolderContents(folderName, callback) {
+  function getLibFolderContents(folderName, callback) {
     var currCtx = new SP.ClientContext.get_current();
     var web = currCtx.get_web();
 
@@ -1639,7 +1639,7 @@ export function SPList(listDef) {
     files = folder.get_files();
     //files.get_listItemAllFields();
 
-    function onGetListFilesSucceeded() {
+    function onGetLibFilesSucceeded() {
       var fileArr = [];
       var listItemEnumerator = this.files.getEnumerator();
       while (listItemEnumerator.moveNext()) {
@@ -1668,7 +1668,7 @@ export function SPList(listDef) {
       );
     }
 
-    function ongetListFilesFailed(sender, args) {
+    function ongetLibFilesFailed(sender, args) {
       // let's log this but suppress any alerts
       timedNotification(
         "WARN: something went wrong fetching files: " + args.toString()
@@ -1679,14 +1679,14 @@ export function SPList(listDef) {
 
     currCtx.load(files);
     currCtx.executeQueryAsync(
-      Function.createDelegate(data, onGetListFilesSucceeded),
-      Function.createDelegate(data, ongetListFilesFailed)
+      Function.createDelegate(data, onGetLibFilesSucceeded),
+      Function.createDelegate(data, ongetLibFilesFailed)
     );
   }
 
-  function getFolderContentsAsync(folderName) {
+  function getLibFolderContentsAsync(folderName) {
     return new Promise((resolve, reject) => {
-      getFolderContents(folderName, resolve);
+      getLibFolderContents(folderName, resolve);
     });
   }
 
@@ -2104,8 +2104,8 @@ export function SPList(listDef) {
     setItemPermissions: setItemPermissions,
     setItemPermissionsAsync,
     getItemPermissions: getItemPermissions,
-    getFolderContents: getFolderContents,
-    getFolderContentsAsync: getFolderContentsAsync,
+    getLibFolderContents: getLibFolderContents,
+    getLibFolderContentsAsync: getLibFolderContentsAsync,
     showModal: showModal,
     uploadNewDocument: uploadNewDocument,
     upsertListFolderPath: upsertListFolderPath,

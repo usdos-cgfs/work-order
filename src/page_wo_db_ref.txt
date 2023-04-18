@@ -418,7 +418,7 @@
           <h3 class="mx-0" data-bind="text: ServiceType()?.Title"></h3>
           <i
             class="fa fa-sync pointer"
-            data-bind="click: refreshViewModelData"
+            data-bind="click: refreshServiceTypeEntity"
           ></i>
         </div>
         <!-- ko if: ServiceType()?.HasTemplate -->
@@ -429,7 +429,7 @@
           </div>
         </div>
         <!-- /ko -->
-        <!-- ko if: !ComponentsAreLoading() && ViewModel() -->
+        <!-- ko if: !ComponentsAreLoading() && ServiceTypeEntity() -->
         <!-- ko if: IsLoading -->
         <div class="d-flex justify-content-center">
           <div class="spinner-border" role="status">
@@ -438,7 +438,9 @@
         </div>
         <!-- /ko -->
         <!-- ko ifnot: IsLoading -->
-        <div data-bind="template: {name: ElementId, data: ViewModel}"></div>
+        <div
+          data-bind="template: {name: ElementId, data: ServiceTypeEntity}"
+        ></div>
         <!-- /ko -->
         <!-- /ko -->
         <!-- /ko -->
@@ -458,7 +460,7 @@
           ></textarea>
           <!-- /ko -->
           <!-- ko if: Request.DisplayMode() == Request.DisplayModes.View -->
-          <div data-bind="text: Request.RequestDescription"></div>
+          <div data-bind="html: Request.RequestDescription"></div>
           <!-- /ko -->
         </div>
       </div>

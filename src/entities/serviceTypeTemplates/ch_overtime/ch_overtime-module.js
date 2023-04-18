@@ -11,7 +11,7 @@ export default class CH_OverTime {
   GTM = ko.observable();
   APM = ko.observable();
 
-  DateStart = ko.observable();
+  DateStart = new DateField();
   DateEnd = new DateField();
 
   Hours = ko.observable();
@@ -34,8 +34,8 @@ export default class CH_OverTime {
       factory: People.Create,
     },
     DateStart: {
-      set: (val) => this.DateStart(val ? new Date(val) : null),
-      get: () => new Date(this.DateStart()).toISOString(),
+      set: this.DateStart.set,
+      get: this.DateStart.get,
     },
     DateEnd: {
       set: this.DateEnd.set,
