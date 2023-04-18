@@ -10,6 +10,11 @@ export class ServiceTypeComponent {
     this.ElementId = this.ServiceType()?.UID;
     this.Request = request;
     this.ServiceType.subscribe(this.serviceTypeWatcher);
+    // this.Request.ObservableID.subscribe(this.requestIdWatcher);
+
+    if (serviceType()) {
+      this.serviceTypeWatcher(serviceType());
+    }
   }
 
   ElementId = null;
@@ -17,7 +22,29 @@ export class ServiceTypeComponent {
 
   ViewModel = ko.observable();
 
+  IsLoading = ko.observable();
+
+  refreshViewModelData = async () => {
+    console.log("ServiceTypeComponent: refresh Triggered");
+    this.IsLoading(true);
+    var template = this.ViewModel();
+    template.Title = this.Request.ObservableTitle();
+    this.Request.ServiceType()?.getListRef()?.LoadEntity(template);
+    this.IsLoading(false);
+  };
+
+  requestIdWatcher = async (requestId) => {
+    console.log("ServiceTypeComponent: Request ID Changed", requestId);
+    if (!requestId) {
+      return;
+    }
+    this.refreshViewModelData();
+  };
+
   serviceTypeWatcher = async (newSvcType) => {
+    console.log("ServiceTypeComponent: ServiceType Changed", newSvcType);
+    // This should only be triggered when a new RequestDetailView is created
+    // or when the user changes the request from the drop down.
     if (!newSvcType?.HasTemplate) {
       this.ViewModel(null);
       return;
@@ -35,6 +62,8 @@ export class ServiceTypeComponent {
 
     this.ViewModel(new service.default(this.Request));
     this.ComponentsAreLoading(false);
+
+    if (this.Request.ObservableID()) this.refreshViewModelData();
   };
 }
 

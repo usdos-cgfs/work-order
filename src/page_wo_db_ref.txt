@@ -97,7 +97,7 @@
   <script type="text/html" id="tmpl-my-requests-view">
     <h2>My Requests</h2>
     <div class="d-flex">
-      <div class="list-group" id="section-my-requests-tabs">
+      <div class="list-group me-3" id="section-my-requests-tabs">
         <button
           class="list-group-item list-group-action"
           id="my-open-requests-tab"
@@ -129,7 +129,7 @@
           Cancelled
         </button>
       </div>
-      <div>
+      <div class="container">
         <!-- ko if: ActiveComponent -->
         <div
           data-bind="template: {name: ActiveComponent().TemplateId, data: ActiveComponent()} "
@@ -149,6 +149,20 @@
 
   <script type="text/html" id="tmpl-requests-by-status">
     <h2 data-bind="text: filter"></h2>
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Title</th>
+        </tr>
+      </thead>
+      <tbody data-bind="foreach: FilteredRequests">
+        <tr data-bind="click: $root.ViewRequest">
+          <td data-bind="text: ID"></td>
+          <td data-bind="text: Title"></td>
+        </tr>
+      </tbody>
+    </table>
   </script>
 
   <script type="text/html" id="tmpl-new-request-view">
@@ -178,10 +192,12 @@
       <!-- /ko -->
       <!-- ko if: $data -->
       <div>
+        <!-- ko if: PipelineComponent -->
         <div
           class="mb-3"
-          data-bind="template: {name: 'tmpl-request-pipeline', data: Pipeline}"
+          data-bind="template: {name: 'tmpl-request-pipeline', data: PipelineComponent}"
         ></div>
+        <!-- /ko -->
         <div data-bind="template: {name: 'tmpl-request-header'}"></div>
         <div data-bind="template: {name: 'tmpl-service-type-component'}"></div>
         <div class="row mb-3">

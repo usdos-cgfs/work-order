@@ -12,6 +12,8 @@ export default class CH_OverTime {
 
   DateStart = ko.observable();
   DateEnd = ko.observable();
+
+  DateEnd = ko.observable();
   Hours = ko.observable();
 
   FieldMap = {
@@ -32,8 +34,12 @@ export default class CH_OverTime {
       factory: People.Create,
     },
     DateStart: {
-      set: this.DateStart,
+      set: (val) => this.DateStart(val ? new Date(val) : null),
       get: () => new Date(this.DateStart()).toISOString(),
+    },
+    DateEnd: {
+      set: (val) => this.DateEnd(val ? new Date(val) : null),
+      get: () => new Date(this.DateEnd()).toISOString(),
     },
     Hours: this.Hours,
   };

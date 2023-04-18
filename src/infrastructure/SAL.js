@@ -1292,8 +1292,8 @@ export function SPList(listDef) {
     }
 
     function onGetListItemFailed(sender, args) {
-      console.error("Update Failed - List: " + self.config.def.name);
-      console.error("ValuePairs", valuePairs);
+      console.error("SAL: findById - List: " + self.config.def.name);
+      console.error("Fields", this);
       console.error(sender, args);
     }
 

@@ -12,12 +12,12 @@ export class RequestsByStatusComponent {
     '<View Scope="RecursiveAll"><Query><Where><And>' +
     `<Eq><FieldRef Name="RequestStatus"/><Value Type="Text">${this.filter}</Value></Eq>` +
     '<Eq><FieldRef Name="FSObjType"/><Value Type="int">0</Value></Eq>' +
-    "</And></Where></Query></View>";
+    "</And></Where><OrderBy><FieldRef Name='ID' Ascending='FALSE'/></OrderBy></Query></View>";
 
   IsLoading = ko.observable();
   HasLoaded = ko.observable(false);
 
-  FilteredRequests = ko.observable();
+  FilteredRequests = ko.observableArray();
 
   Refresh = async () => {
     this.IsLoading(true);

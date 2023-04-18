@@ -130,17 +130,18 @@ class NewReport {
     this.Tab(Tabs.RequestDetail);
   };
 
-  ViewRequest = async function (request) {
+  ViewRequest = async (request) => {
     //var title = "230330-6165";
-    request = {
-      ID: 539,
-      Title: "230330-6165",
-    };
+    // request = {
+    //   ID: 539,
+    //   Title: "230330-6165",
+    // };
     setUrlParam("reqId", request.Title);
     this.RequestDetailView(
       new RequestDetailView({
         ID: request.ID,
         Title: request.Title,
+        currentUser: this.currentUser,
         context: this.context,
       })
     );

@@ -23,10 +23,14 @@ export class RequestAssignmentsComponent {
 
   Refresh = async () => {
     this.IsLoading(true);
-    const assignments = await this._context.Assignments.FindByTitle(
-      this.RequestTitle()
-    );
-    this.Assignments(assignments);
+    // const assignments = await this._context.Assignments.Find(
+    //   {
+    //     ID: this.RequestId(),
+    //     Title: this.RequestTitle(),
+    //   },
+    //   Assignment.Views.All
+    // );
+    // this.Assignments(assignments);
     this.IsLoading(false);
   };
 }

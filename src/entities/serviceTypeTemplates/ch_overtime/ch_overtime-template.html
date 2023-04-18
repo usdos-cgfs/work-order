@@ -22,7 +22,10 @@
     <div class="row">
       <div class="col-6 pb-2">
         <label for=""><h6>Overtime Dates (within month estimate):</h6></label>
+        <div class="fw-semibold">Start Date:</div>
         <input class="form-control" type="date" data-bind="value: DateStart" />
+        <div class="fw-semibold">End Date:</div>
+        <input class="form-control" type="date" data-bind="value: DateEnd" />
       </div>
       <div class="col-6 pb-2">
         <label for=""><h6>Overtime Hours (not to exceed):</h6></label>
@@ -46,11 +49,24 @@
     <div class="row">
       <div class="col-6 pb-2">
         <h6>Overtime Dates (within month estimate):</h6>
-        <p data-bind="text: DateStart"></p>
+        <div class="fw-semibold">Start Date:</div>
+        <input
+          class="form-control"
+          type="date"
+          disabled
+          data-bind="value: DateStart"
+        />
+        <div class="fw-semibold">End Date:</div>
+        <input
+          class="form-control"
+          type="date"
+          disabled
+          data-bind="value: DateEnd"
+        />
       </div>
       <div class="col-6 pb-2">
         <h6>Overtime Hours (not to exceed):</h6>
-        <p data-bind="text: Hours.obs"></p>
+        <p data-bind="text: Hours"></p>
       </div>
     </div>
   </div>

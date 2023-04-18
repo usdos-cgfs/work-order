@@ -23,7 +23,8 @@ export class People {
 
   isInPicker = (elementId) => this.SetPeoplePickers.includes(elementId);
 
-  static Create = function ({ ID, LookupValue }) {
-    return new People({ ID, Title: LookupValue });
+  static Create = function (props) {
+    if (!props) return null;
+    return new People({ ID: props.ID, Title: props.LookupValue });
   };
 }

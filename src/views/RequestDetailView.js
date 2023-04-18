@@ -33,7 +33,7 @@ const templates = {
 };
 
 export class RequestDetailView {
-  _context = {};
+  _context;
 
   ID;
   Title;
@@ -117,29 +117,11 @@ export class RequestDetailView {
     }, // {id, title},
   };
 
-  ServiceTypeComponent = new ServiceTypeComponent({
-    request: this,
-    serviceType: this.ServiceType,
-    context: this._context,
-  });
+  ServiceTypeComponent;
 
-  Pipeline = ko.pureComputed(() => {
-    return {
-      currentStage: this.State.Stage,
-      stages: pipelineStageStore()
-        .filter((stage) => stage.ServiceType.ID == this.ServiceType().ID)
-        .sort(sortByField("Step")),
-    };
-  });
+  PipelineComponent;
 
-  Assignments = new RequestAssignmentsComponent({
-    request: {
-      ID: this.ObservableID,
-      Title: this.ObservableTitle,
-      AssignmentsBlob: this.AssignmentsBlob,
-    },
-    context: this._context,
-  });
+  AssignmentsComponent;
 
   IsLoading = ko.observable();
   DisplayModes = DisplayModes;
@@ -167,12 +149,13 @@ export class RequestDetailView {
   // Controls
   RefreshAll = async () => {
     this.RefreshRequest();
-    this.Assignments.Refresh();
+    // this.ServiceTypeComponent.refresh();
+    // this.AssignmentsComponent.Refresh();
   };
 
   RefreshRequest = async () => {
     this.IsLoading(true);
-    await this._context.Requests.Load(this);
+    await this._context.Requests.LoadEntity(this);
     this.IsLoading(false);
   };
 
@@ -287,6 +270,33 @@ export class RequestDetailView {
         serviceTypeStore().find((service) => service.ID == serviceType.ID)
       );
     }
+
+    this.ServiceTypeComponent = new ServiceTypeComponent({
+      request: this,
+      serviceType: this.ServiceType,
+      context,
+    });
+
+    this.PipelineComponent = ko.pureComputed(() => {
+      if (!this.ServiceType()) {
+        return null;
+      }
+      return {
+        currentStage: this.State.Stage,
+        stages: pipelineStageStore()
+          .filter((stage) => stage.ServiceType.ID == this.ServiceType().ID)
+          .sort(sortByField("Step")),
+      };
+    });
+
+    this.AssignmentsComponent = new RequestAssignmentsComponent({
+      request: {
+        ID: this.ObservableID,
+        Title: this.ObservableTitle,
+        AssignmentsBlob: this.AssignmentsBlob,
+      },
+      context,
+    });
 
     this.DisplayMode(displayMode);
 

@@ -61,7 +61,7 @@ class EntitySet {
     if (entity.ID) {
       // Prefer find by Id
       item = await this.ListRef.findByIdAsync(entity.ID, fields);
-    } else if (entity.title) {
+    } else if (entity.Title) {
       item = await this.ListRef.findByTitleAsync(entity.Title, fields, 1);
     }
     return item;
@@ -116,7 +116,7 @@ function mapObjectToViewField(inVal, fieldMap) {
   // 3. factory/obs - the fieldmap exposes a factory and an observable to put the result.
 
   if (typeof fieldMap == "function") {
-    fieldMap.obs(inVal);
+    fieldMap(inVal);
     return;
   }
 
