@@ -225,11 +225,10 @@ export class RequestDetailView {
         folderPath
       );
 
-      if (this.ServiceTypeComponent.ViewModel()) {
-        const newSvcTypeItemId = await serviceType
-          .getListRef()
-          .AddEntity(this.ServiceTypeComponent.ViewModel(), folderPath);
-      }
+      this.ID = newRequestItemId;
+      this.ObservableID(newRequestItemId);
+
+      await this.ServiceTypeComponent.submitViewModelData();
     }
     // await this._context.Requests.AddInFolder(this);
     // this.DisplayMode(DisplayModes.View);

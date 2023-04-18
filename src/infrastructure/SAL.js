@@ -1273,6 +1273,24 @@ export function SPList(listDef) {
     });
   }
 
+  async function findByReqIdAsync(id, fields, count = null) {
+    var caml =
+      '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
+      '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
+      "</Eq><Eq>" +
+      '<FieldRef Name="ReqId" LookupId="TRUE"/><Value Type="Lookup">' +
+      id +
+      "</Value>" +
+      `</Eq></And></Where></Query>${
+        count ?? "<RowLimit>" + count + "</RowLimit>"
+      }</View>`;
+    const listItems = await new Promise((resolve, reject) => {
+      getListItems(caml, fields, resolve);
+    });
+
+    return listItems;
+  }
+
   function findById(id, fields, callback) {
     var currCtx = new SP.ClientContext.get_current();
     var web = currCtx.get_web();
@@ -2078,6 +2096,7 @@ export function SPList(listDef) {
     getListItems: getListItems,
     getListItemsAsync: getListItemsAsync,
     findByTitleAsync,
+    findByReqIdAsync,
     findByIdAsync,
     updateListItem: updateListItem,
     updateListItemAsync: updateListItemAsync,

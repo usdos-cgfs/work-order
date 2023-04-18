@@ -1,4 +1,5 @@
 import { People } from "../../../components/People.js";
+import { DateField } from "../../../components/DateField.js";
 
 export default class CH_OverTime {
   constructor(request) {
@@ -11,9 +12,8 @@ export default class CH_OverTime {
   APM = ko.observable();
 
   DateStart = ko.observable();
-  DateEnd = ko.observable();
+  DateEnd = new DateField();
 
-  DateEnd = ko.observable();
   Hours = ko.observable();
 
   FieldMap = {
@@ -38,8 +38,8 @@ export default class CH_OverTime {
       get: () => new Date(this.DateStart()).toISOString(),
     },
     DateEnd: {
-      set: (val) => this.DateEnd(val ? new Date(val) : null),
-      get: () => new Date(this.DateEnd()).toISOString(),
+      set: this.DateEnd.set,
+      get: this.DateEnd.get,
     },
     Hours: this.Hours,
   };

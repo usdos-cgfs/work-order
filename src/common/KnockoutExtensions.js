@@ -59,3 +59,14 @@ ko.bindingHandlers.people = {
     }
   },
 };
+
+ko.bindingHandlers.dateField = {
+  init: function (element, valueAccessor, allBindingsAccessor) {},
+  update: function (
+    element,
+    valueAccessor,
+    allBindings,
+    viewModel,
+    bindingContext
+  ) {},
+};

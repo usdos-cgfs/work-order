@@ -25,7 +25,11 @@
         <div class="fw-semibold">Start Date:</div>
         <input class="form-control" type="date" data-bind="value: DateStart" />
         <div class="fw-semibold">End Date:</div>
-        <input class="form-control" type="date" data-bind="value: DateEnd" />
+        <input
+          class="form-control"
+          type="date"
+          data-bind="value: DateEnd.inputBinding"
+        />
       </div>
       <div class="col-6 pb-2">
         <label for=""><h6>Overtime Hours (not to exceed):</h6></label>
@@ -61,7 +65,7 @@
           class="form-control"
           type="date"
           disabled
-          data-bind="value: DateEnd"
+          data-bind="value: DateEnd.inputBinding"
         />
       </div>
       <div class="col-6 pb-2">

@@ -100,7 +100,7 @@ class NewReport {
       var startTab = getUrlParam("tab");
       var reqId = getUrlParam("reqId");
       if (reqId) {
-        this.ViewRequest({ title: reqId });
+        this.ViewRequest({ Title: reqId });
       } else if (startTab == Tabs.RequestDetail) {
         startTab = Tabs.NewRequest;
       }

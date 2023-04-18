@@ -67,8 +67,16 @@ class EntitySet {
     return item;
   };
 
-  AddEntity = async function (entity, folderPath) {
+  FindByRequestId = async function (entity, fields, requestId) {
+    if (!entity || !requestId) return;
+    return await this.ListRef.findByReqIdAsync(requestId, fields);
+  };
+
+  AddEntity = async function (entity, folderPath, request = null) {
     var vp = mapViewFieldsToValuePairs(entity.FieldMap);
+    if (request) {
+      vp.push(["ReqId", request]);
+    }
     console.log(vp);
     return this.ListRef.createListItemAsync(vp, folderPath);
   };
@@ -85,6 +93,17 @@ class EntitySet {
     }
     mapObjectPropsToViewFields(item, entity.FieldMap);
 
+    return true;
+  };
+
+  LoadEntityByRequestId = async function (entity, requestId) {
+    var items = await this.FindByRequestId(
+      entity,
+      Object.keys(entity.FieldMap),
+      requestId
+    );
+    if (!items) return false;
+    mapObjectPropsToViewFields(items[0], entity.FieldMap);
     return true;
   };
 

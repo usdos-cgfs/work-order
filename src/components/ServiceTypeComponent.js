@@ -29,8 +29,24 @@ export class ServiceTypeComponent {
     this.IsLoading(true);
     var template = this.ViewModel();
     template.Title = this.Request.ObservableTitle();
-    this.Request.ServiceType()?.getListRef()?.LoadEntity(template);
+    await this.ServiceType()
+      ?.getListRef()
+      ?.LoadEntityByRequestId(template, this.Request.ObservableID());
     this.IsLoading(false);
+  };
+
+  submitViewModelData = async () => {
+    if (!this.ViewModel()) return;
+
+    const newEntity = this.ViewModel();
+    newEntity.Title = this.Request.ObservableTitle();
+
+    const folderPath = this.Request.getRelativeFolderPath();
+    const newSvcTypeItemId = await this.ServiceType()
+      .getListRef()
+      .AddEntity(newEntity, folderPath, this.Request);
+
+    return newSvcTypeItemId;
   };
 
   requestIdWatcher = async (requestId) => {
