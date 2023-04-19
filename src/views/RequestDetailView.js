@@ -20,6 +20,8 @@ import {
 } from "../common/DateUtilities.js";
 import { requestStates } from "../entities/Request.js";
 
+import * as Router from "../common/Router.js";
+
 export const DisplayModes = {
   New: "New",
   Edit: "Edit",
@@ -93,7 +95,7 @@ export class RequestDetailView {
       set: (val) => this.RequestorInfo.ManagingDirector(People.Create(val)),
       get: this.RequestorInfo.ManagingDirector,
     },
-    RequestorOffice: {
+    RequestorOrg: {
       set: (val) => this.RequestorInfo.Office(RequestOrg.Create(val)),
       get: this.RequestorInfo.Office,
     },
@@ -140,6 +142,10 @@ export class RequestDetailView {
     return true;
   };
 
+  /**
+   * Returns the generic relative path without the list/library name
+   * e.g. EX/2929-20199
+   */
   getRelativeFolderPath = ko.pureComputed(
     () => `${this.RequestorInfo.Office().Title}/${this.ObservableTitle()}`
   );
@@ -231,9 +237,12 @@ export class RequestDetailView {
       await this.ServiceTypeComponent.submitServiceTypeEntity();
     }
 
-    setUrlParam("reqId", this.ObservableTitle());
-    // await this._context.Requests.AddInFolder(this);
-    // this.DisplayMode(DisplayModes.View);
+    Router.setUrlParam("reqId", this.ObservableTitle());
+
+    // Send New WorkOrder Notification to User
+    // Create new Action Log Item
+    // Initial Assignments
+    // Progress Request
   };
 
   EditRequest = async () => {
@@ -283,6 +292,7 @@ export class RequestDetailView {
         return null;
       }
       return {
+        icon: this.ServiceType().Icon,
         currentStage: this.State.Stage,
         stages: pipelineStageStore()
           .filter((stage) => stage.ServiceType.ID == this.ServiceType().ID)

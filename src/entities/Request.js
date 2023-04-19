@@ -18,6 +18,15 @@ export class RequestEntity {
 
   static Views = {
     All: ["ID", "Title"],
-    ByStatus: ["ID", "Title"],
+    ByStatus: [
+      "ID",
+      "Title",
+      "ServiceType",
+      "RequestorOrg",
+      "Requestor",
+      "RequestSubmitted",
+      "EstClosedDate",
+      "ClosedDate",
+    ],
   };
 }

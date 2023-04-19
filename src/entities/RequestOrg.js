@@ -12,10 +12,14 @@ export class RequestOrg {
     this.LookupValue = Title;
   }
 
-  static Create = function ({ ID, LookupValue }) {
-    const newRequestOrg = new RequestOrg({ ID, Title: LookupValue });
-    const requestOrg = requestOrgStore().find((entity) => entity.ID == ID);
-    return Object.assign(newRequestOrg, requestOrg);
+  static Create = function (props) {
+    if (!props?.ID) return null;
+    // const newRequestOrg = new RequestOrg({
+    //   ID: props.ID,
+    //   Title: props.LookupValue,
+    // });
+    return requestOrgStore().find((entity) => entity.ID == props.ID);
+    //return Object.assign(newRequestOrg, requestOrg);
   };
 
   static Views = {

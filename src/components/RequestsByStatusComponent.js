@@ -19,7 +19,7 @@ export class RequestsByStatusComponent {
 
   FilteredRequests = ko.observableArray();
 
-  Refresh = async () => {
+  refreshRequests = async () => {
     this.IsLoading(true);
     this.FilteredRequests(
       await this.view._context.Requests.FindAll(
@@ -34,7 +34,7 @@ export class RequestsByStatusComponent {
     if (this.HasLoaded() || this.IsLoading()) {
       return;
     }
-    await this.Refresh();
+    await this.refreshRequests();
     this.HasLoaded(true);
   };
 }
