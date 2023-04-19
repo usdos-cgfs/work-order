@@ -78,7 +78,13 @@ export class RequestDetailView {
 
   // FieldMap defines how to store and retrieve this ServiceTypeEntity
   FieldMap = {
-    ID: this.ObservableID,
+    ID: {
+      set: (val) => {
+        this.ID = val;
+        this.ObservableID(val);
+      },
+      get: this.ObservableID,
+    },
     Title: this.ObservableTitle,
     RequestSubject: this.RequestSubject,
     RequestDescription: this.RequestDescription,
@@ -323,10 +329,7 @@ export class RequestDetailView {
     });
 
     this.AssignmentsComponent = new RequestAssignmentsComponent({
-      request: {
-        ID: this.ID,
-        Title: this.Title,
-      },
+      request: this,
       context,
     });
 

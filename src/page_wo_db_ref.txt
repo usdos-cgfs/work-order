@@ -225,6 +225,10 @@
           data-bind="template: {name: 'tmpl-request-pipeline', data: PipelineComponent}"
         ></div>
         <!-- /ko -->
+        <div
+          class="mb-3"
+          data-bind="template: {name: 'tmpl-assignments-component', data: AssignmentsComponent}"
+        ></div>
         <div data-bind="template: {name: 'tmpl-request-header'}"></div>
         <div data-bind="template: {name: 'tmpl-service-type-component'}"></div>
         <div class="row mb-3">
@@ -313,6 +317,57 @@
         </li>
         <!-- /ko -->
       </ol>
+    </div>
+  </script>
+
+  <script type="text/html" id="tmpl-assignments-component">
+    <div class="card">
+      <div class="card-body">
+        <div class="card-title d-flex justify-content-between">
+          <h3 class="mx-0">Assignments</h3>
+          <i
+            class="fa fa-sync pointer"
+            data-bind="click: refreshAssignments"
+          ></i>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Role</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- ko if: IsLoading -->
+            <tr>
+              <td colspan="4">
+                <div class="d-flex justify-content-center">
+                  <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            <!-- /ko -->
+            <!-- ko ifnot: IsLoading -->
+            <!-- ko foreach: Assignments -->
+            <tr>
+              <td data-bind="text: ID"></td>
+              <td data-bind="text: Title"></td>
+              <td data-bind="text: Role"></td>
+              <td></td>
+            </tr>
+            <!-- /ko -->
+            <!-- /ko -->
+          </tbody>
+        </table>
+
+        <button type="button" data-bind="click: addAssignment">
+          New Assignment
+        </button>
+      </div>
     </div>
   </script>
 

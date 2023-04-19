@@ -1,6 +1,6 @@
 import { SPList } from "./SAL.js";
 
-const DEBUG = false;
+const DEBUG = true;
 
 export default class ApplicationDbContext {
   constructor() {}
@@ -122,7 +122,7 @@ class EntitySet {
   };
 }
 
-function mapObjectPropsToViewFields(inputObject, fieldMappings) {
+export function mapObjectPropsToViewFields(inputObject, fieldMappings) {
   Object.keys(fieldMappings).forEach((key) => {
     if (DEBUG) console.log(`ORM Setting ${key} to`, inputObject[key]);
     mapObjectToViewField(inputObject[key], fieldMappings[key]);
@@ -137,6 +137,11 @@ function mapObjectToViewField(inVal, fieldMap) {
 
   if (typeof fieldMap == "function") {
     fieldMap(inVal);
+    return;
+  }
+
+  if (typeof fieldMap != "object") {
+    fieldMap = inVal;
     return;
   }
 
@@ -158,7 +163,9 @@ function mapObjectToViewField(inVal, fieldMap) {
     fieldMap.obs(outVal);
     return;
   }
-  throw "Error setting fieldmap?";
+
+  fieldMap = inVal;
+  //throw "Error setting fieldmap?";
 }
 
 function generateObject(inVal, fieldMap) {
@@ -197,6 +204,8 @@ function mapViewFieldToValuePair(fieldMap) {
     return fieldMap.obs();
   }
 
-  console.error("Error setting fieldMap", fieldMap);
-  throw "Error getting fieldmap";
+  return fieldMap;
+
+  // console.error("Error setting fieldMap", fieldMap);
+  // throw "Error getting fieldmap";
 }

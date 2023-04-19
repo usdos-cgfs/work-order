@@ -1,9 +1,10 @@
 import { Assignment } from "../entities/Assignment.js";
 
 export class RequestAssignmentsComponent {
-  constructor({ request, getFolderPath, context }) {
-    this.requestEntity = request;
+  constructor({ request, context }) {
+    this.request = request;
     this._context = context;
+    this.request.ObservableID.subscribe(this.requestIdWatcher);
   }
 
   // StoredAssignments = ko.pureComputed({
@@ -19,15 +20,34 @@ export class RequestAssignmentsComponent {
 
   IsLoading = ko.observable();
 
-  refresh = async () => {
+  requestIdWatcher = (newId) => {
+    this.refreshAssignments();
+  };
+
+  refreshAssignments = async () => {
+    if (!this.request.ID) return;
     this.IsLoading(true);
     const assignments = await this._context.Assignments.FindByRequestId(
-      this.requestEntity.ID,
+      this.request.ID,
       Assignment.Views.All
     );
     this.Assignments(assignments);
     this.IsLoading(false);
   };
 
-  addAssignment = (assignment) => {};
+  addAssignment = async (assignment = null) => {
+    assignment = {
+      ID: 12,
+      Title: "Test Assignment",
+      Role: "SuperAdmin",
+    };
+    const assignmentObj = Assignment.CreateFromObject(assignment);
+    const folderPath = this.request.getRelativeFolderPath();
+    const newAssignmentId = await this._context.Assignments.AddEntity(
+      assignmentObj,
+      folderPath,
+      this.request
+    );
+    this.refreshAssignments();
+  };
 }
