@@ -1,5 +1,7 @@
 import { SPList } from "./SAL.js";
 
+const DEBUG = false;
+
 export default class ApplicationDbContext {
   constructor() {}
 
@@ -67,8 +69,8 @@ class EntitySet {
     return item;
   };
 
-  FindByRequestId = async function (entity, fields, requestId) {
-    if (!entity || !requestId) return;
+  FindByRequestId = async function (requestId, fields) {
+    if (!requestId) return;
     return await this.ListRef.findByReqIdAsync(requestId, fields);
   };
 
@@ -77,7 +79,7 @@ class EntitySet {
     if (request) {
       vp.push(["ReqId", request]);
     }
-    console.log(vp);
+    if (DEBUG) console.log(vp);
     return this.ListRef.createListItemAsync(vp, folderPath);
   };
 
@@ -98,9 +100,8 @@ class EntitySet {
 
   LoadEntityByRequestId = async function (entity, requestId) {
     var items = await this.FindByRequestId(
-      entity,
-      Object.keys(entity.FieldMap),
-      requestId
+      requestId,
+      Object.keys(entity.FieldMap)
     );
     if (!items) return false;
     mapObjectPropsToViewFields(items[0], entity.FieldMap);
@@ -123,7 +124,7 @@ class EntitySet {
 
 function mapObjectPropsToViewFields(inputObject, fieldMappings) {
   Object.keys(fieldMappings).forEach((key) => {
-    console.log(`ORM Setting ${key} to`, inputObject[key]);
+    if (DEBUG) console.log(`ORM Setting ${key} to`, inputObject[key]);
     mapObjectToViewField(inputObject[key], fieldMappings[key]);
   });
 }

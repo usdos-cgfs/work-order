@@ -22,6 +22,8 @@ import { requestStates } from "../entities/Request.js";
 
 import * as Router from "../common/Router.js";
 
+const DEBUG = true;
+
 export const DisplayModes = {
   New: "New",
   Edit: "Edit",
@@ -258,6 +260,19 @@ export class RequestDetailView {
     this.DisplayMode(DisplayModes.Edit);
   };
 
+  displayModeWatcher = (newDisplayMode) => {
+    if (DEBUG)
+      console.log("RequestDetailView: displayMode changed", newDisplayMode);
+    switch (newDisplayMode) {
+      case DisplayModes.New:
+        break;
+      case DisplayModes.View:
+        this.RefreshAll();
+        break;
+      default:
+    }
+  };
+
   constructor({
     displayMode = DisplayModes.View,
     ID = null,
@@ -272,8 +287,15 @@ export class RequestDetailView {
     this.Title = Title;
     this.LookupValue = Title;
 
-    this.ObservableID(ID);
-    this.ObservableTitle(Title);
+    if (displayMode == DisplayModes.New) {
+      this.RequestorInfo.Requestor(new People(currentUser));
+      this.ObservableID(ID);
+      this.ObservableTitle(createNewRequestTitle());
+      this.State.Status(requestStates.draft);
+    } else {
+      this.ObservableID(ID);
+      this.ObservableTitle(Title);
+    }
 
     if (serviceType) {
       this.ServiceType(
@@ -302,25 +324,13 @@ export class RequestDetailView {
 
     this.AssignmentsComponent = new RequestAssignmentsComponent({
       request: {
-        ID: this.ObservableID,
-        Title: this.ObservableTitle,
-        AssignmentsBlob: this.AssignmentsBlob,
+        ID: this.ID,
+        Title: this.Title,
       },
       context,
     });
 
+    this.DisplayMode.subscribe(this.displayModeWatcher);
     this.DisplayMode(displayMode);
-
-    switch (displayMode) {
-      case DisplayModes.New:
-        this.RequestorInfo.Requestor(new People(currentUser));
-        this.ObservableTitle(createNewRequestTitle());
-        this.State.Status(requestStates.draft);
-        break;
-      case DisplayModes.View:
-        this.RefreshAll();
-        break;
-      default:
-    }
   }
 }

@@ -20,14 +20,16 @@ document.addEventListener("DOMContentLoaded", function (event) {
   SP.SOD.executeFunc(
     "sp.js",
     "SP.ClientContext",
-    ExecuteOrDelayUntilScriptLoaded(InitDB, "sp.js")
+    ExecuteOrDelayUntilScriptLoaded(CreateApp, "sp.js")
   );
 });
 
-async function InitDB() {
+async function CreateApp() {
+  // TODO: deferred import dependencies (SAL) here and DI into App
+
   //const { WorkOrder } = await import("./models/WorkOrder.js");
   await InitSal();
-  WorkOrder.Report = await NewReport.Create();
+  WorkOrder.Report = await App.Create();
   ko.applyBindings(WorkOrder.Report);
 }
 
@@ -37,7 +39,7 @@ export const Tabs = {
   RequestDetail: "request-detail-tab",
 };
 
-class NewReport {
+class App {
   constructor() {
     this.Tab.subscribe(tabWatcher);
   }
@@ -109,7 +111,7 @@ class NewReport {
   };
 
   static Create = async function () {
-    const report = new NewReport();
+    const report = new App();
     await report.Init();
     return report;
   };
