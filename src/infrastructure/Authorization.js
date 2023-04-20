@@ -6,7 +6,7 @@ import {
   getDefaultGroups,
 } from "./SAL.js";
 
-var roles = {
+var permissions = {
   FullControl: "Full Control",
   Design: "Design",
   Edit: "Edit",
@@ -20,6 +20,30 @@ var roles = {
 
 var staticGroups = {
   RestrictedReaders: { Title: "Restricted Readers" },
+};
+
+export const roles = {
+  ActionResolver: {
+    LookupValue: "Action Resolver",
+    description: "Completes an action before moving request forward",
+    permissions: permissions.RestrictedContribute,
+  },
+  Approver: {
+    LookupValue: "Approver",
+    description: "Approves or Rejects the request.",
+    permissions: permissions.RestrictedContribute,
+  },
+  Viewer: {
+    LookupValue: "Viewer",
+    description: "Has view only access to the request.",
+    permissions: permissions.RestrictedRead,
+  },
+  Subscriber: {
+    LookupValue: "Subscriber",
+    description:
+      "Has view only access to the request and recieves notifications",
+    permissions: permissions.RestrictedRead,
+  },
 };
 
 export class User {
@@ -71,16 +95,16 @@ export function getRequestFolderPermissions(request) {
   const requestorOffice = request.RequestorInfo.Office(); // this should be set during validation
 
   const folderPermissions = [
-    [defaultGroups.owners, roles.FullControl],
-    [staticGroups.RestrictedReaders, roles.RestrictedRead],
+    [defaultGroups.owners, permissions.FullControl],
+    [staticGroups.RestrictedReaders, permissions.RestrictedRead],
   ];
 
-  folderPermissions.push([requestor, roles.RestrictedContribute]);
+  folderPermissions.push([requestor, permissions.RestrictedContribute]);
 
   if (requestorOffice && !requestorOffice.BreakAccess) {
     folderPermissions.push([
       requestorOffice.UserGroup,
-      roles.RestrictedContribute,
+      permissions.RestrictedContribute,
     ]);
   }
 
@@ -90,7 +114,10 @@ export function getRequestFolderPermissions(request) {
       (org) => org.ID == stage.RequestOrg.ID
     );
     if (stageOrg) {
-      folderPermissions.push([stageOrg.UserGroup, roles.RestrictedContribute]);
+      folderPermissions.push([
+        stageOrg.UserGroup,
+        permissions.RestrictedContribute,
+      ]);
     }
 
     if (
@@ -101,7 +128,7 @@ export function getRequestFolderPermissions(request) {
         AssignmentFunctions[stage.AssignmentFunction].bind(request);
       const people = boundAssignmenttFunc();
       if (people && people.Title) {
-        folderPermissions.push([people, roles.RestrictedContribute]);
+        folderPermissions.push([people, permissions.RestrictedContribute]);
       }
     }
   });

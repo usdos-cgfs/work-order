@@ -1,17 +1,15 @@
-import { mapObjectPropsToViewFields } from "../infrastructure/ApplicationDbContext.js";
-
+export const assignmentStates = {
+  InProgress: "In Progress",
+  Completed: "Completed",
+  Approved: "Approved",
+  Rejected: "Rejected",
+};
 export class Assignment {
   constructor() {}
 
   ID;
   Title;
   Role;
-
-  FieldMap = {
-    ID: { get: () => this.ID, set: (val) => (this.ID = val) },
-    Title: { get: () => this.Title, set: (val) => (this.Title = val) },
-    Role: { get: () => this.Role, set: (val) => (this.Role = val) },
-  };
 
   static CreateFromObject = function (assignment) {
     const newAssignment = new Assignment();

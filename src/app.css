@@ -15,7 +15,44 @@
   animation-duration: 0.5s;
   transition: all 0.5s linear;
 }
+
 .active.dimmer {
   display: flex;
   opacity: 1;
+}
+
+.sticky {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1 !important;
+}
+
+#people-new-assignee > div {
+  height: 100%;
+}
+
+#people-new-assignee div.sp-peoplepicker-topLevel {
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+#people-new-assignee .sp-peoplepicker-initialHelpText {
+  position: inherit;
+  white-space: nowrap;
+  top: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+#people-new-assignee
+  .sp-peoplepicker-topLevelFocus
+  .sp-peoplepicker-initialHelpText {
+  display: none !important;
+}
+
+#people-new-assignee .sp-peoplepicker-resolveList {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
 }

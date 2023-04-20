@@ -1,6 +1,7 @@
 import { SPList } from "./SAL.js";
+import { Assignment } from "../entities/Assignment.js";
 
-const DEBUG = true;
+const DEBUG = false;
 
 export default class ApplicationDbContext {
   constructor() {}
@@ -8,6 +9,7 @@ export default class ApplicationDbContext {
   Assignments = new EntitySet({
     name: "Assignment",
     title: "Assignment",
+    fields: Assignment.Views.All,
   });
 
   Notifications = new EntitySet({
@@ -45,8 +47,10 @@ export default class ApplicationDbContext {
 
 class EntitySet {
   constructor(listDef) {
+    this.ListDef = listDef;
     this.Title = listDef.title;
     this.Name = listDef.name;
+
     this.ListRef = new SPList(listDef);
   }
 
@@ -75,12 +79,20 @@ class EntitySet {
   };
 
   AddEntity = async function (entity, folderPath, request = null) {
-    var vp = mapViewFieldsToValuePairs(entity.FieldMap);
-    if (request) {
-      vp.push(["ReqId", request]);
+    if (entity.FieldMap) {
+      entity = mapViewFieldsToValuePairs(entity.FieldMap);
     }
-    if (DEBUG) console.log(vp);
-    return this.ListRef.createListItemAsync(vp, folderPath);
+
+    if (this.ListDef.fields) {
+      entity = createWritableObject(entity, this.ListDef.fields);
+    }
+
+    if (request) {
+      entity.ReqId = request;
+      // vp.push(["ReqId", request]);
+    }
+    if (DEBUG) console.log(entity);
+    return this.ListRef.createListItemAsync(entity, folderPath);
   };
 
   LoadEntity = async function (entity) {
@@ -93,8 +105,9 @@ class EntitySet {
       console.warn("ApplicationDbContext Could not find entity", entity);
       return false;
     }
-    mapObjectPropsToViewFields(item, entity.FieldMap);
-
+    if (entity.FieldMap) {
+      mapObjectPropsToViewFields(item, entity.FieldMap);
+    }
     return true;
   };
 
@@ -104,7 +117,15 @@ class EntitySet {
       Object.keys(entity.FieldMap)
     );
     if (!items) return false;
-    mapObjectPropsToViewFields(items[0], entity.FieldMap);
+    if (entity.FieldMap) {
+      mapObjectPropsToViewFields(items[0], entity.FieldMap);
+      return true;
+    }
+  };
+
+  RemoveEntity = async function (entity) {
+    if (!entity.ID) return false;
+    await this.ListRef.deleteListItemAsync(entity.ID);
     return true;
   };
 
@@ -208,4 +229,10 @@ function mapViewFieldToValuePair(fieldMap) {
 
   // console.error("Error setting fieldMap", fieldMap);
   // throw "Error getting fieldmap";
+}
+
+function createWritableObject(input, fields) {
+  const entity = {};
+  fields.map((field) => (entity[field] = input[field]));
+  return entity;
 }

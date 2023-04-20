@@ -1082,6 +1082,12 @@ export function SPList(listDef) {
       //return lookupValue;
       return `${item.ID};#${item.LookupValue ?? ""}`;
     }
+    if (item.LookupValue) {
+      //var lookupValue = new SP.FieldLookupValue();
+      //lookupValue.set_lookupId(item.id);
+      //return lookupValue;
+      return item.LookupValue;
+    }
     if (item.constructor.getName() == "Date") {
       return item.toISOString();
     }
@@ -1135,9 +1141,59 @@ export function SPList(listDef) {
     );
   }
 
-  function createListItemAsync(valuePairs, folderPath) {
+  function createListItemAsync(entity, folderPath = null) {
     return new Promise((resolve, reject) => {
-      createListItem(valuePairs, resolve, folderPath);
+      //self.updateConfig();
+      const currCtx = new SP.ClientContext.get_current();
+      const web = currCtx.get_web();
+      const oList = web.get_lists().getByTitle(self.config.def.title);
+
+      const itemCreateInfo = new SP.ListItemCreationInformation();
+
+      if (folderPath) {
+        var folderUrl =
+          sal.globalConfig.siteUrl +
+          "/Lists/" +
+          self.config.def.name +
+          "/" +
+          folderPath;
+        itemCreateInfo.set_folderUrl(folderUrl);
+      }
+
+      const oListItem = oList.addItem(itemCreateInfo);
+      const restrictedFields = [
+        "ID",
+        "Author",
+        "Created",
+        "Editor",
+        "Modified",
+      ];
+      Object.keys(entity)
+        .filter((key) => !restrictedFields.includes(key))
+        .forEach((key) => {
+          oListItem.set_item(key, mapObjectToListItem(entity[key]));
+        });
+
+      oListItem.update();
+
+      function onCreateListItemSucceeded() {
+        resolve(oListItem.get_id());
+      }
+
+      function onCreateListItemFailed(sender, args) {
+        console.error("Create Item Failed - List: " + self.config.def.name);
+        console.error("ValuePairs", valuePairs);
+        console.error(sender, args);
+        reject(sender);
+      }
+
+      const data = { oListItem: oListItem, resolve, reject };
+
+      currCtx.load(oListItem);
+      currCtx.executeQueryAsync(
+        Function.createDelegate(data, onCreateListItemSucceeded),
+        Function.createDelegate(data, onCreateListItemFailed)
+      );
     });
   }
 
@@ -1384,8 +1440,8 @@ export function SPList(listDef) {
     var oList = web.get_lists().getByTitle(self.config.def.title);
 
     var data = { callback: callback };
-    this.oListItem = oList.getItemById(id);
-    this.oListItem.deleteObject();
+    const oListItem = oList.getItemById(id);
+    oListItem.deleteObject();
 
     function onDeleteListItemsSucceeded(sender, args) {
       //alert('Item updated!');
@@ -1403,10 +1459,14 @@ export function SPList(listDef) {
       );
     }
 
-    self.config.currentContext.executeQueryAsync(
+    currCtx.executeQueryAsync(
       Function.createDelegate(data, onDeleteListItemsSucceeded),
       Function.createDelegate(data, onDeleteListItemsFailed)
     );
+  }
+
+  function deleteListItemAsync(id) {
+    return new Promise((resolve, reject) => deleteListItem(id, resolve));
   }
 
   /*****************************************************************
@@ -2101,6 +2161,7 @@ export function SPList(listDef) {
     updateListItem: updateListItem,
     updateListItemAsync: updateListItemAsync,
     deleteListItem: deleteListItem,
+    deleteListItemAsync,
     setItemPermissions: setItemPermissions,
     setItemPermissionsAsync,
     getItemPermissions: getItemPermissions,

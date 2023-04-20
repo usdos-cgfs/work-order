@@ -12,6 +12,7 @@ import {
   getRepositoryListName,
 } from "../entities/ServiceType.js";
 import { ServiceTypeComponent } from "../components/ServiceTypeComponent.js";
+import { PipelineComponent } from "../components/PipelineComponent.js";
 import { addTask, finishTask, taskDefs } from "../stores/Tasks.js";
 import { getRequestFolderPermissions } from "../infrastructure/Authorization.js";
 import {
@@ -131,9 +132,12 @@ export class RequestDetailView {
 
   PipelineComponent;
 
+  Assignments = ko.observableArray();
   AssignmentsComponent;
 
   IsLoading = ko.observable();
+  LoadedAt = ko.observable();
+
   DisplayModes = DisplayModes;
   DisplayMode = ko.observable();
 
@@ -161,19 +165,20 @@ export class RequestDetailView {
   getFolderPermissions = () => getRequestFolderPermissions(this);
 
   // Controls
-  RefreshAll = async () => {
-    this.RefreshRequest();
+  refreshAll = async () => {
+    this.refreshRequest();
     // this.ServiceTypeComponent.refresh();
     // this.AssignmentsComponent.Refresh();
   };
 
-  RefreshRequest = async () => {
+  refreshRequest = async () => {
     this.IsLoading(true);
     await this._context.Requests.LoadEntity(this);
+    this.LoadedAt(new Date());
     this.IsLoading(false);
   };
 
-  SubmitNewRequest = async () => {
+  submitNewRequest = async () => {
     // 1. Validate Request
     //if (!this.validateRequest()) return;
 
@@ -250,6 +255,7 @@ export class RequestDetailView {
     // Send New WorkOrder Notification to User
     // Create new Action Log Item
     // Initial Assignments
+
     // Progress Request
   };
 
@@ -266,6 +272,31 @@ export class RequestDetailView {
     this.DisplayMode(DisplayModes.Edit);
   };
 
+  closeAndFinalize = async () => {
+    // set all assignments to inactive
+  };
+
+  promptAdvanceModal;
+  promptAdvance = () => {
+    if (!this.promptAdvanceModal) {
+      this.promptAdvanceModal = new bootstrap.Modal(
+        document.getElementById("modal-advance-request"),
+        {}
+      );
+    }
+    this.promptAdvanceModal.show();
+  };
+
+  advanceRequest = async () => {
+    const thisStepNum = this.State.Stage() ?? 0;
+    const nextStepNum = thisStepNum + 1;
+
+    this.State.Stage(nextStepNum);
+    this.promptAdvanceModal.hide();
+  };
+
+  approveAll = async () => {};
+
   displayModeWatcher = (newDisplayMode) => {
     if (DEBUG)
       console.log("RequestDetailView: displayMode changed", newDisplayMode);
@@ -273,7 +304,7 @@ export class RequestDetailView {
       case DisplayModes.New:
         break;
       case DisplayModes.View:
-        this.RefreshAll();
+        //this.refreshAll();
         break;
       default:
     }
@@ -315,25 +346,44 @@ export class RequestDetailView {
       context,
     });
 
-    this.PipelineComponent = ko.pureComputed(() => {
-      if (!this.ServiceType()) {
-        return null;
-      }
-      return {
-        icon: this.ServiceType().Icon,
-        currentStage: this.State.Stage,
-        stages: pipelineStageStore()
-          .filter((stage) => stage.ServiceType.ID == this.ServiceType().ID)
-          .sort(sortByField("Step")),
-      };
+    this.PipelineComponent = new PipelineComponent({
+      request: this,
+      serviceType: this.ServiceType,
     });
+
+    // = ko.pureComputed(() => {
+    //   if (!this.ServiceType()) {
+    //     return null;
+    //   }
+    //   const stages = pipelineStageStore()
+    //     .filter((stage) => stage.ServiceType.ID == this.ServiceType().ID)
+    //     .sort(sortByField("Step"));
+
+    //   const currentStage = stages.find(
+    //     (stage) => stage.Step == this.State.Stage()
+    //   );
+
+    //   ShowAdvancePrompt = ko.observable();
+
+    //   promptAdvance = () => {};
+    //   return {
+    //     icon: this.ServiceType().Icon,
+    //     currentStage,
+    //     stages,
+    //   };
+    // });
 
     this.AssignmentsComponent = new RequestAssignmentsComponent({
       request: this,
+      assignments: this.Assignments,
       context,
     });
 
     this.DisplayMode.subscribe(this.displayModeWatcher);
     this.DisplayMode(displayMode);
+
+    if (displayMode != DisplayModes.New) {
+      this.refreshAll();
+    }
   }
 }

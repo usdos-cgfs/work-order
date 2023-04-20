@@ -43,17 +43,22 @@ ko.bindingHandlers.people = {
     viewModel,
     bindingContext
   ) {
-    //debugger;
-    //  Force to Ensure User
-    var userValue = ko.utils.unwrapObservable(valueAccessor());
-    if (userValue && !userValue.isInPicker(element.id)) {
-      var pickerControl =
-        SPClientPeoplePicker.SPClientPeoplePickerDict[element.id + "_TopSpan"];
-      //var editId = "#" + pickerControl.EditorElementId;
-      //jQuery(editId).val(userValue.userName);
+    var pickerControl =
+      SPClientPeoplePicker.SPClientPeoplePickerDict[element.id + "_TopSpan"];
+    const editorElement = document.getElementById(
+      pickerControl.EditorElementId
+    );
 
-      document.getElementById(pickerControl.EditorElementId).value =
-        userValue.LookupValue;
+    var userValue = ko.utils.unwrapObservable(valueAccessor());
+
+    if (!userValue) {
+      // Clear the form
+      pickerControl.DeleteProcessedUser();
+      return;
+    }
+
+    if (userValue && !userValue.isInPicker(element.id)) {
+      editorElement.value = userValue.LookupValue;
       // Resolve the User
       pickerControl.AddUnresolvedUserFromEditor(true);
     }

@@ -10,7 +10,6 @@ export class ServiceTypeComponent {
     this.ElementId = this.ServiceType()?.UID;
     this.Request = request;
     this.ServiceType.subscribe(this.serviceTypeWatcher);
-    // this.Request.ObservableID.subscribe(this.requestIdWatcher);
 
     if (serviceType()) {
       this.serviceTypeWatcher(serviceType());
@@ -47,14 +46,6 @@ export class ServiceTypeComponent {
       .AddEntity(newEntity, folderPath, this.Request);
 
     return newSvcTypeItemId;
-  };
-
-  requestIdWatcher = async (requestId) => {
-    console.log("ServiceTypeComponent: Request ID Changed", requestId);
-    if (!requestId) {
-      return;
-    }
-    this.refreshServiceTypeEntity();
   };
 
   serviceTypeWatcher = async (newSvcType) => {
