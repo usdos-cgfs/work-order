@@ -1,4 +1,4 @@
-import { pipelineStageStore } from "../entities/Pipelines.js";
+import { pipelineStageStore } from "../entities/PipelineStage.js";
 import { sortByField } from "../common/EntityUtilities.js";
 
 export class PipelineComponent {
@@ -14,11 +14,29 @@ export class PipelineComponent {
       .sort(sortByField("Step"));
   });
 
-  CurrentStage = ko.pureComputed(() =>
-    this.Stages()?.find((stage) => stage.Step == this.request.State.Stage())
+  CurrentStage = ko.pureComputed(
+    () => this.request.State.Stage()
+    // this.Stages()?.find((stage) => stage.ID == this.request.State.Stage()?.ID)
   );
+
+  getNextStage = () => {
+    const thisStepNum = this.request.State.Stage()?.Step ?? 0;
+    const nextStepNum = thisStepNum + 1;
+
+    return this.Stages()?.find((stage) => stage.Step == nextStepNum);
+  };
 
   Icon = ko.pureComputed(() => this.serviceType()?.Icon);
 
-  AdvancePromptIsVisible = ko.observable(false);
+  advanceRequest() {
+    const nextStage = this.getNextStage();
+
+    if (!nextStage) {
+      // End of the Pipeline; time to close
+      // return null;
+    }
+    this.request.State.Stage(nextStage);
+    this.request.ActivityLog.requestAdvanced(nextStage);
+    return;
+  }
 }

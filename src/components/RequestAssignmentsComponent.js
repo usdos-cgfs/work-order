@@ -1,24 +1,15 @@
 import { Assignment, assignmentStates } from "../entities/Assignment.js";
 import { NewAssignmentComponent } from "./NewAssignmentComponent.js";
+import { roles } from "../infrastructure/Authorization.js";
 
 export class RequestAssignmentsComponent {
   constructor({ request, assignments, context }) {
     this.request = request;
     this._context = context;
     this.Assignments = assignments;
+    this.activityLog = request.ActivityLog;
     this.request.ObservableID.subscribe(this.requestIdWatcher);
   }
-
-  // StoredAssignments = ko.pureComputed({
-  //   write: (arr) => {
-  //     this.RequestAssignmentsBlob(JSON.stringify(arr));
-  //   },
-  //   read: () => {
-  //     return JSON.parse(this.RequestAssignmentsBlob());
-  //   },
-  // });
-
-  AssignmentStates = assignmentStates;
 
   Assignments;
 
@@ -47,23 +38,28 @@ export class RequestAssignmentsComponent {
 
   addAssignment = async (assignment = null) => {
     if (!this.request.ID || !assignment) return;
-    // assignment = {
-    //   ID: 12,
-    //   Title: "Test Assignment",
-    //   Role: "SuperAdmin",
-    // };
-    // const assignmentObj = Assignment.CreateFromObject(assignment);
+
     if (!assignment.RequestOrg) {
-      const reqOrg = this.request.PipelineComponent.CurrentStage()?.RequestOrg;
+      const reqOrg = this.request.State.Stage()?.RequestOrg;
       assignment.RequestOrg = reqOrg;
     }
+
+    if (!assignment.PipelineStage) {
+      assignment.PipelineStage = this.request.State.Stage();
+    }
+
+    assignment.Status = assignment.Role.initialStatus;
+
     const folderPath = this.request.getRelativeFolderPath();
+
     const newAssignmentId = await this._context.Assignments.AddEntity(
       assignment,
       folderPath,
       this.request
     );
     this.refreshAssignments();
+
+    this.request.ActivityLog.assignmentAdded(assignment);
   };
 
   removeAssignment = async (assignment) => {
@@ -75,6 +71,8 @@ export class RequestAssignmentsComponent {
       return;
     }
     this.refreshAssignments();
+
+    this.request.ActivityLog.assignmentRemoved(assignment);
   };
 
   newAssignmentComponent = new NewAssignmentComponent({

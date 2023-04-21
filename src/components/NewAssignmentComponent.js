@@ -20,7 +20,6 @@ export class NewAssignmentComponent {
     const assignment = {
       Role: roles[this.Role().key],
       Assignee: this.Assignee(),
-      Status: statusByRole(this.Role()),
     };
     try {
       await this.addAssignment(assignment);
@@ -32,11 +31,4 @@ export class NewAssignmentComponent {
     this.Assignee(null);
     this.Role(null);
   };
-}
-
-function statusByRole(role) {
-  if (role == roles.ActionResolver || role == roles.Approver)
-    return assignmentStates.InProgress;
-
-  return null;
 }

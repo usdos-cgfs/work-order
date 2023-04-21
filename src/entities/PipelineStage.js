@@ -9,6 +9,11 @@ export class PipelineStage {
     return new PipelineStage({ ID, Title: LookupValue });
   };
 
+  static FindInStore = function (props) {
+    if (!props || !props.ID) return null;
+    return pipelineStageStore().find((stage) => stage.ID == props.ID);
+  };
+
   static Views = {
     All: [
       "ID",
@@ -20,6 +25,12 @@ export class PipelineStage {
       "WildCardAssignee",
       "AssignmentFunction",
     ],
+  };
+
+  static ListDef = {
+    name: "ConfigPipelines",
+    title: "ConfigPipelines",
+    fields: PipelineStage.Views.All,
   };
 }
 

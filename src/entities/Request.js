@@ -17,7 +17,18 @@ export class RequestEntity {
   };
 
   static Views = {
-    All: ["ID", "Title"],
+    All: [
+      "ID",
+      "Title",
+      "ServiceType",
+      "RequestorOrg",
+      "Requestor",
+      "RequestSubmitted",
+      "EstClosedDate",
+      "ClosedDate",
+      "PipelineStage",
+      "ActionsBlob",
+    ],
     ByStatus: [
       "ID",
       "Title",
@@ -28,5 +39,11 @@ export class RequestEntity {
       "EstClosedDate",
       "ClosedDate",
     ],
+  };
+
+  static ListDef = {
+    name: "WorkOrder",
+    title: "Work Order",
+    fields: RequestEntity.Views.All,
   };
 }

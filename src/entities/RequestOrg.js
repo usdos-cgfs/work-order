@@ -34,15 +34,11 @@ export class RequestOrg {
     ],
   };
 
-  static Fields = [
-    "ID",
-    "Title",
-    "UserGroup",
-    "ContactInfo",
-    "OrgType",
-    "GTM",
-    "BreakAccess",
-  ];
+  static ListDef = {
+    name: "ConfigRequestOrgs",
+    title: "ConfigRequestOrgs",
+    fields: RequestOrg.Views.All,
+  };
 }
 
 export const requestOrgStore = ko.observableArray([]);

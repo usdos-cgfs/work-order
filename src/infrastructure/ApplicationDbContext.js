@@ -1,52 +1,42 @@
 import { SPList } from "./SAL.js";
 import { Assignment } from "../entities/Assignment.js";
+import { Notification } from "../entities/Notification.js";
+import { RequestEntity } from "../entities/Request.js";
+import { Holiday } from "../entities/Holiday.js";
+import { PipelineStage } from "../entities/PipelineStage.js";
+import { RequestOrg } from "../entities/RequestOrg.js";
+import { ServiceType } from "../entities/ServiceType.js";
+import { Action } from "../entities/Action.js";
 
 const DEBUG = false;
 
 export default class ApplicationDbContext {
   constructor() {}
 
-  Assignments = new EntitySet({
-    name: "Assignment",
-    title: "Assignment",
-    fields: Assignment.Views.All,
-  });
+  Actions = new EntitySet(Action);
 
-  Notifications = new EntitySet({
-    name: "WorkOrderEmails",
-    title: "WorkOrderEmails",
-  });
+  Assignments = new EntitySet(Assignment);
 
-  Requests = new EntitySet({
-    name: "WorkOrder",
-    title: "Work Order",
-  });
+  Notifications = new EntitySet(Notification);
 
-  ConfigHolidays = new EntitySet({
-    name: "ConfigHolidays",
-    title: "ConfigHolidays",
-  });
+  Requests = new EntitySet(RequestEntity);
 
-  ConfigRequestOrgs = new EntitySet({
-    name: "ConfigRequestOrgs",
-    title: "ConfigRequestOrgs",
-  });
+  ConfigHolidays = new EntitySet(Holiday);
 
-  ConfigPipelines = new EntitySet({
-    name: "ConfigPipelines",
-    title: "ConfigPipelines",
-  });
+  ConfigRequestOrgs = new EntitySet(RequestOrg);
 
-  ConfigServiceTypes = new EntitySet({
-    name: "ConfigServiceTypes",
-    title: "ConfigServiceTypes",
-  });
+  ConfigPipelines = new EntitySet(PipelineStage);
+
+  ConfigServiceTypes = new EntitySet(ServiceType);
 
   static Set = (listDef) => new EntitySet(listDef);
 }
 
 class EntitySet {
   constructor(listDef) {
+    if (listDef.ListDef) {
+      listDef = listDef.ListDef;
+    }
     this.ListDef = listDef;
     this.Title = listDef.title;
     this.Name = listDef.name;
@@ -78,23 +68,6 @@ class EntitySet {
     return await this.ListRef.findByReqIdAsync(requestId, fields);
   };
 
-  AddEntity = async function (entity, folderPath, request = null) {
-    if (entity.FieldMap) {
-      entity = mapViewFieldsToValuePairs(entity.FieldMap);
-    }
-
-    if (this.ListDef.fields) {
-      entity = createWritableObject(entity, this.ListDef.fields);
-    }
-
-    if (request) {
-      entity.ReqId = request;
-      // vp.push(["ReqId", request]);
-    }
-    if (DEBUG) console.log(entity);
-    return this.ListRef.createListItemAsync(entity, folderPath);
-  };
-
   LoadEntity = async function (entity) {
     if (!entity.ID == null && !entity.Title) {
       console.error("entity missing Id or title", entity);
@@ -121,7 +94,27 @@ class EntitySet {
       mapObjectPropsToViewFields(items[0], entity.FieldMap);
       return true;
     }
+    Object.assign(entity, items[0]);
+    return true;
   };
+
+  AddEntity = async function (entity, folderPath, request = null) {
+    // if (entity.FieldMap) {
+    //   entity = mapViewFieldsToValuePairs(entity.FieldMap);
+    // } else if (this.ListDef.fields) {
+    const creationfunc = createWritableObject.bind(this);
+    const writeableEntity = creationfunc(entity);
+    // }
+
+    if (request) {
+      writeableEntity.Request = request;
+      // vp.push(["ReqId", request]);
+    }
+    if (DEBUG) console.log(writeableEntity);
+    return this.ListRef.createListItemAsync(writeableEntity, folderPath);
+  };
+
+  UpdateEntity = async function (entity, fields) {};
 
   RemoveEntity = async function (entity) {
     if (!entity.ID) return false;
@@ -205,11 +198,11 @@ function mapViewFieldsToValuePairs(fieldMappings, fields = null) {
         (fields ? fields.includes(key) : true)
     )
     .map((key) => {
-      return [key, mapViewFieldToValuePair(fieldMappings[key])];
+      return [key, mapViewFieldToValue(fieldMappings[key])];
     });
 }
 
-function mapViewFieldToValuePair(fieldMap) {
+function mapViewFieldToValue(fieldMap) {
   // Fieldmap has Three options for getting,
   // 1. observable - the fieldmap represents an observable or other function that returns a value
   // 2. get - the fieldmap is an object that exposes a getter function
@@ -231,8 +224,19 @@ function mapViewFieldToValuePair(fieldMap) {
   // throw "Error getting fieldmap";
 }
 
-function createWritableObject(input, fields) {
+function createWritableObject(input) {
   const entity = {};
-  fields.map((field) => (entity[field] = input[field]));
+  // TODO: We should ensure ListDef includes the fields
+  // We either predefine the fields in the ListDef, or provide a complete fieldmap
+  const fields = this.ListDef.fields ?? Object.keys(input.FieldMap);
+
+  fields.map((field) => {
+    if (input.FieldMap && input.FieldMap[field]) {
+      entity[field] = mapViewFieldToValue(input.FieldMap[field]);
+      return;
+    }
+    entity[field] = input[field];
+  });
+
   return entity;
 }

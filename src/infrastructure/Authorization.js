@@ -1,5 +1,7 @@
 import { People } from "../components/People.js";
+import { assignmentStates } from "../entities/Assignment.js";
 import { OrgTypes, requestOrgStore } from "../entities/RequestOrg.js";
+
 import {
   getCurrentUserPropertiesAsync,
   getUserPropsAsync,
@@ -26,22 +28,28 @@ export const roles = {
   ActionResolver: {
     LookupValue: "Action Resolver",
     description: "Completes an action before moving request forward",
+    isAssignable: true,
     permissions: permissions.RestrictedContribute,
+    initialStatus: assignmentStates.InProgress,
   },
   Approver: {
     LookupValue: "Approver",
     description: "Approves or Rejects the request.",
+    isAssignable: true,
     permissions: permissions.RestrictedContribute,
+    initialStatus: assignmentStates.InProgress,
   },
   Viewer: {
     LookupValue: "Viewer",
     description: "Has view only access to the request.",
+    isAssignable: true,
     permissions: permissions.RestrictedRead,
   },
   Subscriber: {
     LookupValue: "Subscriber",
     description:
       "Has view only access to the request and recieves notifications",
+    isAssignable: true,
     permissions: permissions.RestrictedRead,
   },
 };
@@ -109,7 +117,7 @@ export function getRequestFolderPermissions(request) {
   }
 
   // break pipeline stages at front?
-  request.PipelineComponent().stages.forEach((stage) => {
+  request.PipelineComponent.Stages()?.forEach((stage) => {
     const stageOrg = requestOrgStore().find(
       (org) => org.ID == stage.RequestOrg.ID
     );

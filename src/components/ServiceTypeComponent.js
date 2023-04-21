@@ -4,6 +4,8 @@ import {
   modulePath,
 } from "../entities/ServiceType.js";
 
+const DEBUG = false;
+
 export class ServiceTypeComponent {
   constructor({ request, serviceType, context }) {
     this.ServiceType = serviceType;
@@ -24,7 +26,7 @@ export class ServiceTypeComponent {
   IsLoading = ko.observable();
 
   refreshServiceTypeEntity = async () => {
-    console.log("ServiceTypeComponent: refresh Triggered");
+    if (DEBUG) console.log("ServiceTypeComponent: refresh Triggered");
     this.IsLoading(true);
     var template = this.ServiceTypeEntity();
     template.Title = this.Request.ObservableTitle();
@@ -49,7 +51,8 @@ export class ServiceTypeComponent {
   };
 
   serviceTypeWatcher = async (newSvcType) => {
-    console.log("ServiceTypeComponent: ServiceType Changed", newSvcType);
+    if (DEBUG)
+      console.log("ServiceTypeComponent: ServiceType Changed", newSvcType);
     // This should only be triggered when a new RequestDetailView is created
     // or when the user changes the request from the drop down.
     if (!newSvcType?.HasTemplate) {

@@ -1,27 +1,26 @@
-import { People } from "../components/People.js";
 import { RequestOrg } from "../entities/RequestOrg.js";
+import { serviceTypeStore, ServiceType } from "../entities/ServiceType.js";
+import { requestStates } from "../entities/Request.js";
+
 import { RequestAssignmentsComponent } from "../components/RequestAssignmentsComponent.js";
-import { pipelineStageStore } from "../entities/Pipelines.js";
+import { People } from "../components/People.js";
+import { ServiceTypeComponent } from "../components/ServiceTypeComponent.js";
+import { PipelineComponent } from "../components/PipelineComponent.js";
+
 import {
   createNewRequestTitle,
   sortByField,
 } from "../common/EntityUtilities.js";
 import {
-  serviceTypeStore,
-  ServiceType,
-  getRepositoryListName,
-} from "../entities/ServiceType.js";
-import { ServiceTypeComponent } from "../components/ServiceTypeComponent.js";
-import { PipelineComponent } from "../components/PipelineComponent.js";
-import { addTask, finishTask, taskDefs } from "../stores/Tasks.js";
-import { getRequestFolderPermissions } from "../infrastructure/Authorization.js";
-import {
   calculateEffectiveSubmissionDate,
   businessDaysFromDate,
 } from "../common/DateUtilities.js";
-import { requestStates } from "../entities/Request.js";
-
 import * as Router from "../common/Router.js";
+
+import { addTask, finishTask, taskDefs } from "../stores/Tasks.js";
+import { getRequestFolderPermissions } from "../infrastructure/Authorization.js";
+import { PipelineStage } from "../entities/PipelineStage.js";
+import { ActivityLogComponent } from "../components/ActivityLogComponent.js";
 
 const DEBUG = true;
 
@@ -109,7 +108,10 @@ export class RequestDetailView {
       get: this.RequestorInfo.Office,
     },
     IsActive: this.State.IsActive,
-    RequestStage: this.State.Stage,
+    PipelineStage: {
+      factory: PipelineStage.FindInStore,
+      obs: this.State.Stage,
+    },
     RequestStagePrev: this.State.PreviousStage,
     RequestStatus: this.State.Status,
     RequestStatusPrev: this.State.PreviousStatus,
@@ -129,11 +131,12 @@ export class RequestDetailView {
   };
 
   ServiceTypeComponent;
-
   PipelineComponent;
 
   Assignments = ko.observableArray();
   AssignmentsComponent;
+
+  ActivityLog;
 
   IsLoading = ko.observable();
   LoadedAt = ko.observable();
@@ -199,6 +202,7 @@ export class RequestDetailView {
 
       const listRefs = [
         this._context.Requests,
+        this._context.Actions,
         this._context.Assignments,
         this._context.Notifications,
       ];
@@ -255,21 +259,24 @@ export class RequestDetailView {
     // Send New WorkOrder Notification to User
     // Create new Action Log Item
     // Initial Assignments
+    this.ActivityLog.requestCreated();
 
     // Progress Request
+    this.PipelineComponent.advanceRequest();
   };
 
-  EditRequest = async () => {
+  editRequest = async () => {
     this.DisplayMode(DisplayModes.Edit);
   };
 
-  UpdateRequest = async () => {
+  updateRequest = async () => {
     this.DisplayMode(DisplayModes.View);
   };
 
-  CancelChanges = async () => {
+  cancelChanges = async () => {
     //Refresh
-    this.DisplayMode(DisplayModes.Edit);
+    this.refreshAll();
+    this.DisplayMode(DisplayModes.View);
   };
 
   closeAndFinalize = async () => {
@@ -288,11 +295,9 @@ export class RequestDetailView {
   };
 
   advanceRequest = async () => {
-    const thisStepNum = this.State.Stage() ?? 0;
-    const nextStepNum = thisStepNum + 1;
+    if (this.promptAdvanceModal) this.promptAdvanceModal.hide();
 
-    this.State.Stage(nextStepNum);
-    this.promptAdvanceModal.hide();
+    this.PipelineComponent.advanceRequest();
   };
 
   approveAll = async () => {};
@@ -376,6 +381,11 @@ export class RequestDetailView {
     this.AssignmentsComponent = new RequestAssignmentsComponent({
       request: this,
       assignments: this.Assignments,
+      context,
+    });
+
+    this.ActivityLog = new ActivityLogComponent({
+      request: this,
       context,
     });
 

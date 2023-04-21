@@ -1182,12 +1182,12 @@ export function SPList(listDef) {
 
       function onCreateListItemFailed(sender, args) {
         console.error("Create Item Failed - List: " + self.config.def.name);
-        console.error("ValuePairs", valuePairs);
+        console.error("ValuePairs", entity);
         console.error(sender, args);
         reject(sender);
       }
 
-      const data = { oListItem: oListItem, resolve, reject };
+      const data = { entity, oListItem, resolve, reject };
 
       currCtx.load(oListItem);
       currCtx.executeQueryAsync(
@@ -1334,7 +1334,7 @@ export function SPList(listDef) {
       '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
       '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
       "</Eq><Eq>" +
-      '<FieldRef Name="ReqId" LookupId="TRUE"/><Value Type="Lookup">' +
+      '<FieldRef Name="Request" LookupId="TRUE"/><Value Type="Lookup">' +
       id +
       "</Value>" +
       `</Eq></And></Where></Query>${

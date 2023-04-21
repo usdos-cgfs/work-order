@@ -4,6 +4,14 @@ export const assignmentStates = {
   Approved: "Approved",
   Rejected: "Rejected",
 };
+
+export const assignmentRoles = {
+  ActionResolver: "Action Resolver",
+  Approver: "Approver",
+  Viewer: "Viewer",
+  Subscriber: "Subscriber",
+};
+
 export class Assignment {
   constructor() {}
 
@@ -26,16 +34,20 @@ export class Assignment {
       "Role",
       "Status",
       "ActionOffice",
+      "RequestOrg",
       "IsActive",
       "Comment",
       "CompletionDate",
       "CanDelegate",
       "ActionTaker",
       "PipelineStage",
+      "Request",
     ],
   };
-}
 
-export class AssignmentBlob {
-  constructor() {}
+  static ListDef = {
+    name: "Assignment",
+    title: "Assignment",
+    fields: Assignment.Views.All,
+  };
 }

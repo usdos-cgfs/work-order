@@ -1,4 +1,4 @@
-import { holidayStore } from "../entities/Holidays.js";
+import { holidayStore } from "../entities/Holiday.js";
 
 export function calculateEffectiveSubmissionDate(submissionDate = null) {
   // Check the submitted date, if it's between 3 pm, (19 UTC) and midnight (4 UTC)

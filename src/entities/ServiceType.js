@@ -46,6 +46,11 @@ export class ServiceType {
     return Object.assign(newServiceType, serviceType);
   };
 
+  static FindInStore = function (serviceType) {
+    if (!serviceType || !serviceType.ID) return null;
+    return serviceTypeStore().find((service) => service.ID == serviceType.ID);
+  };
+
   static Views = {
     All: [
       "ID",
@@ -71,5 +76,11 @@ export class ServiceType {
       "EmailPipelineOnClose",
       "HideReport",
     ],
+  };
+
+  static ListDef = {
+    name: "ConfigServiceTypes",
+    title: "ConfigServiceTypes",
+    fields: this.Views.All,
   };
 }
