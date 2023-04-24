@@ -114,7 +114,12 @@ class EntitySet {
     return this.ListRef.createListItemAsync(writeableEntity, folderPath);
   };
 
-  UpdateEntity = async function (entity, fields) {};
+  UpdateEntity = async function (entity, fields = null) {
+    const writeableEntity = createWritableObject.bind(this)(entity, fields);
+    writeableEntity.ID = entity.ID;
+    if (DEBUG) console.log(writeableEntity);
+    return this.ListRef.updateListItemAsync(writeableEntity);
+  };
 
   RemoveEntity = async function (entity) {
     if (!entity.ID) return false;
@@ -136,7 +141,7 @@ class EntitySet {
   };
 }
 
-export function mapObjectPropsToViewFields(inputObject, fieldMappings) {
+function mapObjectPropsToViewFields(inputObject, fieldMappings) {
   Object.keys(fieldMappings).forEach((key) => {
     if (DEBUG) console.log(`ORM Setting ${key} to`, inputObject[key]);
     mapObjectToViewField(inputObject[key], fieldMappings[key]);
@@ -224,11 +229,11 @@ function mapViewFieldToValue(fieldMap) {
   // throw "Error getting fieldmap";
 }
 
-function createWritableObject(input) {
+function createWritableObject(input, selectedFields = null) {
   const entity = {};
-  // TODO: We should ensure ListDef includes the fields
   // We either predefine the fields in the ListDef, or provide a complete fieldmap
-  const fields = this.ListDef.fields ?? Object.keys(input.FieldMap);
+  const fields =
+    selectedFields ?? this.ListDef.fields ?? Object.keys(input.FieldMap);
 
   fields.map((field) => {
     if (input.FieldMap && input.FieldMap[field]) {

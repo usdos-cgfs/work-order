@@ -9,7 +9,14 @@ export class DateField {
   }
 
   get = () => {
-    return this.ObservableDateTime()?.toISOString();
+    if (
+      !this.ObservableDateTime() ||
+      isNaN(this.ObservableDateTime().valueOf())
+    ) {
+      return null;
+    }
+
+    return this.ObservableDateTime().toISOString();
   };
 
   set = (newDate) => {
@@ -27,12 +34,13 @@ export class DateField {
       if (!this.ObservableDateTime()) return null;
       const d = this.ObservableDateTime();
       return [
-        d.getUTCFullYear(),
-        d.getUTCMonth().toString().padStart(2, "0"),
+        d.getUTCFullYear().toString().padStart(4, "0"),
+        (d.getUTCMonth() + 1).toString().padStart(2, "0"),
         d.getUTCDate().toString().padStart(2, "0"),
       ].join("-");
     },
     write: (val) => {
+      if (!val) return;
       //writes in format
       this.ObservableDateTime(new Date(val));
     },

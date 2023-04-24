@@ -21,7 +21,6 @@ export class Assignment {
 
   static CreateFromObject = function (assignment) {
     const newAssignment = new Assignment();
-    //mapObjectPropsToViewFields(assignment, newAssignment.FieldMap);
     Object.assign(newAssignment, assignment);
     return newAssignment;
   };

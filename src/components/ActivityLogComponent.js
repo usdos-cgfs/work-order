@@ -5,6 +5,11 @@ export class ActivityLogComponent {
     this.request = request;
     this._context = context;
     this.request.ObservableID.subscribe(this.requestIdWatcher);
+    this.request.ActivityQueue.subscribe(
+      this.activityQueueWatcher,
+      this,
+      "arrayChange"
+    );
   }
   Actions = ko.observableArray();
 
@@ -12,6 +17,28 @@ export class ActivityLogComponent {
 
   requestIdWatcher = (newId) => {
     this.refreshActions();
+  };
+
+  activityQueueWatcher = (changes) => {
+    const activities = changes
+      .filter((change) => change.status == "added")
+      .map((change) => change.value);
+
+    activities.map(({ activity, data }) => {
+      if (this.actionTypeFunctionMap[activity]) {
+        this.actionTypeFunctionMap[activity](data);
+      }
+    });
+  };
+
+  actionTypeFunctionMap = {
+    Assigned: this.assignmentAdded.bind(this),
+    Unassigned: this.assignmentRemoved.bind(this),
+    Created: this.requestCreated.bind(this),
+    Advanced: this.requestAdvanced.bind(this),
+    Approved: this.requestApproved.bind(this),
+    Rejected: this.requestRejected.bind(this),
+    Closed: this.requestClosed.bind(this),
   };
 
   refreshActions = async () => {
@@ -39,28 +66,31 @@ export class ActivityLogComponent {
     this.refreshActions();
   };
 
-  requestCreated = async () => {
+  async requestCreated() {
     this.addAction({
       ActionType: actionTypes.Created,
       Description: `The request was submitted with an effective submission date of ${this.request.Dates.Submitted()?.toLocaleDateString()}.`,
     });
-  };
+  }
 
-  requestAdvanced = async (stage) => {
+  async requestAdvanced(stage) {
     this.addAction({
       ActionType: actionTypes.Advanced,
       Description: `The request was advanced to stage ${stage.Step}: ${stage.Title}.`,
     });
-  };
+  }
 
-  requestClosed = async () => {
+  async requestClosed() {
     this.addAction({
       ActionType: actionTypes.Closed,
       Description: `The request was closed with a status of ${this.request.State.Status()}.`,
     });
-  };
+  }
 
-  assignmentAdded = async (assignment) => {
+  async requestApproved() {}
+  async requestRejected() {}
+
+  async assignmentAdded(assignment) {
     let actionDescription = `The following ${assignment.Role.LookupValue}s have been assigned to this request:<br>`;
     if (assignment.Assignee?.Title) {
       actionDescription += `${assignment.Assignee.Title} - `;
@@ -68,12 +98,12 @@ export class ActivityLogComponent {
     actionDescription += assignment.RequestOrg?.Title;
 
     this.addAction({
-      ActionType: actionTypes.Assignment,
+      ActionType: actionTypes.Assigned,
       Description: actionDescription,
     });
-  };
+  }
 
-  assignmentRemoved = async (assignment) => {
+  async assignmentRemoved(assignment) {
     let actionDescription = `The following ${assignment.Role.LookupValue}s have been removed from this request:<br>`;
     if (assignment.Assignee?.Title) {
       actionDescription += `${assignment.Assignee.Title} - `;
@@ -81,8 +111,8 @@ export class ActivityLogComponent {
     actionDescription += assignment.RequestOrg?.Title;
 
     this.addAction({
-      ActionType: actionTypes.Assignment,
+      ActionType: actionTypes.Unassigned,
       Description: actionDescription,
     });
-  };
+  }
 }

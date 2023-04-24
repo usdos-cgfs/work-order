@@ -308,13 +308,15 @@
             </button>
             <!-- /ko -->
             <!-- ko if: DisplayMode() == DisplayModes.View -->
-            <button type="button" data-bind="click: editRequest">Edit</button>
+            <button type="button" data-bind="click: editRequestHandler">
+              Edit
+            </button>
             <!-- /ko -->
             <!-- ko if: DisplayMode() == DisplayModes.Edit -->
-            <button type="button" data-bind="click: updateRequest">
+            <button type="button" data-bind="click: updateRequestHandler">
               Save Changes
             </button>
-            <button type="button" data-bind="click: cancelChanges">
+            <button type="button" data-bind="click: cancelChangesHandler">
               Cancel
             </button>
             <!-- /ko -->

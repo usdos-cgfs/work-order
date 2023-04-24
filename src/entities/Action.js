@@ -1,5 +1,6 @@
 export const actionTypes = {
-  Assignment: "Assignment",
+  Assigned: "Assigned",
+  Unassigned: "Unassigned",
   Created: "Created",
   Advanced: "Advanced",
   Approved: "Approved",

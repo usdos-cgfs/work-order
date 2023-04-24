@@ -1,6 +1,13 @@
 import { Assignment, assignmentStates } from "../entities/Assignment.js";
+import { RequestOrg } from "../entities/RequestOrg.js";
+import { actionTypes } from "../entities/Action.js";
+
 import { NewAssignmentComponent } from "./NewAssignmentComponent.js";
-import { roles } from "../infrastructure/Authorization.js";
+import {
+  roles,
+  AssignmentFunctions,
+  stageActionRoleMap,
+} from "../infrastructure/Authorization.js";
 
 export class RequestAssignmentsComponent {
   constructor({ request, assignments, context }) {
@@ -59,7 +66,11 @@ export class RequestAssignmentsComponent {
     );
     this.refreshAssignments();
 
-    this.request.ActivityLog.assignmentAdded(assignment);
+    //this.request.ActivityLog.assignmentAdded(assignment);
+    this.request.ActivityQueue.push({
+      activity: actionTypes.Assigned,
+      data: assignment,
+    });
   };
 
   removeAssignment = async (assignment) => {
@@ -72,8 +83,40 @@ export class RequestAssignmentsComponent {
     }
     this.refreshAssignments();
 
-    this.request.ActivityLog.assignmentRemoved(assignment);
+    //this.request.ActivityLog.assignmentRemoved(assignment);
+    this.request.ActivityQueue.push({
+      activity: actionTypes.Unassigned,
+      data: assignment,
+    });
   };
+
+  async createStageAssignments(stage) {
+    const newAssignment = {
+      RequestOrg: stage.RequestOrg,
+      PipelineStage: stage,
+      IsActive: true,
+      Role: stageActionRoleMap[stage.ActionType],
+    };
+
+    if (
+      stage.AssignmentFunction &&
+      AssignmentFunctions[stage.AssignmentFunction]
+    ) {
+      const people = AssignmentFunctions[stage.AssignmentFunction].bind(
+        this.request
+      )();
+      if (people && people.Title) {
+        newAssignment.Assignee = people;
+        //TODO: Trigger permissions update based on role
+      }
+    } else {
+      newAssignment.Assignee = RequestOrg.FindInStore(
+        stage.RequestOrg
+      )?.UserGroup;
+    }
+
+    await this.addAssignment(newAssignment);
+  }
 
   newAssignmentComponent = new NewAssignmentComponent({
     addAssignment: this.addAssignment,

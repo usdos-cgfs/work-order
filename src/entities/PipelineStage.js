@@ -1,3 +1,11 @@
+export const stageActionTypes = {
+  PendingAssignment: "Pending Assignment",
+  PendingApproval: "Pending Approval",
+  PendingAction: "Pending Action",
+  PendingResolution: "Pending Resolution",
+  Notification: "Notification",
+};
+
 export class PipelineStage {
   constructor({ ID, Title }) {
     this.ID = ID;

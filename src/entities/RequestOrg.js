@@ -22,6 +22,11 @@ export class RequestOrg {
     //return Object.assign(newRequestOrg, requestOrg);
   };
 
+  static FindInStore = function (entity) {
+    if (!entity?.ID) return null;
+    return requestOrgStore().find((reqOrg) => reqOrg.ID == entity.ID);
+  };
+
   static Views = {
     All: [
       "ID",

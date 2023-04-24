@@ -1,6 +1,7 @@
 import { RequestOrg } from "../entities/RequestOrg.js";
 import { serviceTypeStore, ServiceType } from "../entities/ServiceType.js";
 import { requestStates } from "../entities/Request.js";
+import { actionTypes } from "../entities/Action.js";
 
 import { RequestAssignmentsComponent } from "../components/RequestAssignmentsComponent.js";
 import { People } from "../components/People.js";
@@ -136,6 +137,7 @@ export class RequestDetailView {
   Assignments = ko.observableArray();
   AssignmentsComponent;
 
+  ActivityQueue = ko.observableArray();
   ActivityLog;
 
   IsLoading = ko.observable();
@@ -143,6 +145,8 @@ export class RequestDetailView {
 
   DisplayModes = DisplayModes;
   DisplayMode = ko.observable();
+
+  activityQueueWatcher() {}
 
   // Request Methods
   validateRequest = () => {
@@ -262,18 +266,22 @@ export class RequestDetailView {
     this.ActivityLog.requestCreated();
 
     // Progress Request
-    this.PipelineComponent.advanceRequest();
+    this.advanceRequest();
   };
 
-  editRequest = async () => {
+  saveChanges(fields = null) {
+    this._context.Requests.UpdateEntity(this, fields);
+  }
+
+  editRequestHandler = async () => {
     this.DisplayMode(DisplayModes.Edit);
   };
 
-  updateRequest = async () => {
+  updateRequestHandler = async () => {
     this.DisplayMode(DisplayModes.View);
   };
 
-  cancelChanges = async () => {
+  cancelChangesHandler = async () => {
     //Refresh
     this.refreshAll();
     this.DisplayMode(DisplayModes.View);
@@ -297,7 +305,22 @@ export class RequestDetailView {
   advanceRequest = async () => {
     if (this.promptAdvanceModal) this.promptAdvanceModal.hide();
 
-    this.PipelineComponent.advanceRequest();
+    const nextStage = this.PipelineComponent.getNextStage();
+
+    if (!nextStage) {
+      // End of the Pipeline; time to close
+      // return null;
+    }
+    this.State.Stage(nextStage);
+
+    //await this.saveChanges(["PipelineStage"]);
+
+    this.ActivityQueue.push({
+      activity: actionTypes.Advanced,
+      data: nextStage,
+    });
+    this.AssignmentsComponent.createStageAssignments(nextStage);
+    return;
   };
 
   approveAll = async () => {};

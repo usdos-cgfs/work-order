@@ -1422,9 +1422,54 @@ export function SPList(listDef) {
     );
   }
 
-  function updateListItemAsync(id, valuePairs) {
+  function updateListItemAsync(entity) {
+    if (!entity?.ID) {
+      return false;
+    }
+
     return new Promise((resolve, reject) => {
-      updateListItem(id, valuePairs, resolve);
+      const currCtx = new SP.ClientContext.get_current();
+      const web = currCtx.get_web();
+      const oList = web.get_lists().getByTitle(self.config.def.title);
+
+      const oListItem = oList.getItemById(entity.ID);
+
+      const restrictedFields = [
+        "ID",
+        "Author",
+        "Created",
+        "Editor",
+        "Modified",
+      ];
+
+      Object.keys(entity)
+        .filter((key) => !restrictedFields.includes(key))
+        .forEach((key) => {
+          oListItem.set_item(key, mapObjectToListItem(entity[key]));
+        });
+
+      oListItem.update();
+
+      function onUpdateListItemsSucceeded() {
+        //alert('Item updated!');
+        console.log("Successfully updated " + this.oListItem.get_item("Title"));
+        resolve();
+      }
+
+      function onUpdateListItemFailed(sender, args) {
+        console.error("Update Failed - List: " + self.config.def.name);
+        console.error("ValuePairs", valuePairs);
+        console.error(sender, args);
+        reject(args);
+      }
+
+      const data = { oListItem, resolve, reject };
+
+      currCtx.load(oListItem);
+      currCtx.executeQueryAsync(
+        Function.createDelegate(data, onUpdateListItemsSucceeded),
+        Function.createDelegate(data, onUpdateListItemFailed)
+      );
     });
   }
 
@@ -2159,7 +2204,7 @@ export function SPList(listDef) {
     findByReqIdAsync,
     findByIdAsync,
     updateListItem: updateListItem,
-    updateListItemAsync: updateListItemAsync,
+    updateListItemAsync,
     deleteListItem: deleteListItem,
     deleteListItemAsync,
     setItemPermissions: setItemPermissions,

@@ -54,6 +54,14 @@ export const roles = {
   },
 };
 
+export const stageActionRoleMap = {
+  "Pending Assignment": roles.ActionResolver,
+  "Pending Approval": roles.Approver,
+  "Pending Action": roles.ActionResolver,
+  "Pending Resolution": roles.ActionResolver,
+  Notification: roles.Subscriber,
+};
+
 export class User {
   Groups = null;
 
@@ -147,13 +155,12 @@ export function getRequestFolderPermissions(request) {
 /**
  * Assignment functions are function that can be called by pipeline stages
  * Each function is bound to the current request (i.e. "this" refers to the RequestDetailView)
- * Functions should return a valuepair of permissions.
+ * Functions should return a user/group entity.
  */
 
 export const AssignmentFunctions = {
   TestFunc: function () {
     console.log("Hello", this);
-    return;
-    return this.Requestor();
+    return this.RequestorInfo.Requestor();
   },
 };
