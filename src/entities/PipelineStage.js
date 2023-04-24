@@ -32,6 +32,7 @@ export class PipelineStage {
       "RequestOrg",
       "WildCardAssignee",
       "AssignmentFunction",
+      "ActionTemplateId",
     ],
   };
 

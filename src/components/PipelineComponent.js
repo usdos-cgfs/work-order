@@ -1,4 +1,7 @@
-import { pipelineStageStore } from "../entities/PipelineStage.js";
+import {
+  pipelineStageStore,
+  stageActionTypes,
+} from "../entities/PipelineStage.js";
 import { sortByField } from "../common/EntityUtilities.js";
 
 export class PipelineComponent {
@@ -19,6 +22,32 @@ export class PipelineComponent {
     // this.Stages()?.find((stage) => stage.ID == this.request.State.Stage()?.ID)
   );
 
+  getActionTemplateId = ko.pureComputed(() => {
+    const stage = this.CurrentStage();
+    if (!stage) {
+      return;
+    }
+    return stageActionTypeTemplateMap[stage.ActionType];
+  });
+
+  getCustomActionTemplateId = ko.pureComputed(() => {
+    const stage = this.CurrentStage();
+    if (!stage || !stage.ActionTemplateId) {
+      return;
+    }
+    if (!document.getElementById(stage.ActionTemplateId)) {
+      return;
+    }
+    return stage.ActionTemplateId;
+  });
+
+  templateData = ko.pureComputed(() => {
+    return {
+      request: this.request,
+      serviceType: this.request.ServiceTypeComponent.ServiceTypeEntity,
+    };
+  });
+
   getNextStage() {
     const thisStepNum = this.request.State.Stage()?.Step ?? 0;
     const nextStepNum = thisStepNum + 1;
@@ -28,3 +57,10 @@ export class PipelineComponent {
 
   Icon = ko.pureComputed(() => this.serviceType()?.Icon);
 }
+
+const stageActionTypeTemplateMap = {
+  "Pending Assignment": "tmpl-stage-assignment",
+  "Pending Approval": "tmpl-stage-approval",
+  "Pending Action": "tmpl-stage-action",
+  "Pending Resolution": "tmpl-stage-close",
+};

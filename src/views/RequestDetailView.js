@@ -415,6 +415,7 @@ export class RequestDetailView {
     this.DisplayMode.subscribe(this.displayModeWatcher);
     this.DisplayMode(displayMode);
 
+    this.LoadedAt(new Date());
     if (displayMode != DisplayModes.New) {
       this.refreshAll();
     }
