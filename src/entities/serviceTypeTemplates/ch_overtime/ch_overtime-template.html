@@ -15,7 +15,7 @@
         >
         <div
           id="ch_overtime-people-gov-manager"
-          data-bind="people: DepartmentManager"
+          data-bind="people: GovManager"
         ></div>
       </div>
     </div>
@@ -51,7 +51,7 @@
       </div>
       <div class="col-6 pb-2">
         <h6>Gov Manager:</h6>
-        <div data-bind="text: DepartmentManager()?.Title"></div>
+        <div data-bind="text: GovManager()?.Title"></div>
       </div>
     </div>
     <div class="row">
@@ -79,25 +79,25 @@
     </div>
   </div>
 
-  <!-- ko if: Request.State.Stage() == 1 -->
-  <div class="col-6 pb-2">
-    <label for="ch_overtime-people-gtm"><h6>GTM:</h6></label>
-    <div id="ch_overtime-people-gtm" data-bind="people: GTM"></div>
+  <!-- ko if: Request.State.Stage()?.Step >= 1 -->
+  <div class="row">
+    <div class="col-6 pb-2">
+      <h6>APM:</h6>
+      <div data-bind="text: APM()?.Title"></div>
+    </div>
   </div>
-  <button type="button" data-bind="click: Submit">Approve</button>
-  <button type="button" class="btn btn-danger">Reject</button>
   <!-- /ko -->
-  <!-- ko if: Request.State.Stage() == 2 -->
+  <!-- ko if: Request.State.Stage()?.Step >= 2 -->
   <div class="col-6 pb-2">
-    <h6>Gov Manager:</h6>
+    <h6>GTM:</h6>
     <div data-bind="text: GTM()?.Title"></div>
   </div>
+  <!-- /ko -->
+  <!-- ko if: Request.State.Stage()?.Step >= 3 -->
   <div class="col-6 pb-2">
-    <label for="ch_overtime-people-gtm"><h6>APM:</h6></label>
-    <div id="ch_overtime-people-gtm" data-bind="people: APM"></div>
+    <h6>Task Order Info:</h6>
+    <div data-bind="text: "></div>
   </div>
-  <button type="button" data-bind="click: Submit">Approve</button>
-  <button type="button" class="btn btn-danger">Reject</button>
   <!-- /ko -->
 
   <!-- /ko -->

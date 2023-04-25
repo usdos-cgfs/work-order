@@ -7,7 +7,7 @@ export default class CH_OverTime {
   }
 
   Contractor = ko.observable();
-  DepartmentManager = ko.observable();
+  GovManager = ko.observable();
   GTM = ko.observable();
   APM = ko.observable();
 
@@ -16,13 +16,18 @@ export default class CH_OverTime {
 
   Hours = ko.observable();
 
+  TaskOrder = ko.observable();
+  RequisitionNumber = ko.observable();
+  LaborCategory = ko.observable();
+  ContractorType = ko.observable();
+
   FieldMap = {
     FullName: {
       obs: this.Contractor,
       factory: People.Create,
     },
     ManagerDept: {
-      obs: this.DepartmentManager,
+      obs: this.GovManager,
       factory: People.Create,
     },
     GTM: {

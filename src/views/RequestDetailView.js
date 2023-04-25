@@ -313,7 +313,7 @@ export class RequestDetailView {
     }
     this.State.Stage(nextStage);
 
-    //await this.saveChanges(["PipelineStage"]);
+    await this.saveChanges(["PipelineStage"]);
 
     this.ActivityQueue.push({
       activity: actionTypes.Advanced,
@@ -322,6 +322,15 @@ export class RequestDetailView {
     this.AssignmentsComponent.createStageAssignments(nextStage);
     return;
   };
+
+  approveRequestHandler = () => {
+    this.approveRequest();
+  };
+
+  async approveRequest() {
+    await this.AssignmentsComponent.approveUserAssignments(this._currentUser);
+    this.promptAdvance();
+  }
 
   approveAll = async () => {};
 

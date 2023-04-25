@@ -87,8 +87,29 @@ export class ActivityLogComponent {
     });
   }
 
-  async requestApproved() {}
-  async requestRejected() {}
+  async assignmentCompleted(assignment) {
+    let actionDescription = `${assignment.ActionTaker.Title} has ${assignment.Status} an assignment.`;
+    this.addAction({
+      ActionType: assignment.Status,
+      Description: actionDescription,
+    });
+  }
+
+  async requestApproved(assignment) {
+    let actionDescription = `${assignment.ActionTaker.Title} has ${assignment.Status} an assignment.`;
+    this.addAction({
+      ActionType: actionTypes.Approved,
+      Description: actionDescription,
+    });
+  }
+
+  async requestRejected(assignment) {
+    let actionDescription = `${assignment.ActionTaker.Title} has ${assignment.Status} an assignment.`;
+    this.addAction({
+      ActionType: actionTypes.Rejected,
+      Description: actionDescription,
+    });
+  }
 
   async assignmentAdded(assignment) {
     let actionDescription = `The following ${assignment.Role.LookupValue}s have been assigned to this request:<br>`;

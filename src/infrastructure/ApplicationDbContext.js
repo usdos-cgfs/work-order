@@ -133,10 +133,9 @@ class EntitySet {
   };
 
   SetItemPermissions = async function (entityId, valuePairs, reset = false) {
-    const salValuePairs = valuePairs.map((vp) => [
-      vp[0].LoginName ?? vp[0].Title,
-      vp[1],
-    ]);
+    const salValuePairs = valuePairs
+      .filter((vp) => vp[0] && vp[1])
+      .map((vp) => [vp[0].LoginName ?? vp[0].Title, vp[1]]);
     return this.ListRef.setItemPermissionsAsync(entityId, salValuePairs, reset);
   };
 }
@@ -232,16 +231,31 @@ function mapViewFieldToValue(fieldMap) {
 function createWritableObject(input, selectedFields = null) {
   const entity = {};
   // We either predefine the fields in the ListDef, or provide a complete fieldmap
-  const fields =
-    selectedFields ?? this.ListDef.fields ?? Object.keys(input.FieldMap);
+  const allWriteableFieldsSet = new Set([]);
+  if (this.ListDef.fields) {
+    this.ListDef.fields.forEach((field) => allWriteableFieldsSet.add(field));
+  }
+  if (input.FieldMap) {
+    Object.keys(input.FieldMap).forEach((field) =>
+      allWriteableFieldsSet.add(field)
+    );
+  }
+  const allWriteableFields = [...allWriteableFieldsSet];
 
-  fields.map((field) => {
-    if (input.FieldMap && input.FieldMap[field]) {
-      entity[field] = mapViewFieldToValue(input.FieldMap[field]);
-      return;
-    }
-    entity[field] = input[field];
-  });
+  const fields =
+    selectedFields ??
+    (input.FieldMap ? Object.keys(input.FieldMap) : null) ??
+    Object.keys(input);
+
+  fields
+    .filter((field) => allWriteableFields.includes(field))
+    .map((field) => {
+      if (input.FieldMap && input.FieldMap[field]) {
+        entity[field] = mapViewFieldToValue(input.FieldMap[field]);
+        return;
+      }
+      entity[field] = input[field];
+    });
 
   return entity;
 }

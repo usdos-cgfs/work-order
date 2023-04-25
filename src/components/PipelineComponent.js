@@ -3,6 +3,12 @@ import {
   stageActionTypes,
 } from "../entities/PipelineStage.js";
 import { sortByField } from "../common/EntityUtilities.js";
+import { assignmentStates } from "../entities/Assignment.js";
+
+const assignmentRoleComponentMap = {
+  "Action Resolver": "resolver-actions",
+  Approver: "approver-actions",
+};
 
 export class PipelineComponent {
   constructor({ request, serviceType }) {
@@ -28,6 +34,27 @@ export class PipelineComponent {
       return;
     }
     return stageActionTypeTemplateMap[stage.ActionType];
+  });
+
+  currentStageActiveUserAssignments = ko.pureComputed(() => {
+    const stage = this.request.State.Stage();
+    const assignments = this.request
+      .Assignments()
+      .filter(
+        (assignment) =>
+          assignment.PipelineStage?.ID == stage.ID &&
+          assignment.Status == assignmentStates.InProgress
+      )
+      .map((assignment) => {
+        return {
+          assignment,
+          completeAssignment: this.completeAssignment,
+          actionComponentName: ko.observable(
+            assignmentRoleComponentMap[assignment.Role]
+          ),
+        };
+      });
+    return assignments;
   });
 
   getCustomActionTemplateId = ko.pureComputed(() => {

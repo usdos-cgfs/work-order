@@ -1,5 +1,8 @@
 import { People } from "../components/People.js";
 import { ensureUserByKeyAsync } from "../infrastructure/SAL.js";
+import { appRoot } from "../common/Router.js";
+
+const componentPath = (path) => `${appRoot}/SiteAssets/wo/components/${path}`;
 
 ko.bindingHandlers.people = {
   init: function (element, valueAccessor, allBindingsAccessor) {
@@ -75,3 +78,63 @@ ko.bindingHandlers.dateField = {
     bindingContext
   ) {},
 };
+
+const templateFromPathLoader = {
+  loadTemplate: function (name, templateConfig, callback) {
+    if (templateConfig.fromPath) {
+      fetch(componentPath(templateConfig.fromPath))
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(
+              `Fetching the HTML file went wrong - ${response.statusText}`
+            );
+          }
+          return response.text();
+        })
+        .then((text) =>
+          ko.components.defaultLoader.loadTemplate(name, text, callback)
+        );
+    } else {
+      callback(null);
+    }
+  },
+};
+
+ko.components.loaders.unshift(templateFromPathLoader);
+
+const viewModelCustomLoader = {
+  loadViewModel: function (name, viewModelConfig, callback) {
+    if (viewModelConfig.viaLoader) {
+      console.log("loading module", name);
+      const module = import(componentPath(viewModelConfig.viaLoader)).then(
+        (module) => {
+          console.log("imported module", name);
+          const viewModelConstructor = module.default;
+          // We need a createViewModel function, not a plain constructor.
+          // We can use the default loader to convert to the
+          // required format.
+          ko.components.defaultLoader.loadViewModel(
+            name,
+            viewModelConstructor,
+            callback
+          );
+        }
+      );
+    } else {
+      // Unrecognized config format. Let another loader handle it.
+      callback(null);
+    }
+  },
+};
+
+ko.components.loaders.unshift(viewModelCustomLoader);
+
+ko.components.register("approver-actions", {
+  template: { fromPath: "AssignmentActions/ApprovalTemplate.html" },
+  viewModel: { viaLoader: "AssignmentActions/ApprovalModule.js" },
+});
+
+ko.components.register("resolver-actions", {
+  template: { fromPath: "AssignmentActions/ResolverTemplate.html" },
+  viewModel: { viaLoader: "AssignmentActions/ResolverModule.js" },
+});

@@ -4,6 +4,7 @@ export const actionTypes = {
   Created: "Created",
   Advanced: "Advanced",
   Approved: "Approved",
+  Completed: "Completed",
   Rejected: "Rejected",
   Closed: "Closed",
 };

@@ -62,6 +62,8 @@ export const stageActionRoleMap = {
   Notification: roles.Subscriber,
 };
 
+export const currentUser = ko.observable();
+
 export class User {
   Groups = null;
 
@@ -162,5 +164,14 @@ export const AssignmentFunctions = {
   TestFunc: function () {
     console.log("Hello", this);
     return this.RequestorInfo.Requestor();
+  },
+  getGovManager: function () {
+    return this.ServiceTypeComponent.ServiceTypeEntity()?.GovManager();
+  },
+  getAPM: function () {
+    return this.ServiceTypeComponent.ServiceTypeEntity()?.APM();
+  },
+  getGTM: function () {
+    return this.ServiceTypeComponent.ServiceTypeEntity()?.GTM();
   },
 };

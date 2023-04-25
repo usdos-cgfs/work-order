@@ -11,7 +11,7 @@ import "./common/KnockoutExtensions.js";
 import { sortByTitle } from "./common/EntityUtilities.js";
 import { getUrlParam, setUrlParam } from "./common/Router.js";
 
-import { User } from "./infrastructure/Authorization.js";
+import { User, currentUser } from "./infrastructure/Authorization.js";
 import ApplicationDbContext from "./infrastructure/ApplicationDbContext.js";
 import { InitSal } from "./infrastructure/SAL.js";
 
@@ -97,6 +97,7 @@ class App {
 
     user: {
       this.currentUser = await User.Create();
+      currentUser(this.currentUser);
     }
 
     routing: {
