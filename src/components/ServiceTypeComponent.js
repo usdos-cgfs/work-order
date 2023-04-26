@@ -7,11 +7,13 @@ import {
 const DEBUG = false;
 
 export class ServiceTypeComponent {
-  constructor({ request, serviceType, context }) {
+  constructor({ request, serviceType, serviceTypeEntity, context }) {
     this.ServiceType = serviceType;
     this.ElementId = this.ServiceType()?.UID;
     this.Request = request;
     this.ServiceType.subscribe(this.serviceTypeWatcher);
+
+    this.ServiceTypeEntity = serviceTypeEntity;
 
     if (serviceType()) {
       this.serviceTypeWatcher(serviceType());
@@ -21,7 +23,7 @@ export class ServiceTypeComponent {
   ElementId = null;
   ComponentsAreLoading = ko.observable();
 
-  ServiceTypeEntity = ko.observable();
+  ServiceTypeEntity;
 
   IsLoading = ko.observable();
 

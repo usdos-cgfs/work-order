@@ -12,6 +12,11 @@ export const assignmentRoles = {
   Subscriber: "Subscriber",
 };
 
+export const assignmentRoleComponentMap = {
+  "Action Resolver": "resolver-actions",
+  Approver: "approver-actions",
+};
+
 export class Assignment {
   constructor() {}
 

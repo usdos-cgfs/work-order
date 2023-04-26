@@ -2,7 +2,7 @@ import { People } from "../components/People.js";
 import { ensureUserByKeyAsync } from "../infrastructure/SAL.js";
 import { appRoot } from "../common/Router.js";
 
-const componentPath = (path) => `${appRoot}/SiteAssets/wo/components/${path}`;
+const componentPath = (path) => `${appRoot}/SiteAssets/wo/${path}`;
 
 ko.bindingHandlers.people = {
   init: function (element, valueAccessor, allBindingsAccessor) {
@@ -130,11 +130,22 @@ const viewModelCustomLoader = {
 ko.components.loaders.unshift(viewModelCustomLoader);
 
 ko.components.register("approver-actions", {
-  template: { fromPath: "AssignmentActions/ApprovalTemplate.html" },
-  viewModel: { viaLoader: "AssignmentActions/ApprovalModule.js" },
+  template: { fromPath: "components/AssignmentActions/ApprovalTemplate.html" },
+  viewModel: { viaLoader: "components/AssignmentActions/ApprovalModule.js" },
 });
 
 ko.components.register("resolver-actions", {
-  template: { fromPath: "AssignmentActions/ResolverTemplate.html" },
-  viewModel: { viaLoader: "AssignmentActions/ResolverModule.js" },
+  template: { fromPath: "components/AssignmentActions/ResolverTemplate.html" },
+  viewModel: { viaLoader: "components/AssignmentActions/ResolverModule.js" },
 });
+
+export function registerServiceTypeComponent(componentName, serviceTypeUid) {
+  ko.components.register(componentName, {
+    template: {
+      fromPath: `entities/ServiceTypeTemplates/${serviceTypeUid}-template.html`,
+    },
+    viewModel: {
+      viaLoader: `entities/ServiceTypeTemplates/${serviceTypeUid}-module.js`,
+    },
+  });
+}

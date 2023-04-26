@@ -22,6 +22,7 @@ import { addTask, finishTask, taskDefs } from "../stores/Tasks.js";
 import { getRequestFolderPermissions } from "../infrastructure/Authorization.js";
 import { PipelineStage } from "../entities/PipelineStage.js";
 import { ActivityLogComponent } from "../components/ActivityLogComponent.js";
+import PipelineStageAssignments from "../components/PipelineStageAssignments.js";
 
 const DEBUG = true;
 
@@ -131,8 +132,10 @@ export class RequestDetailView {
     }, // {id, title},
   };
 
+  ServiceTypeEntity = ko.observable();
   ServiceTypeComponent;
   PipelineComponent;
+  PipelineStageAssignments;
 
   Assignments = ko.observableArray();
   AssignmentsComponent;
@@ -150,9 +153,8 @@ export class RequestDetailView {
 
   // Request Methods
   validateRequest = () => {
-    if (this.ServiceTypeComponent.ServiceTypeEntity()?.Validate) {
-      const validationResult =
-        this.ServiceTypeComponent?.ServiceTypeEntity()?.Validate();
+    if (this.ServiceTypeEntity()?.Validate) {
+      const validationResult = this.ServiceTypeEntity()?.Validate();
       if (!validationResult.Success) {
         alert(validationResult.Message);
         return false;
@@ -380,6 +382,7 @@ export class RequestDetailView {
     this.ServiceTypeComponent = new ServiceTypeComponent({
       request: this,
       serviceType: this.ServiceType,
+      serviceTypeEntity: this.ServiceTypeEntity,
       context,
     });
 
@@ -413,6 +416,15 @@ export class RequestDetailView {
     this.AssignmentsComponent = new RequestAssignmentsComponent({
       request: this,
       assignments: this.Assignments,
+      context,
+    });
+
+    this.PipelineStageAssignments = new PipelineStageAssignments({
+      serviceTypeEntity: this.ServiceTypeEntity,
+      serviceType: this.ServiceType,
+      stage: this.State.Stage,
+      assignments: this.Assignments,
+      activityQueue: this.ActivityQueue,
       context,
     });
 

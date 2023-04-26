@@ -214,14 +214,22 @@
       <div class="container">
         <h2>Service Request Detail</h2>
         <div>
-          <div data-bind="template: {name: 'tmpl-quick-actions-bar'}"></div>
-          <!-- ko if: ServiceType -->
           <div
-            id="request-pipeline"
-            class="mb-3"
-            data-bind="template: {name: 'tmpl-request-pipeline', data: PipelineComponent}"
+            class="sticky mb-3"
+            data-bind="template: {name: 'tmpl-quick-actions-bar'}"
           ></div>
-          <!-- /ko -->
+          <div>
+            <div
+              id="request-pipeline"
+              class="mb-3"
+              data-bind="template: {name: 'tmpl-request-pipeline', data: PipelineComponent}"
+            ></div>
+            <div
+              id="request-pipeline"
+              class="mb-3"
+              data-bind="template: {name: 'tmpl-request-pipeline-actions', data: PipelineStageAssignments}"
+            ></div>
+          </div>
           <!-- ko if: AssignmentsComponent -->
           <div
             class="mb-3"
@@ -337,45 +345,44 @@
     </script>
 
     <script type="text/html" id="tmpl-quick-actions-bar">
-      <div class="sticky mb-3">
-        <div
-          class="card d-flex flex-row justify-content-between align-items-center px-2"
-        >
-          <div class="m-2">
-            <h6 class="mb-1">
-              Request: <span data-bind="text: ObservableTitle"></span>
-            </h6>
-            <div class="d-flex align-items-center">
-              <div class="me-2">
-                Loaded:
-                <span data-bind="text: LoadedAt()?.toLocaleString()"></span>
-              </div>
-              <i
-                class="fa fa-sync pointer"
-                title="Refresh this request"
-                data-bind="click: refreshAll"
-              ></i>
+      <div
+        class="card d-flex flex-row justify-content-between align-items-center px-2"
+      >
+        <div class="m-2">
+          <h6 class="mb-1">
+            Request: <span data-bind="text: ObservableTitle"></span>
+          </h6>
+          <div class="d-flex align-items-center">
+            <div class="me-2">
+              Loaded:
+              <span data-bind="text: LoadedAt()?.toLocaleString()"></span>
             </div>
+            <i
+              class="fa fa-sync pointer"
+              title="Refresh this request"
+              data-bind="click: refreshAll"
+            ></i>
           </div>
-          <div class="d-flex justify-content-between">
-            <button
-              type="button"
-              class="btn btn-success ms-3"
-              data-bind="click: approveRequestHandler"
-            >
-              Approve
-            </button>
-            <button
-              type="button"
-              class="btn btn-success ms-3"
-              data-bind="click: promptAdvance"
-            >
-              Next Stage <span class="fa fa-chevron-right"></span>
-            </button>
-          </div>
+        </div>
+        <div class="d-flex justify-content-between">
+          <button
+            type="button"
+            class="btn btn-success ms-3"
+            data-bind="click: approveRequestHandler"
+          >
+            Approve
+          </button>
+          <button
+            type="button"
+            class="btn btn-success ms-3"
+            data-bind="click: promptAdvance"
+          >
+            Next Stage <span class="fa fa-chevron-right"></span>
+          </button>
         </div>
       </div>
     </script>
+
     <script type="text/html" id="tmpl-request-pipeline">
       <ol class="list-group-horizontal p-0 m-0 d-flex">
         <li
@@ -400,43 +407,29 @@
         </li>
         <!-- /ko -->
       </ol>
-      <!-- ko if: currentStageActiveUserAssignments -->
+    </script>
+
+    <script type="text/html" id="tmpl-request-pipeline-actions">
+      <!-- ko if: getActiveAssignmentComponents() || getCustomAssignmentComponent() -->
       <div class="border border-top-0 rounded-bottom">
         <div class=" card-body d-flex justify-content-between">
-          <!-- ko if: getCustomActionTemplateId -->
+          <!-- ko if: getCustomAssignmentComponent -->
           <div
-            data-bind="template: {name: getCustomActionTemplateId, data: templateData}"
+            data-bind="component: {name: getCustomAssignmentComponent, params: {ServiceTypeEntity} }"
           ></div>
           <!-- /ko -->
-
+          <!-- ko if: getActiveAssignmentComponents -->
           <div class="ms-auto">
-            <!-- ko foreach: currentStageActiveUserAssignments -->
+            <!-- ko foreach: getActiveAssignmentComponents -->
             <div
               data-bind="component: {name: actionComponentName, params: {assignment, completeAssignment}}"
             ></div>
             <!-- /ko -->
           </div>
+          <!-- /ko -->
         </div>
       </div>
       <!-- /ko -->
-    </script>
-
-    <script type="text/html" id="tmpl-stage-approval">
-      <approval-actions></approval-actions>
-      <!-- <div class="d-flex justify-content-end">
-        <button
-          class="ms-3 btn btn-success"
-          data-bind="click: request.approveRequestHandler"
-        >
-          Approve
-        </button>
-        <button
-          class="ms-3 btn btn-danger"
-          data-bind="click: request.rejectRequestHandler"
-        >
-          Reject
-        </button>
-      </div> -->
     </script>
 
     <script type="text/html" id="tmpl-ch_overtime-action-gov-manager">
