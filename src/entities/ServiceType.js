@@ -1,15 +1,16 @@
-import { siteRoot } from "../infrastructure/SAL.js";
-import { appRoot } from "../common/Router.js";
+import { appRoot, assetsPath } from "../common/Router.js";
 import ApplicationDbContext from "../infrastructure/ApplicationDbContext.js";
 
 export const getTemplateElementId = (uid) => `tmpl-${uid}`;
 
-const componentsPath = (uid) =>
-  `${appRoot}/SiteAssets/wo/entities/ServiceTypeTemplates/${uid}/`;
+const getServiceTypePathByUid = (uid) =>
+  `${assetsPath}/entities/ServiceTypeTemplates/${uid}/`;
 
-export const templatePath = (uid) =>
-  componentsPath(uid) + `${uid}-template.html`;
-export const modulePath = (uid) => componentsPath(uid) + `${uid}-module.js`;
+export const getTemplateFilePath = (uid) =>
+  getServiceTypePathByUid(uid) + `${uid}-template.html`;
+
+export const modulePath = (uid) =>
+  getServiceTypePathByUid(uid) + `${uid}-module.js`;
 
 export const getRepositoryListName = (serviceType) => `st_${serviceType.UID}`;
 

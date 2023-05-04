@@ -45,14 +45,14 @@ export default class PipelineStageAssignments {
   getCustomAssignmentComponent = ko.pureComputed(() => {
     const stage = this.Stage();
     const serviceType = this.ServiceType();
-    if (!stage || !serviceType || !stage.ActionTemplateId) {
+    if (!stage || !serviceType || !stage.ActionComponentName) {
       return;
     }
     registerServiceTypeComponent(
-      stage.ActionTemplateId,
+      stage.ActionComponentName,
       this.ServiceType().UID
     );
-    return stage.ActionTemplateId;
+    return stage.ActionComponentName;
   });
 
   completeAssignment = async (assignment, action) => {

@@ -23,6 +23,10 @@ export class RequestAssignmentsComponent {
     this.Assignments = assignments;
     this.activityLog = request.ActivityLog;
     this.request.ObservableID.subscribe(this.requestIdWatcher);
+
+    if (this.request.ID) {
+      this.refreshAssignments();
+    }
   }
 
   Assignments;
@@ -96,26 +100,6 @@ export class RequestAssignmentsComponent {
       data: assignment,
     });
   };
-
-  getActiveAssignmentsByStage = ko.pureComputed(() => {
-    const stage = this.request.State.Stage();
-    const assignments = this.Assignments()
-      .filter(
-        (assignment) =>
-          assignment.PipelineStage?.ID == stage.ID &&
-          assignment.Status == assignmentStates.InProgress
-      )
-      .map((assignment) => {
-        return {
-          assignment,
-          completeAssignment: this.completeAssignment,
-          actionComponentName: ko.observable(
-            assignmentRoleComponentMap[assignment.Role]
-          ),
-        };
-      });
-    return assignments;
-  });
 
   async createStageAssignments(stage = null) {
     stage = stage ?? this.request.State.Stage();

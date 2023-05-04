@@ -1,6 +1,6 @@
 import {
   getTemplateElementId,
-  templatePath,
+  getTemplateFilePath,
   modulePath,
 } from "../entities/ServiceType.js";
 
@@ -81,12 +81,16 @@ export class ServiceTypeComponent {
 
 async function loadServiceTypeTemplate(uid) {
   const templateId = getTemplateElementId(uid);
-  const response = await fetch(templatePath(uid));
+  const response = await fetch(getTemplateFilePath(uid));
 
   if (!response.ok) {
-    throw new Error(
-      `Fetching the HTML file went wrong - ${response.statusText}`
+    console.error(
+      `Fetching the HTML file went wrong - ${response.statusText}`,
+      getTemplateFilePath(uid)
     );
+    // throw new Error(
+    //   `Fetching the HTML file went wrong - ${response.statusText}`
+    // );
   }
 
   const text = await response.text();

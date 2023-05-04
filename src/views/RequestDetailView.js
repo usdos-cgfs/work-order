@@ -1,6 +1,6 @@
 import { RequestOrg } from "../entities/RequestOrg.js";
 import { serviceTypeStore, ServiceType } from "../entities/ServiceType.js";
-import { requestStates } from "../entities/Request.js";
+import { RequestEntity, requestStates } from "../entities/Request.js";
 import { actionTypes } from "../entities/Action.js";
 
 import { RequestAssignmentsComponent } from "../components/RequestAssignmentsComponent.js";
@@ -40,6 +40,8 @@ const templates = {
 
 export class RequestDetailView {
   _context;
+
+  //RequestEntity = ko.observable();
 
   ID;
   Title;
@@ -390,28 +392,6 @@ export class RequestDetailView {
       request: this,
       serviceType: this.ServiceType,
     });
-
-    // = ko.pureComputed(() => {
-    //   if (!this.ServiceType()) {
-    //     return null;
-    //   }
-    //   const stages = pipelineStageStore()
-    //     .filter((stage) => stage.ServiceType.ID == this.ServiceType().ID)
-    //     .sort(sortByField("Step"));
-
-    //   const currentStage = stages.find(
-    //     (stage) => stage.Step == this.State.Stage()
-    //   );
-
-    //   ShowAdvancePrompt = ko.observable();
-
-    //   promptAdvance = () => {};
-    //   return {
-    //     icon: this.ServiceType().Icon,
-    //     currentStage,
-    //     stages,
-    //   };
-    // });
 
     this.AssignmentsComponent = new RequestAssignmentsComponent({
       request: this,

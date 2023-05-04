@@ -1,8 +1,8 @@
 import { People } from "../components/People.js";
 import { ensureUserByKeyAsync } from "../infrastructure/SAL.js";
-import { appRoot } from "../common/Router.js";
+import { appRoot, assetsPath } from "../common/Router.js";
 
-const componentPath = (path) => `${appRoot}/SiteAssets/wo/${path}`;
+// const componentPath = (path) => `${appRoot}/SiteAssets/wo/${path}`;
 
 ko.bindingHandlers.people = {
   init: function (element, valueAccessor, allBindingsAccessor) {
@@ -79,10 +79,10 @@ ko.bindingHandlers.dateField = {
   ) {},
 };
 
-const templateFromPathLoader = {
+const fromPathTemplateLoader = {
   loadTemplate: function (name, templateConfig, callback) {
     if (templateConfig.fromPath) {
-      fetch(componentPath(templateConfig.fromPath))
+      fetch(assetsPath + templateConfig.fromPath)
         .then((response) => {
           if (!response.ok) {
             throw new Error(
@@ -100,13 +100,13 @@ const templateFromPathLoader = {
   },
 };
 
-ko.components.loaders.unshift(templateFromPathLoader);
+ko.components.loaders.unshift(fromPathTemplateLoader);
 
-const viewModelCustomLoader = {
+const fromPathViewModelLoader = {
   loadViewModel: function (name, viewModelConfig, callback) {
     if (viewModelConfig.viaLoader) {
       console.log("loading module", name);
-      const module = import(componentPath(viewModelConfig.viaLoader)).then(
+      const module = import(assetsPath + viewModelConfig.viaLoader).then(
         (module) => {
           console.log("imported module", name);
           const viewModelConstructor = module.default;
@@ -127,25 +127,28 @@ const viewModelCustomLoader = {
   },
 };
 
-ko.components.loaders.unshift(viewModelCustomLoader);
+ko.components.loaders.unshift(fromPathViewModelLoader);
 
 ko.components.register("approver-actions", {
-  template: { fromPath: "components/AssignmentActions/ApprovalTemplate.html" },
-  viewModel: { viaLoader: "components/AssignmentActions/ApprovalModule.js" },
+  template: { fromPath: "/components/AssignmentActions/ApprovalTemplate.html" },
+  viewModel: { viaLoader: "/components/AssignmentActions/ApprovalModule.js" },
 });
 
 ko.components.register("resolver-actions", {
-  template: { fromPath: "components/AssignmentActions/ResolverTemplate.html" },
-  viewModel: { viaLoader: "components/AssignmentActions/ResolverModule.js" },
+  template: { fromPath: "/components/AssignmentActions/ResolverTemplate.html" },
+  viewModel: { viaLoader: "/components/AssignmentActions/ResolverModule.js" },
 });
 
 export function registerServiceTypeComponent(componentName, serviceTypeUid) {
+  if (ko.components.isRegistered(componentName)) {
+    return;
+  }
   ko.components.register(componentName, {
     template: {
-      fromPath: `entities/ServiceTypeTemplates/${serviceTypeUid}-template.html`,
+      fromPath: `/entities/ServiceTypeTemplates/${serviceTypeUid}/${componentName}-template.html`,
     },
     viewModel: {
-      viaLoader: `entities/ServiceTypeTemplates/${serviceTypeUid}-module.js`,
+      viaLoader: `/entities/ServiceTypeTemplates/${serviceTypeUid}/${componentName}-module.js`,
     },
   });
 }

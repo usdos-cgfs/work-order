@@ -1,5 +1,8 @@
 import { siteRoot } from "../infrastructure/SAL.js";
 
+export const appRoot = siteRoot;
+export const assetsPath = appRoot + "/SiteAssets/wo";
+
 export function setUrlParam(param, newval) {
   const search = window.location.search;
   //var urlParams = new URLSearchParams(queryString);
@@ -24,5 +27,3 @@ export function getUrlParam(param) {
     return decodeURI(results[1]) || 0;
   }
 }
-
-export const appRoot = siteRoot;
