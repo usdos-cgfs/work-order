@@ -46,7 +46,7 @@ export class RequestAssignmentsComponent {
 
   Assignments;
 
-  IsLoading = ko.observable();
+  IsLoading = ko.observable(false);
 
   InProgress = ko.pureComputed(() =>
     this.Assignments().filter(
@@ -166,6 +166,9 @@ export class RequestAssignmentsComponent {
 
   getCurrentStageAssignmentComponents = ko.pureComputed(() => {
     const stage = this.Stage();
+    if (!stage) {
+      return [];
+    }
     const assignmentComponents = this.Assignments()
       .filter(
         (assignment) =>

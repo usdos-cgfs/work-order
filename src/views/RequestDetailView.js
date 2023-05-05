@@ -3,6 +3,7 @@ import { serviceTypeStore, ServiceType } from "../entities/ServiceType.js";
 import { RequestEntity, requestStates } from "../entities/Request.js";
 import { actionTypes } from "../entities/Action.js";
 import { pipelineStageStore } from "../entities/PipelineStage.js";
+import { Assignment, assignmentStates } from "../entities/Assignment.js";
 
 import { RequestAssignmentsComponent } from "../components/RequestAssignmentsComponent.js";
 import { People } from "../components/People.js";
@@ -170,7 +171,51 @@ export class RequestDetailView {
     },
   };
 
-  Assignments = ko.observableArray();
+  // Assignments = {
+  //   List: ko.observable(),
+  //   AreLoading: ko.observable(),
+  //   refresh: async () => {
+  //     if (!this.ObservableID()) return;
+  //     this.Assignments.AreLoading(true);
+  //     const assignments = await this._context.Assignments.FindByRequestId(
+  //       this.ObservableID(),
+  //       Assignment.Views.All
+  //     );
+  //     this.Assignments.List(assignments);
+  //     this.Assignments.AreLoading(false);
+  //   },
+  //   addNew: async (assignment = null) => {
+  //     if (!this.ObservableID() || !assignment) return;
+
+  //     if (!assignment.RequestOrg) {
+  //       const reqOrg = this.State.Stage()?.RequestOrg;
+  //       assignment.RequestOrg = reqOrg;
+  //     }
+
+  //     if (!assignment.PipelineStage) {
+  //       assignment.PipelineStage = this.Stage();
+  //     }
+
+  //     assignment.Status = assignment.Role.initialStatus;
+
+  //     const folderPath = this.request.getRelativeFolderPath();
+
+  //     const newAssignmentId = await this._context.Assignments.AddEntity(
+  //       assignment,
+  //       folderPath,
+  //       this.request
+  //     );
+  //     this.refreshAssignments();
+
+  //     //this.request.ActivityLog.assignmentAdded(assignment);
+  //     this.ActivityQueue.push({
+  //       activity: actionTypes.Assigned,
+  //       data: assignment,
+  //     });
+  //   },
+  // };
+
+  AssignmentsArr = ko.observableArray();
 
   AssignmentsComponent;
 
@@ -185,17 +230,20 @@ export class RequestDetailView {
 
   activityQueueWatcher() {}
 
-  // Request Methods
-  validateRequest = () => {
-    if (this.ServiceTypeEntity()?.Validate) {
-      const validationResult = this.ServiceTypeEntity()?.Validate();
-      if (!validationResult.Success) {
-        alert(validationResult.Message);
-        return false;
-      }
-    }
-    return true;
-  };
+  validationErrors = ko.pureComputed(() => {
+    // Return a list of validation errors for the request
+    return [];
+  });
+
+  isValid = ko.pureComputed(() => {
+    const serviceTypValidationErrors =
+      this.ServiceTypeEntity()?.validationErrors &&
+      this.ServiceTypeEntity()?.validationErrors();
+
+    return !(
+      this.validationErrors().length || serviceTypValidationErrors?.length
+    );
+  });
 
   /**
    * Returns the generic relative path without the list/library name
@@ -222,7 +270,7 @@ export class RequestDetailView {
 
   submitNewRequest = async () => {
     // 1. Validate Request
-    //if (!this.validateRequest()) return;
+    //if (!this.isValid()) return;
 
     const serviceType = this.ServiceType();
     if (!serviceType) {
@@ -403,7 +451,7 @@ export class RequestDetailView {
       serviceTypeEntity: this.ServiceTypeEntity,
       serviceType: this.ServiceType,
       stage: this.State.Stage,
-      assignments: this.Assignments,
+      assignments: this.AssignmentsArr,
       activityQueue: this.ActivityQueue,
     });
 

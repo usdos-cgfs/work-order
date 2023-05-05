@@ -372,7 +372,7 @@
           <button
             type="button"
             class="btn btn-success ms-3"
-            data-bind="click: promptAdvance"
+            data-bind="click: promptAdvance, enable: isValid"
           >
             Next Stage <span class="fa fa-chevron-right"></span>
           </button>

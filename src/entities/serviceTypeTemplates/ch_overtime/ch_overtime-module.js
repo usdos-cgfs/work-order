@@ -50,4 +50,20 @@ export default class CH_OverTime {
   };
 
   Submit = () => this.Request.Fields.RequestStage.obs(2);
+
+  validationErrors = ko.pureComputed(() => {
+    const result = [];
+
+    const stage = this.Request.State.Stage();
+    if (!stage) {
+      result.push("no stage set");
+    }
+    if (stage.Step == 1) {
+      // Gov Manager Approval
+      if (!this.APM()) {
+        result.push("No APM set!");
+      }
+    }
+    return result;
+  });
 }
