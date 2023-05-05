@@ -127,7 +127,7 @@ export function getRequestFolderPermissions(request) {
   }
 
   // break pipeline stages at front?
-  request.PipelineComponent.Stages()?.forEach((stage) => {
+  request.Pipeline.Stages()?.forEach((stage) => {
     const stageOrg = requestOrgStore().find(
       (org) => org.ID == stage.RequestOrg.ID
     );

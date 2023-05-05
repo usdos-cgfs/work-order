@@ -10,6 +10,19 @@ import { Action } from "../entities/Action.js";
 
 const DEBUG = false;
 
+let context = null;
+
+export function setAppContext(appContext) {
+  if (context) {
+    return;
+  }
+  context = appContext;
+}
+
+export function getAppContext() {
+  return context;
+}
+
 export default class ApplicationDbContext {
   constructor() {}
 
@@ -34,6 +47,7 @@ export default class ApplicationDbContext {
 
 class EntitySet {
   constructor(listDef) {
+    // Check if the object we passed in defines a ListDef
     if (listDef.ListDef) {
       listDef = listDef.ListDef;
     }

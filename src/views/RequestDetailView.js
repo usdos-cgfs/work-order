@@ -2,11 +2,11 @@ import { RequestOrg } from "../entities/RequestOrg.js";
 import { serviceTypeStore, ServiceType } from "../entities/ServiceType.js";
 import { RequestEntity, requestStates } from "../entities/Request.js";
 import { actionTypes } from "../entities/Action.js";
+import { pipelineStageStore } from "../entities/PipelineStage.js";
 
 import { RequestAssignmentsComponent } from "../components/RequestAssignmentsComponent.js";
 import { People } from "../components/People.js";
 import { ServiceTypeComponent } from "../components/ServiceTypeComponent.js";
-import { PipelineComponent } from "../components/PipelineComponent.js";
 
 import {
   createNewRequestTitle,
@@ -22,7 +22,6 @@ import { addTask, finishTask, taskDefs } from "../stores/Tasks.js";
 import { getRequestFolderPermissions } from "../infrastructure/Authorization.js";
 import { PipelineStage } from "../entities/PipelineStage.js";
 import { ActivityLogComponent } from "../components/ActivityLogComponent.js";
-import PipelineStageAssignments from "../components/PipelineStageAssignments.js";
 
 const DEBUG = true;
 
@@ -40,8 +39,6 @@ const templates = {
 
 export class RequestDetailView {
   _context;
-
-  //RequestEntity = ko.observable();
 
   ID;
   Title;
@@ -80,7 +77,8 @@ export class RequestDetailView {
 
   RequestOrgs = ko.observable();
 
-  // FieldMap defines how to store and retrieve this ServiceTypeEntity
+  // FieldMaps are used by the ApplicationDbContext and define
+  // how to store and retrieve the entity properties
   FieldMap = {
     ID: {
       set: (val) => {
@@ -135,11 +133,45 @@ export class RequestDetailView {
   };
 
   ServiceTypeEntity = ko.observable();
+
   ServiceTypeComponent;
-  PipelineComponent;
-  PipelineStageAssignments;
+
+  Pipeline = {
+    Stages: ko.pureComputed(() => {
+      if (!this.ServiceType()) return [];
+      return pipelineStageStore()
+        .filter((stage) => stage.ServiceType.ID == this.ServiceType()?.ID)
+        .sort(sortByField("Step"));
+    }),
+    getNextStage: () => {
+      const thisStepNum = this.State.Stage()?.Step ?? 0;
+      const nextStepNum = thisStepNum + 1;
+      return this.Pipeline.Stages()?.find((stage) => stage.Step == nextStepNum);
+    },
+    advance: async () => {
+      if (this.promptAdvanceModal) this.promptAdvanceModal.hide();
+
+      const nextStage = this.Pipeline.getNextStage();
+
+      if (!nextStage) {
+        // End of the Pipeline; time to close
+        // return null;
+      }
+      this.State.Stage(nextStage);
+
+      await this._context.Requests.UpdateEntity(this, ["PipelineStage"]);
+
+      this.ActivityQueue.push({
+        activity: actionTypes.Advanced,
+        data: nextStage,
+      });
+      this.AssignmentsComponent.createStageAssignments(nextStage);
+      return;
+    },
+  };
 
   Assignments = ko.observableArray();
+
   AssignmentsComponent;
 
   ActivityQueue = ko.observableArray();
@@ -179,7 +211,6 @@ export class RequestDetailView {
   refreshAll = async () => {
     this.refreshRequest();
     // this.ServiceTypeComponent.refresh();
-    // this.AssignmentsComponent.Refresh();
   };
 
   refreshRequest = async () => {
@@ -270,7 +301,7 @@ export class RequestDetailView {
     this.ActivityLog.requestCreated();
 
     // Progress Request
-    this.advanceRequest();
+    this.Pipeline.advance();
   };
 
   saveChanges(fields = null) {
@@ -304,27 +335,6 @@ export class RequestDetailView {
       );
     }
     this.promptAdvanceModal.show();
-  };
-
-  advanceRequest = async () => {
-    if (this.promptAdvanceModal) this.promptAdvanceModal.hide();
-
-    const nextStage = this.PipelineComponent.getNextStage();
-
-    if (!nextStage) {
-      // End of the Pipeline; time to close
-      // return null;
-    }
-    this.State.Stage(nextStage);
-
-    await this.saveChanges(["PipelineStage"]);
-
-    this.ActivityQueue.push({
-      activity: actionTypes.Advanced,
-      data: nextStage,
-    });
-    this.AssignmentsComponent.createStageAssignments(nextStage);
-    return;
   };
 
   approveRequestHandler = () => {
@@ -388,24 +398,13 @@ export class RequestDetailView {
       context,
     });
 
-    this.PipelineComponent = new PipelineComponent({
-      request: this,
-      serviceType: this.ServiceType,
-    });
-
     this.AssignmentsComponent = new RequestAssignmentsComponent({
       request: this,
-      assignments: this.Assignments,
-      context,
-    });
-
-    this.PipelineStageAssignments = new PipelineStageAssignments({
       serviceTypeEntity: this.ServiceTypeEntity,
       serviceType: this.ServiceType,
       stage: this.State.Stage,
       assignments: this.Assignments,
       activityQueue: this.ActivityQueue,
-      context,
     });
 
     this.ActivityLog = new ActivityLogComponent({

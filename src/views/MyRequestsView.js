@@ -1,11 +1,14 @@
 import { getUrlParam, setUrlParam } from "../common/Router.js";
 import { RequestsByStatusComponent } from "../components/RequestsByStatusComponent.js";
 import { requestStates } from "../entities/Request.js";
+import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
 
 export class MyRequestsView {
-  constructor({ context }) {
-    this._context = context;
+  constructor({}) {
+    this._context = getAppContext();
     this.View.subscribe(this.viewWatcher);
+
+    this.View(this.views.open);
   }
 
   views = {

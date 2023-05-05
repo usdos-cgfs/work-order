@@ -12,7 +12,10 @@ import { sortByTitle } from "./common/EntityUtilities.js";
 import { getUrlParam, setUrlParam } from "./common/Router.js";
 
 import { User, currentUser } from "./infrastructure/Authorization.js";
-import ApplicationDbContext from "./infrastructure/ApplicationDbContext.js";
+import ApplicationDbContext, {
+  getAppContext,
+  setAppContext,
+} from "./infrastructure/ApplicationDbContext.js";
 import { InitSal } from "./infrastructure/SAL.js";
 
 var WorkOrder = window.WorkOrder || {};
@@ -30,6 +33,9 @@ async function CreateApp() {
 
   //const { WorkOrder } = await import("./models/WorkOrder.js");
   await InitSal();
+
+  const context = new ApplicationDbContext();
+  setAppContext(context);
   WorkOrder.Report = await App.Create();
   ko.applyBindings(WorkOrder.Report);
 }
@@ -45,7 +51,7 @@ class App {
     this.Tab.subscribe(tabWatcher);
   }
 
-  context = new ApplicationDbContext();
+  context = getAppContext();
 
   Tab = ko.observable();
   TabClicked = (data, e) => this.Tab(e.target.getAttribute("id"));
@@ -61,7 +67,7 @@ class App {
   };
 
   // Views
-  MyRequestsView = new MyRequestsView({ context: this.context });
+  MyRequestsView = new MyRequestsView({});
   NewRequestView = new NewRequestView();
   RequestDetailView = ko.observable();
 
@@ -101,7 +107,7 @@ class App {
     }
 
     routing: {
-      var startTab = getUrlParam("tab");
+      var startTab = getUrlParam("tab") || Tabs.MyRequests;
       var reqId = getUrlParam("reqId");
       if (reqId) {
         this.ViewRequest({ Title: reqId });

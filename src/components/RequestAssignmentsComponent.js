@@ -1,15 +1,19 @@
 import { Assignment, assignmentStates } from "../entities/Assignment.js";
 import { RequestOrg } from "../entities/RequestOrg.js";
 import { actionTypes } from "../entities/Action.js";
+import { assignmentRoles } from "../entities/Assignment.js";
 
 import { NewAssignmentComponent } from "./NewAssignmentComponent.js";
+
 import {
   roles,
   AssignmentFunctions,
   stageActionRoleMap,
   currentUser,
 } from "../infrastructure/Authorization.js";
-import { assignmentRoles } from "../entities/Assignment.js";
+import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
+
+import { registerServiceTypeComponent } from "../common/KnockoutExtensions.js";
 
 const assignmentRoleComponentMap = {
   "Action Resolver": "resolver-actions",
@@ -17,11 +21,22 @@ const assignmentRoleComponentMap = {
 };
 
 export class RequestAssignmentsComponent {
-  constructor({ request, assignments, context }) {
+  constructor({
+    request,
+    stage,
+    assignments,
+    activityQueue,
+    serviceTypeEntity,
+    serviceType,
+  }) {
     this.request = request;
-    this._context = context;
+    this.Stage = stage;
     this.Assignments = assignments;
-    this.activityLog = request.ActivityLog;
+    this.ActivityQueue = activityQueue;
+    this.ServiceTypeEntity = serviceTypeEntity;
+    this.ServiceType = serviceType;
+    this._context = getAppContext();
+
     this.request.ObservableID.subscribe(this.requestIdWatcher);
 
     if (this.request.ID) {
@@ -58,12 +73,12 @@ export class RequestAssignmentsComponent {
     if (!this.request.ID || !assignment) return;
 
     if (!assignment.RequestOrg) {
-      const reqOrg = this.request.State.Stage()?.RequestOrg;
+      const reqOrg = this.Stage()?.RequestOrg;
       assignment.RequestOrg = reqOrg;
     }
 
     if (!assignment.PipelineStage) {
-      assignment.PipelineStage = this.request.State.Stage();
+      assignment.PipelineStage = this.Stage();
     }
 
     assignment.Status = assignment.Role.initialStatus;
@@ -78,7 +93,7 @@ export class RequestAssignmentsComponent {
     this.refreshAssignments();
 
     //this.request.ActivityLog.assignmentAdded(assignment);
-    this.request.ActivityQueue.push({
+    this.ActivityQueue.push({
       activity: actionTypes.Assigned,
       data: assignment,
     });
@@ -95,14 +110,96 @@ export class RequestAssignmentsComponent {
     this.refreshAssignments();
 
     //this.request.ActivityLog.assignmentRemoved(assignment);
-    this.request.ActivityQueue.push({
+    this.ActivityQueue.push({
       activity: actionTypes.Unassigned,
       data: assignment,
     });
   };
 
+  newAssignmentComponent = new NewAssignmentComponent({
+    addAssignment: this.addAssignment,
+  });
+
+  async approveUserAssignments(user) {
+    const userAssignments = await Promise.all(
+      this.Assignments()
+        .filter(
+          (assignment) =>
+            assignment.Role == assignmentRoles.Approver &&
+            assignment.Status == assignmentStates.InProgress &&
+            assignment.Assignee?.ID == user.ID
+        )
+        .map((asg) => this.completeAssignment(asg, assignmentStates.Approved))
+    );
+    //this.refreshAssignments();
+  }
+
+  approveAssignment = (assignment) =>
+    this.completeAssignment(assignment, assignmentStates.Approved);
+
+  rejectAssignment = (assignment) =>
+    this.completeAssignment(assignment, assignmentStates.rejectAssignment);
+
+  completeAssignment = async (assignment, action) => {
+    const updateEntity = {
+      ID: assignment.ID,
+      Status: assignmentStates[action],
+      CompletionDate: new Date().toISOString(),
+      ActionTaker: currentUser(),
+    };
+    await this._context.Assignments.UpdateEntity(updateEntity);
+
+    this.refreshAssignments();
+    this.request.ActivityQueue.push({
+      activity: actionTypes[action],
+      data: updateEntity,
+    });
+  };
+
+  // Section for pipeline Assignments area
+  userHasStageActions = ko.pureComputed(() => {
+    return (
+      this.getCurrentStageAssignmentComponents().length ||
+      this.getCurrentStageCustomAssignmentComponent()
+    );
+  });
+
+  getCurrentStageAssignmentComponents = ko.pureComputed(() => {
+    const stage = this.Stage();
+    const assignmentComponents = this.Assignments()
+      .filter(
+        (assignment) =>
+          assignment.PipelineStage?.ID == stage.ID &&
+          assignment.Status == assignmentStates.InProgress
+      )
+      .map((assignment) => {
+        return {
+          assignment,
+          completeAssignment: this.completeAssignment,
+          actionComponentName: ko.observable(
+            assignmentRoleComponentMap[assignment.Role]
+          ),
+        };
+      });
+
+    return assignmentComponents;
+  });
+
+  getCurrentStageCustomAssignmentComponent = ko.pureComputed(() => {
+    const stage = this.Stage();
+    const serviceType = this.ServiceType();
+    if (!stage || !serviceType || !stage.ActionComponentName) {
+      return;
+    }
+    registerServiceTypeComponent(
+      stage.ActionComponentName,
+      this.ServiceType().UID
+    );
+    return stage.ActionComponentName;
+  });
+
   async createStageAssignments(stage = null) {
-    stage = stage ?? this.request.State.Stage();
+    stage = stage ?? this.Stage();
     const newAssignment = {
       RequestOrg: stage.RequestOrg,
       PipelineStage: stage,
@@ -129,67 +226,4 @@ export class RequestAssignmentsComponent {
 
     await this.addAssignment(newAssignment);
   }
-
-  newAssignmentComponent = new NewAssignmentComponent({
-    addAssignment: this.addAssignment,
-  });
-
-  async approveUserAssignments(user) {
-    const userAssignments = await Promise.all(
-      this.Assignments()
-        .filter(
-          (assignment) =>
-            assignment.Role == assignmentRoles.Approver &&
-            assignment.Status == assignmentStates.InProgress &&
-            assignment.Assignee?.ID == user.ID
-        )
-        .map(this.approveAssignment)
-    );
-    this.refreshAssignments();
-  }
-
-  approveAssignment = async (assignment) => {
-    const updateEntity = {
-      ID: assignment.ID,
-      Status: assignmentStates.Approved,
-      CompletionDate: new Date().toISOString(),
-      ActionTaker: currentUser(),
-    };
-    await this._context.Assignments.UpdateEntity(updateEntity);
-
-    this.request.ActivityQueue.push({
-      activity: actionTypes.Approved,
-      data: updateEntity,
-    });
-  };
-
-  rejectAssignment = async (assignment) => {
-    const updateEntity = {
-      ID: assignment.ID,
-      Status: assignmentStates.Rejected,
-      CompletionDate: new Date().toISOString(),
-      ActionTaker: currentUser(),
-    };
-    await this._context.Assignments.UpdateEntity(updateEntity);
-
-    this.request.ActivityQueue.push({
-      activity: actionTypes.Rejected,
-      data: updateEntity,
-    });
-  };
-
-  completeAssignment = async (assignment, action) => {
-    const updateEntity = {
-      ID: assignment.ID,
-      Status: assignmentStates[action],
-      CompletionDate: new Date().toISOString(),
-      ActionTaker: currentUser(),
-    };
-    await this._context.Assignments.UpdateEntity(updateEntity);
-
-    this.request.ActivityQueue.push({
-      activity: actionTypes[action],
-      data: updateEntity,
-    });
-  };
 }

@@ -221,21 +221,18 @@
           <div>
             <div
               id="request-pipeline"
-              class="mb-3"
-              data-bind="template: {name: 'tmpl-request-pipeline', data: PipelineComponent}"
+              class=""
+              data-bind="template: {name: 'tmpl-request-pipeline'}"
             ></div>
             <div
               id="request-pipeline"
-              class="mb-3"
-              data-bind="template: {name: 'tmpl-request-pipeline-actions', data: PipelineStageAssignments}"
+              data-bind="template: {name: 'tmpl-request-pipeline-actions', data: AssignmentsComponent}"
             ></div>
           </div>
-          <!-- ko if: AssignmentsComponent -->
           <div
-            class="mb-3"
+            class="my-3"
             data-bind="template: {name: 'tmpl-assignments-component', data: AssignmentsComponent}"
           ></div>
-          <!-- /ko -->
           <div data-bind="template: {name: 'tmpl-request-header'}"></div>
           <div
             data-bind="template: {name: 'tmpl-service-type-component'}"
@@ -334,7 +331,7 @@
               <button
                 type="button"
                 class="btn btn-primary"
-                data-bind="click: advanceRequest"
+                data-bind="click: Pipeline.advance"
               >
                 Advance
               </button>
@@ -384,43 +381,50 @@
     </script>
 
     <script type="text/html" id="tmpl-request-pipeline">
-      <ol class="list-group-horizontal p-0 m-0 d-flex">
-        <li
-          class="list-group-item d-flex flex-column justify-content-center fix-service-icon-border"
-        >
-          <i class="fa fa-3x" data-bind="class: Icon"></i>
-        </li>
-        <!-- ko foreach: Stages -->
-        <li
-          class="list-group-item d-flex flex-column justify-content-center flex-grow-1"
-          data-bind="css: {'border-bottom-0': Step == $parent.CurrentStage()?.Step,
-            'list-group-item-secondary': Step < $parent.CurrentStage()?.Step}"
-        >
-          <div class="d-flex align-items-center">
-            <h4 class="" data-bind="text: Step"></h4>
-            <div class="mx-2"></div>
-            <div>
-              <div class="fw-bold" data-bind="text: Title"></div>
-              <p data-bind="text: ActionType"></p>
+      <div class="d-flex m-0">
+        <ol class="list-group-horizontal p-0 m-0 d-flex">
+          <li
+            class="list-group-item d-flex flex-column justify-content-center fix-service-icon-border"
+          >
+            <!-- ko if: ServiceType -->
+            <i class="fa fa-3x" data-bind="class: ServiceType()?.Icon"></i>
+            <!-- /ko -->
+          </li>
+          <!-- ko foreach: Pipeline.Stages -->
+          <li
+            class="list-group-item d-flex flex-column justify-content-center"
+            data-bind="css: {'border-bottom-0': Step == $parent.State.Stage()?.Step,
+            'list-group-item-secondary': Step < $parent.State.Stage()?.Step}"
+          >
+            <div class="d-flex align-items-center">
+              <h4 class="" data-bind="text: Step"></h4>
+              <div class="mx-2"></div>
+              <div>
+                <div class="fw-bold" data-bind="text: Title"></div>
+                <p data-bind="text: ActionType"></p>
+              </div>
             </div>
-          </div>
-        </li>
+          </li>
+          <!-- /ko -->
+        </ol>
+        <!-- ko if: AssignmentsComponent.userHasStageActions -->
+        <div class="flex-grow-1 border-bottom"></div>
         <!-- /ko -->
-      </ol>
+      </div>
     </script>
 
     <script type="text/html" id="tmpl-request-pipeline-actions">
-      <!-- ko if: getActiveAssignmentComponents() || getCustomAssignmentComponent() -->
+      <!-- ko if: userHasStageActions -->
       <div class="border border-top-0 rounded-bottom">
         <div class=" card-body d-flex justify-content-between">
-          <!-- ko if: getCustomAssignmentComponent -->
+          <!-- ko if: getCurrentStageCustomAssignmentComponent -->
           <div
-            data-bind="component: {name: getCustomAssignmentComponent, params: {ServiceTypeEntity} }"
+            data-bind="component: {name: getCurrentStageCustomAssignmentComponent, params: {ServiceTypeEntity} }"
           ></div>
           <!-- /ko -->
-          <!-- ko if: getActiveAssignmentComponents -->
+          <!-- ko if: getCurrentStageAssignmentComponents -->
           <div class="ms-auto">
-            <!-- ko foreach: getActiveAssignmentComponents -->
+            <!-- ko foreach: getCurrentStageAssignmentComponents -->
             <div
               data-bind="component: {name: actionComponentName, params: {assignment, completeAssignment}}"
             ></div>
@@ -430,6 +434,13 @@
         </div>
       </div>
       <!-- /ko -->
+      <button
+        type="button"
+        class="btn btn-success"
+        data-bind="click: () => createStageAssignments()"
+      >
+        Re-assign Current Stage
+      </button>
     </script>
 
     <script type="text/html" id="tmpl-ch_overtime-action-gov-manager">
@@ -514,13 +525,6 @@
           </div>
           <div id="routing-body" class="accordion-collapse collapse">
             <div class="d-flex justify-content-between">
-              <button
-                type="button"
-                class="btn btn-success"
-                data-bind="click: () => createStageAssignments()"
-              >
-                Re-assign Stage
-              </button>
               <i
                 class="fa fa-sync pointer ms-auto"
                 data-bind="click: refreshAssignments"
