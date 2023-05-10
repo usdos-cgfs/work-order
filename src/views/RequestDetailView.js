@@ -230,6 +230,27 @@ export class RequestDetailView {
 
   activityQueueWatcher() {}
 
+  Validation = {
+    Errors: {
+      Request: ko.observableArray(),
+      ServiceType: ko.pureComputed(() => []),
+      All: ko.pureComputed(() => [
+        ...this.Validation.Errors.Request(),
+        ...this.Validation.Errors.ServiceType(),
+        ...this.Validation.CurrentStage.Errors(),
+      ]),
+    },
+    IsValid: ko.pureComputed(() => !this.Validation.Errors.All().length),
+    CurrentStage: {
+      IsValid: ko.pureComputed(() => {
+        return !this.Validation.CurrentStage.Errors().length;
+      }),
+      Errors: ko.pureComputed(() =>
+        this.AssignmentsComponent.CurrentStage.Validation.Errors()
+      ),
+    },
+  };
+
   validationErrors = ko.pureComputed(() => {
     // Return a list of validation errors for the request
     return [];
@@ -258,7 +279,7 @@ export class RequestDetailView {
   // Controls
   refreshAll = async () => {
     this.refreshRequest();
-    // this.ServiceTypeComponent.refresh();
+    this.ServiceTypeComponent.refreshServiceTypeEntity();
   };
 
   refreshRequest = async () => {

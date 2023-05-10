@@ -106,6 +106,9 @@ class EntitySet {
     if (!items) return false;
     if (entity.FieldMap) {
       mapObjectPropsToViewFields(items[0], entity.FieldMap);
+      if (!entity.ID && items[0].ID) {
+        entity.ID = items[0].ID;
+      }
       return true;
     }
     Object.assign(entity, items[0]);

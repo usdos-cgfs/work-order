@@ -13,7 +13,7 @@ export class ServiceTypeComponent {
     this.Request = request;
     this.ServiceType.subscribe(this.serviceTypeWatcher);
 
-    this.ServiceTypeEntity = serviceTypeEntity;
+    this.Entity = serviceTypeEntity;
 
     if (serviceType()) {
       this.serviceTypeWatcher(serviceType());
@@ -23,14 +23,15 @@ export class ServiceTypeComponent {
   ElementId = null;
   ComponentsAreLoading = ko.observable();
 
-  ServiceTypeEntity;
+  Entity;
 
   IsLoading = ko.observable();
 
   refreshServiceTypeEntity = async () => {
     if (DEBUG) console.log("ServiceTypeComponent: refresh Triggered");
+    if (!this.Entity()) return;
     this.IsLoading(true);
-    var template = this.ServiceTypeEntity();
+    var template = this.Entity();
     template.Title = this.Request.ObservableTitle();
     await this.ServiceType()
       ?.getListRef()
@@ -39,9 +40,9 @@ export class ServiceTypeComponent {
   };
 
   submitServiceTypeEntity = async () => {
-    if (!this.ServiceTypeEntity()) return;
+    if (!this.Entity()) return;
 
-    const newEntity = this.ServiceTypeEntity();
+    const newEntity = this.Entity();
     newEntity.Title = this.Request.ObservableTitle();
 
     const folderPath = this.Request.getRelativeFolderPath();
@@ -58,7 +59,7 @@ export class ServiceTypeComponent {
     // This should only be triggered when a new RequestDetailView is created
     // or when the user changes the request from the drop down.
     if (!newSvcType?.HasTemplate) {
-      this.ServiceTypeEntity(null);
+      this.Entity(null);
       return;
     }
     this.ComponentsAreLoading(true);
@@ -72,7 +73,7 @@ export class ServiceTypeComponent {
       console.logError("Could not find service module");
     }
 
-    this.ServiceTypeEntity(new service.default(this.Request));
+    this.Entity(new service.default(this.Request));
     this.ComponentsAreLoading(false);
 
     if (this.Request.ObservableID()) this.refreshServiceTypeEntity();

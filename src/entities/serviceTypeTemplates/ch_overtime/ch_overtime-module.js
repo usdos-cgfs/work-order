@@ -5,6 +5,7 @@ export default class CH_OverTime {
   constructor(request) {
     this.Request = request;
   }
+  ID;
 
   Contractor = ko.observable();
   GovManager = ko.observable();
@@ -22,6 +23,7 @@ export default class CH_OverTime {
   ContractorType = ko.observable();
 
   FieldMap = {
+    ID: this.ID,
     FullName: {
       obs: this.Contractor,
       factory: People.Create,
@@ -49,21 +51,9 @@ export default class CH_OverTime {
     Hours: this.Hours,
   };
 
-  Submit = () => this.Request.Fields.RequestStage.obs(2);
-
   validationErrors = ko.pureComputed(() => {
     const result = [];
-
-    const stage = this.Request.State.Stage();
-    if (!stage) {
-      result.push("no stage set");
-    }
-    if (stage.Step == 1) {
-      // Gov Manager Approval
-      if (!this.APM()) {
-        result.push("No APM set!");
-      }
-    }
+    // result.push({ description: "no stage set" });
     return result;
   });
 }

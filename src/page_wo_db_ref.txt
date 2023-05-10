@@ -214,6 +214,13 @@
       <div class="container">
         <h2>Service Request Detail</h2>
         <div>
+          <div data-bind=" foreach: Validation.Errors.All">
+            <div
+              class="alert alert-warning"
+              role="alert"
+              data-bind="text: description"
+            ></div>
+          </div>
           <div
             class="sticky mb-3"
             data-bind="template: {name: 'tmpl-quick-actions-bar'}"
@@ -372,7 +379,7 @@
           <button
             type="button"
             class="btn btn-success ms-3"
-            data-bind="click: promptAdvance, enable: isValid"
+            data-bind="click: promptAdvance, enable: Validation.CurrentStage.IsValid"
           >
             Next Stage <span class="fa fa-chevron-right"></span>
           </button>
@@ -407,26 +414,29 @@
           </li>
           <!-- /ko -->
         </ol>
-        <!-- ko if: AssignmentsComponent.userHasStageActions -->
+        <!-- ko if: AssignmentsComponent.CurrentStage.AssignmentComponents.Any -->
         <div class="flex-grow-1 border-bottom"></div>
         <!-- /ko -->
       </div>
     </script>
 
     <script type="text/html" id="tmpl-request-pipeline-actions">
-      <!-- ko if: userHasStageActions -->
+      <!-- ko using: CurrentStage.AssignmentComponents -->
+      <!-- ko if: Any -->
       <div class="border border-top-0 rounded-bottom">
-        <div class=" card-body d-flex justify-content-between">
-          <!-- ko if: getCurrentStageCustomAssignmentComponent -->
+        <div class="card-body d-flex justify-content-between">
+          <!-- ko if: Custom -->
+          <!-- ko using: Custom -->
           <div
-            data-bind="component: {name: getCurrentStageCustomAssignmentComponent, params: {ServiceTypeEntity} }"
+            data-bind="component: {name: actionComponentName, params: $data }"
           ></div>
           <!-- /ko -->
-          <!-- ko if: getCurrentStageAssignmentComponents -->
+          <!-- /ko -->
+          <!-- ko if: Generic -->
           <div class="ms-auto">
-            <!-- ko foreach: getCurrentStageAssignmentComponents -->
+            <!-- ko foreach: Generic -->
             <div
-              data-bind="component: {name: actionComponentName, params: {assignment, completeAssignment}}"
+              data-bind="component: {name: actionComponentName, params: $data }"
             ></div>
             <!-- /ko -->
           </div>
@@ -441,6 +451,7 @@
       >
         Re-assign Current Stage
       </button>
+      <!-- /ko -->
     </script>
 
     <script type="text/html" id="tmpl-ch_overtime-action-gov-manager">
@@ -740,7 +751,7 @@
             </div>
           </div>
           <!-- /ko -->
-          <!-- ko if: !ComponentsAreLoading() && ServiceTypeEntity() -->
+          <!-- ko if: !ComponentsAreLoading() && Entity() -->
           <!-- ko if: IsLoading -->
           <div class="d-flex justify-content-center">
             <div class="spinner-border" role="status">
@@ -749,9 +760,7 @@
           </div>
           <!-- /ko -->
           <!-- ko ifnot: IsLoading -->
-          <div
-            data-bind="template: {name: ElementId, data: ServiceTypeEntity}"
-          ></div>
+          <div data-bind="template: {name: ElementId, data: Entity}"></div>
           <!-- /ko -->
           <!-- /ko -->
           <!-- /ko -->

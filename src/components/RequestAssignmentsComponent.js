@@ -134,12 +134,6 @@ export class RequestAssignmentsComponent {
     //this.refreshAssignments();
   }
 
-  approveAssignment = (assignment) =>
-    this.completeAssignment(assignment, assignmentStates.Approved);
-
-  rejectAssignment = (assignment) =>
-    this.completeAssignment(assignment, assignmentStates.rejectAssignment);
-
   completeAssignment = async (assignment, action) => {
     const updateEntity = {
       ID: assignment.ID,
@@ -157,49 +151,98 @@ export class RequestAssignmentsComponent {
   };
 
   // Section for pipeline Assignments area
-  userHasStageActions = ko.pureComputed(() => {
-    return (
-      this.getCurrentStageAssignmentComponents().length ||
-      this.getCurrentStageCustomAssignmentComponent()
-    );
-  });
 
-  getCurrentStageAssignmentComponents = ko.pureComputed(() => {
-    const stage = this.Stage();
-    if (!stage) {
-      return [];
-    }
-    const assignmentComponents = this.Assignments()
-      .filter(
+  CurrentStage = {
+    Validation: {
+      Errors: ko.observableArray(),
+      setActiveAssignmentsError: (activeAssignments) => {
+        if (activeAssignments) {
+          // If we have assignment components and there isn't already a variable set
+          if (
+            this.CurrentStage.Validation.Errors.indexOf(
+              activeAssignmentsError
+            ) < 0
+          ) {
+            this.CurrentStage.Validation.Errors.push(activeAssignmentsError);
+          }
+        } else {
+          this.CurrentStage.Validation.Errors.remove(activeAssignmentsError);
+        }
+      },
+    },
+    UserActionAssignments: ko.pureComputed(() => {
+      const stage = this.Stage();
+      if (!stage) {
+        return [];
+      }
+      return this.Assignments().filter(
         (assignment) =>
           assignment.PipelineStage?.ID == stage.ID &&
           assignment.Status == assignmentStates.InProgress
-      )
-      .map((assignment) => {
-        return {
-          assignment,
-          completeAssignment: this.completeAssignment,
-          actionComponentName: ko.observable(
-            assignmentRoleComponentMap[assignment.Role]
-          ),
-        };
-      });
+      );
+    }),
+    AssignmentComponents: {
+      Generic: ko.pureComputed(() => {
+        const stage = this.Stage();
+        if (!stage) {
+          return [];
+        }
+        const assignmentComponents =
+          this.CurrentStage.UserActionAssignments().map((assignment) => {
+            return {
+              assignment,
+              completeAssignment: this.completeAssignment,
+              errors: this.CurrentStage.Validation.Errors,
+              actionComponentName: ko.observable(
+                assignmentRoleComponentMap[assignment.Role]
+              ),
+            };
+          });
 
-    return assignmentComponents;
-  });
+        this.CurrentStage.Validation.setActiveAssignmentsError(
+          assignmentComponents.length
+        );
 
-  getCurrentStageCustomAssignmentComponent = ko.pureComputed(() => {
-    const stage = this.Stage();
-    const serviceType = this.ServiceType();
-    if (!stage || !serviceType || !stage.ActionComponentName) {
-      return;
-    }
-    registerServiceTypeComponent(
-      stage.ActionComponentName,
-      this.ServiceType().UID
-    );
-    return stage.ActionComponentName;
-  });
+        return assignmentComponents;
+      }),
+      Custom: ko.pureComputed(() => {
+        const stage = this.Stage();
+        const serviceType = this.ServiceType();
+        const serviceTypeEntity = this.ServiceTypeEntity();
+        if (
+          !stage ||
+          !serviceType ||
+          !stage.ActionComponentName ||
+          !serviceTypeEntity
+        ) {
+          return;
+        }
+        try {
+          registerServiceTypeComponent(
+            stage.ActionComponentName,
+            this.ServiceType().UID
+          );
+          return {
+            actionComponentName: stage.ActionComponentName,
+            serviceTypeEntity: this.ServiceTypeEntity,
+            serviceType: this.ServiceType,
+            request: this.request,
+            errors: this.CurrentStage.Validation.Errors,
+          };
+        } catch (e) {
+          console.error(
+            `Error registering declared assignment action: ${stage.ActionComponentName}`,
+            e
+          );
+        }
+      }),
+      Any: ko.pureComputed(
+        () =>
+          this.CurrentStage.AssignmentComponents.Generic().length ||
+          this.CurrentStage.AssignmentComponents.Custom()
+      ),
+    },
+  };
 
   async createStageAssignments(stage = null) {
     stage = stage ?? this.Stage();
@@ -230,3 +273,9 @@ export class RequestAssignmentsComponent {
     await this.addAssignment(newAssignment);
   }
 }
+
+const activeAssignmentsError = {
+  source: "current-stage-active-assignments",
+  type: "current-stage",
+  description: "Please complete all assignments",
+};
