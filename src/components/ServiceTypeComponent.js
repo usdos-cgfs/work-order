@@ -7,16 +7,16 @@ import {
 const DEBUG = false;
 
 export class ServiceTypeComponent {
-  constructor({ request, serviceType, serviceTypeEntity, context }) {
-    this.ServiceType = serviceType;
+  constructor({ request, Def, Entity, context }) {
+    this.ServiceType = Def;
     this.ElementId = this.ServiceType()?.UID;
     this.Request = request;
     this.ServiceType.subscribe(this.serviceTypeWatcher);
 
-    this.Entity = serviceTypeEntity;
+    this.Entity = Entity;
 
-    if (serviceType()) {
-      this.serviceTypeWatcher(serviceType());
+    if (Def()) {
+      this.serviceTypeWatcher(Def());
     }
   }
 

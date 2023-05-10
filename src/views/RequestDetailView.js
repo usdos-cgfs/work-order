@@ -41,8 +41,19 @@ const templates = {
 export class RequestDetailView {
   _context;
 
-  ID;
-  Title;
+  get ID() {
+    return this.ObservableID();
+  }
+  set ID(id) {
+    this.ObservableID(id);
+  }
+  get Title() {
+    return this.ObservableTitle();
+  }
+
+  set Title(title) {
+    this.ObservableTitle(title);
+  }
   ObservableID = ko.observable();
   ObservableTitle = ko.observable();
 
@@ -74,20 +85,17 @@ export class RequestDetailView {
     Closed: ko.observable(),
   };
 
-  ServiceType = ko.observable();
-
   RequestOrgs = ko.observable();
+
+  ServiceType = {
+    Def: ko.observable(),
+    Entity: ko.observable(),
+  };
 
   // FieldMaps are used by the ApplicationDbContext and define
   // how to store and retrieve the entity properties
   FieldMap = {
-    ID: {
-      set: (val) => {
-        this.ID = val;
-        this.ObservableID(val);
-      },
-      get: this.ObservableID,
-    },
+    ID: this.ObservableID,
     Title: this.ObservableTitle,
     RequestSubject: this.RequestSubject,
     RequestDescription: this.RequestDescription,
@@ -128,20 +136,16 @@ export class RequestDetailView {
       get: this.RequestOrgs,
     },
     ServiceType: {
-      set: (val) => this.ServiceType(ServiceType.Create(val)),
-      get: this.ServiceType,
+      set: (val) => this.ServiceType.Def(ServiceType.Create(val)),
+      get: this.ServiceType.Def,
     }, // {id, title},
   };
 
-  ServiceTypeEntity = ko.observable();
-
-  ServiceTypeComponent;
-
   Pipeline = {
     Stages: ko.pureComputed(() => {
-      if (!this.ServiceType()) return [];
+      if (!this.ServiceType.Def()) return [];
       return pipelineStageStore()
-        .filter((stage) => stage.ServiceType.ID == this.ServiceType()?.ID)
+        .filter((stage) => stage.ServiceType.ID == this.ServiceType.Def()?.ID)
         .sort(sortByField("Step"));
     }),
     getNextStage: () => {
@@ -242,9 +246,8 @@ export class RequestDetailView {
     },
     IsValid: ko.pureComputed(() => !this.Validation.Errors.All().length),
     CurrentStage: {
-      IsValid: ko.pureComputed(() => {
-        return !this.Validation.CurrentStage.Errors().length;
-      }),
+      IsValid: () =>
+        this.AssignmentsComponent.CurrentStage.Validation.IsValid(),
       Errors: ko.pureComputed(() =>
         this.AssignmentsComponent.CurrentStage.Validation.Errors()
       ),
@@ -258,8 +261,8 @@ export class RequestDetailView {
 
   isValid = ko.pureComputed(() => {
     const serviceTypValidationErrors =
-      this.ServiceTypeEntity()?.validationErrors &&
-      this.ServiceTypeEntity()?.validationErrors();
+      this.ServiceType.Entity()?.validationErrors &&
+      this.ServiceType.Entity()?.validationErrors();
 
     return !(
       this.validationErrors().length || serviceTypValidationErrors?.length
@@ -279,7 +282,7 @@ export class RequestDetailView {
   // Controls
   refreshAll = async () => {
     this.refreshRequest();
-    this.ServiceTypeComponent.refreshServiceTypeEntity();
+    this.ServiceType.Component.refreshServiceTypeEntity();
   };
 
   refreshRequest = async () => {
@@ -293,7 +296,7 @@ export class RequestDetailView {
     // 1. Validate Request
     //if (!this.isValid()) return;
 
-    const serviceType = this.ServiceType();
+    const serviceType = this.ServiceType.Def();
     if (!serviceType) {
       // We should have caught this in validation.
       throw "no service type provided";
@@ -359,7 +362,7 @@ export class RequestDetailView {
       this.ID = newRequestItemId;
       this.ObservableID(newRequestItemId);
 
-      await this.ServiceTypeComponent.submitServiceTypeEntity();
+      await this.ServiceType.Component.submitServiceTypeEntity();
     }
 
     Router.setUrlParam("reqId", this.ObservableTitle());
@@ -434,7 +437,7 @@ export class RequestDetailView {
     displayMode = DisplayModes.View,
     ID = null,
     Title = null,
-    serviceType = null,
+    serviceType: serviceTypeDef = null,
     context,
     currentUser,
   }) {
@@ -454,23 +457,19 @@ export class RequestDetailView {
       this.ObservableTitle(Title);
     }
 
-    if (serviceType) {
-      this.ServiceType(
-        serviceTypeStore().find((service) => service.ID == serviceType.ID)
+    if (serviceTypeDef) {
+      this.ServiceType.Def(
+        serviceTypeStore().find((service) => service.ID == serviceTypeDef.ID)
       );
     }
 
-    this.ServiceTypeComponent = new ServiceTypeComponent({
+    this.ServiceType.Component = new ServiceTypeComponent({
       request: this,
-      serviceType: this.ServiceType,
-      serviceTypeEntity: this.ServiceTypeEntity,
-      context,
+      ...this.ServiceType,
     });
 
     this.AssignmentsComponent = new RequestAssignmentsComponent({
       request: this,
-      serviceTypeEntity: this.ServiceTypeEntity,
-      serviceType: this.ServiceType,
       stage: this.State.Stage,
       assignments: this.AssignmentsArr,
       activityQueue: this.ActivityQueue,

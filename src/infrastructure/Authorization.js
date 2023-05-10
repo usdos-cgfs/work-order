@@ -62,6 +62,7 @@ export const stageActionRoleMap = {
   Notification: roles.Subscriber,
 };
 
+// Holds a User object
 export const currentUser = ko.observable();
 
 export class User {
@@ -166,12 +167,12 @@ export const AssignmentFunctions = {
     return this.RequestorInfo.Requestor();
   },
   getGovManager: function () {
-    return this.ServiceTypeComponent.ServiceTypeEntity()?.GovManager();
+    return this.ServiceType.Entity()?.GovManager();
   },
   getAPM: function () {
-    return this.ServiceTypeComponent.ServiceTypeEntity()?.APM();
+    return this.ServiceType.Entity()?.APM();
   },
   getGTM: function () {
-    return this.ServiceTypeComponent.ServiceTypeEntity()?.GTM();
+    return this.ServiceType.Entity()?.GTM();
   },
 };

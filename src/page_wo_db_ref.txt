@@ -369,20 +369,31 @@
           </div>
         </div>
         <div class="d-flex justify-content-between">
-          <button
+          <!-- <button
             type="button"
             class="btn btn-success ms-3"
             data-bind="click: approveRequestHandler"
           >
             Approve
-          </button>
+          </button> -->
+          <!-- ko if: DisplayMode() == DisplayModes.New -->
           <button
             type="button"
             class="btn btn-success ms-3"
-            data-bind="click: promptAdvance, enable: Validation.CurrentStage.IsValid"
+            data-bind="click: submitNewRequest, enable: Validation.IsValid"
+          >
+            Submit
+          </button>
+          <!-- /ko -->
+          <!-- ko if: AssignmentsComponent.CurrentStage.userActionAssignments -->
+          <button
+            type="button"
+            class="btn btn-success ms-3"
+            data-bind="click: promptAdvance, enable: AssignmentsComponent.CurrentStage.Validation.IsValid"
           >
             Next Stage <span class="fa fa-chevron-right"></span>
           </button>
+          <!-- /ko -->
         </div>
       </div>
     </script>
@@ -393,9 +404,7 @@
           <li
             class="list-group-item d-flex flex-column justify-content-center fix-service-icon-border"
           >
-            <!-- ko if: ServiceType -->
-            <i class="fa fa-3x" data-bind="class: ServiceType()?.Icon"></i>
-            <!-- /ko -->
+            <i class="fa fa-3x" data-bind="class: ServiceType.Def()?.Icon"></i>
           </li>
           <!-- ko foreach: Pipeline.Stages -->
           <li
@@ -677,7 +686,7 @@
                 <select
                   class="form-control"
                   class="fluid"
-                  data-bind="value: ServiceType,
+                  data-bind="value: ServiceType.Def,
               options: $root.Config.serviceTypeStore,
               optionsText: (st) => st.Title"
                 ></select>
@@ -724,7 +733,7 @@
               </div>
               <div class="col-6">
                 <h6>Service Type:</h6>
-                <p data-bind="text: ServiceType()?.Title"></p>
+                <p data-bind="text: ServiceType.Def()?.Title"></p>
               </div>
             </div>
           </div>
@@ -734,7 +743,7 @@
     </script>
 
     <script type="text/html" id="tmpl-service-type-component">
-      <div class="card mb-3 w-100" data-bind="using: ServiceTypeComponent">
+      <div class="card mb-3 w-100" data-bind="using: ServiceType.Component">
         <div class="card-body">
           <div class="card-title d-flex justify-content-between">
             <h3 class="mx-0" data-bind="text: ServiceType()?.Title"></h3>

@@ -3,18 +3,17 @@ import { getAppContext } from "../../../infrastructure/ApplicationDbContext.js";
 export default class ActionGovManager {
   constructor(params) {
     this._context = getAppContext();
-    this.ServiceTypeEntity = params.serviceTypeEntity;
     this.ServiceType = params.serviceType;
     this.Errors = params.errors;
-    this.ServiceTypeEntity().APM.subscribe(this.apmWatcher);
-    this.ServiceTypeEntity().GTM.subscribe(this.gtmWatcher);
+    this.ServiceType.Entity().APM.subscribe(this.apmWatcher);
+    this.ServiceType.Entity().GTM.subscribe(this.gtmWatcher);
     this.Request = params.request;
 
     // this.Errors.push({
     //   source: errorSource,
     //   description: "Has not been validated",
     // });
-    this.apmWatcher(this.ServiceTypeEntity().APM());
+    this.apmWatcher(this.ServiceType.Entity().APM());
     //this.validate();
   }
   APM = ko.observable();
@@ -24,9 +23,9 @@ export default class ActionGovManager {
   hasBeenSaved = ko.observable(false);
 
   validate = () => {
-    if (!this.ServiceTypeEntity()) return [];
+    if (!this.ServiceType.Entity()) return [];
     const errors = [];
-    if (!this.APM() && !this.ServiceTypeEntity().APM()) {
+    if (!this.APM() && !this.ServiceType.Entity().APM()) {
       errors.push({
         source: errorSource,
         description: "Please provide an APM.",
@@ -65,12 +64,12 @@ export default class ActionGovManager {
     if (this.validate().length) return;
     console.log(this);
 
-    this.ServiceTypeEntity().APM(this.APM());
-    this.ServiceTypeEntity().GTM(this.GTM());
+    this.ServiceType.Entity().APM(this.APM());
+    this.ServiceType.Entity().GTM(this.GTM());
 
-    await this.ServiceType()
+    await this.ServiceType.Def()
       ?.getListRef()
-      ?.UpdateEntity(this.ServiceTypeEntity(), ["APM", "GTM"]);
+      ?.UpdateEntity(this.ServiceType.Entity(), ["APM", "GTM"]);
 
     this.Request.refreshAll();
     this.hasBeenSaved(true);
