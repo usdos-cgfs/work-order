@@ -130,6 +130,7 @@ export class RequestAssignmentsComponent {
     const updateEntity = {
       ID: assignment.ID,
       Status: assignmentStates[action],
+      Comment: assignment.Comment,
       CompletionDate: new Date().toISOString(),
       ActionTaker: currentUser(),
     };

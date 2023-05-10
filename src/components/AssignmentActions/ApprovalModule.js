@@ -9,12 +9,15 @@ export default function ApprovalActions(params) {
     params.completeAssignment(params.assignment, assignmentStates.Approved);
   };
 
+  const rejectModalId = "reject-modal-" + assignment.ID;
+  const rejectReason = ko.observable();
+
   const reject = async () => {
     console.log("reject");
+    params.assignment.Comment = rejectReason();
     params.completeAssignment(params.assignment, assignmentStates.Rejected);
+    document.getElementById(rejectModalId).close();
   };
-
-  const rejectModalId = "reject-modal-" + assignment.ID;
 
   const showReject = () => {
     document.getElementById(rejectModalId).showModal();
@@ -22,8 +25,6 @@ export default function ApprovalActions(params) {
   const cancelReject = () => {
     document.getElementById(rejectModalId).close();
   };
-
-  const rejectReason = ko.observable();
 
   return {
     approve,

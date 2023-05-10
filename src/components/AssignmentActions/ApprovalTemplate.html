@@ -14,13 +14,32 @@
     Reject
   </button>
 </div>
-<dialog data-bind="attr: {id: rejectModalId}">
-  <div class="d-flex flex-column justify-content-center">
+<dialog class="" data-bind="attr: {id: rejectModalId}">
+  <div class="d-flex flex-column justify-content-between h-100">
     <h4>Please Provide a Rejection Reason:</h4>
-    <textarea data-bind="rejectReason"></textarea>
+    <div class="alert alert-warning mb-3">
+      Note: Rejecting this request will close the record! Closed requests cannot
+      be re-opened!
+    </div>
+    <textarea
+      class="form-control mb-3 flex-grow-1"
+      data-bind="value: rejectReason"
+    ></textarea>
     <div class="d-flex justify-content-center">
-      <button type="button" data-bind="click: reject">Reject</button>
-      <button type="button" data-bind="click: cancelReject">Cancel</button>
+      <button
+        type="button"
+        class="btn btn-danger me-2"
+        data-bind="click: reject"
+      >
+        Reject
+      </button>
+      <button
+        type="button"
+        class="btn btn-secondary"
+        data-bind="click: cancelReject"
+      >
+        Cancel
+      </button>
     </div>
   </div>
 </dialog>

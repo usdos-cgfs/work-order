@@ -104,7 +104,9 @@ export class ActivityLogComponent {
   }
 
   async requestRejected(assignment) {
-    let actionDescription = `${assignment.ActionTaker.Title} has ${assignment.Status} an assignment.`;
+    let actionDescription =
+      `${assignment.ActionTaker.Title} has rejected the request and provided the following reason:<br/>` +
+      assignment.Comment;
     this.addAction({
       ActionType: actionTypes.Rejected,
       Description: actionDescription,

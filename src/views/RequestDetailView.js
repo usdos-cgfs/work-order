@@ -23,6 +23,7 @@ import { addTask, finishTask, taskDefs } from "../stores/Tasks.js";
 import { getRequestFolderPermissions } from "../infrastructure/Authorization.js";
 import { PipelineStage } from "../entities/PipelineStage.js";
 import { ActivityLogComponent } from "../components/ActivityLogComponent.js";
+import { emitRequestNotification } from "../infrastructure/Notifications.js";
 
 const DEBUG = true;
 
@@ -232,7 +233,19 @@ export class RequestDetailView {
   DisplayModes = DisplayModes;
   DisplayMode = ko.observable();
 
-  activityQueueWatcher() {}
+  activityQueueWatcher = (changes) => {
+    const activities = changes
+      .filter((change) => change.status == "added")
+      .map((change) => change.value);
+
+    activities.map((action) => {
+      emitRequestNotification(action, this);
+      if (action.activity == actionTypes.Rejected) {
+        // Request was rejected, close it out
+        console.warn("Closing request");
+      }
+    });
+  };
 
   Validation = {
     Errors: {
@@ -479,6 +492,12 @@ export class RequestDetailView {
       request: this,
       context,
     });
+
+    this.ActivityQueue.subscribe(
+      this.activityQueueWatcher,
+      this,
+      "arrayChange"
+    );
 
     this.DisplayMode.subscribe(this.displayModeWatcher);
     this.DisplayMode(displayMode);
