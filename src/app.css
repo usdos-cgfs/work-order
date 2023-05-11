@@ -38,11 +38,11 @@
   opacity: 1;
 }
 
-.sticky {
+/* .sticky {
   position: sticky !important;
   top: 0 !important;
   z-index: 1 !important;
-}
+} */
 
 #people-new-assignee > div {
   height: 100%;

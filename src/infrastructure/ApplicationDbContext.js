@@ -7,6 +7,7 @@ import { PipelineStage } from "../entities/PipelineStage.js";
 import { RequestOrg } from "../entities/RequestOrg.js";
 import { ServiceType } from "../entities/ServiceType.js";
 import { Action } from "../entities/Action.js";
+import { Attachment } from "../entities/Attachment.js";
 
 const DEBUG = false;
 
@@ -29,6 +30,8 @@ export default class ApplicationDbContext {
   Actions = new EntitySet(Action);
 
   Assignments = new EntitySet(Assignment);
+
+  Attachments = new EntitySet(Attachment);
 
   Notifications = new EntitySet(Notification);
 
@@ -79,7 +82,11 @@ class EntitySet {
 
   FindByRequestId = async function (requestId, fields) {
     if (!requestId) return;
-    return await this.ListRef.findByReqIdAsync(requestId, fields);
+    return await this.ListRef.findByLookupColumnAsync(
+      "Request",
+      requestId,
+      fields
+    );
   };
 
   LoadEntity = async function (entity) {
@@ -144,16 +151,46 @@ class EntitySet {
     return true;
   };
 
-  // hoisting
-  UpsertFolderPath = async function (folderPath) {
-    return this.ListRef.upsertListFolderPathAsync(folderPath);
-  };
-
   SetItemPermissions = async function (entityId, valuePairs, reset = false) {
     const salValuePairs = valuePairs
       .filter((vp) => vp[0] && vp[1])
       .map((vp) => [vp[0].LoginName ?? vp[0].Title, vp[1]]);
     return this.ListRef.setItemPermissionsAsync(entityId, salValuePairs, reset);
+  };
+
+  // Folder Methods
+  GetItemsByFolderPath = async function (folderPath, fields) {
+    return this.ListRef.getLibFolderContentsAsync(folderPath, fields);
+  };
+
+  UpsertFolderPath = async function (folderPath) {
+    return this.ListRef.upsertFolderPathAsync(folderPath);
+  };
+
+  SetFolderPermissions = async function (folderPath, valuePairs, reset = true) {
+    const salValuePairs = valuePairs
+      .filter((vp) => vp[0] && vp[1])
+      .map((vp) => [vp[0].LoginName ?? vp[0].Title, vp[1]]);
+    return this.ListRef.setFolderPermissionsAsync(
+      folderPath,
+      salValuePairs,
+      reset
+    );
+  };
+
+  UploadNewDocument = async function (folderPath, args) {
+    return this.ListRef.uploadNewDocumentAsync(
+      folderPath,
+      "Attach a New Document",
+      args
+    );
+  };
+
+  // Form Methods
+  ShowForm = async function (name, title, args) {
+    return new Promise((resolve, reject) =>
+      this.ListRef.showModal(name, title, args, resolve)
+    );
   };
 }
 

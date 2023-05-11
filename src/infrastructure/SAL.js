@@ -1329,12 +1329,12 @@ export function SPList(listDef) {
     });
   }
 
-  async function findByReqIdAsync(id, fields, count = null) {
+  async function findByLookupColumnAsync(column, id, fields, count = null) {
     var caml =
       '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
       '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
       "</Eq><Eq>" +
-      '<FieldRef Name="Request" LookupId="TRUE"/><Value Type="Lookup">' +
+      `<FieldRef Name="${column}" LookupId="TRUE"/><Value Type="Lookup">` +
       id +
       "</Value>" +
       `</Eq></And></Where></Query>${
@@ -1732,16 +1732,30 @@ export function SPList(listDef) {
   }
 
   /*****************************************************************
-                            getLibFolderContents          
+                            Folders          
     ******************************************************************/
-  function getLibFolderContents(folderName, callback) {
-    var currCtx = new SP.ClientContext.get_current();
-    var web = currCtx.get_web();
 
-    var folder = web.getFolderByServerRelativeUrl(
+  function upsertFolderPathAsync(folderPath) {
+    if (self.config.def.isLib) {
+      return new Promise((resolve, reject) =>
+        upsertLibFolderByPath(folderPath, resolve)
+      );
+    }
+    return new Promise((resolve, reject) =>
+      upsertListFolderByPath(folderPath, resolve)
+    );
+  }
+  /*****************************************************************
+                            Document Libraries          
+    ******************************************************************/
+  function getLibFolderContents(folderName, fields, callback) {
+    const currCtx = new SP.ClientContext.get_current();
+    const web = currCtx.get_web();
+
+    const folder = web.getFolderByServerRelativeUrl(
       sal.globalConfig.siteUrl + "/" + self.config.def.name + "/" + folderName
     );
-    files = folder.get_files();
+    const files = folder.get_files();
     //files.get_listItemAllFields();
 
     function onGetLibFilesSucceeded() {
@@ -1752,6 +1766,7 @@ export function SPList(listDef) {
         //console.log(file);
         var fileUrl = file.get_serverRelativeUrl();
         currCtx.load(file, "ListItemAllFields");
+        // currCtx.load(file, `Include(${fields.join(", ")})`);
         fileArr.push({
           fileUrl: fileUrl,
           title: file.get_title(),
@@ -1764,6 +1779,9 @@ export function SPList(listDef) {
         function () {
           fileArr.forEach(function (file) {
             file.ID = file.file.get_listItemAllFields().get_id();
+            let fieldValues = file.file
+              .get_listItemAllFields()
+              .get_fieldValues();
           });
           callback(fileArr);
         },
@@ -1775,12 +1793,12 @@ export function SPList(listDef) {
 
     function ongetLibFilesFailed(sender, args) {
       // let's log this but suppress any alerts
-      timedNotification(
-        "WARN: something went wrong fetching files: " + args.toString()
-      );
+      console.warn("Unable to folder contents:");
+      console.error(sender);
+      console.error(args);
     }
 
-    data = { files: files, callback: callback };
+    const data = { files: files, fields, callback: callback };
 
     currCtx.load(files);
     currCtx.executeQueryAsync(
@@ -1789,101 +1807,72 @@ export function SPList(listDef) {
     );
   }
 
-  function getLibFolderContentsAsync(folderName) {
+  function getLibFolderContentsAsync(folderPath, fields) {
     return new Promise((resolve, reject) => {
-      getLibFolderContents(folderName, resolve);
+      const currCtx = new SP.ClientContext.get_current();
+      const web = currCtx.get_web();
+
+      const folder = web.getFolderByServerRelativeUrl(
+        sal.globalConfig.siteUrl + "/" + self.config.def.name + "/" + folderPath
+      );
+      const files = folder.get_files();
+      //files.get_listItemAllFields();
+
+      function onGetLibFilesSucceeded() {
+        var fileArr = [];
+        var listItemEnumerator = this.files.getEnumerator();
+        while (listItemEnumerator.moveNext()) {
+          var file = listItemEnumerator.get_current();
+          currCtx.load(file, "ListItemAllFields");
+          fileArr.push({
+            file,
+          });
+        }
+        currCtx.executeQueryAsync(
+          function () {
+            fileArr.forEach(function (file) {
+              let fieldValues = file.file
+                .get_listItemAllFields()
+                .get_fieldValues();
+
+              fields.map((field) => {
+                let colVal = fieldValues[field];
+                file[field] = Array.isArray(colVal)
+                  ? colVal.map((val) => mapListItemToObject(val))
+                  : mapListItemToObject(colVal);
+              });
+            });
+            resolve(fileArr);
+          },
+          function (sender, args) {
+            console.warn("Unable load file details:");
+            console.error(sender);
+            console.error(args);
+          }
+        );
+      }
+
+      function ongetLibFilesFailed(sender, args) {
+        console.warn("Unable load folder contents:");
+        console.error(sender);
+        console.error(args);
+      }
+
+      const data = { files: files, fields, resolve };
+
+      currCtx.load(files);
+      currCtx.executeQueryAsync(
+        Function.createDelegate(data, onGetLibFilesSucceeded),
+        Function.createDelegate(data, ongetLibFilesFailed)
+      );
     });
-  }
-
-  /*****************************************************************
-                                  
-    ******************************************************************/
-
-  function showModal(formName, title, args, callback) {
-    var id = "";
-    var options = SP.UI.$create_DialogOptions();
-    options.title = title;
-    options.dialogReturnValueCallback = callback;
-    if (args.id) {
-      id = args.id;
-    }
-
-    var listPath = self.config.listRef.get_baseType()
-      ? "/" + self.config.def.name + "/"
-      : "/Lists/" + self.config.def.name + "/";
-
-    var rootFolder = "";
-
-    if (args.rootFolder) {
-      rootFolder = sal.globalConfig.siteUrl + listPath;
-      rootFolder += args.rootFolder;
-    }
-
-    options.args = JSON.stringify(args);
-
-    //Check if we are a document library or a list
-    // Basetype 1 = lib
-    // BaseType 0 = list
-    //Document library
-    var formsPath = self.config.listRef.get_baseType()
-      ? "/" + self.config.def.name + "/Forms/"
-      : "/Lists/" + self.config.def.name + "/";
-
-    options.url =
-      sal.globalConfig.siteUrl +
-      formsPath +
-      formName +
-      "?ID=" +
-      id +
-      "&Source=" +
-      location.pathname +
-      "&RootFolder=" +
-      rootFolder;
-    console.log("Options url: " + options.url);
-    SP.UI.ModalDialog.showModalDialog(options);
-  }
-
-  function uploadNewDocument(folder, title, args, callback) {
-    //folder = folder != '/' ? folder : '';
-    var options = SP.UI.$create_DialogOptions();
-    options.title = title;
-    options.dialogReturnValueCallback = callback;
-
-    var siteString =
-      sal.globalConfig.siteUrl == "/" ? "" : sal.globalConfig.siteUrl;
-
-    options.args = JSON.stringify(args);
-    options.url =
-      siteString +
-      "/_layouts/Upload.aspx?List=" +
-      self.config.guid +
-      "&RootFolder=" +
-      siteString +
-      "/" +
-      self.config.def.name +
-      "/" +
-      encodeURI(folder) +
-      "&Source=" +
-      location.pathname +
-      "&args=" +
-      encodeURI(JSON.stringify(args));
-
-    console.log("Options url: " + options.url);
-    SP.UI.ModalDialog.showModalDialog(options);
-  }
-
-  async function upsertListFolderPathAsync(folderPath) {
-    return new Promise((resolve, reject) =>
-      upsertListFolderPath(folderPath, resolve)
-    );
   }
 
   /*****************************************************************
                         Folder Creation          
     ******************************************************************/
-  // TODO: There should probably only be one entry point to create a folder
 
-  function upsertListFolderPath(folderPath, callback) {
+  function upsertListFolderByPath(folderPath, callback) {
     var folderArr = folderPath.split("/");
     var idx = 0;
 
@@ -2047,9 +2036,13 @@ export function SPList(listDef) {
     );
   }
 
-  function createLibFolder(folderUrl, success) {
-    var ctx = SP.ClientContext.get_current();
-    var list = self.config.listRef;
+  function upsertLibFolderByPath(folderUrl, success) {
+    const currCtx = new SP.ClientContext.get_current();
+    const web = currCtx.get_web();
+    const oList = web.get_lists().getByTitle(self.config.def.title);
+
+    // TODO: Check if the folder exists before adding it
+
     var createFolderInternal = function (parentFolder, folderUrl, success) {
       var ctx = parentFolder.get_context();
       var folderNames = folderUrl.split("/");
@@ -2067,24 +2060,32 @@ export function SPList(listDef) {
             success(curFolder);
           }
         },
-        function () {
-          console.log("error creating new folder");
+        function (sender, args) {
+          console.error("error creating new folder");
+          console.error(sender);
+          console.error(error);
         }
       );
     };
-    createFolderInternal(list.get_rootFolder(), folderUrl, success);
+    createFolderInternal(oList.get_rootFolder(), folderUrl, success);
   }
 
+  function setFolderPermissionsAsync(folderPath, valuePairs, reset) {
+    return new Promise((resolve, reject) => {
+      setLibFolderPermissions(folderPath, valuePairs, resolve, reset);
+    });
+  }
   function setLibFolderPermissions(path, valuePairs, callback, reset) {
     reset = reset === undefined ? false : reset;
-    var users = new Array();
-    var resolvedGroups = new Array();
+    // TODO: Validate that the users exist
+    var users = [];
+    var resolvedGroups = [];
     var relativeUrl =
       sal.globalConfig.siteUrl + "/" + self.config.def.name + "/" + path;
 
-    var currCtx = new SP.ClientContext.get_current();
-    var web = currCtx.get_web();
-    var folder = web.getFolderByServerRelativeUrl(relativeUrl);
+    const currCtx = new SP.ClientContext.get_current();
+    const web = currCtx.get_web();
+    const folder = web.getFolderByServerRelativeUrl(relativeUrl);
 
     valuePairs.forEach(function (vp) {
       var resolvedGroup = sal.getSPSiteGroupByName(vp[0]);
@@ -2181,6 +2182,96 @@ export function SPList(listDef) {
     );
   }
 
+  /*****************************************************************
+                                  
+    ******************************************************************/
+
+  function showModal(formName, title, args, callback) {
+    var id = "";
+    var options = SP.UI.$create_DialogOptions();
+    options.title = title;
+    options.dialogReturnValueCallback = callback;
+    if (args.id) {
+      id = args.id;
+    }
+
+    var listPath = self.config.def.isLib
+      ? "/" + self.config.def.name + "/"
+      : "/Lists/" + self.config.def.name + "/";
+
+    var rootFolder = "";
+
+    if (args.rootFolder) {
+      rootFolder = sal.globalConfig.siteUrl + listPath;
+      rootFolder += args.rootFolder;
+    }
+
+    options.args = JSON.stringify(args);
+
+    // WARNING: this looks similar to listPath but is different
+    var formsPath = self.config.def.isLib
+      ? "/" + self.config.def.name + "/Forms/"
+      : "/Lists/" + self.config.def.name + "/";
+
+    options.url =
+      sal.globalConfig.siteUrl +
+      formsPath +
+      formName +
+      "?ID=" +
+      id +
+      "&Source=" +
+      location.pathname +
+      "&RootFolder=" +
+      rootFolder;
+    console.log("Options url: " + options.url);
+    SP.UI.ModalDialog.showModalDialog(options);
+  }
+
+  function uploadNewDocumentAsync(folderPath, title, args) {
+    return new Promise((resolve, reject) => {
+      const currCtx = new SP.ClientContext.get_current();
+      const web = currCtx.get_web();
+      const oList = web.get_lists().getByTitle(self.config.def.title);
+
+      currCtx.load(oList);
+      currCtx.executeQueryAsync(
+        function () {
+          //folder = folder != '/' ? folder : '';
+          var options = SP.UI.$create_DialogOptions();
+          options.title = title;
+          options.dialogReturnValueCallback = resolve;
+
+          var siteString =
+            sal.globalConfig.siteUrl == "/" ? "" : sal.globalConfig.siteUrl;
+
+          options.args = JSON.stringify(args);
+          options.url =
+            siteString +
+            "/_layouts/Upload.aspx?List=" +
+            oList.get_id().toString() +
+            "&RootFolder=" +
+            siteString +
+            "/" +
+            self.config.def.name +
+            "/" +
+            encodeURI(folderPath) +
+            "&Source=" +
+            location.pathname +
+            "&args=" +
+            encodeURI(JSON.stringify(args));
+
+          //console.log("Options url: " + options.url);
+          SP.UI.ModalDialog.showModalDialog(options);
+        },
+        function (sender, args) {
+          console.error("Error showing file modal: ");
+          console.error(sender);
+          console.error(args);
+        }
+      );
+    });
+  }
+
   function showListView(filter) {
     // Redirect to the default sharepoint list view
     listUrl =
@@ -2201,7 +2292,7 @@ export function SPList(listDef) {
     getListItems: getListItems,
     getListItemsAsync: getListItemsAsync,
     findByTitleAsync,
-    findByReqIdAsync,
+    findByLookupColumnAsync,
     findByIdAsync,
     updateListItem: updateListItem,
     updateListItemAsync,
@@ -2213,12 +2304,10 @@ export function SPList(listDef) {
     getLibFolderContents: getLibFolderContents,
     getLibFolderContentsAsync: getLibFolderContentsAsync,
     showModal: showModal,
-    uploadNewDocument: uploadNewDocument,
-    upsertListFolderPath: upsertListFolderPath,
-    upsertListFolderPathAsync,
+    uploadNewDocumentAsync,
+    upsertFolderPathAsync,
     ensureListFolder: ensureListFolder,
-    createFolderRec: createLibFolder,
-    setLibFolderPermissions: setLibFolderPermissions,
+    setFolderPermissionsAsync,
     showListView: showListView,
   };
 

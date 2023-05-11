@@ -4,6 +4,7 @@ import { RequestEntity, requestStates } from "../entities/Request.js";
 import { actionTypes } from "../entities/Action.js";
 import { pipelineStageStore } from "../entities/PipelineStage.js";
 import { Assignment, assignmentStates } from "../entities/Assignment.js";
+import { Attachment } from "../entities/Attachment.js";
 
 import { RequestAssignmentsComponent } from "../components/RequestAssignmentsComponent.js";
 import { People } from "../components/People.js";
@@ -176,6 +177,56 @@ export class RequestDetailView {
     },
   };
 
+  // TODO: Don't forget to update request id on submission of new request
+  Attachments = {
+    list: {
+      All: ko.observableArray(),
+      Active: ko.pureComputed(() =>
+        this.Attachments.list.All().filter((attachment) => attachment.IsActive)
+      ),
+    },
+    addNew: async () => {
+      const folderPath = this.getRelativeFolderPath();
+      const folderPerms = this.getFolderPermissions();
+
+      try {
+        await this._context.Attachments.UpsertFolderPath(folderPath);
+        await this._context.Attachments.SetFolderPermissions(
+          folderPath,
+          folderPerms
+        );
+        await this._context.Attachments.UploadNewDocument(folderPath, {
+          RequestId: this.ID,
+          RequestTitle: this.Title,
+        });
+        this.Attachments.refresh();
+      } catch (e) {
+        console.error("Error creating folder: ");
+      }
+    },
+    refresh: async () => {
+      const attachments = await this._context.Attachments.GetItemsByFolderPath(
+        this.getRelativeFolderPath(),
+        Attachment.Views.All
+      );
+      this.Attachments.list.All(attachments);
+    },
+    view: (attachment) => {
+      //console.log("viewing", attachment);
+      this._context.Attachments.ShowForm(
+        "DispForm.aspx",
+        "View " + attachment.Title,
+        { id: attachment.ID }
+      );
+    },
+    remove: async (attachment) => {
+      console.log("removing", attachment);
+      attachment.IsActive = false;
+      await this._context.Attachments.UpdateEntity(attachment, ["IsActive"]);
+      this.Attachments.refresh();
+    },
+  };
+
   // Assignments = {
   //   List: ko.observable(),
   //   AreLoading: ko.observable(),
@@ -267,21 +318,6 @@ export class RequestDetailView {
     },
   };
 
-  validationErrors = ko.pureComputed(() => {
-    // Return a list of validation errors for the request
-    return [];
-  });
-
-  isValid = ko.pureComputed(() => {
-    const serviceTypValidationErrors =
-      this.ServiceType.Entity()?.validationErrors &&
-      this.ServiceType.Entity()?.validationErrors();
-
-    return !(
-      this.validationErrors().length || serviceTypValidationErrors?.length
-    );
-  });
-
   /**
    * Returns the generic relative path without the list/library name
    * e.g. EX/2929-20199
@@ -294,8 +330,9 @@ export class RequestDetailView {
 
   // Controls
   refreshAll = async () => {
-    this.refreshRequest();
+    await this.refreshRequest();
     this.ServiceType.Component.refreshServiceTypeEntity();
+    this.Attachments.refresh();
   };
 
   refreshRequest = async () => {

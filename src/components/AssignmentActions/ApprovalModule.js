@@ -22,6 +22,7 @@ export default function ApprovalActions(params) {
   const showReject = () => {
     document.getElementById(rejectModalId).showModal();
   };
+
   const cancelReject = () => {
     document.getElementById(rejectModalId).close();
   };
