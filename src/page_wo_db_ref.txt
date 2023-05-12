@@ -276,7 +276,15 @@
                           <th>Actions</th>
                         </tr>
                       </thead>
-                      <tbody data-bind="foreach: Attachments.list.Active">
+                      <tbody data-bind="">
+                        <!-- ko if: Attachments.AreLoading -->
+                        <tr class="">
+                          <td colspan="4" class="p-0">
+                            <progress class="w-100"></progress>
+                          </td>
+                        </tr>
+                        <!-- /ko -->
+                        <!-- ko foreach: Attachments.list.Active -->
                         <tr>
                           <td>
                             <a
@@ -295,6 +303,7 @@
                             ></i>
                           </td>
                         </tr>
+                        <!-- /ko -->
                       </tbody>
                     </table>
                     <button
@@ -315,14 +324,59 @@
           <div class="card mb-3 w-100">
             <div class="card-body">
               <h3 class="card-title">Comments</h3>
-              <!-- ko if: false -->
-              <div class="d-flex justify-content-center">
-                <div class="spinner-border" role="status">
-                  <span class="visually-hidden">Loading...</span>
-                </div>
+              <div class="alert alert-warning">
+                <strong>Note:</strong> Anyone with access to this record is able
+                to view all comments.
               </div>
-              <!-- /ko -->
-              <textarea class="form-control"></textarea>
+              <div class="d-flex justify-content-end">
+                <i
+                  class="fa fa-sync pointer"
+                  data-bind="click: Comments.refresh"
+                ></i>
+              </div>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Author</th>
+                    <th>Comment</th>
+                    <th>Notification Sent</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody data-bind="">
+                  <!-- ko if: Comments.AreLoading -->
+                  <tr class="">
+                    <td colspan="4" class="p-0">
+                      <progress class="w-100"></progress>
+                    </td>
+                  </tr>
+                  <!-- /ko -->
+                  <!-- ko foreach: Comments.list.All -->
+                  <tr>
+                    <td data-bind="text: Author.Title"></td>
+                    <td data-bind="text: Comment"></td>
+                    <td data-bind="text: NotificationSent"></td>
+                    <td>
+                      <i
+                        class="fa fa-envelope pointer"
+                        data-bind="click: $parent.Comments.sendNotification,
+                        attr: {title: NotificationSent ? 'Re-Send Email Notification' : 'Send Email Notification'}"
+                      ></i>
+                    </td>
+                  </tr>
+                  <!-- /ko -->
+                </tbody>
+              </table>
+              <div>Provide additional comments/instructions here:</div>
+              <div data-bind="using: Comments.NewCommentComponent">
+                <textarea
+                  class="form-control mb-2"
+                  data-bind="value: CommentText"
+                ></textarea>
+                <button class="btn btn-primary" data-bind="click: submit">
+                  Submit Comment
+                </button>
+              </div>
             </div>
           </div>
           <div>
@@ -812,21 +866,19 @@
                   </tr>
                 </thead>
                 <tbody>
+                  <!-- ko if: IsLoading -->
+                  <tr class="">
+                    <td colspan="4" class="p-0">
+                      <progress class="w-100"></progress>
+                    </td>
+                  </tr>
+                  <!-- /ko -->
                   <!-- ko foreach: Actions -->
                   <tr>
                     <td data-bind="text: Author?.Title"></td>
                     <td data-bind="text: ActionType"></td>
                     <td data-bind="html: Description"></td>
                     <td data-bind="text: Created.toLocaleString()"></td>
-                  </tr>
-                  <!-- /ko -->
-                  <!-- ko if: IsLoading -->
-                  <tr>
-                    <td colspan="4">
-                      <div class="spinner-border mx-auto" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                      </div>
-                    </td>
                   </tr>
                   <!-- /ko -->
                 </tbody>

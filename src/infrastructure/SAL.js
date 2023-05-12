@@ -1202,7 +1202,7 @@ export function SPList(listDef) {
     ******************************************************************/
   function mapListItemToObject(val) {
     if (!val) {
-      return null;
+      return val;
     }
     var out;
     switch (val.constructor.getName()) {
@@ -1329,13 +1329,18 @@ export function SPList(listDef) {
     });
   }
 
-  async function findByLookupColumnAsync(column, id, fields, count = null) {
+  async function findByLookupColumnAsync(
+    column,
+    lookupId,
+    fields,
+    count = null
+  ) {
     var caml =
       '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
       '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
       "</Eq><Eq>" +
       `<FieldRef Name="${column}" LookupId="TRUE"/><Value Type="Lookup">` +
-      id +
+      lookupId +
       "</Value>" +
       `</Eq></And></Where></Query>${
         count ?? "<RowLimit>" + count + "</RowLimit>"
@@ -1515,7 +1520,7 @@ export function SPList(listDef) {
   }
 
   /*****************************************************************
-                            Set Item Permissions  
+                            Permissions  
     ******************************************************************/
 
   function setItemPermissionsAsync(id, valuePairs, reset) {
@@ -1648,9 +1653,7 @@ export function SPList(listDef) {
       Function.createDelegate(data, onFindItemFailed)
     );
   }
-  /*****************************************************************
-                            Get Item Permissions  
-    ******************************************************************/
+
   /**
    * Documentation - getItemPermissions
    * @param {number} id Item identifier, obtain using getListItems above
@@ -1745,6 +1748,66 @@ export function SPList(listDef) {
       upsertListFolderByPath(folderPath, resolve)
     );
   }
+
+  function getFolderContentsAsync(folderpath, fields) {
+    if (self.config.def.isLib) {
+      return getLibFolderContentsAsync(folderpath, fields);
+    }
+    return getListFolderContentsAsync(folderpath, fields);
+  }
+
+  /*****************************************************************
+                            Lists          
+    ******************************************************************/
+  function getListFolderContentsAsync(relFolderPath, fields) {
+    return new Promise((resolve, reject) => {
+      // TODO: everything is the same as getListItems except for the caml query
+      const currCtx = new SP.ClientContext.get_current();
+      const web = currCtx.get_web();
+      const oList = web.get_lists().getByTitle(self.config.def.title);
+
+      const serverRelFolderPath =
+        sal.globalConfig.siteUrl +
+        "/Lists/" +
+        self.config.def.name +
+        "/" +
+        relFolderPath;
+
+      const camlQuery = SP.CamlQuery.createAllItemsQuery();
+      camlQuery.set_folderServerRelativeUrl(serverRelFolderPath);
+      const allItems = oList.getItems(camlQuery);
+
+      currCtx.load(allItems, `Include(${fields.join(", ")})`);
+
+      currCtx.executeQueryAsync(
+        function () {
+          const foundObjects = [];
+          var listItemEnumerator = allItems.getEnumerator();
+          while (listItemEnumerator.moveNext()) {
+            var oListItem = listItemEnumerator.get_current();
+            var listObj = {};
+            fields.forEach((field) => {
+              var colVal = oListItem.get_item(field);
+              //console.log(`SAL: Setting ${field} to`, colVal);
+              listObj[field] = Array.isArray(colVal)
+                ? colVal.map((val) => mapListItemToObject(val))
+                : mapListItemToObject(colVal);
+            });
+            //listObj.fileUrl = oListItem.get_item("FileRef");
+            listObj.oListItem = oListItem;
+            foundObjects.push(listObj);
+          }
+          resolve(foundObjects);
+        },
+        function (sender, args) {
+          console.warn("Unable load list folder contents:");
+          console.error(sender);
+          console.error(args);
+        }
+      );
+    });
+  }
+
   /*****************************************************************
                             Document Libraries          
     ******************************************************************/
@@ -2184,7 +2247,7 @@ export function SPList(listDef) {
 
   /*****************************************************************
                                   
-    ******************************************************************/
+  ******************************************************************/
 
   function showModal(formName, title, args, callback) {
     var id = "";
@@ -2302,7 +2365,7 @@ export function SPList(listDef) {
     setItemPermissionsAsync,
     getItemPermissions: getItemPermissions,
     getLibFolderContents: getLibFolderContents,
-    getLibFolderContentsAsync: getLibFolderContentsAsync,
+    getFolderContentsAsync,
     showModal: showModal,
     uploadNewDocumentAsync,
     upsertFolderPathAsync,

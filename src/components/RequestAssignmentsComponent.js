@@ -57,6 +57,9 @@ export class RequestAssignmentsComponent {
       this.request.ID,
       Assignment.Views.All
     );
+    assignments?.forEach(
+      (asg) => (asg.RequestOrg = RequestOrg.FindInStore(asg.RequestOrg))
+    );
     this.Assignments(assignments);
     this.IsLoading(false);
   };

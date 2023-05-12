@@ -10,3 +10,6 @@ WorkOrderEmails
 
 WorkOrder:
 RequestorOffice -> ConfigRequestOrg
+
+ConfigRequestOrg:
+Add PreferredEmail field

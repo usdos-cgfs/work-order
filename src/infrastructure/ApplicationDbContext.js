@@ -8,6 +8,7 @@ import { RequestOrg } from "../entities/RequestOrg.js";
 import { ServiceType } from "../entities/ServiceType.js";
 import { Action } from "../entities/Action.js";
 import { Attachment } from "../entities/Attachment.js";
+import { Comment } from "../entities/Comment.js";
 
 const DEBUG = false;
 
@@ -32,6 +33,8 @@ export default class ApplicationDbContext {
   Assignments = new EntitySet(Assignment);
 
   Attachments = new EntitySet(Attachment);
+
+  Comments = new EntitySet(Comment);
 
   Notifications = new EntitySet(Notification);
 
@@ -160,7 +163,7 @@ class EntitySet {
 
   // Folder Methods
   GetItemsByFolderPath = async function (folderPath, fields) {
-    return this.ListRef.getLibFolderContentsAsync(folderPath, fields);
+    return this.ListRef.getFolderContentsAsync(folderPath, fields);
   };
 
   UpsertFolderPath = async function (folderPath) {

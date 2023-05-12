@@ -36,6 +36,7 @@ export class RequestOrg {
       "OrgType",
       "GTM",
       "BreakAccess",
+      "PreferredEmail",
     ],
   };
 

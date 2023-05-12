@@ -5,6 +5,7 @@ import { actionTypes } from "../entities/Action.js";
 import { pipelineStageStore } from "../entities/PipelineStage.js";
 import { Assignment, assignmentStates } from "../entities/Assignment.js";
 import { Attachment } from "../entities/Attachment.js";
+import { Comment } from "../entities/Comment.js";
 
 import { RequestAssignmentsComponent } from "../components/RequestAssignmentsComponent.js";
 import { People } from "../components/People.js";
@@ -24,7 +25,12 @@ import { addTask, finishTask, taskDefs } from "../stores/Tasks.js";
 import { getRequestFolderPermissions } from "../infrastructure/Authorization.js";
 import { PipelineStage } from "../entities/PipelineStage.js";
 import { ActivityLogComponent } from "../components/ActivityLogComponent.js";
-import { emitRequestNotification } from "../infrastructure/Notifications.js";
+import {
+  emitCommentNotification,
+  emitRequestNotification,
+} from "../infrastructure/Notifications.js";
+
+import { Tabs } from "../app.js";
 
 const DEBUG = true;
 
@@ -177,8 +183,8 @@ export class RequestDetailView {
     },
   };
 
-  // TODO: Don't forget to update request id on submission of new request
   Attachments = {
+    AreLoading: ko.observable(),
     list: {
       All: ko.observableArray(),
       Active: ko.pureComputed(() =>
@@ -205,11 +211,13 @@ export class RequestDetailView {
       }
     },
     refresh: async () => {
+      this.Attachments.AreLoading(true);
       const attachments = await this._context.Attachments.GetItemsByFolderPath(
         this.getRelativeFolderPath(),
         Attachment.Views.All
       );
       this.Attachments.list.All(attachments);
+      this.Attachments.AreLoading(false);
     },
     view: (attachment) => {
       //console.log("viewing", attachment);
@@ -227,51 +235,110 @@ export class RequestDetailView {
     },
   };
 
-  // Assignments = {
-  //   List: ko.observable(),
-  //   AreLoading: ko.observable(),
-  //   refresh: async () => {
-  //     if (!this.ObservableID()) return;
-  //     this.Assignments.AreLoading(true);
-  //     const assignments = await this._context.Assignments.FindByRequestId(
-  //       this.ObservableID(),
-  //       Assignment.Views.All
-  //     );
-  //     this.Assignments.List(assignments);
-  //     this.Assignments.AreLoading(false);
-  //   },
-  //   addNew: async (assignment = null) => {
-  //     if (!this.ObservableID() || !assignment) return;
+  Comments = {
+    AreLoading: ko.observable(),
+    list: {
+      All: ko.observableArray(),
+      Active: ko.pureComputed(() => {
+        return this.Comments.list.All().filter((comment) => comment.IsActive);
+      }),
+    },
+    NewCommentComponent: {
+      CommentText: ko.observable(),
+      submit: async () => {
+        const comment = {
+          Comment: this.Comments.NewCommentComponent.CommentText(),
+        };
+        await this.Comments.addNew(comment);
+        this.Comments.NewCommentComponent.CommentText("");
+      },
+    },
+    addNew: async (comment) => {
+      const folderPath = this.getRelativeFolderPath();
+      const folderPerms = this.getFolderPermissions();
 
-  //     if (!assignment.RequestOrg) {
-  //       const reqOrg = this.State.Stage()?.RequestOrg;
-  //       assignment.RequestOrg = reqOrg;
-  //     }
+      try {
+        const commentFolderId = await this._context.Comments.UpsertFolderPath(
+          folderPath
+        );
 
-  //     if (!assignment.PipelineStage) {
-  //       assignment.PipelineStage = this.Stage();
-  //     }
+        await this._context.Comments.SetItemPermissions(
+          commentFolderId,
+          folderPerms
+        );
 
-  //     assignment.Status = assignment.Role.initialStatus;
+        await this._context.Comments.AddEntity(comment, folderPath);
+        this.Comments.refresh();
+      } catch (e) {
+        console.error("Error creating folder: ");
+      }
+    },
+    update: async (comment) => {},
+    refresh: async () => {
+      this.Comments.AreLoading(true);
+      const folderPath = this.getRelativeFolderPath();
+      const comments = await this._context.Comments.GetItemsByFolderPath(
+        folderPath,
+        Comment.Views.All
+      );
+      this.Comments.list.All(comments);
+      this.Comments.AreLoading(false);
+    },
+    sendNotification: async (comment) => {
+      await emitCommentNotification(comment, this);
+      comment.NotificationSent = true;
+      await this._context.Comments.UpdateEntity(comment, ["NotificationSent"]);
+      this.Comments.refresh();
+    },
+  };
 
-  //     const folderPath = this.request.getRelativeFolderPath();
+  Assignments = {
+    list: {
+      All: ko.observableArray(),
+    },
+    //   AreLoading: ko.observable(),
+    //   refresh: async () => {
+    //     if (!this.ObservableID()) return;
+    //     this.Assignments.AreLoading(true);
+    //     const assignments = await this._context.Assignments.FindByRequestId(
+    //       this.ObservableID(),
+    //       Assignment.Views.All
+    //     );
+    //     this.Assignments.List(assignments);
+    //     this.Assignments.AreLoading(false);
+    //   },
+    //   addNew: async (assignment = null) => {
+    //     if (!this.ObservableID() || !assignment) return;
 
-  //     const newAssignmentId = await this._context.Assignments.AddEntity(
-  //       assignment,
-  //       folderPath,
-  //       this.request
-  //     );
-  //     this.refreshAssignments();
+    //     if (!assignment.RequestOrg) {
+    //       const reqOrg = this.State.Stage()?.RequestOrg;
+    //       assignment.RequestOrg = reqOrg;
+    //     }
 
-  //     //this.request.ActivityLog.assignmentAdded(assignment);
-  //     this.ActivityQueue.push({
-  //       activity: actionTypes.Assigned,
-  //       data: assignment,
-  //     });
-  //   },
-  // };
+    //     if (!assignment.PipelineStage) {
+    //       assignment.PipelineStage = this.Stage();
+    //     }
 
-  AssignmentsArr = ko.observableArray();
+    //     assignment.Status = assignment.Role.initialStatus;
+
+    //     const folderPath = this.request.getRelativeFolderPath();
+
+    //     const newAssignmentId = await this._context.Assignments.AddEntity(
+    //       assignment,
+    //       folderPath,
+    //       this.request
+    //     );
+    //     this.refreshAssignments();
+
+    //     //this.request.ActivityLog.assignmentAdded(assignment);
+    //     this.ActivityQueue.push({
+    //       activity: actionTypes.Assigned,
+    //       data: assignment,
+    //     });
+    //   },
+  };
+
+  // AssignmentsArr = ko.observableArray();
 
   AssignmentsComponent;
 
@@ -318,6 +385,11 @@ export class RequestDetailView {
     },
   };
 
+  getAppLink = () =>
+    `${Router.appRoot}/Pages/WO_DB.aspx?reqId=${this.Title}&tab=${Tabs.RequestDetail}`;
+
+  getAppLinkElement = () =>
+    `<a href="${this.getAppLink()}" target="blank">${this.Title}</a>`;
   /**
    * Returns the generic relative path without the list/library name
    * e.g. EX/2929-20199
@@ -333,6 +405,7 @@ export class RequestDetailView {
     await this.refreshRequest();
     this.ServiceType.Component.refreshServiceTypeEntity();
     this.Attachments.refresh();
+    this.Comments.refresh();
   };
 
   refreshRequest = async () => {
@@ -521,7 +594,7 @@ export class RequestDetailView {
     this.AssignmentsComponent = new RequestAssignmentsComponent({
       request: this,
       stage: this.State.Stage,
-      assignments: this.AssignmentsArr,
+      assignments: this.Assignments.list.All,
       activityQueue: this.ActivityQueue,
     });
 
