@@ -7,13 +7,14 @@ import {
 const DEBUG = false;
 
 export class ServiceTypeComponent {
-  constructor({ request, Def, Entity, context }) {
+  constructor({ request, Def, Entity, IsLoading }) {
     this.ServiceType = Def;
     this.ElementId = this.ServiceType()?.UID;
     this.Request = request;
-    this.ServiceType.subscribe(this.serviceTypeWatcher);
-
     this.Entity = Entity;
+    this.IsLoading = IsLoading;
+
+    this.ServiceType.subscribe(this.serviceTypeWatcher);
 
     if (Def()) {
       this.serviceTypeWatcher(Def());
@@ -24,8 +25,6 @@ export class ServiceTypeComponent {
   ComponentsAreLoading = ko.observable();
 
   Entity;
-
-  IsLoading = ko.observable();
 
   refreshServiceTypeEntity = async () => {
     if (DEBUG) console.log("ServiceTypeComponent: refresh Triggered");
@@ -62,6 +61,7 @@ export class ServiceTypeComponent {
       this.Entity(null);
       return;
     }
+
     this.ComponentsAreLoading(true);
 
     this.ElementId = getTemplateElementId(newSvcType.UID);
@@ -76,7 +76,7 @@ export class ServiceTypeComponent {
     this.Entity(new service.default(this.Request));
     this.ComponentsAreLoading(false);
 
-    if (this.Request.ObservableID()) this.refreshServiceTypeEntity();
+    if (this.Request.ID) this.refreshServiceTypeEntity();
   };
 }
 

@@ -1,6 +1,14 @@
-<div>Hello from our template action resolver component!</div>
-<div class="d-flex justify-content-end">
+<div>
+  <h6>You have been designated as an action office resolver:</h6>
+</div>
+<!-- ko if: assignment.Status != assignmentStates.Completed -->
+<div>Please confirm you have completed any necessary actions!</div>
+<div class="d-flex justify-content-start">
   <button class="ms-3 btn btn-success" data-bind="click: complete">
-    Completed
+    Confirm
   </button>
 </div>
+<!-- /ko -->
+<!-- ko if: assignment.Status == assignmentStates.Completed -->
+<strong>Thank you for confirming!</strong>
+<!-- /ko -->

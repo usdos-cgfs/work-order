@@ -152,3 +152,37 @@ export function registerServiceTypeComponent(componentName, serviceTypeUid) {
     },
   });
 }
+
+export async function registerServiceTypeTemplate(
+  templateName,
+  serviceTypeUid
+) {
+  const templateId = "tmpl-" + templateName;
+  if (!document.getElementById(templateId)) {
+    const templateRelPath = `/entities/ServiceTypeTemplates/${serviceTypeUid}/${templateName}-template.html`;
+    await fetchTemplate(templateId, templateRelPath);
+  }
+}
+
+async function fetchTemplate(templatePath) {
+  const response = await fetch(assetsPath + templatePath);
+
+  if (!response.ok) {
+    console.error(
+      `Fetching the HTML file went wrong - ${response.statusText}`,
+      templatePath
+    );
+    // throw new Error(
+    //   `Fetching the HTML file went wrong - ${response.statusText}`
+    // );
+  }
+
+  const text = await response.text();
+  const element = document.createElement("script");
+
+  element.setAttribute("type", "text/html");
+  element.setAttribute("id", templateId);
+  element.text = text;
+
+  document.getElementById("service-type-templates").append(element);
+}

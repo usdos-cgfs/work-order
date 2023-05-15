@@ -22,7 +22,10 @@ import {
 import * as Router from "../common/Router.js";
 
 import { addTask, finishTask, taskDefs } from "../stores/Tasks.js";
-import { getRequestFolderPermissions } from "../infrastructure/Authorization.js";
+import {
+  currentUser,
+  getRequestFolderPermissions,
+} from "../infrastructure/Authorization.js";
 import { PipelineStage } from "../entities/PipelineStage.js";
 import { ActivityLogComponent } from "../components/ActivityLogComponent.js";
 import {
@@ -96,6 +99,7 @@ export class RequestDetailView {
   RequestOrgs = ko.observable();
 
   ServiceType = {
+    IsLoading: ko.observable(),
     Def: ko.observable(),
     Entity: ko.observable(),
   };
@@ -161,6 +165,7 @@ export class RequestDetailView {
       const nextStepNum = thisStepNum + 1;
       return this.Pipeline.Stages()?.find((stage) => stage.Step == nextStepNum);
     },
+    showActionsExtension: ko.pureComputed(() => {}),
     advance: async () => {
       if (this.promptAdvanceModal) this.promptAdvanceModal.hide();
 
@@ -293,9 +298,48 @@ export class RequestDetailView {
   };
 
   Assignments = {
+    AreLoading: ko.observable(),
     list: {
       All: ko.observableArray(),
+      InProgress: ko.pureComputed(() =>
+        this.Assignments.list
+          .All()
+          .filter(
+            (assignment) => assignment.Status == assignmentStates.InProgress
+          )
+      ),
+      CurrentUserAssignments: ko.pureComputed(() => {
+        // We need find assignments where the current user is directly assigned:
+        const directAssignments = this.Assignments.list
+          .All()
+          .filter((assignment) => assignment.Assignee?.ID == currentUser()?.ID);
+
+        // Where they're in a group that's been assigned:
+        // TODO: Assignee column is People Only
+        // const groupIds = currentUser().Groups.map((group) => group.ID);
+        // const groupAssignments = this.Assignments.list
+        //   .All()
+        //   .filter((assignment) => groupIds.includes(assignment.Assignee?.ID));
+
+        // Where they're in a requestOrg that's been assigned:
+        const userReqOrgIds = currentUser()
+          .RequestOrgs()
+          .map((org) => org.ID);
+        const requestOrgAssignments = this.Assignments.list
+          .All()
+          .filter((assignment) => {
+            userReqOrgIds.includes(assignment.RequestOrg.ID);
+          });
+
+        return [...directAssignments, ...requestOrgAssignments];
+      }),
     },
+    CurrentStage: {
+      list: {
+        userActionAssignments: ko.pureComputed(() => {}),
+      },
+    },
+
     //   AreLoading: ko.observable(),
     //   refresh: async () => {
     //     if (!this.ObservableID()) return;

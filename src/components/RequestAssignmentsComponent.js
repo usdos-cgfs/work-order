@@ -40,12 +40,6 @@ export class RequestAssignmentsComponent {
 
   IsLoading = ko.observable(false);
 
-  InProgress = ko.pureComputed(() =>
-    this.Assignments().filter(
-      (assignment) => assignment.Status == assignmentStates.InProgress
-    )
-  );
-
   requestIdWatcher = (newId) => {
     this.refreshAssignments();
   };
@@ -216,11 +210,10 @@ export class RequestAssignmentsComponent {
         const serviceType = this.ServiceType.Def();
         const serviceTypeEntity = this.ServiceType.Entity();
         if (
-          !stage ||
-          !serviceType ||
-          !serviceType.UID ||
-          !stage.ActionComponentName ||
-          !serviceTypeEntity
+          !serviceType?.UID ||
+          !stage?.ActionComponentName ||
+          !serviceTypeEntity ||
+          this.ServiceType.IsLoading()
         ) {
           return;
         }

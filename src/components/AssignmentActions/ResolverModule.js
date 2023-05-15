@@ -9,6 +9,8 @@ export default function (params) {
   };
 
   return {
+    assignment: params.assignment,
+    assignmentStates,
     complete,
   };
 }

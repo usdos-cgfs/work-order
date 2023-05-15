@@ -421,10 +421,13 @@
               ></button>
             </div>
             <div class="modal-body">
-              <!-- ko if: AssignmentsComponent.InProgress().length -->
+              <!-- ko if: !Assignments.list.InProgress().length -->
+              This request is ready to advance.
+              <!-- /ko -->
+              <!-- ko if: Assignments.list.InProgress().length -->
               This request still has
               <span
-                data-bind="text: AssignmentsComponent.InProgress().length"
+                data-bind="text: Assignments.list.InProgress().length"
               ></span>
               open assignments.
               <!-- /ko -->
@@ -487,7 +490,7 @@
             Submit
           </button>
           <!-- /ko -->
-          <!-- ko if: AssignmentsComponent.CurrentStage.userActionAssignments -->
+          <!-- ko if: AssignmentsComponent.CurrentStage.userActionAssignments().length -->
           <button
             type="button"
             class="btn btn-success ms-3"
@@ -555,13 +558,13 @@
         </div>
       </div>
       <!-- /ko -->
-      <button
+      <!-- <button
         type="button"
         class="btn btn-success"
         data-bind="click: () => createStageAssignments()"
       >
         Re-assign Current Stage
-      </button>
+      </button> -->
       <!-- /ko -->
     </script>
 

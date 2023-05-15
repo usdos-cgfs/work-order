@@ -8,7 +8,7 @@ import {
   getDefaultGroups,
 } from "./SAL.js";
 
-var permissions = {
+export const permissions = {
   FullControl: "Full Control",
   Design: "Design",
   Edit: "Edit",

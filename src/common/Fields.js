@@ -1,26 +1,5 @@
 import { EnsureUserByIdAsync } from "../infrastructure/SAL.js";
 
-export function FieldArray(creator) {
-  const Arr = ko.observableArray();
-  const SPMap = ko.pureComputed({
-    write: function (valueArr) {
-      if (!Array.isArray(valueArr)) {
-        alert("Not passed an array!");
-      }
-      valueArr.forEach((inputValue) => {
-        var newObj = creator(inputValue);
-        Arr.push(newObj);
-      });
-    },
-    read: function () {},
-  });
-
-  return {
-    Arr,
-    SPMap,
-  };
-}
-
 export function PeopleField(schemaOpts) {
   const IsLoading = ko.observable();
   const User = ko.observable();

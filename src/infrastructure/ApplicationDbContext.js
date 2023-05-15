@@ -113,7 +113,7 @@ class EntitySet {
       requestId,
       Object.keys(entity.FieldMap)
     );
-    if (!items) return false;
+    if (!items.length) return false;
     if (entity.FieldMap) {
       mapObjectPropsToViewFields(items[0], entity.FieldMap);
       if (!entity.ID && items[0].ID) {
@@ -143,7 +143,8 @@ class EntitySet {
 
   UpdateEntity = async function (entity, fields = null) {
     const writeableEntity = createWritableObject.bind(this)(entity, fields);
-    writeableEntity.ID = entity.ID;
+    writeableEntity.ID =
+      typeof entity.ID == "function" ? entity.ID() : entity.ID;
     if (DEBUG) console.log(writeableEntity);
     return this.ListRef.updateListItemAsync(writeableEntity);
   };
