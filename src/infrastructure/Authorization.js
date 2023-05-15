@@ -87,13 +87,23 @@ export class User {
     this.Groups = Groups;
   }
 
-  RequestOrgs = ko.pureComputed(() =>
-    requestOrgStore().filter(
+  RequestingOffices = ko.pureComputed(() => {
+    const groupIds = this.Groups.map((uGroup) => uGroup.ID);
+    return requestOrgStore().filter(
       (reqOrg) =>
         reqOrg.OrgType == OrgTypes.RequestingOffice &&
-        this.Groups.map((uGroup) => uGroup.ID).includes(reqOrg.UserGroup.ID)
-    )
-  );
+        groupIds.includes(reqOrg.UserGroup?.ID)
+    );
+  });
+
+  ActionOffices = ko.pureComputed(() => {
+    const groupIds = this.Groups.map((uGroup) => uGroup.ID);
+    return requestOrgStore().filter(
+      (reqOrg) =>
+        reqOrg.OrgType == OrgTypes.ActionOffice &&
+        groupIds.includes(reqOrg.UserGroup?.ID)
+    );
+  });
 
   static Create = async function () {
     // TODO: Switch to getUserPropertiesAsync since that includes phone # etc

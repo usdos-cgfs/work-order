@@ -14,6 +14,7 @@ export default class ActionGovManager {
     //   description: "Has not been validated",
     // });
     this.apmWatcher(this.ServiceType.Entity().APM());
+    this.gtmWatcher(this.ServiceType.Entity().GTM());
     //this.validate();
   }
   APM = ko.observable();

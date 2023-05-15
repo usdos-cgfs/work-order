@@ -17,6 +17,12 @@ export const assignmentRoleComponentMap = {
   Approver: "approver-actions",
 };
 
+export const activeAssignmentsError = {
+  source: "current-stage-active-assignments",
+  type: "current-stage",
+  description: "Please complete all assignments",
+};
+
 export class Assignment {
   constructor() {}
 

@@ -2,14 +2,24 @@ import { RequestOrg } from "../entities/RequestOrg.js";
 import { serviceTypeStore, ServiceType } from "../entities/ServiceType.js";
 import { RequestEntity, requestStates } from "../entities/Request.js";
 import { actionTypes } from "../entities/Action.js";
-import { pipelineStageStore } from "../entities/PipelineStage.js";
-import { Assignment, assignmentStates } from "../entities/Assignment.js";
+import {
+  PipelineStage,
+  pipelineStageStore,
+} from "../entities/PipelineStage.js";
+import {
+  Assignment,
+  assignmentRoles,
+  assignmentStates,
+  assignmentRoleComponentMap,
+  activeAssignmentsError,
+} from "../entities/Assignment.js";
 import { Attachment } from "../entities/Attachment.js";
 import { Comment } from "../entities/Comment.js";
 
 import { RequestAssignmentsComponent } from "../components/RequestAssignmentsComponent.js";
 import { People } from "../components/People.js";
 import { ServiceTypeComponent } from "../components/ServiceTypeComponent.js";
+import { ActivityLogComponent } from "../components/ActivityLogComponent.js";
 
 import {
   createNewRequestTitle,
@@ -20,14 +30,16 @@ import {
   businessDaysFromDate,
 } from "../common/DateUtilities.js";
 import * as Router from "../common/Router.js";
+import { registerServiceTypeComponent } from "../common/KnockoutExtensions.js";
 
 import { addTask, finishTask, taskDefs } from "../stores/Tasks.js";
+
 import {
   currentUser,
   getRequestFolderPermissions,
+  stageActionRoleMap,
+  AssignmentFunctions,
 } from "../infrastructure/Authorization.js";
-import { PipelineStage } from "../entities/PipelineStage.js";
-import { ActivityLogComponent } from "../components/ActivityLogComponent.js";
 import {
   emitCommentNotification,
   emitRequestNotification,
@@ -165,7 +177,9 @@ export class RequestDetailView {
       const nextStepNum = thisStepNum + 1;
       return this.Pipeline.Stages()?.find((stage) => stage.Step == nextStepNum);
     },
-    showActionsExtension: ko.pureComputed(() => {}),
+    ShowActionsArea: ko.pureComputed(
+      () => this.Assignments.CurrentStage.list.UserActionAssignments().length
+    ),
     advance: async () => {
       if (this.promptAdvanceModal) this.promptAdvanceModal.hide();
 
@@ -183,7 +197,7 @@ export class RequestDetailView {
         activity: actionTypes.Advanced,
         data: nextStage,
       });
-      this.AssignmentsComponent.createStageAssignments(nextStage);
+      this.Assignments.createStageAssignments(nextStage);
       return;
     },
   };
@@ -310,76 +324,248 @@ export class RequestDetailView {
       ),
       CurrentUserAssignments: ko.pureComputed(() => {
         // We need find assignments where the current user is directly assigned:
-        const directAssignments = this.Assignments.list
-          .All()
-          .filter((assignment) => assignment.Assignee?.ID == currentUser()?.ID);
-
-        // Where they're in a group that's been assigned:
-        // TODO: Assignee column is People Only
-        // const groupIds = currentUser().Groups.map((group) => group.ID);
-        // const groupAssignments = this.Assignments.list
-        //   .All()
-        //   .filter((assignment) => groupIds.includes(assignment.Assignee?.ID));
-
-        // Where they're in a requestOrg that's been assigned:
+        // or They're in a group that's been assigned:
+        const userGroupIds = currentUser().Groups.map((group) => group.ID);
+        // or Where they're in a requestOrg that's been assigned:
         const userReqOrgIds = currentUser()
-          .RequestOrgs()
+          .ActionOffices()
           .map((org) => org.ID);
-        const requestOrgAssignments = this.Assignments.list
-          .All()
-          .filter((assignment) => {
-            userReqOrgIds.includes(assignment.RequestOrg.ID);
-          });
 
-        return [...directAssignments, ...requestOrgAssignments];
+        const assignments = this.Assignments.list
+          .All()
+          .filter(
+            (assignment) =>
+              assignment.Assignee?.ID == currentUser()?.ID ||
+              userGroupIds.includes(assignment.Assignee?.ID)
+          );
+
+        return assignments;
       }),
     },
     CurrentStage: {
       list: {
-        userActionAssignments: ko.pureComputed(() => {}),
+        UserActionAssignments: ko.pureComputed(() => {
+          const userAssignments = this.Assignments.list
+            .CurrentUserAssignments()
+            .filter(
+              (assignment) =>
+                assignment.PipelineStage?.ID == this.State.Stage()?.ID &&
+                (assignment.Role == assignmentRoles.ActionResolver ||
+                  assignment.Role == assignmentRoles.Approver)
+            );
+
+          // TODO: Is this really the best way to do this?
+          this.Assignments.CurrentStage.Validation.setActiveAssignmentsError(
+            userAssignments.find(
+              (assignment) => assignment.Status == assignmentStates.InProgress
+            )
+          );
+
+          return userAssignments;
+        }),
+      },
+      Validation: {
+        IsValid: ko.pureComputed(
+          () => !this.Assignments.CurrentStage.Validation.Errors().length
+        ),
+        Errors: ko.observableArray(),
+        setActiveAssignmentsError: (activeAssignments) => {
+          if (activeAssignments) {
+            // If we have assignment components and there isn't already a variable set
+            if (
+              this.Assignments.CurrentStage.Validation.Errors.indexOf(
+                activeAssignmentsError
+              ) < 0
+            ) {
+              this.Assignments.CurrentStage.Validation.Errors.push(
+                activeAssignmentsError
+              );
+            }
+          } else {
+            this.Assignments.CurrentStage.Validation.Errors.remove(
+              activeAssignmentsError
+            );
+          }
+        },
+      },
+      UserCanAdvance: ko.pureComputed(() => {
+        return this.Assignments.CurrentStage.list.UserActionAssignments()
+          .length;
+      }),
+      AssignmentComponents: {
+        Generic: ko.pureComputed(() => {
+          const stage = this.State.Stage();
+          if (!stage) {
+            return [];
+          }
+          const assignmentComponents = this.Assignments.CurrentStage.list
+            .UserActionAssignments()
+            .map((assignment) => {
+              return {
+                assignment,
+                completeAssignment: this.Assignments.complete,
+                errors: this.Assignments.CurrentStage.Validation.Errors,
+                actionComponentName: ko.observable(
+                  assignmentRoleComponentMap[assignment.Role]
+                ),
+              };
+            });
+
+          return assignmentComponents;
+        }),
+        Custom: ko.pureComputed(() => {
+          const stage = this.State.Stage();
+          const serviceType = this.ServiceType.Def();
+          const serviceTypeEntity = this.ServiceType.Entity();
+          if (
+            !serviceType?.UID ||
+            !stage?.ActionComponentName ||
+            !serviceTypeEntity ||
+            this.ServiceType.IsLoading()
+          ) {
+            return;
+          }
+          // Check if the user is assigned to this stage
+          if (
+            !this.Assignments.CurrentStage.list.UserActionAssignments().length
+          ) {
+            return;
+          }
+          try {
+            registerServiceTypeComponent(
+              stage.ActionComponentName,
+              serviceType.UID
+            );
+            return {
+              actionComponentName: stage.ActionComponentName,
+              serviceType: this.ServiceType,
+              request: this,
+              errors: this.Assignments.CurrentStage.Validation.Errors,
+            };
+          } catch (e) {
+            console.error(
+              `Error registering declared assignment action: ${stage.ActionComponentName}`,
+              e
+            );
+          }
+        }),
+        Any: ko.pureComputed(
+          () =>
+            this.Assignments.CurrentStage.AssignmentComponents.Generic()
+              .length ||
+            this.Assignments.CurrentStage.AssignmentComponents.Custom()
+        ),
       },
     },
+    refresh: async () => {
+      this.Assignments.AreLoading(true);
+      const assignments = await this._context.Assignments.FindByRequestId(
+        this.ID,
+        Assignment.Views.All
+      );
+      assignments?.forEach(
+        (asg) => (asg.RequestOrg = RequestOrg.FindInStore(asg.RequestOrg))
+      );
+      this.Assignments.list.All(assignments);
+      this.Assignments.AreLoading(false);
+    },
+    addNew: async (assignment = null) => {
+      if (!this.ID || !assignment) return;
 
-    //   AreLoading: ko.observable(),
-    //   refresh: async () => {
-    //     if (!this.ObservableID()) return;
-    //     this.Assignments.AreLoading(true);
-    //     const assignments = await this._context.Assignments.FindByRequestId(
-    //       this.ObservableID(),
-    //       Assignment.Views.All
-    //     );
-    //     this.Assignments.List(assignments);
-    //     this.Assignments.AreLoading(false);
-    //   },
-    //   addNew: async (assignment = null) => {
-    //     if (!this.ObservableID() || !assignment) return;
+      if (!assignment.RequestOrg) {
+        const reqOrg = this.State.Stage()?.RequestOrg;
+        assignment.RequestOrg = reqOrg;
+      }
 
-    //     if (!assignment.RequestOrg) {
-    //       const reqOrg = this.State.Stage()?.RequestOrg;
-    //       assignment.RequestOrg = reqOrg;
-    //     }
+      if (!assignment.PipelineStage) {
+        assignment.PipelineStage = this.State.Stage();
+      }
 
-    //     if (!assignment.PipelineStage) {
-    //       assignment.PipelineStage = this.Stage();
-    //     }
+      assignment.Status = assignment.Role.initialStatus;
 
-    //     assignment.Status = assignment.Role.initialStatus;
+      const folderPath = this.getRelativeFolderPath();
 
-    //     const folderPath = this.request.getRelativeFolderPath();
+      const newAssignmentId = await this._context.Assignments.AddEntity(
+        assignment,
+        folderPath,
+        this
+      );
+      this.Assignments.refresh();
 
-    //     const newAssignmentId = await this._context.Assignments.AddEntity(
-    //       assignment,
-    //       folderPath,
-    //       this.request
-    //     );
-    //     this.refreshAssignments();
+      //this.request.ActivityLog.assignmentAdded(assignment);
+      this.ActivityQueue.push({
+        activity: actionTypes.Assigned,
+        data: assignment,
+      });
+    },
+    view: (assignment) => {
+      //console.log("viewing", attachment);
+      this._context.Assignments.ShowForm(
+        "DispForm.aspx",
+        "View " + assignment.Assignee.Title,
+        { id: assignment.ID }
+      );
+    },
+    remove: async (assignment) => {
+      if (!confirm("Are you sure you want to remove this assignment?")) return;
+      try {
+        await this._context.Assignments.RemoveEntity(assignment);
+      } catch (e) {
+        console.error("Unable to remove assignment", e);
+        return;
+      }
+      this.Assignments.refresh();
 
-    //     //this.request.ActivityLog.assignmentAdded(assignment);
-    //     this.ActivityQueue.push({
-    //       activity: actionTypes.Assigned,
-    //       data: assignment,
-    //     });
-    //   },
+      //this.request.ActivityLog.assignmentRemoved(assignment);
+      this.ActivityQueue.push({
+        activity: actionTypes.Unassigned,
+        data: assignment,
+      });
+    },
+    complete: async (assignment, action) => {
+      const updateEntity = {
+        ID: assignment.ID,
+        Status: assignmentStates[action],
+        Comment: assignment.Comment,
+        CompletionDate: new Date().toISOString(),
+        ActionTaker: currentUser(),
+      };
+      await this._context.Assignments.UpdateEntity(updateEntity);
+
+      this.Assignments.refresh();
+      this.ActivityQueue.push({
+        activity: actionTypes[action],
+        data: updateEntity,
+      });
+    },
+    createStageAssignments: async (stage = null) => {
+      stage = stage ?? this.State.Stage();
+      const newAssignment = {
+        RequestOrg: stage.RequestOrg,
+        PipelineStage: stage,
+        IsActive: true,
+        Role: stageActionRoleMap[stage.ActionType],
+      };
+
+      if (
+        stage.AssignmentFunction &&
+        AssignmentFunctions[stage.AssignmentFunction]
+      ) {
+        const people =
+          AssignmentFunctions[stage.AssignmentFunction].bind(this)();
+
+        if (people && people.Title) {
+          newAssignment.Assignee = people;
+          //TODO: Trigger permissions update based on role
+        }
+      } else {
+        newAssignment.Assignee = RequestOrg.FindInStore(
+          stage.RequestOrg
+        )?.UserGroup;
+      }
+
+      await this.Assignments.addNew(newAssignment);
+    },
   };
 
   // AssignmentsArr = ko.observableArray();
@@ -638,8 +824,9 @@ export class RequestDetailView {
     this.AssignmentsComponent = new RequestAssignmentsComponent({
       request: this,
       stage: this.State.Stage,
-      assignments: this.Assignments.list.All,
+      // assignments: this.Assignments.list.All,
       activityQueue: this.ActivityQueue,
+      ...this.Assignments,
     });
 
     this.ActivityLog = new ActivityLogComponent({

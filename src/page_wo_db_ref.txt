@@ -14,7 +14,6 @@
 <div class="position-fixed bottom-0 end-0">
   <div class="toast-container">
     <!-- ko if: RequestDetailView -->
-    Hello
     <!-- ko foreach: RequestDetailView().ActivityQueue -->
     <div data-bind="template: {name: 'tmpl-activity-toast', data: $data}"></div>
     <!-- /ko -->
@@ -490,11 +489,11 @@
             Submit
           </button>
           <!-- /ko -->
-          <!-- ko if: AssignmentsComponent.CurrentStage.userActionAssignments().length -->
+          <!-- ko if: Assignments.CurrentStage.list.UserActionAssignments().length -->
           <button
             type="button"
             class="btn btn-success ms-3"
-            data-bind="click: promptAdvance, enable: AssignmentsComponent.CurrentStage.Validation.IsValid"
+            data-bind="click: promptAdvance, enable: Assignments.CurrentStage.Validation.IsValid"
           >
             Next Stage <span class="fa fa-chevron-right"></span>
           </button>
@@ -514,11 +513,17 @@
           <!-- ko foreach: Pipeline.Stages -->
           <li
             class="list-group-item d-flex flex-column justify-content-center"
-            data-bind="css: {'border-bottom-0': Step == $parent.State.Stage()?.Step,
+            data-bind="css: {'border-bottom-0': Step == $parent.State.Stage()?.Step &&
+            $parent.Pipeline.ShowActionsArea,
             'list-group-item-secondary': Step < $parent.State.Stage()?.Step}"
           >
-            <div class="d-flex align-items-center">
-              <h4 class="" data-bind="text: Step"></h4>
+            <div
+              class="d-flex align-items-center"
+              data-bind="css: {'text-primary': Step == $parent.State.Stage()?.Step }"
+            >
+              <h4
+                data-bind="text: Step, css: {'text-primary': Step == $parent.State.Stage()?.Step }"
+              ></h4>
               <div class="mx-2"></div>
               <div>
                 <div class="fw-bold" data-bind="text: Title"></div>
@@ -528,7 +533,7 @@
           </li>
           <!-- /ko -->
         </ol>
-        <!-- ko if: AssignmentsComponent.CurrentStage.AssignmentComponents.Any -->
+        <!-- ko if: Pipeline.ShowActionsArea -->
         <div class="flex-grow-1 border-bottom"></div>
         <!-- /ko -->
       </div>
@@ -558,13 +563,6 @@
         </div>
       </div>
       <!-- /ko -->
-      <!-- <button
-        type="button"
-        class="btn btn-success"
-        data-bind="click: () => createStageAssignments()"
-      >
-        Re-assign Current Stage
-      </button> -->
       <!-- /ko -->
     </script>
 
@@ -591,18 +589,10 @@
               ></i>
             </div>
             <div class="position-relative">
-              <div class="dimmer" data-bind="css: {'active': IsLoading}">
-                <div
-                  class="d-flex flex-grow-1 align-items-center justify-content-center"
-                >
-                  <div class="spinner-border text-white" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                  </div>
-                </div>
-              </div>
               <table class="table">
                 <thead>
                   <tr>
+                    <th>ID</th>
                     <th>Stage</th>
                     <th>Assignee</th>
                     <th>Request Org</th>
@@ -612,14 +602,26 @@
                   </tr>
                 </thead>
                 <tbody>
+                  <!-- ko if: AreLoading -->
+                  <tr class="">
+                    <td colspan="5" class="p-0">
+                      <progress class="w-100"></progress>
+                    </td>
+                  </tr>
+                  <!-- /ko -->
                   <!-- ko foreach: Assignments -->
                   <tr>
+                    <td data-bind="text: ID"></td>
                     <td data-bind="text: PipelineStage?.Title"></td>
                     <td data-bind="text: Assignee?.Title"></td>
                     <td data-bind="text: RequestOrg?.Title"></td>
                     <td data-bind="text: Role"></td>
                     <td data-bind="text: Status"></td>
                     <td>
+                      <i
+                        class="fas fa-search pointer"
+                        data-bind="click: $parent.view"
+                      ></i>
                       <i
                         class="fa fa-trash pointer"
                         data-bind="click: $parent.removeAssignment"
@@ -682,7 +684,7 @@
                   <select
                     class="form-control"
                     data-bind="value: RequestorInfo.Office,
-                options: $root.currentUser.RequestOrgs,
+                options: $root.currentUser.RequestingOffices,
                 optionsText: (ro) => ro.Title"
                   ></select>
                   <p>

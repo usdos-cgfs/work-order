@@ -127,7 +127,9 @@ export class ActivityLogComponent {
   }
 
   async assignmentRemoved(assignment) {
-    let actionDescription = `The following ${assignment.Role.LookupValue}s have been removed from this request:<br>`;
+    let actionDescription = `The following ${
+      assignment.Role.LookupValue ?? assignment.Role
+    }s have been removed from this request:<br>`;
     if (assignment.Assignee?.Title) {
       actionDescription += `${assignment.Assignee.Title} - `;
     }
