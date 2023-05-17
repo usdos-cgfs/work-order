@@ -26,7 +26,7 @@ export default class CH_OverTime {
   ContractorSupplement = {
     entity: new ContractorSupplement(),
     refresh: async () =>
-      this.supplementSet.LoadEntityByRequestId(
+      await this.supplementSet.LoadEntityByRequestId(
         this.ContractorSupplement.entity,
         this.Request.ID
       ),
@@ -129,6 +129,15 @@ export class ContractorSupplement {
     LaborCategory: this.LaborCategory,
     ContractorType: this.ContractorType,
   };
+
+  IsValid = ko.pureComputed(() => {
+    return (
+      this.ContractorType() &&
+      this.LaborCategory() &&
+      this.RequisitionNumber() &&
+      this.TaskOrderNumber()
+    );
+  });
 
   static Views = {
     All: [

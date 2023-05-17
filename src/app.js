@@ -31,6 +31,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
 async function CreateApp() {
   // TODO: deferred import dependencies (SAL) here and DI into App
 
+  ko.options.deferUpdates = true;
   //const { WorkOrder } = await import("./models/WorkOrder.js");
   await InitSal();
 

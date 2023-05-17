@@ -138,7 +138,9 @@ class EntitySet {
       // vp.push(["ReqId", request]);
     }
     if (DEBUG) console.log(writeableEntity);
-    return this.ListRef.createListItemAsync(writeableEntity, folderPath);
+    const newId = this.ListRef.createListItemAsync(writeableEntity, folderPath);
+    mapObjectToEntity({ ID: newId }, entity);
+    return newId;
   };
 
   UpdateEntity = async function (entity, fields = null) {
@@ -163,7 +165,7 @@ class EntitySet {
   };
 
   // Folder Methods
-  GetItemsByFolderPath = async function (folderPath, fields) {
+  GetItemsByFolderPath = function (folderPath, fields) {
     return this.ListRef.getFolderContentsAsync(folderPath, fields);
   };
 
@@ -196,6 +198,24 @@ class EntitySet {
       this.ListRef.showModal(name, title, args, resolve)
     );
   };
+}
+
+function mapObjectToEntity(inputObject, targetEntity) {
+  // Takes an object and attempts to map it to the target entity
+  Object.keys(inputObject).forEach((key) => {
+    mapValueToEntityProperty(key, inputObject[key], targetEntity);
+  });
+}
+
+function mapValueToEntityProperty(propertyName, inputValue, targetEntity) {
+  //1. Check if the targetEntity has a fieldmapping for this property
+  if (targetEntity.FieldMap && targetEntity.FieldMap[propertyName]) {
+    mapObjectToViewField(inputValue, targetEntity.FieldMap[propertyName]);
+    return;
+  }
+  // 2. This is just a regular property, set it
+  targetEntity[propertyName] = inputValue;
+  return;
 }
 
 function mapObjectPropsToViewFields(inputObject, fieldMappings) {
@@ -247,21 +267,6 @@ function mapObjectToViewField(inVal, fieldMap) {
 function generateObject(inVal, fieldMap) {
   // If the fieldMap provides a factory, use that, otherwise return the value
   return fieldMap.factory ? fieldMap.factory(inVal) : inVal;
-}
-
-function mapViewFieldsToValuePairs(fieldMappings, fields = null) {
-  // Returns array of arrays: [[col1, val1], [col2, val2]]
-  // Restricted fields for writing:
-  const restrictedFields = ["ID", "Author", "Created", "Editor", "Modified"];
-  return Object.keys(fieldMappings)
-    .filter(
-      (key) =>
-        !restrictedFields.includes(key) &&
-        (fields ? fields.includes(key) : true)
-    )
-    .map((key) => {
-      return [key, mapViewFieldToValue(fieldMappings[key])];
-    });
 }
 
 function mapViewFieldToValue(fieldMap) {

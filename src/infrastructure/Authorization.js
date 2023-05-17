@@ -66,7 +66,7 @@ export const stageActionRoleMap = {
 export const currentUser = ko.observable();
 
 export class User {
-  Groups = null;
+  Groups = [];
 
   constructor({
     ID,
@@ -87,21 +87,34 @@ export class User {
     this.Groups = Groups;
   }
 
+  isInGroup(group) {
+    return this.getGroupIds().includes(group.ID);
+  }
+
+  getGroupIds() {
+    return this.Groups.map((group) => group.ID);
+  }
+
+  isInRequestOrg(reqOrg) {
+    return this.RequestOrgs().find((userReqOrg) => userReqOrg.ID == reqOrg.ID);
+  }
+
+  RequestOrgs = ko.pureComputed(() => {
+    const groupIds = this.getGroupIds();
+    return requestOrgStore().filter((reqOrg) =>
+      groupIds.includes(reqOrg.UserGroup?.ID)
+    );
+  });
+
   RequestingOffices = ko.pureComputed(() => {
-    const groupIds = this.Groups.map((uGroup) => uGroup.ID);
-    return requestOrgStore().filter(
-      (reqOrg) =>
-        reqOrg.OrgType == OrgTypes.RequestingOffice &&
-        groupIds.includes(reqOrg.UserGroup?.ID)
+    return this.RequestOrgs().filter(
+      (reqOrg) => reqOrg.OrgType == OrgTypes.RequestingOffice
     );
   });
 
   ActionOffices = ko.pureComputed(() => {
-    const groupIds = this.Groups.map((uGroup) => uGroup.ID);
-    return requestOrgStore().filter(
-      (reqOrg) =>
-        reqOrg.OrgType == OrgTypes.ActionOffice &&
-        groupIds.includes(reqOrg.UserGroup?.ID)
+    return this.RequestOrgs().filter(
+      (reqOrg) => reqOrg.OrgType == OrgTypes.ActionOffice
     );
   });
 

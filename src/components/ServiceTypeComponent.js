@@ -1,23 +1,33 @@
+import { registerServiceTypeTemplate } from "../common/KnockoutExtensions.js";
 import {
   getTemplateElementId,
   getTemplateFilePath,
   modulePath,
 } from "../entities/ServiceType.js";
 
-const DEBUG = false;
+const DEBUG = true;
 
 export class ServiceTypeComponent {
-  constructor({ request, Def, Entity, IsLoading }) {
-    this.ServiceType = Def;
-    this.ElementId = this.ServiceType()?.UID;
+  constructor({
+    request,
+    Def,
+    Entity,
+    IsLoading,
+    refreshEntity,
+    instantiateEntity,
+  }) {
+    this.Def = Def;
+    this.ElementId = this.Def()?.UID;
     this.Request = request;
     this.Entity = Entity;
     this.IsLoading = IsLoading;
+    this.refreshEntity = refreshEntity;
+    this.instantiateEntity = instantiateEntity;
 
-    this.ServiceType.subscribe(this.serviceTypeWatcher);
+    this.Def.subscribeChanged(this.serviceTypeWatcher);
 
     if (Def()) {
-      this.serviceTypeWatcher(Def());
+      this.loadTemplate(Def());
     }
   }
 
@@ -26,35 +36,21 @@ export class ServiceTypeComponent {
 
   Entity;
 
-  refreshServiceTypeEntity = async () => {
-    if (DEBUG) console.log("ServiceTypeComponent: refresh Triggered");
-    if (!this.Entity()) return;
-    this.IsLoading(true);
-    var template = this.Entity();
-    template.Title = this.Request.ObservableTitle();
-    await this.ServiceType()
-      ?.getListRef()
-      ?.LoadEntityByRequestId(template, this.Request.ObservableID());
-    this.IsLoading(false);
-  };
+  // submitServiceTypeEntity = async () => {
+  //   if (!this.Entity()) return;
 
-  submitServiceTypeEntity = async () => {
-    if (!this.Entity()) return;
+  //   const newEntity = this.Entity();
+  //   newEntity.Title = this.Request.ObservableTitle();
 
-    const newEntity = this.Entity();
-    newEntity.Title = this.Request.ObservableTitle();
+  //   const folderPath = this.Request.getRelativeFolderPath();
+  //   const newSvcTypeItemId = await this.Def()
+  //     .getListRef()
+  //     .AddEntity(newEntity, folderPath, this.Request);
 
-    const folderPath = this.Request.getRelativeFolderPath();
-    const newSvcTypeItemId = await this.ServiceType()
-      .getListRef()
-      .AddEntity(newEntity, folderPath, this.Request);
+  //   return newSvcTypeItemId;
+  // };
 
-    return newSvcTypeItemId;
-  };
-
-  serviceTypeWatcher = async (newSvcType) => {
-    if (DEBUG)
-      console.log("ServiceTypeComponent: ServiceType Changed", newSvcType);
+  loadTemplate = async (newSvcType) => {
     // This should only be triggered when a new RequestDetailView is created
     // or when the user changes the request from the drop down.
     if (!newSvcType?.HasTemplate) {
@@ -64,42 +60,18 @@ export class ServiceTypeComponent {
 
     this.ComponentsAreLoading(true);
 
-    this.ElementId = getTemplateElementId(newSvcType.UID);
-    if (!document.getElementById(this.ElementId)) {
-      await loadServiceTypeTemplate(newSvcType.UID);
-    }
-    const service = await import(modulePath(newSvcType.UID));
-    if (!service) {
-      console.logError("Could not find service module");
-    }
-
-    this.Entity(new service.default(this.Request));
-    this.ComponentsAreLoading(false);
-
-    if (this.Request.ID) this.refreshServiceTypeEntity();
-  };
-}
-
-async function loadServiceTypeTemplate(uid) {
-  const templateId = getTemplateElementId(uid);
-  const response = await fetch(getTemplateFilePath(uid));
-
-  if (!response.ok) {
-    console.error(
-      `Fetching the HTML file went wrong - ${response.statusText}`,
-      getTemplateFilePath(uid)
+    this.ElementId = await registerServiceTypeTemplate(
+      newSvcType.UID,
+      newSvcType.UID
     );
-    // throw new Error(
-    //   `Fetching the HTML file went wrong - ${response.statusText}`
-    // );
-  }
+    // await this.instantiateEntity(newSvcType);
+    this.ComponentsAreLoading(false);
+  };
 
-  const text = await response.text();
-  const element = document.createElement("script");
-
-  element.setAttribute("type", "text/html");
-  element.setAttribute("id", templateId);
-  element.text = text;
-
-  document.getElementById("service-type-templates").append(element);
+  serviceTypeWatcher = (newSvcType, oldSvcType) => {
+    if (newSvcType?.UID == oldSvcType?.UID) return;
+    if (DEBUG)
+      console.log("ServiceTypeComponent: ServiceType Changed", newSvcType);
+    this.loadTemplate(newSvcType);
+  };
 }

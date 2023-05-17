@@ -13,7 +13,7 @@
 
 <div class="position-fixed bottom-0 end-0">
   <div class="toast-container">
-    <!-- ko if: RequestDetailView -->
+    <!-- ko if: false -->
     <!-- ko foreach: RequestDetailView().ActivityQueue -->
     <div data-bind="template: {name: 'tmpl-activity-toast', data: $data}"></div>
     <!-- /ko -->
@@ -240,10 +240,12 @@
               class=""
               data-bind="template: {name: 'tmpl-request-pipeline'}"
             ></div>
+            <!-- ko if: Pipeline.ShowActionsArea -->
             <div
               id="request-pipeline"
-              data-bind="template: {name: 'tmpl-request-pipeline-actions', data: AssignmentsComponent}"
+              data-bind="template: {name: 'tmpl-request-pipeline-actions', data: Assignments}"
             ></div>
+            <!-- /ko -->
           </div>
           <div
             class="my-3"
@@ -257,17 +259,19 @@
             <div class="col-4">
               <div class="card">
                 <div class="card-body">
-                  <div class="card-title d-flex justify-content-between">
+                  <div class="card-title">
                     <h3 class="mx-0">Attachments</h3>
-                    <i
-                      class="fa fa-sync pointer"
-                      data-bind="click: Attachments.refresh"
-                    ></i>
                   </div>
                   <div
                     data-bind="html: ServiceType.Def()?.AttachmentDescription"
                   ></div>
                   <div>
+                    <div class="d-flex justify-content-end">
+                      <i
+                        class="fa fa-sync pointer"
+                        data-bind="click: Attachments.refresh"
+                      ></i>
+                    </div>
                     <table class="table">
                       <thead>
                         <tr>
@@ -410,7 +414,7 @@
           <div class="modal-content">
             <div class="modal-header">
               <h1 class="mx-0 modal-title fs-5" id="staticBackdropLabel">
-                Modal title
+                Confirm Advance
               </h1>
               <button
                 type="button"
@@ -788,13 +792,10 @@
       <div class="card mb-3 w-100" data-bind="using: ServiceType.Component">
         <div class="card-body">
           <div class="card-title d-flex justify-content-between">
-            <h3 class="mx-0" data-bind="text: ServiceType()?.Title"></h3>
-            <i
-              class="fa fa-sync pointer"
-              data-bind="click: refreshServiceTypeEntity"
-            ></i>
+            <h3 class="mx-0" data-bind="text: Def()?.Title"></h3>
+            <i class="fa fa-sync pointer" data-bind="click: refreshEntity"></i>
           </div>
-          <!-- ko if: ServiceType()?.HasTemplate -->
+          <!-- ko if: Def()?.HasTemplate -->
           <!-- ko if: ComponentsAreLoading -->
           <div class="d-flex justify-content-center">
             <div class="spinner-border" role="status">
@@ -819,7 +820,7 @@
             <label for=""
               ><h6>
                 <span
-                  data-bind="text: ServiceType()?.DescriptionTitle ?? 'Description'"
+                  data-bind="text: Def()?.DescriptionTitle ?? 'Description'"
                 ></span
                 >:
               </h6>

@@ -1911,6 +1911,7 @@ export function SPList(listDef) {
             console.warn("Unable load file details:");
             console.error(sender);
             console.error(args);
+            reject(sender, args);
           }
         );
       }
@@ -1919,9 +1920,10 @@ export function SPList(listDef) {
         console.warn("Unable load folder contents:");
         console.error(sender);
         console.error(args);
+        reject(sender, args);
       }
 
-      const data = { files: files, fields, resolve };
+      const data = { files: files, fields, resolve, reject };
 
       currCtx.load(files);
       currCtx.executeQueryAsync(

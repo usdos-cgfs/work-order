@@ -1,5 +1,9 @@
 import { RequestOrg } from "../entities/RequestOrg.js";
-import { serviceTypeStore, ServiceType } from "../entities/ServiceType.js";
+import {
+  serviceTypeStore,
+  ServiceType,
+  modulePath,
+} from "../entities/ServiceType.js";
 import { RequestEntity, requestStates } from "../entities/Request.js";
 import { actionTypes } from "../entities/Action.js";
 import {
@@ -111,9 +115,53 @@ export class RequestDetailView {
   RequestOrgs = ko.observable();
 
   ServiceType = {
-    IsLoading: ko.observable(),
-    Def: ko.observable(),
+    IsLoading: ko.observable(false),
     Entity: ko.observable(),
+    Def: ko.observable(),
+    definitionWatcher: async (newSvcType) => {
+      // This should only be needed when creating a new request.
+      await this.ServiceType.instantiateEntity(newSvcType);
+    },
+    instantiateEntity: async (newSvcType = this.ServiceType.Def()) => {
+      if (!newSvcType?.HasTemplate) {
+        this.ServiceType.Entity(null);
+        return;
+      }
+      // this.ServiceType.IsLoading(true);
+      const service = await import(modulePath(newSvcType.UID));
+      if (!service) {
+        console.error("Could not find service module");
+        return;
+      }
+      this.ServiceType.Entity(new service.default(this));
+      // this.ServiceType.IsLoading(false);
+    },
+    refreshEntity: async () => {
+      if (DEBUG) console.log("ServiceType: refresh Triggered");
+      if (!this.ServiceType.Def()?.HasTemplate) return;
+      if (!this.ID) return;
+
+      this.ServiceType.IsLoading(true);
+      if (!this.ServiceType.Entity())
+        await this.ServiceType.instantiateEntity();
+      var template = this.ServiceType.Entity();
+      template.Title = this.Title;
+      await this.ServiceType.Def()
+        ?.getListRef()
+        ?.LoadEntityByRequestId(template, this.ID);
+
+      this.ServiceType.IsLoading(false);
+    },
+    createEntity: async (newEntity = this.ServiceType.Entity()) => {
+      if (!newEntity) return;
+      newEntity.Title = this.Title;
+      const folderPath = this.getRelativeFolderPath();
+      const newSvcTypeItemId = await this.ServiceType.Def()
+        .getListRef()
+        .AddEntity(newEntity, folderPath, this);
+      newEntity.ID = newSvcTypeItemId;
+      return newSvcTypeItemId;
+    },
   };
 
   // FieldMaps are used by the ApplicationDbContext and define
@@ -178,7 +226,11 @@ export class RequestDetailView {
       return this.Pipeline.Stages()?.find((stage) => stage.Step == nextStepNum);
     },
     ShowActionsArea: ko.pureComputed(
-      () => this.Assignments.CurrentStage.list.UserActionAssignments().length
+      () =>
+        !this.IsLoading() &&
+        !this.Assignments.AreLoading() &&
+        !this.ServiceType.IsLoading() &&
+        this.Assignments.CurrentStage.list.UserActionAssignments().length
     ),
     advance: async () => {
       if (this.promptAdvanceModal) this.promptAdvanceModal.hide();
@@ -230,12 +282,18 @@ export class RequestDetailView {
       }
     },
     refresh: async () => {
+      if (!this.Title) return;
       this.Attachments.AreLoading(true);
-      const attachments = await this._context.Attachments.GetItemsByFolderPath(
-        this.getRelativeFolderPath(),
-        Attachment.Views.All
-      );
-      this.Attachments.list.All(attachments);
+      try {
+        const attachments =
+          await this._context.Attachments.GetItemsByFolderPath(
+            this.getRelativeFolderPath(),
+            Attachment.Views.All
+          );
+        this.Attachments.list.All(attachments);
+      } catch (e) {
+        console.warn("Looks like there are no attachments", e);
+      }
       this.Attachments.AreLoading(false);
     },
     view: (attachment) => {
@@ -336,7 +394,8 @@ export class RequestDetailView {
           .filter(
             (assignment) =>
               assignment.Assignee?.ID == currentUser()?.ID ||
-              userGroupIds.includes(assignment.Assignee?.ID)
+              userGroupIds.includes(assignment.Assignee?.ID) ||
+              userReqOrgIds.includes(assignment.RequestOrg?.ID)
           );
 
         return assignments;
@@ -353,25 +412,38 @@ export class RequestDetailView {
                 (assignment.Role == assignmentRoles.ActionResolver ||
                   assignment.Role == assignmentRoles.Approver)
             );
-
           // TODO: Is this really the best way to do this?
-          this.Assignments.CurrentStage.Validation.setActiveAssignmentsError(
-            userAssignments.find(
-              (assignment) => assignment.Status == assignmentStates.InProgress
-            )
-          );
+          // this.Assignments.CurrentStage.Validation.setActiveAssignmentsError(
+          //   userAssignments.find(
+          //     (assignment) => assignment.Status == assignmentStates.InProgress
+          //   )
+          // );
 
           return userAssignments;
         }),
       },
       Validation: {
         IsValid: ko.pureComputed(
-          () => !this.Assignments.CurrentStage.Validation.Errors().length
+          () =>
+            !this.Assignments.CurrentStage.Validation.ActiveAssignmentsError() &&
+            !this.Assignments.CurrentStage.Validation.Errors().length
         ),
         Errors: ko.observableArray(),
-        setActiveAssignmentsError: (activeAssignments) => {
+        ActiveAssignmentsError: ko.pureComputed(() => {
+          const activeAssignments = this.Assignments.CurrentStage.list
+            .UserActionAssignments()
+            .find(
+              (assignment) => assignment.Status == assignmentStates.InProgress
+            );
           if (activeAssignments) {
             // If we have assignment components and there isn't already a variable set
+            // this.Assignments.CurrentStage.Validation.Errors(
+            //   this.Assignments.CurrentStage.Validation.Errors()
+            //     .filter(
+            //       (error) => error.source != activeAssignmentsError.source
+            //     )
+            //     .push(activeAssignmentsError)
+            // );
             if (
               this.Assignments.CurrentStage.Validation.Errors.indexOf(
                 activeAssignmentsError
@@ -381,12 +453,15 @@ export class RequestDetailView {
                 activeAssignmentsError
               );
             }
+            return true;
           } else {
             this.Assignments.CurrentStage.Validation.Errors.remove(
               activeAssignmentsError
             );
+            return false;
           }
-        },
+        }),
+        setActiveAssignmentsError: (activeAssignments) => {},
       },
       UserCanAdvance: ko.pureComputed(() => {
         return this.Assignments.CurrentStage.list.UserActionAssignments()
@@ -459,13 +534,14 @@ export class RequestDetailView {
     },
     refresh: async () => {
       this.Assignments.AreLoading(true);
-      const assignments = await this._context.Assignments.FindByRequestId(
-        this.ID,
-        Assignment.Views.All
-      );
-      assignments?.forEach(
-        (asg) => (asg.RequestOrg = RequestOrg.FindInStore(asg.RequestOrg))
-      );
+      // Create a list of Assignment instances from raw entities
+      const assignments = (
+        await this._context.Assignments.FindByRequestId(
+          this.ID,
+          Assignment.Views.All
+        )
+      ).map(Assignment.CreateFromObject);
+
       this.Assignments.list.All(assignments);
       this.Assignments.AreLoading(false);
     },
@@ -473,8 +549,7 @@ export class RequestDetailView {
       if (!this.ID || !assignment) return;
 
       if (!assignment.RequestOrg) {
-        const reqOrg = this.State.Stage()?.RequestOrg;
-        assignment.RequestOrg = reqOrg;
+        assignment.RequestOrg = this.State.Stage()?.RequestOrg;
       }
 
       if (!assignment.PipelineStage) {
@@ -607,10 +682,9 @@ export class RequestDetailView {
     },
     IsValid: ko.pureComputed(() => !this.Validation.Errors.All().length),
     CurrentStage: {
-      IsValid: () =>
-        this.AssignmentsComponent.CurrentStage.Validation.IsValid(),
+      IsValid: () => this.Assignments.CurrentStage.Validation.IsValid(),
       Errors: ko.pureComputed(() =>
-        this.AssignmentsComponent.CurrentStage.Validation.Errors()
+        this.Assignments.CurrentStage.Validation.Errors()
       ),
     },
   };
@@ -632,17 +706,22 @@ export class RequestDetailView {
 
   // Controls
   refreshAll = async () => {
+    this.IsLoading(true);
     await this.refreshRequest();
-    this.ServiceType.Component.refreshServiceTypeEntity();
+    // These can be started when we have the ID
     this.Attachments.refresh();
+    this.ActivityLog.refreshActions();
     this.Comments.refresh();
+    await this.ServiceType.refreshEntity();
+    // this.ServiceType.Component.refreshServiceTypeEntity();
+    // This is dependent on the serviceType being loaded
+    this.Assignments.refresh();
+    this.LoadedAt(new Date());
+    this.IsLoading(false);
   };
 
   refreshRequest = async () => {
-    this.IsLoading(true);
     await this._context.Requests.LoadEntity(this);
-    this.LoadedAt(new Date());
-    this.IsLoading(false);
   };
 
   submitNewRequest = async () => {
@@ -715,7 +794,7 @@ export class RequestDetailView {
       this.ID = newRequestItemId;
       this.ObservableID(newRequestItemId);
 
-      await this.ServiceType.Component.submitServiceTypeEntity();
+      await this.ServiceType.createEntity();
     }
 
     Router.setUrlParam("reqId", this.ObservableTitle());
@@ -805,6 +884,7 @@ export class RequestDetailView {
       this.ObservableID(ID);
       this.ObservableTitle(createNewRequestTitle());
       this.State.Status(requestStates.draft);
+      this.ServiceType.Def.subscribe(this.ServiceType.definitionWatcher);
     } else {
       this.ObservableID(ID);
       this.ObservableTitle(Title);
@@ -814,6 +894,7 @@ export class RequestDetailView {
       this.ServiceType.Def(
         serviceTypeStore().find((service) => service.ID == serviceTypeDef.ID)
       );
+      // this.ServiceType.instantiateEntity();
     }
 
     this.ServiceType.Component = new ServiceTypeComponent({

@@ -45,9 +45,9 @@ export class RequestAssignmentsComponent {
 
     this.request.ObservableID.subscribe(this.requestIdWatcher);
 
-    if (this.request.ID) {
-      this.refreshAssignments();
-    }
+    // if (this.request.ID) {
+    //   this.refreshAssignments();
+    // }
     this.newAssignmentComponent = new NewAssignmentComponent({
       addAssignment: this.addNew,
     });

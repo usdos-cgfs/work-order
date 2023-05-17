@@ -3,6 +3,20 @@ import { ensureUserByKeyAsync } from "../infrastructure/SAL.js";
 import { appRoot, assetsPath } from "../common/Router.js";
 
 // const componentPath = (path) => `${appRoot}/SiteAssets/wo/${path}`;
+ko.subscribable.fn.subscribeChanged = function (callback) {
+  var oldValue;
+  this.subscribe(
+    function (_oldValue) {
+      oldValue = _oldValue;
+    },
+    this,
+    "beforeChange"
+  );
+
+  this.subscribe(function (newValue) {
+    callback(newValue, oldValue);
+  });
+};
 
 ko.bindingHandlers.people = {
   init: function (element, valueAccessor, allBindingsAccessor) {
@@ -20,13 +34,17 @@ ko.bindingHandlers.people = {
       var pickerElement = SPClientPeoplePicker.SPClientPeoplePickerDict[elemId];
       var observable = valueAccessor();
       var userJSObject = pickerElement.GetControlValueAsJSObject()[0];
-      if (userJSObject) {
+      if (!userJSObject) {
+        observable(null);
+        return;
+      }
+
+      if (userJSObject.IsResolved) {
+        if (userJSObject.Key == observable()?.LoginName) return;
         var user = await ensureUserByKeyAsync(userJSObject.Key);
         var person = new People(user);
-        person.SetPeoplePickers.push(element.id);
+        // person.SetPeoplePickers.push(element.id);
         observable(person);
-      } else {
-        observable(null);
       }
       //observable(pickerElement.GetControlValueAsJSObject()[0]);
       //console.log(JSON.stringify(pickerElement.GetControlValueAsJSObject()[0]));
@@ -60,7 +78,12 @@ ko.bindingHandlers.people = {
       return;
     }
 
-    if (userValue && !userValue.isInPicker(element.id)) {
+    if (
+      userValue &&
+      !pickerControl
+        .GetAllUserInfo()
+        .find((pickerUser) => pickerUser.DisplayText == userValue.LookupValue)
+    ) {
       editorElement.value = userValue.LookupValue;
       // Resolve the User
       pickerControl.AddUnresolvedUserFromEditor(true);
@@ -162,9 +185,10 @@ export async function registerServiceTypeTemplate(
     const templateRelPath = `/entities/ServiceTypeTemplates/${serviceTypeUid}/${templateName}-template.html`;
     await fetchTemplate(templateId, templateRelPath);
   }
+  return templateId;
 }
 
-async function fetchTemplate(templatePath) {
+async function fetchTemplate(templateId, templatePath) {
   const response = await fetch(assetsPath + templatePath);
 
   if (!response.ok) {

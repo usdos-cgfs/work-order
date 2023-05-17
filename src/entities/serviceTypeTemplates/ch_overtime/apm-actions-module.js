@@ -7,6 +7,7 @@ import { registerServiceTypeComponent } from "../../../common/KnockoutExtensions
 
 export default class ActionAPM {
   constructor(params) {
+    console.log("Hello from APM Actions module.");
     this._context = getAppContext();
     this.ServiceType = params.serviceType;
     this.Errors = params.errors;
@@ -15,7 +16,6 @@ export default class ActionAPM {
     this.Supplement = this.ServiceType.Entity().ContractorSupplement;
     this.Entity = this.ServiceType.Entity;
 
-    //this.validate();
     this.init();
   }
 
@@ -25,17 +25,16 @@ export default class ActionAPM {
       this.ServiceType.Def().UID
     );
 
-    const entityExists =
-      await this.ServiceType.Entity().ContractorSupplement.refresh();
+    const entityExists = await this.Supplement.refresh();
 
+    this.validate();
     console.log("Found supplement", entityExists);
   };
 
   hasBeenValidated = ko.observable(false);
   hasBeenSaved = ko.observable(false);
 
-  validate = () => {
-    if (!this.ServiceType.Entity()) return [];
+  getValidationErrors = () => {
     const errors = [];
     if (!this.Entity().GTM()) {
       errors.push({
@@ -50,12 +49,24 @@ export default class ActionAPM {
       });
     }
 
+    if (!this.Supplement.entity.IsValid()) {
+      errors.push({
+        source: errorSource,
+        description: "Please provide the contractor supplemental information.",
+      });
+    }
+
+    return errors;
+  };
+
+  validate = () => {
+    const validationErrors = this.getValidationErrors();
     this.Errors(
       this.Errors()
         .filter((e) => e.source != errorSource)
-        .concat(errors)
+        .concat(validationErrors)
     );
-    return errors;
+    return validationErrors;
   };
 
   // gtmWatcher = (user) => {

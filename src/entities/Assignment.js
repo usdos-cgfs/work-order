@@ -1,3 +1,6 @@
+import { RequestOrg } from "./RequestOrg.js";
+// import { currentUser } from "../infrastructure/Authorization.js";
+
 export const assignmentStates = {
   InProgress: "In Progress",
   Completed: "Completed",
@@ -30,7 +33,16 @@ export class Assignment {
   Title;
   Role;
 
+  userIsDirectlyAssigned = (user) => {
+    return this.Assignee?.ID == user.ID || user.isInGroup(this.Assignee);
+  };
+
+  userIsInRequestOrg = (user) => {
+    return user.isInRequestOrg(this.RequestOrg);
+  };
+
   static CreateFromObject = function (assignment) {
+    assignment.RequestOrg = RequestOrg.FindInStore(assignment.RequestOrg);
     const newAssignment = new Assignment();
     Object.assign(newAssignment, assignment);
     return newAssignment;
