@@ -383,23 +383,39 @@
             </div>
           </div>
           <div>
-            <!-- ko if: DisplayMode() -->
-            <button type="button" data-bind="click: submitNewRequest">
-              Submit
+            <!-- ko if: DisplayMode() == DisplayModes.New -->
+            <button
+              type="button"
+              class="btn btn-success"
+              data-bind="click: submitNewRequest"
+            >
+              Submit Request
             </button>
             <!-- /ko -->
             <!-- ko if: DisplayMode() == DisplayModes.View -->
-            <button type="button" data-bind="click: editRequestHandler">
-              Edit
+            <button
+              type="button"
+              class="btn btn-danger"
+              data-bind="click: setReadonly"
+            >
+              tests
             </button>
             <!-- /ko -->
             <!-- ko if: DisplayMode() == DisplayModes.Edit -->
-            <button type="button" data-bind="click: updateRequestHandler">
+            <!-- <button
+              type="button"
+              class="btn btn-primary"
+              data-bind="click: updateRequestHandler"
+            >
               Save Changes
             </button>
-            <button type="button" data-bind="click: cancelChangesHandler">
+            <button
+              type="button"
+              class="btn btn-danger"
+              data-bind="click: cancelChangesHandler"
+            >
               Cancel
-            </button>
+            </button> -->
             <!-- /ko -->
           </div>
         </div>

@@ -164,7 +164,15 @@ class EntitySet {
     return this.ListRef.setItemPermissionsAsync(entityId, salValuePairs, reset);
   };
 
+  GetItemPermissions = function (id) {
+    return this.ListRef.getItemPermissionsAsync(id);
+  };
+
   // Folder Methods
+  SetFolderReadOnly = async function (relFolderPath) {
+    return this.ListRef.setFolderReadonlyAsync(relFolderPath);
+  };
+
   GetItemsByFolderPath = function (folderPath, fields) {
     return this.ListRef.getFolderContentsAsync(folderPath, fields);
   };

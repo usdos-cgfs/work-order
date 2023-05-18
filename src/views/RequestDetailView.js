@@ -239,7 +239,9 @@ export class RequestDetailView {
 
       if (!nextStage) {
         // End of the Pipeline; time to close
-        // return null;
+        console.log("Closing Request");
+        this.closeAndFinalize();
+        return null;
       }
       this.State.Stage(nextStage);
 
@@ -826,8 +828,46 @@ export class RequestDetailView {
     this.DisplayMode(DisplayModes.View);
   };
 
-  closeAndFinalize = async () => {
-    // set all assignments to inactive
+  closeAndFinalize = async (status) => {
+    //1. set all assignments to inactive
+
+    //2. Set request properties
+    this.State.Status(status);
+    this.State.IsActive(false);
+    this.Dates.Closed(new Date());
+    await this._context.Requests.UpdateEntity(this, [
+      "Status",
+      "IsActive",
+      "ClosedDate",
+    ]);
+    //3. Update Permissions;
+    await this.Authorization.setReadonly();
+    this.refreshAll();
+  };
+
+  Authorization = {
+    setReadonly: async () => {
+      const relFolderPath = this.getRelativeFolderPath();
+      const listRefs = [
+        this._context.Requests,
+        this._context.Actions,
+        this._context.Assignments,
+        this._context.Notifications,
+        this._context.Comments,
+        this._context.Attachments,
+      ];
+
+      if (this.ServiceType.Def()?.getListRef()) {
+        listRefs.push(this.ServiceType.Def().getListRef());
+      }
+
+      await Promise.all(
+        listRefs.map(async (listRef) => {
+          // Apply folder permissions
+          await listRef.SetFolderReadonly(relFolderPath);
+        })
+      );
+    },
   };
 
   promptAdvanceModal;
@@ -849,21 +889,6 @@ export class RequestDetailView {
     await this.AssignmentsComponent.approveUserAssignments(this._currentUser);
     this.promptAdvance();
   }
-
-  approveAll = async () => {};
-
-  displayModeWatcher = (newDisplayMode) => {
-    if (DEBUG)
-      console.log("RequestDetailView: displayMode changed", newDisplayMode);
-    switch (newDisplayMode) {
-      case DisplayModes.New:
-        break;
-      case DisplayModes.View:
-        //this.refreshAll();
-        break;
-      default:
-    }
-  };
 
   constructor({
     displayMode = DisplayModes.View,
@@ -921,7 +946,7 @@ export class RequestDetailView {
       "arrayChange"
     );
 
-    this.DisplayMode.subscribe(this.displayModeWatcher);
+    // this.DisplayMode.subscribe(this.displayModeWatcher);
     this.DisplayMode(displayMode);
 
     this.LoadedAt(new Date());

@@ -1654,6 +1654,85 @@ export function SPList(listDef) {
     );
   }
 
+  function getItemPermissionsAsync(id) {
+    return new Promise((resolve, reject) => {
+      var currCtx = new SP.ClientContext.get_current();
+      var web = currCtx.get_web();
+
+      var oList = web.get_lists().getByTitle(self.config.def.title);
+
+      var oListItem = oList.getItemById(id);
+      var roles = oListItem.get_roleAssignments();
+
+      function onFindItemSucceeded() {
+        var currCtx = new SP.ClientContext.get_current();
+        var web = currCtx.get_web();
+        var principals = [];
+        var roleEnumerator = this.roles.getEnumerator();
+        // enumerate the roles
+        while (roleEnumerator.moveNext()) {
+          var role = roleEnumerator.get_current();
+          var principal = role.get_member();
+          // get the principal
+          currCtx.load(principal);
+          principals.push(principal);
+        }
+
+        currCtx.executeQueryAsync(
+          // success
+          function (sender, args) {
+            // alert the title
+            //alert(principal.get_title());
+
+            var logins = principals.map(function (principal) {
+              return {
+                ID: principal.get_id(),
+                Title: principal.get_title(),
+                LoginName: principal.get_loginName(),
+              };
+            });
+            resolve(logins);
+          },
+          // failure
+          function (sender, args) {
+            alert(
+              "Request failed. " +
+                args.get_message() +
+                "\n" +
+                args.get_stackTrace()
+            );
+            reject(args);
+          }
+        );
+      }
+
+      function onFindItemFailed(sender, args) {
+        console.error(
+          "Failed to get permissions on item: " +
+            args.get_message() +
+            "\n" +
+            args.get_stackTrace(),
+          false
+        );
+        reject(args);
+      }
+
+      const data = {
+        id,
+        oListItem,
+        roles,
+        resolve,
+        reject,
+      };
+
+      currCtx.load(oListItem);
+      currCtx.load(roles);
+      currCtx.executeQueryAsync(
+        Function.createDelegate(data, onFindItemSucceeded),
+        Function.createDelegate(data, onFindItemFailed)
+      );
+    });
+  }
   /**
    * Documentation - getItemPermissions
    * @param {number} id Item identifier, obtain using getListItems above
@@ -1756,8 +1835,17 @@ export function SPList(listDef) {
     return getListFolderContentsAsync(folderpath, fields);
   }
 
+  async function setFolderReadonlyAsync(folderPath) {
+    const currentPerms = await getFolderPermissionsAsync(folderPath);
+
+    const targetPerms = currentPerms.map((user) => {
+      return [user.LoginName, sal.config.siteRoles.roles.RestrictedRead];
+    });
+    await setFolderPermissionsAsync(folderPath, targetPerms, true);
+    return;
+  }
   /*****************************************************************
-                            Lists          
+                            List Folders          
     ******************************************************************/
   function getListFolderContentsAsync(relFolderPath, fields) {
     return new Promise((resolve, reject) => {
@@ -1808,8 +1896,146 @@ export function SPList(listDef) {
     });
   }
 
+  async function getFolderPermissionsAsync(relFolderPath) {
+    return new Promise(async (resolve, reject) => {
+      const oListItem = await getFolderItemByPath(relFolderPath);
+      const roles = oListItem.get_roleAssignments();
+
+      const currCtx = new SP.ClientContext.get_current();
+      currCtx.load(oListItem);
+      currCtx.load(roles);
+      currCtx.executeQueryAsync(
+        function () {
+          const currCtx = new SP.ClientContext.get_current();
+          console.log(oListItem);
+          const principals = [];
+          const bindings = [];
+          const roleEnumerator = roles.getEnumerator();
+          // enumerate the roles
+          while (roleEnumerator.moveNext()) {
+            const role = roleEnumerator.get_current();
+            const principal = role.get_member();
+            const bindings = role.get_roleDefinitionBindings();
+            // get the principal
+            currCtx.load(bindings);
+            currCtx.load(principal);
+            principals.push({ principal: principal, bindings: bindings });
+          }
+          currCtx.executeQueryAsync(
+            // success
+            function (sender, args) {
+              // alert the title
+              //alert(principal.get_title());
+
+              const logins = principals.map(function ({ principal, bindings }) {
+                const principalRoles = [];
+                const bindingEnumerator = bindings.getEnumerator();
+                while (bindingEnumerator.moveNext()) {
+                  const binding = bindingEnumerator.get_current();
+                  principalRoles.push(binding.get_name());
+                }
+                return {
+                  ID: principal.get_id(),
+                  Title: principal.get_title(),
+                  LoginName: principal.get_loginName(),
+                  Roles: principalRoles,
+                };
+              });
+              resolve(logins);
+            },
+            // failure
+            function (sender, args) {
+              console.warn("Unable load folder principals permissions:");
+              console.error(sender);
+              console.error(args);
+              reject(args);
+            }
+          );
+        },
+        function (sender, args) {
+          console.warn("Unable load folder permissions:");
+          console.error(sender);
+          console.error(args);
+          reject(args);
+        }
+      );
+    });
+  }
+
+  async function getFolderItemByPath(relFolderPath) {
+    return new Promise((resolve, reject) => {
+      const currCtx = new SP.ClientContext.get_current();
+      const web = currCtx.get_web();
+      const oList = web.get_lists().getByTitle(self.config.def.title);
+
+      const camlQuery = SP.CamlQuery.createAllItemsQuery();
+
+      var listPath = self.config.def.isLib
+        ? "/" + self.config.def.name + "/"
+        : "/Lists/" + self.config.def.name + "/";
+
+      const serverRelFolderPath =
+        sal.globalConfig.siteUrl + listPath + relFolderPath;
+
+      // const apiEndpoint = `/_api/web/GetFolderByServerRelativeUrl('${serverRelFolderPath}')/`;
+
+      var camlq =
+        '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
+        '<FieldRef Name="FSObjType"/><Value Type="int">1</Value>' +
+        "</Eq><Eq>" +
+        '<FieldRef Name="FileRef"/><Value Type="Text">' +
+        serverRelFolderPath +
+        "</Value>" +
+        "</Eq></And></Where></Query><RowLimit>1</RowLimit></View>";
+
+      camlQuery.set_viewXml(camlq);
+      // camlQuery.set_folderServerRelativeUrl(serverRelFolderPath);
+      const allFolders = oList.getItems(camlQuery);
+
+      async function onFindItemSucceeded() {
+        const foundObjects = [];
+        var listItemEnumerator = allFolders.getEnumerator();
+        while (listItemEnumerator.moveNext()) {
+          // Should be only one item
+          const oListItem = listItemEnumerator.get_current();
+          foundObjects.push(oListItem);
+        }
+
+        if (!foundObjects) {
+          console.warn("folder not found");
+          resolve(foundObjects);
+        }
+
+        if (foundObjects.length > 1) {
+          console.warn("Multiple folders found!");
+          resolve(foundObjects);
+        }
+        const oListItem = foundObjects[0];
+        resolve(oListItem);
+      }
+
+      function onFindItemFailed(sender, args) {
+        console.warn("Unable load list folder contents:");
+        console.error(sender);
+        console.error(args);
+        reject(args);
+      }
+      const data = {
+        allFolders,
+        resolve,
+        reject,
+      };
+      currCtx.load(allFolders);
+
+      currCtx.executeQueryAsync(
+        Function.createDelegate(data, onFindItemSucceeded),
+        Function.createDelegate(data, onFindItemFailed)
+      );
+    });
+  }
+
   /*****************************************************************
-                            Document Libraries          
+                            Document Libraries Folders
     ******************************************************************/
   function getLibFolderContents(folderName, fields, callback) {
     const currCtx = new SP.ClientContext.get_current();
@@ -2140,17 +2366,21 @@ export function SPList(listDef) {
       setLibFolderPermissions(folderPath, valuePairs, resolve, reset);
     });
   }
-  function setLibFolderPermissions(path, valuePairs, callback, reset) {
+  function setLibFolderPermissions(relFolderPath, valuePairs, callback, reset) {
     reset = reset === undefined ? false : reset;
     // TODO: Validate that the users exist
     var users = [];
     var resolvedGroups = [];
-    var relativeUrl =
-      sal.globalConfig.siteUrl + "/" + self.config.def.name + "/" + path;
+    var listPath = self.config.def.isLib
+      ? "/" + self.config.def.name + "/"
+      : "/Lists/" + self.config.def.name + "/";
+
+    const serverRelFolderPath =
+      sal.globalConfig.siteUrl + listPath + relFolderPath;
 
     const currCtx = new SP.ClientContext.get_current();
     const web = currCtx.get_web();
-    const folder = web.getFolderByServerRelativeUrl(relativeUrl);
+    const folder = web.getFolderByServerRelativeUrl(serverRelFolderPath);
 
     valuePairs.forEach(function (vp) {
       var resolvedGroup = sal.getSPSiteGroupByName(vp[0]);
@@ -2365,7 +2595,8 @@ export function SPList(listDef) {
     deleteListItemAsync,
     setItemPermissions: setItemPermissions,
     setItemPermissionsAsync,
-    getItemPermissions: getItemPermissions,
+    getItemPermissionsAsync,
+    setFolderReadonlyAsync,
     getLibFolderContents: getLibFolderContents,
     getFolderContentsAsync,
     showModal: showModal,
