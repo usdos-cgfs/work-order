@@ -164,6 +164,12 @@ export class RequestDetailView {
       newEntity.ID = newSvcTypeItemId;
       return newSvcTypeItemId;
     },
+    updateEntity: async (fields) => {
+      if (!this.ServiceType.Entity()) return;
+      await this.ServiceType.Def()
+        ?.getListRef()
+        ?.UpdateEntity(this.ServiceType.Entity(), fields);
+    },
   };
 
   // FieldMaps are used by the ApplicationDbContext and define
@@ -563,7 +569,7 @@ export class RequestDetailView {
     },
     userCanAssign: ko.pureComputed(() => {
       if (!this.State.IsActive()) return false;
-      return true;
+      return false;
     }),
     addNew: async (assignment = null) => {
       if (!this.ID || !assignment) return;

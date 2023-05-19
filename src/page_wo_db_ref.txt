@@ -631,10 +631,6 @@
                     <td data-bind="text: Status"></td>
                     <td>
                       <i
-                        class="fas fa-sync pointer"
-                        data-bind="click: $parent.addNew"
-                      ></i>
-                      <i
                         class="fas fa-search pointer"
                         data-bind="click: $parent.view"
                       ></i>

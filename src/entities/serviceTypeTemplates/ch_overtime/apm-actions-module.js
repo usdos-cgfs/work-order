@@ -20,15 +20,15 @@ export default class ActionAPM {
   }
 
   init = async () => {
-    registerServiceTypeComponent(
-      "edit-contractor-supplement",
-      this.ServiceType.Def().UID
-    );
+    // registerServiceTypeComponent(
+    //   "edit-contractor-supplement",
+    //   this.ServiceType.Def().UID
+    // );
 
-    const entityExists = await this.Supplement.refresh();
+    // const entityExists = await this.Supplement.refresh();
 
     this.validate();
-    console.log("Found supplement", entityExists);
+    // console.log("Found supplement", entityExists);
   };
 
   hasBeenValidated = ko.observable(false);
@@ -80,9 +80,7 @@ export default class ActionAPM {
     if (this.validate().length) return;
     console.log(this);
 
-    await this.ServiceType.Def()
-      ?.getListRef()
-      ?.UpdateEntity(this.ServiceType.Entity(), ["COR", "GTM"]);
+    await this.ServiceType.updateEntity(["COR", "GTM"]);
 
     await this.Supplement.create();
     this.Request.refreshAll();

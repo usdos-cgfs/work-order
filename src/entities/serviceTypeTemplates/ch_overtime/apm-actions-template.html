@@ -20,7 +20,7 @@
   <div
     data-bind="component: {name: 'edit-contractor-supplement', params: Supplement}"
   ></div>
-  <!-- ko if: Supplement.entity.ID -->
+  <!-- ko if: Supplement.entity.ObservableID -->
   <button
     class="btn btn-primary"
     data-bind="click: update, enable: Supplement.entity.IsValid"
@@ -28,7 +28,7 @@
     Update
   </button>
   <!-- /ko -->
-  <!-- ko ifnot: Supplement.entity.ID -->
+  <!-- ko ifnot: Supplement.entity.ObservableID -->
   <button
     class="btn btn-primary"
     data-bind="click: submit, enable: Supplement.entity.IsValid"

@@ -93,7 +93,7 @@ class EntitySet {
   };
 
   LoadEntity = async function (entity) {
-    if (!entity.ID == null && !entity.Title) {
+    if (!entity.ID && !entity.Title) {
       console.error("entity missing Id or title", entity);
       return false;
     }

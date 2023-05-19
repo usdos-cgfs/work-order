@@ -1,14 +1,19 @@
 import { People } from "../../../components/People.js";
 import { DateField } from "../../../components/DateField.js";
-import ApplicationDbContext from "../../../infrastructure/ApplicationDbContext.js";
 import { requestOrgStore } from "../../RequestOrg.js";
 
+import ApplicationDbContext, {
+  getAppContext,
+} from "../../../infrastructure/ApplicationDbContext.js";
 import { permissions } from "../../../infrastructure/Authorization.js";
+
+import { registerServiceTypeComponent } from "../../../common/KnockoutExtensions.js";
 
 export default class CH_OverTime {
   constructor(request) {
     this.Request = request;
     this.supplementSet = ApplicationDbContext.Set(ContractorSupplement.ListDef);
+    this._context = getAppContext();
   }
   ID;
 
@@ -24,12 +29,24 @@ export default class CH_OverTime {
   Hours = ko.observable();
 
   ContractorSupplement = {
+    IsLoading: ko.observable(),
     entity: new ContractorSupplement(),
-    refresh: async () =>
-      await this.supplementSet.LoadEntityByRequestId(
-        this.ContractorSupplement.entity,
-        this.Request.ID
-      ),
+    refresh: async () => {
+      if (!this.ContractorSupplement.entity.ID) return;
+      this.ContractorSupplement.IsLoading(true);
+      // await this.supplementSet.LoadEntityByRequestId(
+      //   this.ContractorSupplement.entity,
+      //   this.Request.ID
+      // );
+      await this.supplementSet.LoadEntity(this.ContractorSupplement.entity);
+      this.ContractorSupplement.IsLoading(false);
+    },
+    set: async (entity) => {
+      if (!entity?.ID) return;
+      this.ContractorSupplement.entity.ID = entity.ID;
+      //await this.supplementSet.LoadEntity(this.ContractorSupplement.entity);
+      await this.ContractorSupplement.refresh();
+    },
     update: async () => {
       await this.supplementSet.UpdateEntity(
         this.ContractorSupplement.entity,
@@ -48,12 +65,15 @@ export default class CH_OverTime {
       // Break the Permissions
       await this.supplementSet.SetItemPermissions(listFolderId, folderPerms);
 
+      this.ContractorSupplement.entity.Contractor(this.Contractor());
       // Create the item
-      await this.supplementSet.AddEntity(
+      const supplementId = await this.supplementSet.AddEntity(
         this.ContractorSupplement.entity,
         relFolderPath,
         this.Request
       );
+      this.ContractorSupplement.entity.ID = supplementId;
+      await this.Request.ServiceType.updateEntity(["ContractorSupplement"]);
     },
     getPermissions: () => {
       // APM, GTM, Budget, PA, and COR have access
@@ -105,6 +125,10 @@ export default class CH_OverTime {
       get: this.DateEnd.get,
     },
     Hours: this.Hours,
+    ContractorSupplement: {
+      get: () => this.ContractorSupplement.entity,
+      set: this.ContractorSupplement.set,
+    },
   };
 
   validationErrors = ko.pureComputed(() => {
@@ -115,12 +139,25 @@ export default class CH_OverTime {
 }
 
 export class ContractorSupplement {
-  constructor() {}
-  ID = ko.observable();
+  constructor(params) {
+    registerServiceTypeComponent("view-contractor-supplement", "ch_overtime");
+    registerServiceTypeComponent("edit-contractor-supplement", "ch_overtime");
+  }
+  ObservableID = ko.observable();
+  get ID() {
+    return this.ObservableID();
+  }
+  set ID(val) {
+    return this.ObservableID(val);
+  }
+
+  Title = "";
+
   TaskOrderNumber = ko.observable();
   RequisitionNumber = ko.observable();
   LaborCategory = ko.observable();
   ContractorType = ko.observable();
+  Contractor = ko.observable();
 
   FieldMap = {
     ID: this.ID,
@@ -128,6 +165,10 @@ export class ContractorSupplement {
     RequisitionNumber: this.RequisitionNumber,
     LaborCategory: this.LaborCategory,
     ContractorType: this.ContractorType,
+    Contractor: {
+      obs: this.Contractor,
+      factory: People.Create,
+    },
   };
 
   IsValid = ko.pureComputed(() => {
@@ -147,6 +188,7 @@ export class ContractorSupplement {
       "LaborCategory",
       "ContractorType",
       "Request",
+      "Contractor",
     ],
     APMUpdate: ["TaskOrderNumber", "LaborCategory", "ContractorType"],
   };
