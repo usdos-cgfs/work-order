@@ -192,6 +192,19 @@ class EntitySet {
     );
   };
 
+  EnsureFolderPermissions = async function (relFolderPath, valuePairs) {
+    // Slightly more expensive operation to verify a user has the required permissions
+    // before adding them. This will cut down on the number of unique permissions in the
+    // system since a user may already have the permission via group membership.
+    const salValuePairs = valuePairs
+      .filter((vp) => vp[0] && vp[1])
+      .map((vp) => [vp[0].LoginName ?? vp[0].Title, vp[1]]);
+    return this.ListRef.ensureFolderPermissionsAsync(
+      relFolderPath,
+      salValuePairs
+    );
+  };
+
   UploadNewDocument = async function (folderPath, args) {
     return this.ListRef.uploadNewDocumentAsync(
       folderPath,

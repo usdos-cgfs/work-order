@@ -1,4 +1,5 @@
 import { Action, actionTypes } from "../entities/Action.js";
+import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
 
 export class ActivityLogComponent {
   constructor({ request, actions, context }) {

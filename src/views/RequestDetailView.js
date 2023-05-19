@@ -24,6 +24,7 @@ import { RequestAssignmentsComponent } from "../components/RequestAssignmentsCom
 import { People } from "../components/People.js";
 import { ServiceTypeComponent } from "../components/ServiceTypeComponent.js";
 import { ActivityLogComponent } from "../components/ActivityLogComponent.js";
+import { NewAssignmentComponent } from "../components/NewAssignmentComponent.js";
 
 import {
   createNewRequestTitle,
@@ -43,6 +44,7 @@ import {
   getRequestFolderPermissions,
   stageActionRoleMap,
   AssignmentFunctions,
+  permissions,
 } from "../infrastructure/Authorization.js";
 import {
   emitCommentNotification,
@@ -220,11 +222,11 @@ export class RequestDetailView {
         .filter((stage) => stage.ServiceType.ID == this.ServiceType.Def()?.ID)
         .sort(sortByField("Step"));
     }),
-    getNextStage: () => {
+    getNextStage: ko.pureComputed(() => {
       const thisStepNum = this.State.Stage()?.Step ?? 0;
       const nextStepNum = thisStepNum + 1;
       return this.Pipeline.Stages()?.find((stage) => stage.Step == nextStepNum);
-    },
+    }),
     ShowActionsArea: ko.pureComputed(
       () =>
         !this.IsLoading() &&
@@ -264,6 +266,9 @@ export class RequestDetailView {
         this.Attachments.list.All().filter((attachment) => attachment.IsActive)
       ),
     },
+    userCanAttach: ko.pureComputed(() =>
+      this.Authorization.currentUserCanSupplement()
+    ),
     addNew: async () => {
       const folderPath = this.getRelativeFolderPath();
       const folderPerms = this.getFolderPermissions();
@@ -306,6 +311,12 @@ export class RequestDetailView {
         { id: attachment.ID }
       );
     },
+    userCanRemove: (attachment) => {
+      return ko.pureComputed(() => {
+        if (!this.Authorization.currentUserCanSupplement()) return false;
+        return true;
+      });
+    },
     remove: async (attachment) => {
       console.log("removing", attachment);
       attachment.IsActive = false;
@@ -332,6 +343,9 @@ export class RequestDetailView {
         this.Comments.NewCommentComponent.CommentText("");
       },
     },
+    userCanComment: ko.pureComputed(() => {
+      return this.Authorization.currentUserCanSupplement();
+    }),
     addNew: async (comment) => {
       const folderPath = this.getRelativeFolderPath();
       const folderPerms = this.getFolderPermissions();
@@ -547,6 +561,10 @@ export class RequestDetailView {
       this.Assignments.list.All(assignments);
       this.Assignments.AreLoading(false);
     },
+    userCanAssign: ko.pureComputed(() => {
+      if (!this.State.IsActive()) return false;
+      return true;
+    }),
     addNew: async (assignment = null) => {
       if (!this.ID || !assignment) return;
 
@@ -574,6 +592,12 @@ export class RequestDetailView {
         activity: actionTypes.Assigned,
         data: assignment,
       });
+      if (assignment.Role?.permissions) {
+        // assignment.Assignee.Roles = [assignment.Role.permissions];
+        this.Authorization.ensureAccess([
+          [assignment.Assignee, assignment.Role.permissions],
+        ]);
+      }
     },
     view: (assignment) => {
       //console.log("viewing", attachment);
@@ -663,11 +687,13 @@ export class RequestDetailView {
       .filter((change) => change.status == "added")
       .map((change) => change.value);
 
-    activities.map((action) => {
+    activities.map(async (action) => {
       emitRequestNotification(action, this);
       if (action.activity == actionTypes.Rejected) {
         // Request was rejected, close it out
         console.warn("Closing request");
+        //
+        await this.closeAndFinalize(requestStates.rejected);
       }
     });
   };
@@ -745,16 +771,7 @@ export class RequestDetailView {
       //const breakingPermissionsTask = addTask(taskDefs.permissions);
       const folderPerms = this.getFolderPermissions();
 
-      const listRefs = [
-        this._context.Requests,
-        this._context.Actions,
-        this._context.Assignments,
-        this._context.Notifications,
-      ];
-
-      if (serviceType.getListRef()) {
-        listRefs.push(serviceType.getListRef());
-      }
+      this.getInitialListRefs();
 
       await Promise.all(
         listRefs.map(async (listRef) => {
@@ -835,10 +852,12 @@ export class RequestDetailView {
     this.State.Status(status);
     this.State.IsActive(false);
     this.Dates.Closed(new Date());
+    this.State.Stage(null);
     await this._context.Requests.UpdateEntity(this, [
-      "Status",
+      "RequestStatus",
       "IsActive",
       "ClosedDate",
+      "PipelineStage",
     ]);
     //3. Update Permissions;
     await this.Authorization.setReadonly();
@@ -846,30 +865,80 @@ export class RequestDetailView {
   };
 
   Authorization = {
-    setReadonly: async () => {
-      const relFolderPath = this.getRelativeFolderPath();
-      const listRefs = [
-        this._context.Requests,
-        this._context.Actions,
-        this._context.Assignments,
-        this._context.Notifications,
-        this._context.Comments,
-        this._context.Attachments,
-      ];
-
-      if (this.ServiceType.Def()?.getListRef()) {
-        listRefs.push(this.ServiceType.Def().getListRef());
+    currentUserIsActionOffice: ko.pureComputed(() => {
+      return this.Assignments.list
+        .CurrentUserAssignments()
+        .find((assignment) =>
+          [assignmentRoles.ActionResolver, assignmentRoles.Approver].includes(
+            assignment.ActionType
+          )
+        );
+    }),
+    currentUserCanAdvance: ko.pureComputed(() => {
+      return this.Assignments.CurrentStage.list.UserActionAssignments().length;
+    }),
+    currentUserCanSupplement: ko.pureComputed(() => {
+      // determines whether the current user can add attachments or
+      const user = currentUser();
+      if (!user) {
+        console.warn("Current user not set!");
+        return false;
       }
-
+      if (!this.State.IsActive()) return false;
+      if (this.Assignments.list.CurrentUserAssignments().length) return true;
+      if (this.RequestorInfo.Requestor()?.ID == user.ID) return true;
+    }),
+    ensureAccess: async (accessValuePairs) => {
+      const relFolderPath = this.getRelativeFolderPath();
+      const listRefs = this.getAllListRefs();
       await Promise.all(
         listRefs.map(async (listRef) => {
           // Apply folder permissions
-          await listRef.SetFolderReadonly(relFolderPath);
+          await listRef.EnsureFolderPermissions(
+            relFolderPath,
+            accessValuePairs
+          );
+        })
+      );
+    },
+    setReadonly: async () => {
+      const relFolderPath = this.getRelativeFolderPath();
+      const listRefs = this.getAllListRefs();
+      await Promise.all(
+        listRefs.map(async (listRef) => {
+          // Apply folder permissions
+          await listRef.SetFolderReadOnly(relFolderPath);
         })
       );
     },
   };
 
+  getAllListRefs() {
+    const listRefs = this.getInitialListRefs();
+    listRefs.concat([this._context.Comments, this._context.Attachments]);
+    return listRefs;
+  }
+
+  getInitialListRefs() {
+    const listRefs = [
+      this._context.Requests,
+      this._context.Actions,
+      this._context.Assignments,
+      this._context.Notifications,
+      this._context.Comments,
+      this._context.Attachments,
+    ];
+    if (this.ServiceType.Def()?.getListRef()) {
+      listRefs.push(this.ServiceType.Def().getListRef());
+    }
+    return listRefs;
+  }
+
+  promptClose = () => {
+    if (confirm("Close and finalize request? This action cannot be undone!")) {
+      this.closeAndFinalize(requestStates.closed);
+    }
+  };
   promptAdvanceModal;
   promptAdvance = () => {
     if (!this.promptAdvanceModal) {
@@ -886,7 +955,7 @@ export class RequestDetailView {
   };
 
   async approveRequest() {
-    await this.AssignmentsComponent.approveUserAssignments(this._currentUser);
+    // await this.AssignmentsComponent.approveUserAssignments(this._currentUser);
     this.promptAdvance();
   }
 
@@ -927,18 +996,21 @@ export class RequestDetailView {
       ...this.ServiceType,
     });
 
-    this.AssignmentsComponent = new RequestAssignmentsComponent({
-      request: this,
-      stage: this.State.Stage,
-      // assignments: this.Assignments.list.All,
-      activityQueue: this.ActivityQueue,
-      ...this.Assignments,
-    });
+    // this.AssignmentsComponent = new RequestAssignmentsComponent({
+    //   request: this,
+    //   stage: this.State.Stage,
+    //   // assignments: this.Assignments.list.All,
+    //   activityQueue: this.ActivityQueue,
+    //   ...this.Assignments,
+    // });
 
-    this.ActivityLog = new ActivityLogComponent({
-      request: this,
-      context,
-    });
+    (this.Assignments.NewAssignmentComponent = new NewAssignmentComponent({
+      addAssignment: this.Assignments.addNew,
+    })),
+      (this.ActivityLog = new ActivityLogComponent({
+        request: this,
+        context,
+      }));
 
     this.ActivityQueue.subscribe(
       this.activityQueueWatcher,

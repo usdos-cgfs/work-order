@@ -249,7 +249,7 @@
           </div>
           <div
             class="my-3"
-            data-bind="template: {name: 'tmpl-assignments-component', data: AssignmentsComponent}"
+            data-bind="template: {name: 'tmpl-assignments-component', data: Assignments}"
           ></div>
           <div data-bind="template: {name: 'tmpl-request-header'}"></div>
           <div
@@ -300,21 +300,25 @@
                               class="fas fa-search pointer"
                               data-bind="click: $parent.Attachments.view"
                             ></i>
+                            <!-- ko if: $parent.Attachments.userCanRemove($data) -->
                             <i
                               class="fas fa-trash pointer"
                               data-bind="click: $parent.Attachments.remove"
                             ></i>
+                            <!-- /ko -->
                           </td>
                         </tr>
                         <!-- /ko -->
                       </tbody>
                     </table>
+                    <!-- ko if: Attachments.userCanAttach -->
                     <button
                       class="btn btn-primary"
                       data-bind="click: Attachments.addNew"
                     >
                       Upload
                     </button>
+                    <!-- /ko -->
                   </div>
                 </div>
               </div>
@@ -370,6 +374,7 @@
                   <!-- /ko -->
                 </tbody>
               </table>
+              <!-- ko if: Comments.userCanComment -->
               <div>Provide additional comments/instructions here:</div>
               <div data-bind="using: Comments.NewCommentComponent">
                 <textarea
@@ -380,6 +385,7 @@
                   Submit Comment
                 </button>
               </div>
+              <!-- /ko -->
             </div>
           </div>
           <div>
@@ -391,31 +397,6 @@
             >
               Submit Request
             </button>
-            <!-- /ko -->
-            <!-- ko if: DisplayMode() == DisplayModes.View -->
-            <button
-              type="button"
-              class="btn btn-danger"
-              data-bind="click: setReadonly"
-            >
-              tests
-            </button>
-            <!-- /ko -->
-            <!-- ko if: DisplayMode() == DisplayModes.Edit -->
-            <!-- <button
-              type="button"
-              class="btn btn-primary"
-              data-bind="click: updateRequestHandler"
-            >
-              Save Changes
-            </button>
-            <button
-              type="button"
-              class="btn btn-danger"
-              data-bind="click: cancelChangesHandler"
-            >
-              Cancel
-            </button> -->
             <!-- /ko -->
           </div>
         </div>
@@ -440,7 +421,7 @@
               ></button>
             </div>
             <div class="modal-body">
-              <!-- ko if: !Assignments.list.InProgress().length -->
+              <!-- ko ifnot: Assignments.list.InProgress().length -->
               This request is ready to advance.
               <!-- /ko -->
               <!-- ko if: Assignments.list.InProgress().length -->
@@ -509,7 +490,8 @@
             Submit
           </button>
           <!-- /ko -->
-          <!-- ko if: Assignments.CurrentStage.list.UserActionAssignments().length -->
+          <!-- ko if: Authorization.currentUserCanAdvance -->
+          <!-- ko if: Pipeline.getNextStage -->
           <button
             type="button"
             class="btn btn-success ms-3"
@@ -517,6 +499,16 @@
           >
             Next Stage <span class="fa fa-chevron-right"></span>
           </button>
+          <!-- /ko -->
+          <!-- ko ifnot: Pipeline.getNextStage -->
+          <button
+            type="button"
+            class="btn btn-success ms-3"
+            data-bind="click: promptClose, enable: Assignments.CurrentStage.Validation.IsValid"
+          >
+            Close and Finalize
+          </button>
+          <!-- /ko -->
           <!-- /ko -->
         </div>
       </div>
@@ -605,7 +597,7 @@
             <div class="d-flex justify-content-between">
               <i
                 class="fa fa-sync pointer ms-auto"
-                data-bind="click: refreshAssignments"
+                data-bind="click: refresh"
               ></i>
             </div>
             <div class="position-relative">
@@ -629,7 +621,7 @@
                     </td>
                   </tr>
                   <!-- /ko -->
-                  <!-- ko foreach: Assignments -->
+                  <!-- ko foreach: list.All -->
                   <tr>
                     <td data-bind="text: ID"></td>
                     <td data-bind="text: PipelineStage?.Title"></td>
@@ -639,12 +631,16 @@
                     <td data-bind="text: Status"></td>
                     <td>
                       <i
+                        class="fas fa-sync pointer"
+                        data-bind="click: $parent.addNew"
+                      ></i>
+                      <i
                         class="fas fa-search pointer"
                         data-bind="click: $parent.view"
                       ></i>
                       <i
                         class="fa fa-trash pointer"
-                        data-bind="click: $parent.removeAssignment"
+                        data-bind="click: $parent.remove"
                       ></i>
                     </td>
                   </tr>
@@ -652,7 +648,8 @@
                 </tbody>
               </table>
             </div>
-            <div class="input-group" data-bind="using: newAssignmentComponent">
+            <!-- ko if: userCanAssign -->
+            <div class="input-group" data-bind="using: NewAssignmentComponent">
               <span class="input-group-text">New Assignment</span>
               <div id="people-new-assignee" data-bind="people: Assignee"></div>
               <select
@@ -673,6 +670,7 @@
                 Submit
               </button>
             </div>
+            <!-- /ko -->
           </div>
         </div>
       </div>

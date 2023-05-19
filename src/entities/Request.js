@@ -3,6 +3,8 @@ export const requestStates = {
   open: "Open",
   cancelled: "Cancelled",
   closed: "Closed",
+  rejected: "Rejected",
+  fulfilled: "Fulfilled",
 };
 
 export class RequestEntity {

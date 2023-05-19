@@ -135,11 +135,30 @@ sal.NewAppConfig = function () {
     Design: "Design",
     Edit: "Edit",
     Contribute: "Contribute",
-    Read: "Read",
-    LimitedAccess: "Limited Access",
-    RestrictedRead: "Restricted Read",
     RestrictedContribute: "Restricted Contribute",
     InitialCreate: "Initial Create",
+    Read: "Read",
+    RestrictedRead: "Restricted Read",
+    LimitedAccess: "Limited Access",
+  };
+  siteRoles.fulfillsRole = function (inputRole, targetRole) {
+    // the site roles are already in authoritative order
+    const roles = Object.values(siteRoles.roles);
+    if (!roles.includes(inputRole) || !roles.includes(targetRole)) return false;
+
+    return roles.indexOf(inputRole) <= roles.indexOf(targetRole);
+
+    // Takes an input role and compares it to a target role, e.g. Full Control also fulfills 'Restricted Read'
+    // switch (inputRole) {
+    //   case roles.FullControl:
+    //     // FullControl does everything
+    //     return true;
+    //     break;
+    //     case roles.Contribute:
+    //       [roles.Read, roles.RestrictedRead, roles.RestrictedContribute, roles.InitialCreate].includes()
+    //   default:
+
+    // }
   };
 
   siteRoles.validate = function () {
@@ -1063,7 +1082,7 @@ export function SPList(listDef) {
     ******************************************************************/
   function mapObjectToListItem(val) {
     if (!val) {
-      return null;
+      return val;
     }
     if (!Array.isArray(val)) {
       return mapItemToListItem(val);
@@ -1836,12 +1855,89 @@ export function SPList(listDef) {
   }
 
   async function setFolderReadonlyAsync(folderPath) {
-    const currentPerms = await getFolderPermissionsAsync(folderPath);
+    try {
+      const currentPerms = await getFolderPermissionsAsync(folderPath);
 
-    const targetPerms = currentPerms.map((user) => {
-      return [user.LoginName, sal.config.siteRoles.roles.RestrictedRead];
+      const targetPerms = currentPerms.map((user) => {
+        return [user.LoginName, sal.config.siteRoles.roles.RestrictedRead];
+      });
+      await setFolderPermissionsAsync(folderPath, targetPerms, true);
+    } catch (e) {
+      console.warn(e);
+    }
+    return;
+  }
+
+  async function ensureFolderPermissionsAsync(relFolderPath, targetPerms) {
+    var listPath = self.config.def.isLib
+      ? "/" + self.config.def.name + "/"
+      : "/Lists/" + self.config.def.name + "/";
+
+    const serverRelFolderPath =
+      sal.globalConfig.siteUrl + listPath + relFolderPath;
+
+    const apiEndpoint =
+      sal.globalConfig.siteUrl +
+      `/_api/web/GetFolderByServerRelativeUrl('${serverRelFolderPath}')/` +
+      "ListItemAllFields/RoleAssignments?$expand=Member,Member/Users,RoleDefinitionBindings";
+
+    const response = await fetch(apiEndpoint, {
+      method: "GET",
+      headers: {
+        Accept: "application/json; odata=verbose",
+      },
     });
-    await setFolderPermissionsAsync(folderPath, targetPerms, true);
+
+    if (!response.ok) {
+      if (response.status == 404) {
+        return;
+      }
+      console.error(response);
+    }
+    const result = await response.json();
+    const permissionResults = result?.d?.results;
+    if (!permissionResults) {
+      console.warn("No results found", result);
+      return;
+    }
+
+    const missingPerms = targetPerms.filter((targetPermPair) => {
+      const targetLoginName = targetPermPair[0];
+      const targetPerm = targetPermPair[1];
+      // find an existing matching permissiont
+      const permExists = permissionResults.find((curPerm) => {
+        // If the target user isn't the member
+        if (curPerm.Member.LoginName != targetLoginName) {
+          // Or the member is a group that the target user isn't in
+          if (
+            !curPerm.Member.Users?.results.find(
+              (curUser) => curUser.LoginName == targetLoginName
+            )
+          ) {
+            return false;
+          }
+        }
+
+        // The target principal has permissions assigned, let see if they include the target permission
+        if (
+          curPerm.RoleDefinitionBindings.results?.find((curBinding) =>
+            sal.config.siteRoles.fulfillsRole(curBinding.Name, targetPerm)
+          )
+        ) {
+          return true;
+        }
+
+        // Finally, the target principal is assigned, but don't have the appropriate permissions
+        return false;
+      });
+
+      return !permExists;
+    });
+
+    console.log("Adding missing permissions", missingPerms);
+    if (missingPerms.length)
+      await setFolderPermissionsAsync(relFolderPath, missingPerms, false);
+
     return;
   }
   /*****************************************************************
@@ -1899,6 +1995,10 @@ export function SPList(listDef) {
   async function getFolderPermissionsAsync(relFolderPath) {
     return new Promise(async (resolve, reject) => {
       const oListItem = await getFolderItemByPath(relFolderPath);
+      if (!oListItem) {
+        reject("Folder item does not exist");
+        return;
+      }
       const roles = oListItem.get_roleAssignments();
 
       const currCtx = new SP.ClientContext.get_current();
@@ -2597,6 +2697,7 @@ export function SPList(listDef) {
     setItemPermissionsAsync,
     getItemPermissionsAsync,
     setFolderReadonlyAsync,
+    ensureFolderPermissionsAsync,
     getLibFolderContents: getLibFolderContents,
     getFolderContentsAsync,
     showModal: showModal,
