@@ -729,7 +729,7 @@ export class RequestDetailView {
   };
 
   getAppLink = () =>
-    `${Router.appRoot}/Pages/WO_DB.aspx?reqId=${this.Title}&tab=${Tabs.RequestDetail}`;
+    `${Router.webRoot}/Pages/WO_DB.aspx?reqId=${this.Title}&tab=${Tabs.RequestDetail}`;
 
   getAppLinkElement = () =>
     `<a href="${this.getAppLink()}" target="blank">${this.Title}</a>`;
