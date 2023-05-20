@@ -5,11 +5,11 @@
   crossorigin="anonymous"
 />
 
-<link rel="stylesheet" href="../Style Library/wo/app.css" />
-<link
+<!-- <link rel="stylesheet" href="../Style Library/wo/app.css" /> -->
+<!-- <link
   rel="stylesheet"
   href="../Style Library/wo/lib/fontawesome-6.4.0/css/all.min.css"
-/>
+/> -->
 
 <div class="position-fixed bottom-0 end-0">
   <div class="toast-container">
@@ -982,7 +982,7 @@
   ></script>
   <script type="text/javascript" src="../Apps/_layouts/15/autofill.js"></script>
 
-  <script src="../Style Library/wo/lib/knockout/knockout-3.5.1.js"></script>
+  <!-- <script src="../Style Library/wo/lib/knockout/knockout-3.5.1.js"></script> -->
 
   <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
@@ -991,7 +991,20 @@
   ></script>
 
   <script defer type="module">
-    const appRoot = _spPageContextInfo.siteAbsoluteUrl + "/Style Library/wo";
+    const appRoot =
+      _spPageContextInfo.siteAbsoluteUrl + "/Style Library/Apps/wo";
+    const appSheet = await import(appRoot + "/app.css", {
+      assert: { type: "css" },
+    });
+    const faSheet = await import(
+      appRoot + "/lib/fontawesome-6.4.0/css/all.min.css",
+      {
+        assert: { type: "css" },
+      }
+    );
+    //const faStyleSheet =
+    document.adoptedStyleSheets = [appSheet.default, faSheet.default];
+    import(appRoot + "/lib/knockout/knockout-3.5.1.js");
     import(appRoot + "/app.js");
   </script>
 </div>

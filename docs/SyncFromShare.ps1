@@ -1,1 +1,1 @@
-robocopy "Y:\Style Library\wo" ..\src /mir /fft 
+robocopy "Y:\Style Library\Apps\wo" ..\src /mir /fft 
