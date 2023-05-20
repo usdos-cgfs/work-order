@@ -18,20 +18,20 @@
   </div>
   <!-- ko if: Entity().GTM && Entity().COR -->
   <div
-    data-bind="component: {name: 'edit-contractor-supplement', params: Supplement}"
+    data-bind="component: {name: 'edit-contractor-supplement', params: contractorSupplementEntity}"
   ></div>
-  <!-- ko if: Supplement.entity.ObservableID -->
+  <!-- ko if: contractorSupplementEntity.ObservableID -->
   <button
     class="btn btn-primary"
-    data-bind="click: update, enable: Supplement.entity.IsValid"
+    data-bind="click: update, enable: contractorSupplementEntity.IsValid"
   >
     Update
   </button>
   <!-- /ko -->
-  <!-- ko ifnot: Supplement.entity.ObservableID -->
+  <!-- ko ifnot: contractorSupplementEntity.ObservableID -->
   <button
     class="btn btn-primary"
-    data-bind="click: submit, enable: Supplement.entity.IsValid"
+    data-bind="click: submit, enable: contractorSupplementEntity.IsValid"
   >
     Submit
   </button>

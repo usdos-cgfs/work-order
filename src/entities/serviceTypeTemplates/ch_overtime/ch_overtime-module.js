@@ -2,9 +2,7 @@ import { People } from "../../../components/People.js";
 import { DateField } from "../../../components/DateField.js";
 import { requestOrgStore } from "../../RequestOrg.js";
 
-import ApplicationDbContext, {
-  getAppContext,
-} from "../../../infrastructure/ApplicationDbContext.js";
+import ApplicationDbContext from "../../../infrastructure/ApplicationDbContext.js";
 import { permissions } from "../../../infrastructure/Authorization.js";
 
 import { registerServiceTypeComponent } from "../../../common/KnockoutExtensions.js";
@@ -13,7 +11,6 @@ export default class CH_OverTime {
   constructor(request) {
     this.Request = request;
     this.supplementSet = ApplicationDbContext.Set(ContractorSupplement.ListDef);
-    this._context = getAppContext();
   }
   ID;
 
@@ -30,30 +27,31 @@ export default class CH_OverTime {
 
   ContractorSupplement = {
     IsLoading: ko.observable(),
-    entity: new ContractorSupplement(),
+    entity: ko.observable(),
     refresh: async () => {
-      if (!this.ContractorSupplement.entity.ID) return;
+      if (!this.ContractorSupplement.entity()?.ID) return;
       this.ContractorSupplement.IsLoading(true);
       // await this.supplementSet.LoadEntityByRequestId(
       //   this.ContractorSupplement.entity,
       //   this.Request.ID
       // );
-      await this.supplementSet.LoadEntity(this.ContractorSupplement.entity);
+      await this.supplementSet.LoadEntity(this.ContractorSupplement.entity());
       this.ContractorSupplement.IsLoading(false);
     },
     set: async (entity) => {
       if (!entity?.ID) return;
-      this.ContractorSupplement.entity.ID = entity.ID;
+      this.ContractorSupplement.entity(new ContractorSupplement());
+      this.ContractorSupplement.entity().ID = entity.ID;
       //await this.supplementSet.LoadEntity(this.ContractorSupplement.entity);
       await this.ContractorSupplement.refresh();
     },
-    update: async () => {
+    update: async (fields = null) => {
       await this.supplementSet.UpdateEntity(
-        this.ContractorSupplement.entity,
-        ContractorSupplement.Views.APMUpdate
+        this.ContractorSupplement.entity(),
+        fields
       );
     },
-    create: async () => {
+    create: async (contractorSupplement) => {
       // this.ContractorSupplement.entity.Request = this.Request;
       const relFolderPath = this.Request.getRelativeFolderPath();
       const folderPerms = this.ContractorSupplement.getPermissions();
@@ -65,14 +63,15 @@ export default class CH_OverTime {
       // Break the Permissions
       await this.supplementSet.SetItemPermissions(listFolderId, folderPerms);
 
-      this.ContractorSupplement.entity.Contractor(this.Contractor());
+      contractorSupplement.Contractor(this.Contractor());
       // Create the item
       const supplementId = await this.supplementSet.AddEntity(
-        this.ContractorSupplement.entity,
+        contractorSupplement,
         relFolderPath,
         this.Request
       );
-      this.ContractorSupplement.entity.ID = supplementId;
+      contractorSupplement.ID = supplementId;
+      this.ContractorSupplement.entity(contractorSupplement);
       await this.Request.ServiceType.updateEntity(["ContractorSupplement"]);
     },
     getPermissions: () => {
@@ -85,11 +84,11 @@ export default class CH_OverTime {
       )?.UserGroup;
 
       return [
-        [this.APM(), permissions.FullControl],
-        [this.GTM(), permissions.FullControl],
-        [this.COR(), permissions.FullControl],
-        [budgetGroup, permissions.FullControl],
-        [paGroup, permissions.FullControl],
+        [this.APM(), permissions.RestrictedContribute],
+        [this.GTM(), permissions.RestrictedContribute],
+        [this.COR(), permissions.RestrictedContribute],
+        [budgetGroup, permissions.RestrictedContribute],
+        [paGroup, permissions.RestrictedContribute],
       ];
     },
   };
@@ -126,7 +125,7 @@ export default class CH_OverTime {
     },
     Hours: this.Hours,
     ContractorSupplement: {
-      get: () => this.ContractorSupplement.entity,
+      get: this.ContractorSupplement.entity,
       set: this.ContractorSupplement.set,
     },
   };
@@ -140,8 +139,16 @@ export default class CH_OverTime {
 
 export class ContractorSupplement {
   constructor(params) {
-    registerServiceTypeComponent("view-contractor-supplement", "ch_overtime");
-    registerServiceTypeComponent("edit-contractor-supplement", "ch_overtime");
+    registerServiceTypeComponent(
+      "view-contractor-supplement",
+      "contractor-supplement",
+      "ch_overtime"
+    );
+    registerServiceTypeComponent(
+      "edit-contractor-supplement",
+      "contractor-supplement",
+      "ch_overtime"
+    );
   }
   ObservableID = ko.observable();
   get ID() {

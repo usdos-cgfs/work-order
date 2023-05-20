@@ -1,3 +1,4 @@
+import { registerServiceTypeComponent } from "../common/KnockoutExtensions.js";
 import { appRoot, assetsPath } from "../common/Router.js";
 import ApplicationDbContext from "../infrastructure/ApplicationDbContext.js";
 
@@ -12,8 +13,6 @@ export const getTemplateFilePath = (uid) =>
 export const modulePath = (uid) =>
   getServiceTypePathByUid(uid) + `${uid}-module.js`;
 
-export const getRepositoryListName = (serviceType) => `st_${serviceType.UID}`;
-
 export const serviceTypeStore = ko.observableArray();
 
 export class ServiceType {
@@ -26,19 +25,41 @@ export class ServiceType {
     Object.assign(this, serviceType);
   }
 
+  getRepositoryListName = () => `st_${this.UID}`;
+
   getListDef = () => {
     if (!this.HasTemplate) {
       return null;
     }
-    const listName = getRepositoryListName(this);
+    const listName = this.getRepositoryListName();
     return { title: listName, name: listName };
   };
+
+  _listRef = null;
 
   getListRef = () => {
     if (!this.HasTemplate) {
       return null;
     }
-    return ApplicationDbContext.Set(this.getListDef());
+    // Memoization
+    if (!this._listRef)
+      this._listRef = ApplicationDbContext.Set(this.getListDef());
+    return this._listRef;
+  };
+
+  _componentName = null;
+  getComponentName = () => {
+    if (this._componentName) return this._componentName;
+    if (!this.UID) {
+      return null;
+    }
+    this._componentName = this.UID;
+    registerServiceTypeComponent(
+      this._componentName,
+      this._componentName,
+      this.UID
+    );
+    return this._componentName;
   };
 
   static Create = function ({ ID, LookupValue }) {

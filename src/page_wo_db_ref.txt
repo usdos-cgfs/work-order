@@ -798,6 +798,44 @@
       </div>
     </script>
 
+    <script type="text/html" id="tmpl-service-type-using-components">
+      <div class="card mb-3 w-100">
+        <div class="card-body" data-bind="">
+          <div class="card-title d-flex justify-content-between">
+            <h3 class="mx-0" data-bind="text: ServiceType.Def()?.Title"></h3>
+            <i
+              class="fa fa-sync pointer"
+              data-bind="click: ServiceType.refreshEntity"
+            ></i>
+          </div>
+          <!-- ko if: ServiceType.Def()?.getComponentName() -->
+          <div
+            data-bind="component: {name: ServiceType.Def()?.getComponentName(), params: $data}"
+          ></div>
+          <!-- /ko -->
+          <div class="col-12 pb-6">
+            <label for=""
+              ><h6>
+                <span
+                  data-bind="text: ServiceType.Def()?.DescriptionTitle ?? 'Description'"
+                ></span
+                >:
+              </h6>
+            </label>
+            <!-- ko if: DisplayMode() != DisplayModes.View -->
+            <textarea
+              class="form-control"
+              data-bind="value: RequestDescription"
+            ></textarea>
+            <!-- /ko -->
+            <!-- ko if: DisplayMode() == DisplayModes.View -->
+            <div data-bind="html: RequestDescription"></div>
+            <!-- /ko -->
+          </div>
+        </div>
+      </div>
+    </script>
+
     <script type="text/html" id="tmpl-service-type-component">
       <div class="card mb-3 w-100" data-bind="using: ServiceType.Component">
         <div class="card-body">

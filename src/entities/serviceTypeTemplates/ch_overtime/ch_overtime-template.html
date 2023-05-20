@@ -92,9 +92,9 @@
   <!-- <div
     data-bind="component: {name: 'edit-contractor-supplement', params: ContractorSupplement}"
   ></div> -->
-  <!-- ko if: ContractorSupplement.entity.ObservableID -->
+  <!-- ko if: ContractorSupplement.entity()?.ObservableID -->
   <div
-    data-bind="component: {name: 'view-contractor-supplement', params: ContractorSupplement }"
+    data-bind="component: {name: 'view-contractor-supplement', params: ContractorSupplement.entity }"
   ></div>
   <!-- /ko -->
   <!-- /ko -->

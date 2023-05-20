@@ -10,6 +10,7 @@ WorkOrderEmails
 
 WorkOrder:
 RequestorOffice -> ConfigRequestOrg
+HasTemplate? Replace with has UID
 
 ConfigRequestOrg:
 Add PreferredEmail field

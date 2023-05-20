@@ -16,18 +16,19 @@ export default class ActionAPM {
     this.Supplement = this.ServiceType.Entity().ContractorSupplement;
     this.Entity = this.ServiceType.Entity;
 
-    this.init();
+    this.contractorSupplementEntity =
+      this.Supplement.entity() ?? new ContractorSupplement();
+    this.validate();
   }
+
+  contractorSupplementEntity;
 
   init = async () => {
     // registerServiceTypeComponent(
     //   "edit-contractor-supplement",
     //   this.ServiceType.Def().UID
     // );
-
     // const entityExists = await this.Supplement.refresh();
-
-    this.validate();
     // console.log("Found supplement", entityExists);
   };
 
@@ -49,7 +50,7 @@ export default class ActionAPM {
       });
     }
 
-    if (!this.Supplement.entity.IsValid()) {
+    if (!this.contractorSupplementEntity.IsValid()) {
       errors.push({
         source: errorSource,
         description: "Please provide the contractor supplemental information.",
@@ -82,8 +83,8 @@ export default class ActionAPM {
 
     await this.ServiceType.updateEntity(["COR", "GTM"]);
 
-    await this.Supplement.create();
-    this.Request.refreshAll();
+    await this.Supplement.create(this.contractorSupplementEntity);
+    this.ServiceType.refreshEntity();
     this.hasBeenSaved(true);
   };
 
@@ -95,8 +96,8 @@ export default class ActionAPM {
       ?.getListRef()
       ?.UpdateEntity(this.ServiceType.Entity(), ["COR", "GTM"]);
 
-    await this.Supplement.update();
-    this.Request.refreshAll();
+    await this.Supplement.update(ContractorSupplement.Views.APMUpdate);
+    this.ServiceType.refreshEntity();
     this.hasBeenSaved(true);
   };
 }

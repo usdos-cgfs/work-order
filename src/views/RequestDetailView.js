@@ -125,6 +125,7 @@ export class RequestDetailView {
       await this.ServiceType.instantiateEntity(newSvcType);
     },
     instantiateEntity: async (newSvcType = this.ServiceType.Def()) => {
+      if (DEBUG) console.log("ServiceType: Instantiate Triggered");
       if (!newSvcType?.HasTemplate) {
         this.ServiceType.Entity(null);
         return;
@@ -139,13 +140,16 @@ export class RequestDetailView {
       // this.ServiceType.IsLoading(false);
     },
     refreshEntity: async () => {
-      if (DEBUG) console.log("ServiceType: refresh Triggered");
+      if (DEBUG) console.log("ServiceType: Refresh Triggered");
       if (!this.ServiceType.Def()?.HasTemplate) return;
       if (!this.ID) return;
 
       this.ServiceType.IsLoading(true);
-      if (!this.ServiceType.Entity())
+      if (!this.ServiceType.Entity()) {
+        if (DEBUG)
+          console.log("ServiceType: Refresh null entity, Instantiating");
         await this.ServiceType.instantiateEntity();
+      }
       var template = this.ServiceType.Entity();
       template.Title = this.Title;
       await this.ServiceType.Def()
@@ -531,6 +535,7 @@ export class RequestDetailView {
           try {
             registerServiceTypeComponent(
               stage.ActionComponentName,
+              stage.ActionComponentName,
               serviceType.UID
             );
             return {
@@ -777,7 +782,7 @@ export class RequestDetailView {
       //const breakingPermissionsTask = addTask(taskDefs.permissions);
       const folderPerms = this.getFolderPermissions();
 
-      this.getInitialListRefs();
+      const listRefs = this.getInitialListRefs();
 
       await Promise.all(
         listRefs.map(async (listRef) => {
@@ -931,8 +936,6 @@ export class RequestDetailView {
       this._context.Actions,
       this._context.Assignments,
       this._context.Notifications,
-      this._context.Comments,
-      this._context.Attachments,
     ];
     if (this.ServiceType.Def()?.getListRef()) {
       listRefs.push(this.ServiceType.Def().getListRef());
@@ -981,9 +984,9 @@ export class RequestDetailView {
 
     if (displayMode == DisplayModes.New) {
       this.RequestorInfo.Requestor(new People(currentUser));
-      this.ObservableID(ID);
       this.ObservableTitle(createNewRequestTitle());
       this.State.Status(requestStates.draft);
+      this.State.IsActive(true);
       this.ServiceType.Def.subscribe(this.ServiceType.definitionWatcher);
     } else {
       this.ObservableID(ID);

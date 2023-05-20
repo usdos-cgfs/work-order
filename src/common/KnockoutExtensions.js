@@ -162,7 +162,11 @@ ko.components.register("resolver-actions", {
   viewModel: { viaLoader: "/components/AssignmentActions/ResolverModule.js" },
 });
 
-export function registerServiceTypeComponent(componentName, serviceTypeUid) {
+export function registerServiceTypeComponent(
+  componentName,
+  moduleName,
+  serviceTypeUid
+) {
   if (ko.components.isRegistered(componentName)) {
     return;
   }
@@ -171,7 +175,7 @@ export function registerServiceTypeComponent(componentName, serviceTypeUid) {
       fromPath: `/entities/ServiceTypeTemplates/${serviceTypeUid}/${componentName}-template.html`,
     },
     viewModel: {
-      viaLoader: `/entities/ServiceTypeTemplates/${serviceTypeUid}/${componentName}-module.js`,
+      viaLoader: `/entities/ServiceTypeTemplates/${serviceTypeUid}/${moduleName}-module.js`,
     },
   });
 }

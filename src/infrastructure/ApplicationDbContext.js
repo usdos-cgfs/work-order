@@ -138,7 +138,10 @@ class EntitySet {
       // vp.push(["ReqId", request]);
     }
     if (DEBUG) console.log(writeableEntity);
-    const newId = this.ListRef.createListItemAsync(writeableEntity, folderPath);
+    const newId = await this.ListRef.createListItemAsync(
+      writeableEntity,
+      folderPath
+    );
     mapObjectToEntity({ ID: newId }, entity);
     return newId;
   };

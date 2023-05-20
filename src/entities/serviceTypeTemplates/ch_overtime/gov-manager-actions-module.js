@@ -68,11 +68,9 @@ export default class ActionGovManager {
     this.ServiceType.Entity().APM(this.APM());
     this.ServiceType.Entity().GTM(this.GTM());
 
-    await this.ServiceType.Def()
-      ?.getListRef()
-      ?.UpdateEntity(this.ServiceType.Entity(), ["APM", "GTM"]);
+    await this.ServiceType.updateEntity(["APM", "GTM"]);
 
-    this.Request.refreshAll();
+    this.ServiceType.refreshEntity();
     this.hasBeenSaved(true);
   };
 }
