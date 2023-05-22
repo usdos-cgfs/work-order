@@ -94,12 +94,14 @@
     };
 
     const propertyTypeOptions = [
+      "Backpack",
       "Computer Monitor",
-      "Keyboard",
-      "Headset",
-      "Web Camera",
       "Computer Speakers",
+      "Headset",
+      "Keyboard",
       "Mouse",
+      "PIV Card Reader",
+      "Web Camera",
     ];
 
     var serviceItem = vm.configServiceTypes().find(function (stype) {
