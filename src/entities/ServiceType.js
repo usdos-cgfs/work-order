@@ -1,5 +1,5 @@
 import { registerServiceTypeComponent } from "../common/KnockoutExtensions.js";
-import { assetsPath } from "../common/Router.js";
+import { assetsPath } from "../app.js";
 import ApplicationDbContext from "../infrastructure/ApplicationDbContext.js";
 
 export const getTemplateElementId = (uid) => `tmpl-${uid}`;

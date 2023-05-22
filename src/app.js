@@ -18,6 +18,8 @@ import ApplicationDbContext, {
 } from "./infrastructure/ApplicationDbContext.js";
 import { InitSal } from "./infrastructure/SAL.js";
 
+export const assetsPath = window.appRoot + "/src";
+
 var WorkOrder = window.WorkOrder || {};
 
 async function CreateApp() {

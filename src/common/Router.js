@@ -1,7 +1,8 @@
 import { siteRoot } from "../infrastructure/SAL.js";
 export const webRoot = siteRoot;
 export const appRoot = _spPageContextInfo.siteAbsoluteUrl;
-export const assetsPath = appRoot + "/Style Library/Apps/wo";
+// export const assetsPath = appRoot + "/Style Library/Apps/wo";
+
 
 export function setUrlParam(param, newval) {
   const search = window.location.search;

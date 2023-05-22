@@ -990,22 +990,27 @@
     crossorigin="anonymous"
   ></script>
 
-  <script defer type="module">
-    const appRoot =
+  <script>
+    window.appRoot =
       _spPageContextInfo.siteAbsoluteUrl + "/Style Library/Apps/wo";
-    const appSheet = await import(appRoot + "/app.css", {
+  </script>
+  <script defer type="module">
+    // const appRoot =
+    //   _spPageContextInfo.siteAbsoluteUrl + "/Style Library/Apps/wo";
+    const appSheet = await import(window.appRoot + "/src/app.css", {
       assert: { type: "css" },
     });
     const faSheet = await import(
-      appRoot + "/lib/fontawesome-6.4.0/css/all.min.css",
+      window.appRoot + "/lib/fontawesome-6.4.0/css/all.min.css",
       {
         assert: { type: "css" },
       }
     );
     //const faStyleSheet =
     document.adoptedStyleSheets = [appSheet.default, faSheet.default];
-    await import(appRoot + "/lib/knockout/knockout-3.5.1.js");
-    import(appRoot + "/lib/knockout/knockout.mapping-latest.js");
-    import(appRoot + "/app.js");
+
+    await import(window.appRoot + "/lib/knockout/knockout-3.5.1.js");
+    import(window.appRoot + "/lib/knockout/knockout.mapping-latest.js");
+    import(window.appRoot + "/src/app.js");
   </script>
 </div>

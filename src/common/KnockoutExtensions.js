@@ -1,6 +1,6 @@
 import { People } from "../components/People.js";
 import { ensureUserByKeyAsync } from "../infrastructure/SAL.js";
-import { assetsPath } from "../common/Router.js";
+import { assetsPath } from "../app.js";
 
 ko.subscribable.fn.subscribeChanged = function (callback) {
   var oldValue;
