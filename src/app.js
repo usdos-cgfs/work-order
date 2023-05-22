@@ -20,21 +20,6 @@ import { InitSal } from "./infrastructure/SAL.js";
 
 var WorkOrder = window.WorkOrder || {};
 
-if (document.readyState === "ready" || document.readyState === "complete") {
-  SP.SOD.executeFunc(
-    "sp.js",
-    "SP.ClientContext",
-    ExecuteOrDelayUntilScriptLoaded(CreateApp, "sp.js")
-  );
-} else {
-  document.addEventListener("DOMContentLoaded", function (event) {
-    SP.SOD.executeFunc(
-      "sp.js",
-      "SP.ClientContext",
-      ExecuteOrDelayUntilScriptLoaded(CreateApp, "sp.js")
-    );
-  });
-}
 async function CreateApp() {
   // TODO: deferred import dependencies (SAL) here and DI into App
 
@@ -176,3 +161,19 @@ const tabWatcher = (newTab) => {
   setUrlParam("tab", newTab);
   tab.show();
 };
+
+if (document.readyState === "ready" || document.readyState === "complete") {
+  SP.SOD.executeFunc(
+    "sp.js",
+    "SP.ClientContext",
+    ExecuteOrDelayUntilScriptLoaded(CreateApp, "sp.js")
+  );
+} else {
+  document.addEventListener("DOMContentLoaded", function (event) {
+    SP.SOD.executeFunc(
+      "sp.js",
+      "SP.ClientContext",
+      ExecuteOrDelayUntilScriptLoaded(CreateApp, "sp.js")
+    );
+  });
+}

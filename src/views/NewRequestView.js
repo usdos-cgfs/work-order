@@ -6,5 +6,9 @@ export class NewRequestView {
 
   ServiceTypeStore = serviceTypeStore;
 
+  ActiveServiceTypes = ko.pureComputed(() => {
+    return serviceTypeStore().filter((serviceType) => serviceType.Active);
+  });
+
   constructor() {}
 }

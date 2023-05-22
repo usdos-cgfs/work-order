@@ -203,7 +203,7 @@
     <script type="text/html" id="tmpl-new-request-view">
       <h2>Select the type of work order you would like to open:</h2>
       <div class="container text-center">
-        <div class="row row-cols-4" data-bind="foreach: ServiceTypeStore">
+        <div class="row row-cols-4" data-bind="foreach: ActiveServiceTypes">
           <div class="col">
             <div class="card text-center" data-bind="click: $root.NewRequest">
               <div class="card-body">
@@ -701,12 +701,12 @@
                 options: $root.currentUser.RequestingOffices,
                 optionsText: (ro) => ro.Title"
                   ></select>
-                  <p>
+                  <!-- <p>
                     GTM:
                     <span
                       data-bind="text: RequestorInfo.Office()?.GTM?.LookupValue"
                     ></span>
-                  </p>
+                  </p> -->
                 </div>
               </div>
             </div>
@@ -1004,7 +1004,8 @@
     );
     //const faStyleSheet =
     document.adoptedStyleSheets = [appSheet.default, faSheet.default];
-    import(appRoot + "/lib/knockout/knockout-3.5.1.js");
+    await import(appRoot + "/lib/knockout/knockout-3.5.1.js");
+    import(appRoot + "/lib/knockout/knockout.mapping-latest.js");
     import(appRoot + "/app.js");
   </script>
 </div>

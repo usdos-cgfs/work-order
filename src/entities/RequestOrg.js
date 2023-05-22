@@ -1,5 +1,5 @@
 export const OrgTypes = {
-  ActionOffice: "Action Offices",
+  ActionOffice: "Action Office",
   RequestingOffice: "Requesting Office",
   Department: "Department",
   Budget: "Budget PMO",

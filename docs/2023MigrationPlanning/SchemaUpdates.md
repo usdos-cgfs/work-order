@@ -10,7 +10,17 @@ WorkOrderEmails
 
 WorkOrder:
 RequestorOffice -> ConfigRequestOrg
-HasTemplate? Replace with has UID
 
 ConfigRequestOrg:
 Add PreferredEmail field
+
+ConfigServiceTypes:
+HasTemplate? Replace with has UID
+Do we need internal status?
+
+Action:
+do we still need Request lookup?
+
+Assignment:
+do we still need Request lookup?
+PipelineStage is now a LookUp (maybe we should flatten it instead?)

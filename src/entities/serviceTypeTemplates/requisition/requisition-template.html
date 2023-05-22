@@ -13,6 +13,9 @@
       <input type="text" class="form-control" data-bind="value: Quantity" />
     </div>
   </div>
+  <div
+    data-bind="component: {name: 'items-table-edit', params: {itemArray: Items} }"
+  ></div>
 </div>
 <!-- /ko -->
 <!-- ko if: Request.DisplayMode() == Request.DisplayModes.View -->
@@ -27,5 +30,8 @@
       <div data-bind="text: Quantity"></div>
     </div>
   </div>
+  <div
+    data-bind="component: {name: 'items-table-view', params: {itemArray: Items} }"
+  ></div>
 </div>
 <!-- /ko -->

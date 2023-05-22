@@ -1,0 +1,27 @@
+<div>
+  <table class="table mb-3">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Quantity</th>
+        <th>Purchase Price</th>
+      </tr>
+    </thead>
+    <!-- ko ifnot: ItemArray().length -->
+    <tbody>
+      <tr>
+        <td colspan="5" class="text-center">Nothing to Show</td>
+      </tr>
+    </tbody>
+    <!-- /ko -->
+    <tbody data-bind="visible: ItemArray().length, foreach: ItemArray">
+      <tr>
+        <td data-bind="text: ID"></td>
+        <td data-bind="text: Name"></td>
+        <td data-bind="text: Quantity"></td>
+        <td data-bind="text: PurchasePrice"></td>
+      </tr>
+    </tbody>
+  </table>
+</div>

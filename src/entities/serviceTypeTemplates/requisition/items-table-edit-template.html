@@ -1,0 +1,70 @@
+<div>
+  <table class="table mb-3">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Quantity</th>
+        <th>Purchase Price</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <!-- ko ifnot: ItemArray().length -->
+    <tbody>
+      <tr>
+        <td colspan="5" class="text-center">Nothing to Show</td>
+      </tr>
+    </tbody>
+    <!-- /ko -->
+    <tbody data-bind="visible: ItemArray().length, foreach: ItemArray">
+      <tr>
+        <td data-bind="text: ID"></td>
+        <td data-bind="text: Name"></td>
+        <td data-bind="text: Quantity"></td>
+        <td data-bind="text: PurchasePrice"></td>
+        <td>
+          <i
+            class="fas fa-trash pointer"
+            data-bind="click: $parent.remove.bind($data)"
+          ></i>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="mb-3">
+    <!-- ko if: NewItem -->
+    <h5>Create a new Item:</h5>
+    <div class="d-flex align-items-end pb-2" data-bind="using: NewItem">
+      <div class="">
+        <label>
+          <h6>Name<span class="required">*</span>:</h6>
+          <input class="form-control" data-bind="value: Name" />
+        </label>
+      </div>
+      <div class="ms-1">
+        <label>
+          <h6>Quantity<span class="required">*</span>:</h6>
+          <input
+            type="number"
+            class="form-control"
+            data-bind="value: Quantity"
+          />
+        </label>
+      </div>
+      <div class="ms-1">
+        <label
+          ><h6>Purchase Price<span class="required">*</span>:</h6>
+          <input class="form-control" data-bind="value: PurchasePrice" />
+        </label>
+      </div>
+      <button
+        type="button"
+        class="btn btn-success ms-2"
+        data-bind="click: $parent.submit"
+      >
+        Add +
+      </button>
+    </div>
+    <!-- /ko -->
+  </div>
+</div>
