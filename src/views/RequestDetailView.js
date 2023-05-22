@@ -120,9 +120,9 @@ export class RequestDetailView {
     IsLoading: ko.observable(false),
     Entity: ko.observable(),
     Def: ko.observable(),
-    definitionWatcher: async (newSvcType) => {
+    definitionWatcher: (newSvcType) => {
       // This should only be needed when creating a new request.
-      await this.ServiceType.instantiateEntity(newSvcType);
+      this.ServiceType.instantiateEntity(newSvcType);
     },
     instantiateEntity: async (newSvcType = this.ServiceType.Def()) => {
       if (DEBUG) console.log("ServiceType: Instantiate Triggered");
@@ -131,12 +131,16 @@ export class RequestDetailView {
         return;
       }
       // this.ServiceType.IsLoading(true);
-      const service = await import(modulePath(newSvcType.UID));
-      if (!service) {
-        console.error("Could not find service module");
-        return;
+      try {
+        const service = await import(modulePath(newSvcType.UID));
+        if (!service) {
+          console.error("Could not find service module");
+          return;
+        }
+        this.ServiceType.Entity(new service.default(this));
+      } catch (e) {
+        console.error(e);
       }
-      this.ServiceType.Entity(new service.default(this));
       // this.ServiceType.IsLoading(false);
     },
     refreshEntity: async () => {
