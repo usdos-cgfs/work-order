@@ -96,7 +96,7 @@
       aria-labelledby="request-detail-tab"
     >
       <!-- ko ifnot: RequestDetailView -->
-      <div class="container">
+      <div class="">
         <h2>Service Request Detail</h2>
         <div>Please create a new request, or open an existing request.</div>
       </div>
@@ -146,7 +146,7 @@
             Cancelled
           </button>
         </div>
-        <div class="container">
+        <div class="">
           <!-- ko if: ActiveComponent -->
           <div
             data-bind="template: {name: ActiveComponent().TemplateId, data: ActiveComponent()} "
@@ -202,7 +202,7 @@
 
     <script type="text/html" id="tmpl-new-request-view">
       <h2>Select the type of work order you would like to open:</h2>
-      <div class="container text-center">
+      <div class="text-center">
         <div class="row row-cols-4" data-bind="foreach: ActiveServiceTypes">
           <div class="col">
             <div class="card text-center" data-bind="click: $root.NewRequest">
@@ -220,7 +220,7 @@
 
     <script type="text/html" id="tmpl-request-detail">
       <!-- Report.RequestDetailView -->
-      <div class="container">
+      <div class="">
         <h2>Service Request Detail</h2>
         <div>
           <div data-bind=" foreach: Validation.Errors.All">
