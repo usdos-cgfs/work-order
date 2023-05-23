@@ -11,6 +11,15 @@
     Created: 2019-02-12
 */
 
+/*
+  TODO:
+  - migrate to rest api
+  - remove new from "new SP.ClientContext.get_current()"
+  - standardize currctx
+  - remove unused functions
+  - Combine functions 
+*/
+
 window.console = window.console || { log: function () {} };
 
 var sal = window.sal || {};
@@ -63,7 +72,7 @@ export async function InitSal() {
   sal.globalConfig.listServices =
     sal.globalConfig.siteUrl + "/_vti_bin/ListData.svc/";
 
-  var currCtx = new SP.ClientContext.get_current();
+  var currCtx = SP.ClientContext.get_current();
   var web = currCtx.get_web();
   //sal.site = sal.siteConnection;
 

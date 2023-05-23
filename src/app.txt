@@ -231,10 +231,10 @@
             ></div>
           </div>
           <div
-            class="sticky-top mb-3"
+            class="sticky-top my-3"
             data-bind="template: {name: 'tmpl-quick-actions-bar'}"
           ></div>
-          <div>
+          <div class="my-3">
             <div
               id="request-pipeline"
               class=""
@@ -247,15 +247,20 @@
             ></div>
             <!-- /ko -->
           </div>
+          <!-- ko if: State.Status() != 'Draft' -->
           <div
             class="my-3"
             data-bind="template: {name: 'tmpl-assignments-component', data: Assignments}"
           ></div>
-          <div data-bind="template: {name: 'tmpl-request-header'}"></div>
+          <!-- /ko -->
+          <div
+            class="my-3"
+            data-bind="template: {name: 'tmpl-request-header'}"
+          ></div>
           <div
             data-bind="template: {name: 'tmpl-service-type-component'}"
           ></div>
-          <div class="row mb-3">
+          <div class="row my-3">
             <div class="col-4">
               <div class="card">
                 <div class="card-body">
@@ -328,7 +333,7 @@
               data-bind="template: {name: 'tmpl-activity-log-component', data: ActivityLog}"
             ></div>
           </div>
-          <div class="card mb-3 w-100">
+          <div class="card my-3 w-100">
             <div class="card-body">
               <h3 class="card-title">Comments</h3>
               <div class="alert alert-warning">
@@ -634,10 +639,12 @@
                         class="fas fa-search pointer"
                         data-bind="click: $parent.view"
                       ></i>
+                      <!-- ko if: $parent.userCanAssign -->
                       <i
                         class="fa fa-trash pointer"
                         data-bind="click: $parent.remove"
                       ></i>
+                      <!-- /ko -->
                     </td>
                   </tr>
                   <!-- /ko -->
@@ -968,6 +975,12 @@
       </div>
     </script>
   </div>
+
+  <script
+    type="text/javascript"
+    src="../Apps/_layouts/15/sp.runtime.js"
+  ></script>
+  <script type="text/javascript" src="../Apps/_layouts/15/sp.js"></script>
   <script
     type="text/javascript"
     src="../Apps/_layouts/15/clienttemplates.js"

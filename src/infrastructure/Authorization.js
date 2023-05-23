@@ -180,7 +180,7 @@ export function getRequestFolderPermissions(request) {
 
 /**
  * Assignment functions are function that can be called by pipeline stages
- * Each function is bound to the current request (i.e. "this" refers to the RequestDetailView)
+ * Each function is bound to the current request (i.e. "this" refers to the Active Request)
  * Functions should return a user/group entity.
  */
 
@@ -197,5 +197,8 @@ export const AssignmentFunctions = {
   },
   getGTM: function () {
     return this.ServiceType.Entity()?.GTM();
+  },
+  getCOR: function () {
+    return this.ServiceType.Entity()?.COR();
   },
 };

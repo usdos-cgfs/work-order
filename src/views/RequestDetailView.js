@@ -578,7 +578,7 @@ export class RequestDetailView {
     },
     userCanAssign: ko.pureComputed(() => {
       if (!this.State.IsActive()) return false;
-      return false;
+      return true;
     }),
     addNew: async (assignment = null) => {
       if (!this.ID || !assignment) return;
@@ -703,7 +703,7 @@ export class RequestDetailView {
       .map((change) => change.value);
 
     activities.map(async (action) => {
-      emitRequestNotification(action, this);
+      emitRequestNotification(this, action);
       if (action.activity == actionTypes.Rejected) {
         // Request was rejected, close it out
         console.warn("Closing request");
@@ -836,7 +836,7 @@ export class RequestDetailView {
     // Send New WorkOrder Notification to User
     // Create new Action Log Item
     // Initial Assignments
-    this.ActivityLog.requestCreated();
+    this.ActivityQueue.push({ activity: actionTypes.Created, data: this });
 
     // Progress Request
     this.Pipeline.advance();

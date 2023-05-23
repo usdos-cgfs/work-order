@@ -165,11 +165,7 @@ const tabWatcher = (newTab) => {
 };
 
 if (document.readyState === "ready" || document.readyState === "complete") {
-  SP.SOD.executeFunc(
-    "sp.js",
-    "SP.ClientContext",
-    ExecuteOrDelayUntilScriptLoaded(CreateApp, "sp.js")
-  );
+  CreateApp();
 } else {
   document.addEventListener("DOMContentLoaded", function (event) {
     SP.SOD.executeFunc(
