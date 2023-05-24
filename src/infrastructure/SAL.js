@@ -2592,9 +2592,6 @@ export function SPList(listDef) {
 
   function showModal(formName, title, args, callback) {
     var id = "";
-    var options = SP.UI.$create_DialogOptions();
-    options.title = title;
-    options.dialogReturnValueCallback = callback;
     if (args.id) {
       id = args.id;
     }
@@ -2606,29 +2603,36 @@ export function SPList(listDef) {
     var rootFolder = "";
 
     if (args.rootFolder) {
-      rootFolder = sal.globalConfig.siteUrl + listPath;
-      rootFolder += args.rootFolder;
+      rootFolder = sal.globalConfig.siteUrl + listPath + args.rootFolder;
     }
-
-    options.args = JSON.stringify(args);
 
     // WARNING: this looks similar to listPath but is different
     var formsPath = self.config.def.isLib
       ? "/" + self.config.def.name + "/Forms/"
       : "/Lists/" + self.config.def.name + "/";
 
-    options.url =
-      sal.globalConfig.siteUrl +
-      formsPath +
-      formName +
-      "?ID=" +
-      id +
-      "&Source=" +
-      location.pathname +
-      "&RootFolder=" +
-      rootFolder;
-    console.log("Options url: " + options.url);
-    SP.UI.ModalDialog.showModalDialog(options);
+    const options = {
+      title: title,
+      dialogReturnValueCallback: callback,
+      args: JSON.stringify(args),
+      url:
+        sal.globalConfig.siteUrl +
+        formsPath +
+        formName +
+        "?ID=" +
+        id +
+        "&Source=" +
+        location.pathname +
+        "&RootFolder=" +
+        rootFolder,
+    };
+    // SP.UI.ModalDialog.showModalDialog(options);
+
+    SP.SOD.execute(
+      "sp.ui.dialog.js",
+      "SP.UI.ModalDialog.showModalDialog",
+      options
+    );
   }
 
   function uploadNewDocumentAsync(folderPath, title, args) {
@@ -2641,31 +2645,36 @@ export function SPList(listDef) {
       currCtx.executeQueryAsync(
         function () {
           //folder = folder != '/' ? folder : '';
-          var options = SP.UI.$create_DialogOptions();
-          options.title = title;
-          options.dialogReturnValueCallback = resolve;
 
           var siteString =
             sal.globalConfig.siteUrl == "/" ? "" : sal.globalConfig.siteUrl;
 
-          options.args = JSON.stringify(args);
-          options.url =
-            siteString +
-            "/_layouts/Upload.aspx?List=" +
-            oList.get_id().toString() +
-            "&RootFolder=" +
-            siteString +
-            "/" +
-            self.config.def.name +
-            "/" +
-            encodeURI(folderPath) +
-            "&Source=" +
-            location.pathname +
-            "&args=" +
-            encodeURI(JSON.stringify(args));
-
+          const options = {
+            title: title,
+            dialogReturnValueCallback: resolve,
+            args: JSON.stringify(args),
+            url:
+              siteString +
+              "/_layouts/Upload.aspx?List=" +
+              oList.get_id().toString() +
+              "&RootFolder=" +
+              siteString +
+              "/" +
+              self.config.def.name +
+              "/" +
+              encodeURI(folderPath) +
+              "&Source=" +
+              location.pathname +
+              "&args=" +
+              encodeURI(JSON.stringify(args)),
+          };
           //console.log("Options url: " + options.url);
-          SP.UI.ModalDialog.showModalDialog(options);
+          // SP.UI.ModalDialog.showModalDialog(options);
+          SP.SOD.execute(
+            "sp.ui.dialog.js",
+            "SP.UI.ModalDialog.showModalDialog",
+            options
+          );
         },
         function (sender, args) {
           console.error("Error showing file modal: ");

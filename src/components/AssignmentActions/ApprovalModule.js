@@ -67,8 +67,13 @@ export default function ApprovalActions(params) {
     document.getElementById(rejectModalId).close();
   };
 
+  const undo = async () => {
+    // TODO: We should have an undo option instead of a "Reject Instead"
+  };
+
   return {
     approveHandler,
+    undo,
     reject,
     showReject,
     cancelReject,

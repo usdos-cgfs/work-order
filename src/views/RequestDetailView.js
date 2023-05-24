@@ -648,11 +648,12 @@ export class RequestDetailView {
       };
       await this._context.Assignments.UpdateEntity(updateEntity);
 
-      this.Assignments.refresh();
       this.ActivityQueue.push({
         activity: actionTypes[action],
         data: updateEntity,
       });
+
+      this.Assignments.refresh();
     },
     createStageAssignments: async (stage = null) => {
       stage = stage ?? this.State.Stage();
@@ -730,6 +731,12 @@ export class RequestDetailView {
         this.Assignments.CurrentStage.Validation.Errors()
       ),
     },
+  };
+
+  validationWatcher = (isValid) => {
+    if (isValid && this.Authorization.currentUserCanAdvance()) {
+      this.promptAdvance();
+    }
   };
 
   getAppLink = () =>
@@ -1017,13 +1024,13 @@ export class RequestDetailView {
     //   ...this.Assignments,
     // });
 
-    (this.Assignments.NewAssignmentComponent = new NewAssignmentComponent({
+    this.Assignments.NewAssignmentComponent = new NewAssignmentComponent({
       addAssignment: this.Assignments.addNew,
-    })),
-      (this.ActivityLog = new ActivityLogComponent({
-        request: this,
-        context,
-      }));
+    });
+    this.ActivityLog = new ActivityLogComponent({
+      request: this,
+      context,
+    });
 
     this.ActivityQueue.subscribe(
       this.activityQueueWatcher,
@@ -1031,6 +1038,7 @@ export class RequestDetailView {
       "arrayChange"
     );
 
+    this.Validation.IsValid.subscribe(this.validationWatcher);
     // this.DisplayMode.subscribe(this.displayModeWatcher);
     this.DisplayMode(displayMode);
 

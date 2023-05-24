@@ -205,7 +205,10 @@
       <div class="text-center">
         <div class="row row-cols-4" data-bind="foreach: ActiveServiceTypes">
           <div class="col">
-            <div class="card text-center" data-bind="click: $root.NewRequest">
+            <div
+              class="card text-center pointer"
+              data-bind="click: $root.NewRequest"
+            >
               <div class="card-body">
                 <i class="fa fa-5x" data-bind="class: Icon"></i>
               </div>
@@ -221,15 +224,11 @@
     <script type="text/html" id="tmpl-request-detail">
       <!-- Report.RequestDetailView -->
       <div class="">
-        <h2>Service Request Detail</h2>
+        <h2>
+          Service Request Detail:
+          <span data-bind="text: ServiceType.Def()?.Title"></span>
+        </h2>
         <div>
-          <div data-bind=" foreach: Validation.Errors.All">
-            <div
-              class="alert alert-warning"
-              role="alert"
-              data-bind="text: description"
-            ></div>
-          </div>
           <div
             class="sticky-top my-3"
             data-bind="template: {name: 'tmpl-quick-actions-bar'}"
@@ -247,7 +246,7 @@
             ></div>
             <!-- /ko -->
           </div>
-          <!-- ko if: State.Status() != 'Draft' -->
+          <!-- ko if: State.Status() != 'Draft' && Assignments.userCanAssign -->
           <div
             class="my-3"
             data-bind="template: {name: 'tmpl-assignments-component', data: Assignments}"
@@ -557,23 +556,34 @@
     </script>
 
     <script type="text/html" id="tmpl-request-pipeline-actions">
-      <!-- ko using: CurrentStage.AssignmentComponents -->
-      <!-- ko if: Any -->
+      <!-- ko using: CurrentStage -->
+      <!-- ko if: AssignmentComponents.Any -->
       <div class="border border-top-0 rounded-bottom">
-        <div class="card-body d-flex justify-content-between">
-          <!-- ko if: Custom -->
-          <!-- ko using: Custom -->
-          <div
-            data-bind="component: {name: actionComponentName, params: $data }"
-          ></div>
-          <!-- /ko -->
-          <!-- /ko -->
-          <!-- ko if: Generic -->
-          <div class="ms-auto">
-            <!-- ko foreach: Generic -->
+        <div class="card-body">
+          <div data-bind="foreach: Validation.Errors">
+            <div
+              class="alert alert-warning"
+              role="alert"
+              data-bind="text: description"
+            ></div>
+          </div>
+          <!-- ko using: AssignmentComponents -->
+          <div class="d-flex justify-content-between">
+            <!-- ko if: Custom -->
+            <!-- ko using: Custom -->
             <div
               data-bind="component: {name: actionComponentName, params: $data }"
             ></div>
+            <!-- /ko -->
+            <!-- /ko -->
+            <!-- ko if: Generic -->
+            <div class="ms-auto">
+              <!-- ko foreach: Generic -->
+              <div
+                data-bind="component: {name: actionComponentName, params: $data }"
+              ></div>
+              <!-- /ko -->
+            </div>
             <!-- /ko -->
           </div>
           <!-- /ko -->
@@ -1010,17 +1020,6 @@
   <script defer type="module">
     // const appRoot =
     //   _spPageContextInfo.siteAbsoluteUrl + "/Style Library/Apps/wo";
-    const appSheet = await import(window.appRoot + "/src/app.css", {
-      assert: { type: "css" },
-    });
-    const faSheet = await import(
-      window.appRoot + "/lib/fontawesome-6.4.0/css/all.min.css",
-      {
-        assert: { type: "css" },
-      }
-    );
-    //const faStyleSheet =
-    document.adoptedStyleSheets = [appSheet.default, faSheet.default];
 
     await import(window.appRoot + "/lib/knockout/knockout-3.5.1.js");
     import(window.appRoot + "/lib/knockout/knockout.mapping-latest.js");

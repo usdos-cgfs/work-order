@@ -31,10 +31,6 @@ export default class CH_OverTime {
     refresh: async () => {
       if (!this.ContractorSupplement.entity()?.ID) return;
       this.ContractorSupplement.IsLoading(true);
-      // await this.supplementSet.LoadEntityByRequestId(
-      //   this.ContractorSupplement.entity,
-      //   this.Request.ID
-      // );
       await this.supplementSet.LoadEntity(this.ContractorSupplement.entity());
       this.ContractorSupplement.IsLoading(false);
     },
@@ -77,10 +73,7 @@ export default class CH_OverTime {
     getPermissions: () => {
       // APM, GTM, Budget, PA, and COR have access
       const budgetGroup = requestOrgStore().find(
-        (org) => org.Title == "CGFS/EX/Budget"
-      )?.UserGroup;
-      const paGroup = requestOrgStore().find(
-        (org) => org.Title == "CGFS/EX/PA"
+        (org) => org.Title.toUpperCase() == "CGFS/EX/BUDGET"
       )?.UserGroup;
 
       return [

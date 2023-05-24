@@ -20,7 +20,19 @@ import { InitSal } from "./infrastructure/SAL.js";
 
 export const assetsPath = window.appRoot + "/src";
 
-var WorkOrder = window.WorkOrder || {};
+const appSheet = await import(window.appRoot + "/src/app.css", {
+  assert: { type: "css" },
+});
+const faSheet = await import(
+  window.appRoot + "/lib/fontawesome-6.4.0/css/all.min.css",
+  {
+    assert: { type: "css" },
+  }
+);
+
+document.adoptedStyleSheets = [appSheet.default, faSheet.default];
+
+window.WorkOrder = window.WorkOrder || {};
 
 async function CreateApp() {
   // TODO: deferred import dependencies (SAL) here and DI into App
@@ -31,8 +43,8 @@ async function CreateApp() {
 
   const context = new ApplicationDbContext();
   setAppContext(context);
-  WorkOrder.Report = await App.Create();
-  ko.applyBindings(WorkOrder.Report);
+  window.WorkOrder.Report = await App.Create();
+  ko.applyBindings(window.WorkOrder.Report);
 }
 
 export const Tabs = {

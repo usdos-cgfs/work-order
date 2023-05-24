@@ -92,7 +92,8 @@
   <!-- <div
     data-bind="component: {name: 'edit-contractor-supplement', params: ContractorSupplement}"
   ></div> -->
-  <!-- ko if: ContractorSupplement.entity()?.ObservableID -->
+  <!-- ko if: ContractorSupplement.entity()?.ObservableID() && 
+    ContractorSupplement.entity()?.TaskOrderNumber() -->
   <div
     data-bind="component: {name: 'view-contractor-supplement', params: ContractorSupplement.entity }"
   ></div>
