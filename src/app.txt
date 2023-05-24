@@ -246,7 +246,7 @@
             ></div>
             <!-- /ko -->
           </div>
-          <!-- ko if: State.Status() != 'Draft' && Assignments.userCanAssign -->
+          <!-- ko if: State.Status() != 'Draft' -->
           <div
             class="my-3"
             data-bind="template: {name: 'tmpl-assignments-component', data: Assignments}"
@@ -402,6 +402,12 @@
               Submit Request
             </button>
             <!-- /ko -->
+            <!-- <button
+              class="btn btn-danger"
+              data-bind="click: () => closeAndFinalize('Rejected')"
+            >
+              Danger Button
+            </button> -->
           </div>
         </div>
       </div>
@@ -645,11 +651,11 @@
                     <td data-bind="text: Role"></td>
                     <td data-bind="text: Status"></td>
                     <td>
+                      <!-- ko if: $parent.userCanAssign -->
                       <i
                         class="fas fa-search pointer"
                         data-bind="click: $parent.view"
                       ></i>
-                      <!-- ko if: $parent.userCanAssign -->
                       <i
                         class="fa fa-trash pointer"
                         data-bind="click: $parent.remove"
@@ -694,7 +700,7 @@
       <div class="card mb-3 w-100">
         <div class="card-body">
           <h3 class="card-title">Requestor Information</h3>
-          <!-- ko if: DisplayMode() == DisplayModes.New -->
+          <!-- ko if: DisplayMode() != DisplayModes.View -->
           <div class="container-fluid">
             <div class="row">
               <div class="col-6 pb-2">
@@ -767,13 +773,21 @@
             </div>
           </div>
           <!-- /ko -->
-          <!-- ko if: DisplayMode() != DisplayModes.New -->
+          <!-- ko if: DisplayMode() == DisplayModes.View -->
           <div class="container-fluid" data-bind="">
             <div class="row">
               <div class="col-6">
                 <h6>Request Status:</h6>
-                <p data-bind="text: State.Status"></p>
+                <p
+                  data-bind="text: State.Status, class: 'state-' + State.Status()?.toLowerCase()"
+                ></p>
               </div>
+              <!-- ko if: Dates.Closed -->
+              <div class="col-6">
+                <h6>Closed:</h6>
+                <p data-bind="text: Dates.Closed().toLocaleDateString()"></p>
+              </div>
+              <!-- /ko -->
             </div>
             <div class="row">
               <div class="col-6">

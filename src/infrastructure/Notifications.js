@@ -139,11 +139,12 @@ async function requestClosedNotification(request, action) {
   console.log("Sending Request Closed Notification for: ", request);
   const closedNotification = {
     To: [request.RequestorInfo.Requestor()],
-    Title: formatNotificationTitle(request, "Closed "),
+    Title: formatNotificationTitle(request, "Closed " + request.State.Status()),
     Body:
-      `<p>Greetings Colleagues,<br><br>The following request has been Closed:<br>` +
+      `<p>Greetings Colleagues,<br><br>The following request has been ${request.State.Status()}:<br>` +
       request.getAppLinkElement() +
-      "</p>",
+      "</p>" +
+      "<p>This request cannot be re-opened.</p>",
     Request: request,
   };
   await createNotification(closedNotification, request.getRelativeFolderPath());

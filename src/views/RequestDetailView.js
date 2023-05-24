@@ -256,7 +256,7 @@ export class RequestDetailView {
       if (!nextStage) {
         // End of the Pipeline; time to close
         console.log("Closing Request");
-        this.closeAndFinalize();
+        this.closeAndFinalize(requestStates.fulfilled);
         return null;
       }
       this.State.Stage(nextStage);
@@ -413,7 +413,7 @@ export class RequestDetailView {
       CurrentUserAssignments: ko.pureComputed(() => {
         // We need find assignments where the current user is directly assigned:
         // or They're in a group that's been assigned:
-        const userGroupIds = currentUser().Groups.map((group) => group.ID);
+        const userGroupIds = currentUser().getGroupIds();
         // or Where they're in a requestOrg that's been assigned:
         const userReqOrgIds = currentUser()
           .ActionOffices()
@@ -578,7 +578,7 @@ export class RequestDetailView {
     },
     userCanAssign: ko.pureComputed(() => {
       if (!this.State.IsActive()) return false;
-      return true;
+      return false;
     }),
     addNew: async (assignment = null) => {
       if (!this.ID || !assignment) return;
@@ -881,7 +881,12 @@ export class RequestDetailView {
       "ClosedDate",
       "PipelineStage",
     ]);
-    //3. Update Permissions;
+    // 3. Emit closeout action
+    this.ActivityQueue.push({
+      activity: actionTypes.Closed,
+      data: this,
+    });
+    // 4. Update Permissions;
     await this.Authorization.setReadonly();
     this.refreshAll();
   };

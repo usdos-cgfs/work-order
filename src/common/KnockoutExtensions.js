@@ -55,10 +55,10 @@ ko.bindingHandlers.people = {
     //  Initialize the Control, MS enforces to pass the Element ID hence we need to provide
     //  ID to our element, no other options
     SPClientPeoplePicker_InitStandaloneControlWrapper(element.id, null, schema);
-    const helpDiv = document.createElement("div");
-    helpDiv.innerHTML = "Search surname first e.g. Smith, John";
-    helpDiv.classList.add("fst-italic", "fw-lighter");
-    element.appendChild(helpDiv);
+    // const helpDiv = document.createElement("div");
+    // helpDiv.innerHTML = "Search surname first e.g. Smith, John";
+    // helpDiv.classList.add("fst-italic", "fw-lighter");
+    // element.appendChild(helpDiv);
   },
   update: function (
     element,

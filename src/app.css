@@ -73,3 +73,15 @@
   flex-direction: column;
   justify-content: center;
 }
+
+.state-rejected,
+.state-cancelled {
+  color: red;
+  font-weight: bold;
+}
+
+.state-open,
+.state-fulfilled {
+  color: green;
+  font-weight: bold;
+}
