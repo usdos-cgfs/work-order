@@ -2,23 +2,13 @@ import { Action, actionTypes } from "../entities/Action.js";
 import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
 
 export class ActivityLogComponent {
-  constructor({ request, actions, context }) {
-    this.request = request;
-    this._context = context;
-    this.request.ObservableID.subscribe(this.requestIdWatcher);
-    this.request.ActivityQueue.subscribe(
-      this.activityQueueWatcher,
-      this,
-      "arrayChange"
-    );
+  constructor({ addNew, refresh, list, AreLoading }, activityQueue) {
+    activityQueue.subscribe(this.activityQueueWatcher, this, "arrayChange");
+    this.addNew = addNew;
+    this.refresh = refresh;
+    this.Actions = list.All;
+    this.AreLoading = AreLoading;
   }
-  Actions = ko.observableArray();
-
-  IsLoading = ko.observable();
-
-  requestIdWatcher = (newId) => {
-    this.refreshActions();
-  };
 
   activityQueueWatcher = (changes) => {
     const activities = changes
@@ -42,55 +32,30 @@ export class ActivityLogComponent {
     Closed: this.requestClosed.bind(this),
   };
 
-  refreshActions = async () => {
-    if (!this.request.ID) return;
-    this.IsLoading(true);
-    const actions = await this._context.Actions.FindByRequestId(
-      this.request.ID,
-      Action.Views.All
-    );
-    this.Actions(actions);
-    this.IsLoading(false);
-  };
-
-  addAction = async (action) => {
-    if (!this.request.ID || !action) return;
-
-    const folderPath = this.request.getRelativeFolderPath();
-    // const actionObj = Object.assign(new Action(), action);
-    const newActionId = await this._context.Actions.AddEntity(
-      action,
-      folderPath,
-      this.request
-    );
-
-    this.refreshActions();
-  };
-
-  async requestCreated() {
-    this.addAction({
+  async requestCreated(request) {
+    this.addNew({
       ActionType: actionTypes.Created,
-      Description: `The request was submitted with an effective submission date of ${this.request.Dates.Submitted()?.toLocaleDateString()}.`,
+      Description: `The request was submitted with an effective submission date of ${request.Dates.Submitted()?.toLocaleDateString()}.`,
     });
   }
 
   async requestAdvanced(stage) {
-    this.addAction({
+    this.addNew({
       ActionType: actionTypes.Advanced,
       Description: `The request was advanced to stage ${stage.Step}: ${stage.Title}.`,
     });
   }
 
-  async requestClosed() {
-    this.addAction({
+  async requestClosed(request) {
+    this.addNew({
       ActionType: actionTypes.Closed,
-      Description: `The request was closed with a status of ${this.request.State.Status()}.`,
+      Description: `The request was closed with a status of ${request.State.Status()}.`,
     });
   }
 
   async assignmentCompleted(assignment) {
     let actionDescription = `${assignment.ActionTaker.Title} has ${assignment.Status} an assignment.`;
-    this.addAction({
+    this.addNew({
       ActionType: assignment.Status,
       Description: actionDescription,
     });
@@ -98,7 +63,7 @@ export class ActivityLogComponent {
 
   async requestApproved(assignment) {
     let actionDescription = `${assignment.ActionTaker.Title} has ${assignment.Status} an assignment.`;
-    this.addAction({
+    this.addNew({
       ActionType: actionTypes.Approved,
       Description: actionDescription,
     });
@@ -108,7 +73,7 @@ export class ActivityLogComponent {
     let actionDescription =
       `${assignment.ActionTaker.Title} has rejected the request and provided the following reason:<br/>` +
       assignment.Comment;
-    this.addAction({
+    this.addNew({
       ActionType: actionTypes.Rejected,
       Description: actionDescription,
     });
@@ -121,7 +86,7 @@ export class ActivityLogComponent {
     }
     actionDescription += assignment.RequestOrg?.Title;
 
-    this.addAction({
+    this.addNew({
       ActionType: actionTypes.Assigned,
       Description: actionDescription,
     });
@@ -136,7 +101,7 @@ export class ActivityLogComponent {
     }
     actionDescription += assignment.RequestOrg?.Title;
 
-    this.addAction({
+    this.addNew({
       ActionType: actionTypes.Unassigned,
       Description: actionDescription,
     });

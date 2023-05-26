@@ -10,7 +10,7 @@ const getServiceTypePathByUid = (uid) =>
 export const getTemplateFilePath = (uid) =>
   getServiceTypePathByUid(uid) + `${uid}-template.html`;
 
-export const modulePath = (uid) =>
+export const getModuleFilePath = (uid) =>
   getServiceTypePathByUid(uid) + `${uid}-module.js`;
 
 export const serviceTypeStore = ko.observableArray();
@@ -41,9 +41,12 @@ export class ServiceType {
     if (!this.HasTemplate) {
       return null;
     }
+    if (!this._initialized) {
+      throw new Error("Accessing constructor before initialization");
+    }
     // Memoization
     if (!this._listRef)
-      this._listRef = ApplicationDbContext.Set(this.getListDef());
+      this._listRef = ApplicationDbContext.Set(this._constructor);
     return this._listRef;
   };
 
@@ -60,6 +63,45 @@ export class ServiceType {
       this.UID
     );
     return this._componentName;
+  };
+
+  _constructor = null;
+
+  instantiateEntity = async (requestContext) => {
+    if (!this.HasTemplate || !this.UID) {
+      return null;
+    }
+
+    if (!this._initialized) {
+      await this.initializeEntity();
+    }
+
+    return this._constructor ? new this._constructor(requestContext) : null;
+  };
+
+  _initialized = false;
+  initializeEntity = async () => {
+    if (this._initialized) return;
+    if (!this.HasTemplate || !this.UID) {
+      return;
+    }
+    if (this._constructor) {
+      console.warn("Service type was already initialized");
+      this._initialized = true;
+      return;
+    }
+    // this.ServiceType.IsLoading(true);
+    try {
+      const service = await import(getModuleFilePath(this.UID));
+      if (!service) {
+        console.error("Could not find service module");
+        return null;
+      }
+      this._initialized = true;
+      this._constructor = service.default;
+    } catch (e) {
+      console.error("Cannot import service type module", e);
+    }
   };
 
   static Create = function ({ ID, LookupValue }) {

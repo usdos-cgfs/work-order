@@ -2,7 +2,7 @@ import { registerServiceTypeTemplate } from "../common/KnockoutExtensions.js";
 import {
   getTemplateElementId,
   getTemplateFilePath,
-  modulePath,
+  getModuleFilePath,
 } from "../entities/ServiceType.js";
 
 const DEBUG = true;

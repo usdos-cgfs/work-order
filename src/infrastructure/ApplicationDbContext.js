@@ -64,6 +64,20 @@ class EntitySet {
     this.ListRef = new SPList(listDef);
   }
 
+  // Queries
+  FindById = async () => {};
+  FindByColumnValue = async () => {};
+
+  ToList = async () => {};
+
+  // Mutators
+  Add = async (entity) => {};
+  Update = async (entity) => {};
+  Remove = async (entity) => {};
+
+  Load = async (entity) => {};
+
+  //
   FindAll = async function (fields, filter = null) {
     return await this.ListRef.getListItemsAsync({ fields, caml: filter });
   };

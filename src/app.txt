@@ -20,7 +20,7 @@
     <!-- /ko -->
   </div>
 </div>
-<div id="app">
+<div id="app" class="container">
   <ul class="nav nav-tabs" id="section-tabs" role="tablist">
     <li class="nav-item" role="presentation">
       <button
@@ -239,7 +239,7 @@
               class=""
               data-bind="template: {name: 'tmpl-request-pipeline'}"
             ></div>
-            <!-- ko if: Pipeline.ShowActionsArea -->
+            <!-- ko if: ShowActionsArea -->
             <div
               id="request-pipeline"
               data-bind="template: {name: 'tmpl-request-pipeline-actions', data: Assignments}"
@@ -329,7 +329,7 @@
             </div>
             <div
               class="col-8"
-              data-bind="template: {name: 'tmpl-activity-log-component', data: ActivityLog}"
+              data-bind="template: {name: 'tmpl-activity-log-component', data: Actions}"
             ></div>
           </div>
           <div class="card my-3 w-100">
@@ -380,7 +380,7 @@
               </table>
               <!-- ko if: Comments.userCanComment -->
               <div>Provide additional comments/instructions here:</div>
-              <div data-bind="using: Comments.NewCommentComponent">
+              <div data-bind="using: NewCommentComponent">
                 <textarea
                   class="form-control mb-2"
                   data-bind="value: CommentText"
@@ -536,7 +536,7 @@
           <li
             class="list-group-item d-flex flex-column justify-content-center"
             data-bind="css: {'border-bottom-0': Step == $parent.State.Stage()?.Step &&
-            $parent.Pipeline.ShowActionsArea,
+            $parent.ShowActionsArea,
             'list-group-item-secondary': Step < $parent.State.Stage()?.Step}"
           >
             <div
@@ -555,7 +555,7 @@
           </li>
           <!-- /ko -->
         </ol>
-        <!-- ko if: Pipeline.ShowActionsArea -->
+        <!-- ko if: ShowActionsArea -->
         <div class="flex-grow-1 border-bottom"></div>
         <!-- /ko -->
       </div>
@@ -694,7 +694,6 @@
         </div>
       </div>
     </script>
-
     <script type="text/html" id="tmpl-request-header">
       <!-- Report.RequestDetailView -->
       <div class="card mb-3 w-100">
@@ -935,10 +934,7 @@
           </div>
           <div id="actions-body" class="accordion-collapse collapse">
             <div class="d-flex justify-content-end">
-              <i
-                class="fa fa-sync pointer"
-                data-bind="click: refreshActions"
-              ></i>
+              <i class="fa fa-sync pointer" data-bind="click: refresh"></i>
             </div>
             <div>
               <table class="table">
@@ -951,14 +947,14 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <!-- ko if: IsLoading -->
+                  <!-- ko if: AreLoading -->
                   <tr class="">
                     <td colspan="4" class="p-0">
                       <progress class="w-100"></progress>
                     </td>
                   </tr>
                   <!-- /ko -->
-                  <!-- ko foreach: Actions -->
+                  <!-- ko foreach: list.All -->
                   <tr>
                     <td data-bind="text: Author?.Title"></td>
                     <td data-bind="text: ActionType"></td>

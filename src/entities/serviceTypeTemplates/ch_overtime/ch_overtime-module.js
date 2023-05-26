@@ -10,7 +10,7 @@ import { registerServiceTypeComponent } from "../../../common/KnockoutExtensions
 export default class CH_OverTime {
   constructor(request) {
     this.Request = request;
-    this.supplementSet = ApplicationDbContext.Set(ContractorSupplement.ListDef);
+    this.supplementSet = ApplicationDbContext.Set(ContractorSupplement);
   }
   ID;
 
@@ -81,7 +81,6 @@ export default class CH_OverTime {
         [this.GTM(), permissions.RestrictedContribute],
         [this.COR(), permissions.RestrictedContribute],
         [budgetGroup, permissions.RestrictedContribute],
-        [paGroup, permissions.RestrictedContribute],
       ];
     },
   };
@@ -128,6 +127,27 @@ export default class CH_OverTime {
     // result.push({ description: "no stage set" });
     return result;
   });
+
+  static Views = {
+    All: [
+      "ID",
+      "Title",
+      "FullName",
+      "ManagerDept",
+      "GTM",
+      "APM",
+      "COR",
+      "DateStart",
+      "DateEnd",
+      "Hours",
+      "ContractorSupplement",
+    ],
+  };
+  static ListDef = {
+    name: "st_ch_overtime",
+    title: "st_ch_overtime",
+    fields: CH_OverTime.Views.All,
+  };
 }
 
 export class ContractorSupplement {
