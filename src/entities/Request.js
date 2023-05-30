@@ -9,6 +9,7 @@ export const requestStates = {
 
 export class RequestEntity {
   constructor({ ID, Title }) {
+    console.log("using destructured constructor");
     this.ID = ID;
     this.Title = Title;
     this.LookupValue = Title;
@@ -52,6 +53,7 @@ export class RequestEntity {
       "RequestSubmitted",
       "EstClosedDate",
       "ClosedDate",
+      "RequestStatus",
     ],
   };
 

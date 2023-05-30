@@ -22,7 +22,8 @@ export class DateField {
   set = (newDate) => {
     if (!newDate) return null;
     if (!newDate.constructor.getName() == "Date") {
-      console.warn("DateField: Not a date", date);
+      console.warn("Attempting to set date", date);
+      newDate = new Date(newDate);
     }
     if (newDate.getTimezoneOffset()) {
     }

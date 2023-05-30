@@ -26,6 +26,8 @@ var sal = window.sal || {};
 sal.globalConfig = sal.globalConfig || {};
 sal.site = sal.site || {};
 
+window.DEBUG = true;
+
 //ExecuteOrDelayUntilScriptLoaded(InitSal, "sp.js");
 
 export function GetSiteGroups() {
@@ -1303,6 +1305,7 @@ export function SPList(listDef) {
       collListItem: collListItem,
       callback: callback,
       fields,
+      camlQuery,
     };
 
     currCtx.load(collListItem, `Include(${fields.join(", ")})`);
@@ -1357,27 +1360,136 @@ export function SPList(listDef) {
     });
   }
 
+  async function getListFields() {
+    if (!self.config.fieldSchema) {
+      const apiEndpoint = `/web/lists/GetByTitle('${self.config.def.title}')/Fields`;
+      const fields = await fetchData(apiEndpoint);
+      self.config.fieldSchema = fields;
+    }
+    return self.config.fieldSchema;
+  }
+
   async function findByLookupColumnAsync(
-    column,
-    lookupId,
+    { column, value, type = "LookupValue" },
+    { orderByColumn = null, sortAsc },
+    { startIndex = null, count = null },
     fields,
-    count = null
+    includeFolders
   ) {
-    var caml =
-      '<View Scope="RecursiveAll"><Query><Where><And><Eq>' +
-      '<FieldRef Name="FSObjType"/><Value Type="int">0</Value>' +
-      "</Eq><Eq>" +
-      `<FieldRef Name="${column}" LookupId="TRUE"/><Value Type="Lookup">` +
-      lookupId +
-      "</Value>" +
-      `</Eq></And></Where></Query>${
-        count ?? "<RowLimit>" + count + "</RowLimit>"
-      }</View>`;
-    const listItems = await new Promise((resolve, reject) => {
-      getListItems(caml, fields, resolve);
+    {
+      const fieldFilter =
+        `<Eq><FieldRef Name="${column}" ${type}="TRUE"/><Value Type="Lookup">` +
+        value +
+        "</Value></Eq>";
+
+      const folderFilter =
+        '<Eq><FieldRef Name="FSObjType"/><Value Type="int">0</Value></Eq>';
+
+      const innerFilter = !includeFolders
+        ? `<And>$${fieldFilter}${folderFilter}</And>`
+        : fieldFilter;
+
+      const outerFilter = `<Where>${innerFilter}</Where>`;
+
+      const rowCount = count
+        ? `<RowLimit Paged="TRUE">${count}</RowLimit>`
+        : "";
+
+      const orderBy = orderByColumn
+        ? `<OrderBy><FieldRef Name="${orderByColumn}" Ascending="${
+            sortAsc ? "TRUE" : "FALSE"
+          }"/></OrderBy>`
+        : "";
+
+      const camlQuery = `<View Scope="RecursiveAll"><Query>${outerFilter}${orderBy}</Query>${rowCount}</View>`;
+
+      if (window.DEBUG) console.log("Find By Lookup CAML ", camlQuery);
+      const listItems = await new Promise((resolve, reject) => {
+        getListItems(camlQuery, fields, resolve);
+      });
+    }
+    const queryFields = [];
+    const expandFields = [];
+
+    const listFields = await getListFields();
+    fields.map((f) => {
+      const fieldSchema = listFields.find((lf) => lf.StaticName == f);
+      if (!fieldSchema) {
+        alert(`Field '${f}' not found on list ${self.config.def.name}`);
+        return;
+      }
+      switch (fieldSchema.TypeAsString) {
+        case "User":
+        case "Lookup":
+          const idString = f + "/ID";
+          const titleString = f + "/Title";
+          queryFields.push(idString);
+          queryFields.push(titleString);
+          expandFields.push(idString);
+          expandFields.push(titleString);
+          break;
+        case "Choice":
+        default:
+          queryFields.push(f);
+      }
     });
 
-    return listItems;
+    const orderBy = `$orderby=${orderByColumn} ${sortAsc ? "asc" : "desc"}`;
+    // TODO: fieldfilter should use 'lookupcolumnId' e.g. ServiceTypeId eq 1
+    const fieldFilter = `${column} eq '${value}'`;
+    const fsObjTypeFilter = `FSObjType eq '0'`;
+    const filter = `$filter=${fieldFilter}`;
+    const include = "$select=" + queryFields;
+    const expand = `$expand=` + expandFields;
+    const page = `$top=${count}`;
+
+    const apiEndpoint =
+      sal.globalConfig.siteUrl +
+      `/_api/web/lists/GetByTitle('${self.config.def.title}')/items?` +
+      `${include}&${expand}&${orderBy}&${filter}&${page}`;
+
+    const response = await fetch(apiEndpoint, {
+      method: "GET",
+      headers: {
+        Accept: "application/json; odata=verbose",
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status == 404) {
+        return;
+      }
+      console.error(response);
+    }
+    const result = await response.json();
+    const cursor = {
+      results: result?.d?.results,
+      _next: result?.d?.__next,
+    };
+
+    if (window.DEBUG) console.log(cursor);
+    return cursor;
+  }
+
+  async function fetchData(siteEndpoint, method = "GET") {
+    const response = await fetch(
+      sal.globalConfig.siteUrl + "/_api" + siteEndpoint,
+      {
+        method: method,
+        headers: {
+          Accept: "application/json; odata=verbose",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      if (response.status == 404) {
+        return;
+      }
+      console.error(response);
+    }
+    const result = await response.json();
+    return result?.d?.results;
   }
 
   function findById(id, fields, callback) {

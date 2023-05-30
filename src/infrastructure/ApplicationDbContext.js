@@ -25,6 +25,11 @@ export function getAppContext() {
   return context;
 }
 
+export const lookupType = {
+  value: "LookupValue",
+  id: "LookupID",
+};
+
 export default class ApplicationDbContext {
   constructor() {}
 
@@ -52,21 +57,46 @@ export default class ApplicationDbContext {
 }
 
 class EntitySet {
-  constructor(listDef) {
+  constructor(constructor) {
     // Check if the object we passed in defines a ListDef
-    if (listDef.ListDef) {
-      listDef = listDef.ListDef;
+    this.constructor = constructor;
+    if (constructor.ListDef) {
+      constructor = constructor.ListDef;
     }
-    this.ListDef = listDef;
-    this.Title = listDef.title;
-    this.Name = listDef.name;
+    this.ListDef = constructor;
+    this.Title = constructor.title;
+    this.Name = constructor.name;
 
-    this.ListRef = new SPList(listDef);
+    this.ListRef = new SPList(constructor);
   }
 
   // Queries
   FindById = async () => {};
-  FindByColumnValue = async () => {};
+
+  FindByLookupColumn = async (
+    { column, value, type = lookupType.value },
+    { orderByColumn, sortAsc },
+    { startIndex, count },
+    fields,
+    includeFolders = false
+  ) => {
+    const results = await this.ListRef.findByLookupColumnAsync(
+      { column, value, type },
+      { orderByColumn, sortAsc },
+      { startIndex, count },
+      fields,
+      includeFolders
+    );
+
+    return {
+      _next: results._next,
+      results: results.results.map((item) => {
+        const newEntity = new this.constructor(item);
+        mapObjectToEntity(item, newEntity);
+        return newEntity;
+      }),
+    };
+  };
 
   ToList = async () => {};
 

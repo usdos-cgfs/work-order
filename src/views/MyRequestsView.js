@@ -56,6 +56,7 @@ export class MyRequestsView {
     }
 
     component.Init();
+
     return component;
   });
 }

@@ -21,12 +21,26 @@ export class RequestsByStatusComponent {
 
   refreshRequests = async () => {
     this.IsLoading(true);
-    this.FilteredRequests(
-      await this.view._context.Requests.FindAll(
+    const start = new Date();
+    // this.FilteredRequests(
+    //   await this.view._context.Requests.FindAll(
+    //     RequestEntity.Views.ByStatus,
+    //     this.query()
+    //   )
+    // );
+    const requestsByStatus =
+      await this.view._context.Requests.FindByLookupColumn(
+        { column: "RequestStatus", value: this.filter },
+        { orderByColumn: "Title", sortAsc: false },
+        { startIndex: null, count: 10 },
         RequestEntity.Views.ByStatus,
-        this.query()
-      )
-    );
+        false
+      );
+
+    this.FilteredRequests(requestsByStatus.results);
+    const end = new Date();
+    console.log(`Request by status ${this.filter}:`, end - start);
+    this.HasLoaded(true);
     this.IsLoading(false);
   };
 
@@ -35,6 +49,5 @@ export class RequestsByStatusComponent {
       return;
     }
     await this.refreshRequests();
-    this.HasLoaded(true);
   };
 }
