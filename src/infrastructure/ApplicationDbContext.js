@@ -71,23 +71,61 @@ class EntitySet {
   }
 
   // Queries
-  FindById = async () => {};
+  FindById = async (id, fields) => {
+    const result = await this.ListRef.findByIdAsync(id, fields);
+    if (!result) return null;
+    const newEntity = new this.constructor(result);
+    mapObjectToEntity(result, newEntity);
+    return newEntity;
+  };
 
   FindByLookupColumn = async (
     { column, value, type = lookupType.value },
     { orderByColumn, sortAsc },
-    { startIndex, count },
+    { count = null },
     fields,
     includeFolders = false
   ) => {
+    // if we pass in a count, we are expecting a cursor result
+    const returnCursor = count != null;
+    count = count ?? 5000;
+    // else, we should apply a count of 5000 and keep fetching
+
     const results = await this.ListRef.findByLookupColumnAsync(
       { column, value, type },
       { orderByColumn, sortAsc },
-      { startIndex, count },
+      { count },
       fields,
       includeFolders
     );
 
+    let cursor = {
+      _next: results._next,
+      results: results.results.map((item) => {
+        const newEntity = new this.constructor(item);
+        mapObjectToEntity(item, newEntity);
+        return newEntity;
+      }),
+    };
+
+    if (returnCursor) {
+      return cursor;
+    }
+
+    const resultObj = {
+      results: cursor.results,
+    };
+
+    while (cursor._next) {
+      cursor = await this.LoadNextPage(cursor);
+      resultObj.results.concat(cursor.results);
+    }
+
+    return resultObj;
+  };
+
+  LoadNextPage = async (cursor) => {
+    const results = await this.ListRef.loadNextPage(cursor);
     return {
       _next: results._next,
       results: results.results.map((item) => {
@@ -97,7 +135,9 @@ class EntitySet {
       }),
     };
   };
-
+  /**
+   * Return all items in list
+   */
   ToList = async () => {};
 
   // Mutators
@@ -107,6 +147,7 @@ class EntitySet {
 
   Load = async (entity) => {};
 
+  // LEGACY: Replace below!
   //
   FindAll = async function (fields, filter = null) {
     return await this.ListRef.getListItemsAsync({ fields, caml: filter });
@@ -129,11 +170,19 @@ class EntitySet {
 
   FindByRequestId = async function (requestId, fields) {
     if (!requestId) return;
-    return await this.ListRef.findByLookupColumnAsync(
-      "Request",
-      requestId,
-      fields
+    const results = await this.ListRef.findByLookupColumnAsync(
+      { column: "Request", value: requestId, type: lookupType.id },
+      { orderByColumn: "ID", sortAsc: false },
+      { count: null },
+      fields,
+      false
     );
+    return results.results;
+    // return await this.ListRef.findByLookupColumnAsync(
+    //   "Request",
+    //   requestId,
+    //   fields
+    // );
   };
 
   LoadEntity = async function (entity) {

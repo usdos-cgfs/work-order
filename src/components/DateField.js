@@ -8,6 +8,8 @@ export class DateField {
     this.ObservableDateTime(date);
   }
 
+  toLocaleDateString = () => this.ObservableDateTime()?.toLocaleDateString();
+
   get = () => {
     if (
       !this.ObservableDateTime() ||
@@ -21,8 +23,8 @@ export class DateField {
 
   set = (newDate) => {
     if (!newDate) return null;
-    if (!newDate.constructor.getName() == "Date") {
-      console.warn("Attempting to set date", date);
+    if (newDate.constructor.getName() != "Date") {
+      // console.warn("Attempting to set date", newDate);
       newDate = new Date(newDate);
     }
     if (newDate.getTimezoneOffset()) {

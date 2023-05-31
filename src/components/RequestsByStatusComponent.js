@@ -8,16 +8,21 @@ export class RequestsByStatusComponent {
 
   TemplateId = "tmpl-requests-by-status";
 
-  query = () =>
-    '<View Scope="RecursiveAll"><Query><Where><And>' +
-    `<Eq><FieldRef Name="RequestStatus"/><Value Type="Text">${this.filter}</Value></Eq>` +
-    '<Eq><FieldRef Name="FSObjType"/><Value Type="int">0</Value></Eq>' +
-    "</And></Where><OrderBy><FieldRef Name='ID' Ascending='FALSE'/></OrderBy></Query></View>";
-
   IsLoading = ko.observable();
   HasLoaded = ko.observable(false);
 
   FilteredRequests = ko.observableArray();
+
+  Cursor = null;
+
+  loadMore = async () => {
+    if (!this.Cursor) return;
+    const nextPage = await this.view._context.Requests.LoadNextPage(
+      this.Cursor
+    );
+    this.FilteredRequests.push(...nextPage.results);
+    this.Cursor = nextPage;
+  };
 
   refreshRequests = async () => {
     this.IsLoading(true);
@@ -32,12 +37,13 @@ export class RequestsByStatusComponent {
       await this.view._context.Requests.FindByLookupColumn(
         { column: "RequestStatus", value: this.filter },
         { orderByColumn: "Title", sortAsc: false },
-        { startIndex: null, count: 10 },
+        {},
         RequestEntity.Views.ByStatus,
         false
       );
 
     this.FilteredRequests(requestsByStatus.results);
+    this.Cursor = requestsByStatus;
     const end = new Date();
     console.log(`Request by status ${this.filter}:`, end - start);
     this.HasLoaded(true);

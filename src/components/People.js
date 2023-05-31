@@ -25,6 +25,9 @@ export class People {
 
   static Create = function (props) {
     if (!props) return null;
-    return new People({ ID: props.ID, Title: props.LookupValue });
+    return new People({
+      ID: props.ID,
+      Title: props.Title ?? props.LookupValue,
+    });
   };
 }

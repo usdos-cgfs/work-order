@@ -189,15 +189,18 @@
         <tbody data-bind="foreach: FilteredRequests">
           <tr class="pointer" data-bind="click: $root.ViewRequest">
             <td data-bind="text: Title"></td>
-            <td data-bind="text: ServiceType?.Title"></td>
-            <td data-bind="text: RequestorOrg?.Title"></td>
-            <td data-bind="text: Requestor?.Title"></td>
-            <td data-bind="text: RequestSubmitted?.toLocaleDateString()"></td>
-            <td data-bind="text: EstClosedDate?.toLocaleDateString()"></td>
+            <td data-bind="text: ServiceType.Def()?.Title"></td>
+            <td data-bind="text: RequestorInfo.Office()?.Title"></td>
+            <td data-bind="text: RequestorInfo.Requestor()?.Title"></td>
+            <td data-bind="text: Dates.Submitted.toLocaleDateString()"></td>
+            <td data-bind="text: Dates.EstClosed.toLocaleDateString()"></td>
           </tr>
         </tbody>
         <!-- /ko -->
       </table>
+      <button class="btn btn-primary" data-bind="click: loadMore">
+        Load More...
+      </button>
     </script>
 
     <script type="text/html" id="tmpl-new-request-view">

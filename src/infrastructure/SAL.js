@@ -907,13 +907,6 @@ export function SPList(listDef) {
 
   var self = this;
 
-  self.state = {};
-
-  self.setState = function (newState) {
-    // TODO
-    self.state = newState;
-  };
-
   self.config = {
     def: listDef,
   };
@@ -921,47 +914,6 @@ export function SPList(listDef) {
   /*****************************************************************
                                 Common Private Methods       
     ******************************************************************/
-  self.onQueryFailed = function (sender, args) {
-    console.log("unsuccessful read", sender);
-    // alert(
-    //   "Request failed: " + args.get_message() + "\n" + args.get_stackTrace()
-    // );
-    alert(
-      "Request on list " +
-        self.config.def.name +
-        " failed, producing the following error: \n" +
-        args.get_message() +
-        "\nStackTrack: \n" +
-        args.get_stackTrace()
-    );
-  };
-
-  self.updateConfig = function () {
-    //console.log('update', self.config)
-    self.config.currentContext = new SP.ClientContext.get_current();
-    self.config.website = self.config.currentContext.get_web();
-    self.config.listRef = self.config.website
-      .get_lists()
-      .getByTitle(self.config.def.title);
-    self.getLibGUID(function () {});
-  };
-
-  self.getLibGUID = function (callback) {
-    self.callbackGUID = callback;
-
-    self.config.currentContext.load(self.config.listRef);
-    self.config.currentContext.executeQueryAsync(
-      function () {
-        self.config.guid = self.config.listRef.get_id().toString();
-        //console.log("calling callback guid");
-        self.callbackGUID(self.config.guid);
-        //console.log('item count: ', self.config.itemCount)
-      }.bind(this),
-      self.onQueryFailed
-    );
-  };
-
-  //self.updateConfig();
 
   /*****************************************************************
                                 Common Public Methods       
@@ -1073,20 +1025,6 @@ export function SPList(listDef) {
       Function.createDelegate(data, onFindItemFailed)
     );
   }
-
-  self.getItemCount = function (callback) {
-    self.callbackItemCount = callback;
-    self.updateConfig();
-    self.config.currentContext.load(self.config.listRef);
-    self.config.currentContext.executeQueryAsync(
-      function () {
-        self.config.itemCount = self.config.listRef.get_itemCount();
-        self.callbackItemCount(self.config.itemCount);
-        //console.log('item count: ', self.config.itemCount)
-      }.bind(this),
-      self.onQueryFailed
-    );
-  };
 
   /*****************************************************************
                                 createListItem      
@@ -1364,15 +1302,44 @@ export function SPList(listDef) {
     if (!self.config.fieldSchema) {
       const apiEndpoint = `/web/lists/GetByTitle('${self.config.def.title}')/Fields`;
       const fields = await fetchData(apiEndpoint);
-      self.config.fieldSchema = fields;
+      self.config.fieldSchema = fields.d.results;
     }
     return self.config.fieldSchema;
+  }
+
+  async function getQueryFields(fields) {
+    const queryFields = [];
+    const expandFields = [];
+
+    const listFields = await getListFields();
+    fields.map((f) => {
+      const fieldSchema = listFields.find((lf) => lf.StaticName == f);
+      if (!fieldSchema) {
+        alert(`Field '${f}' not found on list ${self.config.def.name}`);
+        return;
+      }
+      switch (fieldSchema.TypeAsString) {
+        case "User":
+        case "Lookup":
+          const idString = f + "/ID";
+          const titleString = f + "/Title";
+          queryFields.push(idString);
+          queryFields.push(titleString);
+          expandFields.push(idString);
+          expandFields.push(titleString);
+          break;
+        case "Choice":
+        default:
+          queryFields.push(f);
+      }
+    });
+    return [queryFields, expandFields];
   }
 
   async function findByLookupColumnAsync(
     { column, value, type = "LookupValue" },
     { orderByColumn = null, sortAsc },
-    { startIndex = null, count = null },
+    { count = null },
     fields,
     includeFolders
   ) {
@@ -1408,48 +1375,49 @@ export function SPList(listDef) {
         getListItems(camlQuery, fields, resolve);
       });
     }
-    const queryFields = [];
-    const expandFields = [];
 
-    const listFields = await getListFields();
-    fields.map((f) => {
-      const fieldSchema = listFields.find((lf) => lf.StaticName == f);
-      if (!fieldSchema) {
-        alert(`Field '${f}' not found on list ${self.config.def.name}`);
-        return;
-      }
-      switch (fieldSchema.TypeAsString) {
-        case "User":
-        case "Lookup":
-          const idString = f + "/ID";
-          const titleString = f + "/Title";
-          queryFields.push(idString);
-          queryFields.push(titleString);
-          expandFields.push(idString);
-          expandFields.push(titleString);
-          break;
-        case "Choice":
-        default:
-          queryFields.push(f);
-      }
-    });
-
-    const orderBy = `$orderby=${orderByColumn} ${sortAsc ? "asc" : "desc"}`;
+    const [queryFields, expandFields] = await getQueryFields(fields);
+    const orderBy = orderByColumn
+      ? `$orderby=${orderByColumn} ${sortAsc ? "asc" : "desc"}`
+      : "";
     // TODO: fieldfilter should use 'lookupcolumnId' e.g. ServiceTypeId eq 1
     const fieldFilter = `${column} eq '${value}'`;
     const fsObjTypeFilter = `FSObjType eq '0'`;
-    const filter = `$filter=${fieldFilter}`;
+    const filter = !includeFolders
+      ? `$filter=(${fieldFilter}) and (${fsObjTypeFilter})`
+      : `$filter=${fieldFilter}`;
     const include = "$select=" + queryFields;
     const expand = `$expand=` + expandFields;
-    const page = `$top=${count}`;
+    const page = count ? `$top=${count}` : "";
 
     const apiEndpoint =
-      sal.globalConfig.siteUrl +
-      `/_api/web/lists/GetByTitle('${self.config.def.title}')/items?` +
+      `/web/lists/GetByTitle('${self.config.def.title}')/items?` +
       `${include}&${expand}&${orderBy}&${filter}&${page}`;
 
-    const response = await fetch(apiEndpoint, {
-      method: "GET",
+    const result = await fetchData(apiEndpoint);
+    const cursor = {
+      results: result?.d?.results,
+      _next: result?.d?.__next,
+    };
+
+    if (window.DEBUG) console.log(cursor);
+    return cursor;
+  }
+
+  async function loadNextPage(cursor) {
+    const result = await fetchData(cursor._next);
+    return {
+      results: result?.d?.results,
+      _next: result?.d?.__next,
+    };
+  }
+
+  async function fetchData(uri, method = "GET") {
+    const siteEndpoint = uri.startsWith("http")
+      ? uri
+      : sal.globalConfig.siteUrl + "/_api" + uri;
+    const response = await fetch(siteEndpoint, {
+      method: method,
       headers: {
         Accept: "application/json; odata=verbose",
       },
@@ -1462,34 +1430,7 @@ export function SPList(listDef) {
       console.error(response);
     }
     const result = await response.json();
-    const cursor = {
-      results: result?.d?.results,
-      _next: result?.d?.__next,
-    };
-
-    if (window.DEBUG) console.log(cursor);
-    return cursor;
-  }
-
-  async function fetchData(siteEndpoint, method = "GET") {
-    const response = await fetch(
-      sal.globalConfig.siteUrl + "/_api" + siteEndpoint,
-      {
-        method: method,
-        headers: {
-          Accept: "application/json; odata=verbose",
-        },
-      }
-    );
-
-    if (!response.ok) {
-      if (response.status == 404) {
-        return;
-      }
-      console.error(response);
-    }
-    const result = await response.json();
-    return result?.d?.results;
+    return result;
   }
 
   function findById(id, fields, callback) {
@@ -2818,6 +2759,7 @@ export function SPList(listDef) {
     getListItemsAsync: getListItemsAsync,
     findByTitleAsync,
     findByLookupColumnAsync,
+    loadNextPage,
     findByIdAsync,
     updateListItem: updateListItem,
     updateListItemAsync,
