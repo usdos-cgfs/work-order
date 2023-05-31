@@ -1,3 +1,4 @@
+import { makeDataTable } from "../common/DataTableExtensions.js";
 import { RequestEntity } from "../entities/Request.js";
 
 export class RequestsByStatusComponent {
@@ -5,7 +6,7 @@ export class RequestsByStatusComponent {
     this.filter = status;
     this.view = view;
   }
-
+  filter = null;
   TemplateId = "tmpl-requests-by-status";
 
   IsLoading = ko.observable();
@@ -14,6 +15,8 @@ export class RequestsByStatusComponent {
   FilteredRequests = ko.observableArray();
 
   Cursor = null;
+
+  Table = null;
 
   loadMore = async () => {
     if (!this.Cursor) return;
@@ -50,10 +53,13 @@ export class RequestsByStatusComponent {
     this.IsLoading(false);
   };
 
+  getTableElementId = () => "tbl-status-" + this.filter?.toLowerCase();
+
   Init = async () => {
     if (this.HasLoaded() || this.IsLoading()) {
       return;
     }
+    // this.Table = makeDataTable(this.getTableElementId());
     await this.refreshRequests();
   };
 }

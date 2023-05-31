@@ -29,6 +29,20 @@ export class MyRequestsView {
     setUrlParam("view", newViewId);
   };
 
+  params = {
+    open: {
+      view: this,
+      status: requestStates.open,
+    },
+    closed: {
+      view: this,
+      status: requestStates.closed,
+    },
+    cancelled: {
+      view: this,
+      status: requestStates.cancelled,
+    },
+  };
   components = {
     open: new RequestsByStatusComponent({
       view: this,
@@ -58,5 +72,9 @@ export class MyRequestsView {
     component.Init();
 
     return component;
+  });
+
+  ActiveTableParams = ko.pureComputed(() => {
+    return this.params[this.View()];
   });
 }

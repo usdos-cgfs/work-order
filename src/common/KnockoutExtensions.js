@@ -165,6 +165,15 @@ ko.components.register("resolver-actions", {
   viewModel: { viaLoader: "/components/AssignmentActions/ResolverModule.js" },
 });
 
+ko.components.register("requests-by-status", {
+  template: {
+    fromPath: "/components/RequestsByStatus/RequestsByStatusTemplate.html",
+  },
+  viewModel: {
+    viaLoader: "/components/RequestsByStatus/RequestsByStatusModule.js",
+  },
+});
+
 export function registerServiceTypeComponent(
   componentName,
   moduleName,

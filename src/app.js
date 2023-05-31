@@ -20,6 +20,12 @@ import { InitSal } from "./infrastructure/SAL.js";
 
 export const assetsPath = window.appRoot + "/src";
 
+const datatablesSheet = await import(
+  window.appRoot + "/lib/datatables/datatables.min.css",
+  {
+    assert: { type: "css" },
+  }
+);
 const appSheet = await import(window.appRoot + "/src/app.css", {
   assert: { type: "css" },
 });
@@ -30,7 +36,11 @@ const faSheet = await import(
   }
 );
 
-document.adoptedStyleSheets = [appSheet.default, faSheet.default];
+document.adoptedStyleSheets = [
+  datatablesSheet.default,
+  appSheet.default,
+  faSheet.default,
+];
 
 window.WorkOrder = window.WorkOrder || {};
 

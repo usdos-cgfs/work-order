@@ -4,7 +4,15 @@
   integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
   crossorigin="anonymous"
 />
+<!-- <link
+  rel="stylesheet"
+  href="//cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css"
+/> -->
 
+<!-- <link
+  rel="stylesheet"
+  href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css"
+/> -->
 <!-- <link rel="stylesheet" href="../Style Library/wo/app.css" /> -->
 <!-- <link
   rel="stylesheet"
@@ -146,61 +154,12 @@
             Cancelled
           </button>
         </div>
-        <div class="">
-          <!-- ko if: ActiveComponent -->
+        <div class="w-100">
           <div
-            data-bind="template: {name: ActiveComponent().TemplateId, data: ActiveComponent()} "
+            data-bind="component: {name: 'requests-by-status', params: ActiveTableParams}"
           ></div>
-          <!-- /ko -->
         </div>
       </div>
-    </script>
-
-    <script type="text/html" id="tmpl-requests-by-status">
-      <div class="d-flex justify-content-between">
-        <h2 class="mx-0" data-bind="text: filter"></h2>
-        <i class="fa fa-sync pointer" data-bind="click: refreshRequests"></i>
-      </div>
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th>Order ID</th>
-            <th>Service Type</th>
-            <th>Requesting Office</th>
-            <th>Requestor</th>
-            <th>Submitted Date</th>
-            <th>Est. Completion Date</th>
-          </tr>
-        </thead>
-        <!-- ko if: IsLoading -->
-        <tbody>
-          <tr>
-            <td colspan="6">
-              <div class="d-flex justify-content-center">
-                <div class="spinner-border" role="status">
-                  <span class="visually-hidden">Loading...</span>
-                </div>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-        <!-- /ko -->
-        <!-- ko ifnot: IsLoading -->
-        <tbody data-bind="foreach: FilteredRequests">
-          <tr class="pointer" data-bind="click: $root.ViewRequest">
-            <td data-bind="text: Title"></td>
-            <td data-bind="text: ServiceType.Def()?.Title"></td>
-            <td data-bind="text: RequestorInfo.Office()?.Title"></td>
-            <td data-bind="text: RequestorInfo.Requestor()?.Title"></td>
-            <td data-bind="text: Dates.Submitted.toLocaleDateString()"></td>
-            <td data-bind="text: Dates.EstClosed.toLocaleDateString()"></td>
-          </tr>
-        </tbody>
-        <!-- /ko -->
-      </table>
-      <button class="btn btn-primary" data-bind="click: loadMore">
-        Load More...
-      </button>
     </script>
 
     <script type="text/html" id="tmpl-new-request-view">
@@ -1025,6 +984,14 @@
     integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
     crossorigin="anonymous"
   ></script>
+  <!-- <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
+  <script src="../SiteAssets/workorder/vendor/DataTables/datatables.min.js"></script> -->
+  <script src="../Style Library/Apps/wo/lib/DataTables/datatables.min.js"></script>
+
+  <!-- <script src="//cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script> -->
+
+  <!-- <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script> -->
 
   <script>
     window.appRoot =
@@ -1033,6 +1000,8 @@
   <script defer type="module">
     // const appRoot =
     //   _spPageContextInfo.siteAbsoluteUrl + "/Style Library/Apps/wo";
+
+    // import(window.appRoot + "/lib/datatables/datatables.js");
 
     await import(window.appRoot + "/lib/knockout/knockout-3.5.1.js");
     import(window.appRoot + "/lib/knockout/knockout.mapping-latest.js");
