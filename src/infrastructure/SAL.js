@@ -914,6 +914,15 @@ export function SPList(listDef) {
   /*****************************************************************
                                 Common Private Methods       
     ******************************************************************/
+  async function init() {
+    if (!self.config.fieldSchema) {
+      const apiEndpoint = `/web/lists/GetByTitle('${self.config.def.title}')/Fields`;
+      const fields = await fetchData(apiEndpoint);
+      self.config.fieldSchema = fields.d.results;
+    }
+  }
+
+  init();
 
   /*****************************************************************
                                 Common Public Methods       
@@ -1343,39 +1352,6 @@ export function SPList(listDef) {
     fields,
     includeFolders
   ) {
-    {
-      const fieldFilter =
-        `<Eq><FieldRef Name="${column}" ${type}="TRUE"/><Value Type="Lookup">` +
-        value +
-        "</Value></Eq>";
-
-      const folderFilter =
-        '<Eq><FieldRef Name="FSObjType"/><Value Type="int">0</Value></Eq>';
-
-      const innerFilter = !includeFolders
-        ? `<And>$${fieldFilter}${folderFilter}</And>`
-        : fieldFilter;
-
-      const outerFilter = `<Where>${innerFilter}</Where>`;
-
-      const rowCount = count
-        ? `<RowLimit Paged="TRUE">${count}</RowLimit>`
-        : "";
-
-      const orderBy = orderByColumn
-        ? `<OrderBy><FieldRef Name="${orderByColumn}" Ascending="${
-            sortAsc ? "TRUE" : "FALSE"
-          }"/></OrderBy>`
-        : "";
-
-      const camlQuery = `<View Scope="RecursiveAll"><Query>${outerFilter}${orderBy}</Query>${rowCount}</View>`;
-
-      if (window.DEBUG) console.log("Find By Lookup CAML ", camlQuery);
-      const listItems = await new Promise((resolve, reject) => {
-        getListItems(camlQuery, fields, resolve);
-      });
-    }
-
     const [queryFields, expandFields] = await getQueryFields(fields);
     const orderBy = orderByColumn
       ? `$orderby=${orderByColumn} ${sortAsc ? "asc" : "desc"}`

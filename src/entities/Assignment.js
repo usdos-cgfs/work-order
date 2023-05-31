@@ -65,6 +65,7 @@ export class Assignment {
       "PipelineStage",
       "Request",
     ],
+    Dashboard: ["Role", "Assignee", "Status"],
   };
 
   static ListDef = {

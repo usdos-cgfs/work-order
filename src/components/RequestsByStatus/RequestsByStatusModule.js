@@ -1,17 +1,19 @@
 import { makeDataTable } from "../../common/DataTableExtensions.js";
 import { RequestEntity } from "../../entities/Request.js";
+import { Assignment } from "../../entities/Assignment.js";
 
-export default class RequestsByStatusComponent {
-  constructor({ status, view }) {
+export default class RequestsByStatusModule {
+  // TODO: each request could be a subcomponent
+  constructor({ status, view, showAssignments }) {
     this.filter = status;
     this.view = view;
+    this.ShowAssignees(showAssignments);
   }
   filter = null;
-  TemplateId = "tmpl-requests-by-status";
 
   IsLoading = ko.observable();
   HasLoaded = ko.observable(false);
-
+  ShowAssignees = ko.observable(true);
   FilteredRequests = ko.observableArray();
 
   Cursor = null;
@@ -21,28 +23,20 @@ export default class RequestsByStatusComponent {
   myPostProcessingLogic = (nodes) => {
     this.Init();
   };
-  tableHasUpdated = (nodes) => {
-    console.log("table updated");
-  };
 
-  loadMore = async () => {
-    if (!this.Cursor) return;
-    const nextPage = await this.view._context.Requests.LoadNextPage(
-      this.Cursor
+  loadAssignments = async () => {
+    this.ShowAssignees(true);
+    await Promise.all(
+      this.FilteredRequests().map((request) => {
+        return request.Assignments.refresh(Assignment.Views.Dashboard);
+      })
     );
-    this.FilteredRequests.push(...nextPage.results);
-    this.Cursor = nextPage;
   };
 
   refreshRequests = async () => {
     this.IsLoading(true);
     const start = new Date();
-    // this.FilteredRequests(
-    //   await this.view._context.Requests.FindAll(
-    //     RequestEntity.Views.ByStatus,
-    //     this.query()
-    //   )
-    // );
+
     const requestsByStatus =
       await this.view._context.Requests.FindByLookupColumn(
         { column: "RequestStatus", value: this.filter },
@@ -53,6 +47,9 @@ export default class RequestsByStatusComponent {
       );
 
     this.FilteredRequests(requestsByStatus.results);
+    if (this.ShowAssignees()) {
+      await this.loadAssignments();
+    }
     this.Cursor = requestsByStatus;
     const end = new Date();
     console.log(`Request by status ${this.filter}:`, end - start);

@@ -67,6 +67,8 @@ class App {
   constructor() {
     this.Tab.subscribe(tabWatcher);
   }
+  readRequestAssignments = (request) =>
+    ko.pureComputed(() => request.Assignments.list.Dashboard());
 
   context = getAppContext();
 

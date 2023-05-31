@@ -1,5 +1,4 @@
 import { getUrlParam, setUrlParam } from "../common/Router.js";
-import { RequestsByStatusComponent } from "../components/RequestsByStatusComponent.js";
 import { requestStates } from "../entities/Request.js";
 import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
 
@@ -33,6 +32,7 @@ export class MyRequestsView {
     open: {
       view: this,
       status: requestStates.open,
+      showAssignments: true,
     },
     closed: {
       view: this,
@@ -42,20 +42,6 @@ export class MyRequestsView {
       view: this,
       status: requestStates.cancelled,
     },
-  };
-  components = {
-    open: new RequestsByStatusComponent({
-      view: this,
-      status: requestStates.open,
-    }),
-    closed: new RequestsByStatusComponent({
-      view: this,
-      status: requestStates.closed,
-    }),
-    cancelled: new RequestsByStatusComponent({
-      view: this,
-      status: requestStates.cancelled,
-    }),
   };
 
   ActiveComponent = ko.pureComputed(() => {

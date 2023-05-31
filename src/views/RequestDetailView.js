@@ -552,7 +552,7 @@ export class RequestDetailView {
     userCanAssign: ko.pureComputed(() => {
       // TODO
       if (!this.State.IsActive()) return false;
-      return false;
+      return true;
     }),
     addNew: async (assignment = null) => {
       if (!this.ID || !assignment) return;
