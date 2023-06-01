@@ -113,7 +113,7 @@
                       </td>
                       <td data-bind="text: ServiceType.get_lookupValue()"></td>
                       <td
-                        data-bind="text: RequestorOffice.get_lookupValue()"
+                        data-bind="text: RequestorOffice?.get_lookupValue()"
                       ></td>
                       <td
                         data-bind="text: Requestor ? Requestor.get_lookupValue() : ''"
@@ -185,7 +185,7 @@
                       </td>
                       <td data-bind="text: ServiceType.get_lookupValue()"></td>
                       <td
-                        data-bind="text: RequestorOffice.get_lookupValue()"
+                        data-bind="text: RequestorOffice?.get_lookupValue()"
                       ></td>
                       <td
                         data-bind="text: Requestor ? Requestor.get_lookupValue() : ''"

@@ -1465,7 +1465,7 @@ function koviewmodel() {
       return ao.ID;
     });
     return self.allAssignments().filter(function (asg) {
-      if (myAOIDs.indexOf(asg.actionOffice.ID) >= 0) {
+      if (myAOIDs.indexOf(asg.actionOffice?.ID) >= 0) {
         return true;
       } else if (asg.Assignee) {
         return (
