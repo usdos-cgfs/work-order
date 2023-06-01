@@ -104,6 +104,12 @@ export class ServiceType {
     }
   };
 
+  // TODO: this should be in a servicetype manager service
+  userCanInitiate = (user) => {
+    if (!this.Active) return false;
+    return true;
+  };
+
   static Create = function ({ ID, LookupValue }) {
     const newServiceType = new ServiceType({ ID, Title: LookupValue });
     const serviceType = serviceTypeStore().find((service) => service.ID == ID);

@@ -730,8 +730,8 @@
                   class="form-control"
                   class="fluid"
                   data-bind="value: ServiceType.Def,
-              options: $root.Config.serviceTypeStore,
-              optionsText: (st) => st.Title"
+                    options: AvailableServiceTypes,
+                    optionsText: (st) => st.Title"
                 ></select>
               </div>
             </div>

@@ -834,6 +834,12 @@ export class RequestDetailView {
       RequestDetail Component Specific Items
   ************************************************************************/
 
+  AvailableServiceTypes = ko.pureComputed(() => {
+    return serviceTypeStore().filter((serviceType) =>
+      serviceType.userCanInitiate(currentUser())
+    );
+  });
+
   DisplayModes = DisplayModes;
   DisplayMode = ko.observable();
 
