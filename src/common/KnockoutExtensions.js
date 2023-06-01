@@ -174,6 +174,15 @@ ko.components.register("requests-by-status", {
   },
 });
 
+ko.components.register("quick-info", {
+  template: {
+    fromPath: "/components/QuickInfo/QuickInfoTemplate.html",
+  },
+  viewModel: {
+    viaLoader: "/components/QuickInfo/QuickInfoModule.js",
+  },
+});
+
 export function registerServiceTypeComponent(
   componentName,
   moduleName,

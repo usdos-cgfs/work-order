@@ -67,8 +67,6 @@ class App {
   constructor() {
     this.Tab.subscribe(tabWatcher);
   }
-  readRequestAssignments = (request) =>
-    ko.pureComputed(() => request.Assignments.list.Dashboard());
 
   context = getAppContext();
 
@@ -77,6 +75,12 @@ class App {
 
   RequestDetail = ko.observable();
   OpenRequests = ko.observableArray();
+  OpenAssignments = ko.observableArray();
+
+  quickInfoParams = {
+    allOpenRequests: this.OpenRequests,
+    allOpenAssignments: this.OpenAssignments,
+  };
 
   Config = {
     pipelineStageStore,
@@ -86,7 +90,10 @@ class App {
   };
 
   // Views
-  MyRequestsView = new MyRequestsView({});
+  MyRequestsView = new MyRequestsView({
+    openRequests: this.OpenRequests,
+    openAssignments: this.OpenAssignments,
+  });
   NewRequestView = new NewRequestView();
   RequestDetailView = ko.observable();
 

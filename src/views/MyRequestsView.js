@@ -3,12 +3,37 @@ import { requestStates } from "../entities/Request.js";
 import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
 
 export class MyRequestsView {
-  constructor({}) {
+  constructor({ openRequests, openAssignments }) {
     this._context = getAppContext();
+    this.AllOpenRequests = openRequests;
+    this.AllOpenAssignments = openAssignments;
+
+    this.params = {
+      open: {
+        view: this,
+        status: requestStates.open,
+        showAssignments: true,
+        data: this.AllOpenRequests,
+        openAssignments: this.AllOpenAssignments,
+      },
+      closed: {
+        view: this,
+        status: requestStates.closed,
+        data: ko.observableArray(),
+      },
+      cancelled: {
+        view: this,
+        status: requestStates.cancelled,
+        data: ko.observableArray(),
+      },
+    };
+
     this.View.subscribe(this.viewWatcher);
 
     this.View(this.views.open);
   }
+
+  // AllOpenAssignments = ko.observableArray();
 
   views = {
     open: "open",
@@ -27,38 +52,6 @@ export class MyRequestsView {
     //var tabTriggerElement = document.getElementById(newTab);
     setUrlParam("view", newViewId);
   };
-
-  params = {
-    open: {
-      view: this,
-      status: requestStates.open,
-      showAssignments: true,
-    },
-    closed: {
-      view: this,
-      status: requestStates.closed,
-    },
-    cancelled: {
-      view: this,
-      status: requestStates.cancelled,
-    },
-  };
-
-  ActiveComponent = ko.pureComputed(() => {
-    if (!this.View()) {
-      return;
-    }
-
-    const component = this.components[this.View()];
-    if (!component) {
-      console.error("Missing component", this.View());
-      return null;
-    }
-
-    component.Init();
-
-    return component;
-  });
 
   ActiveTableParams = ko.pureComputed(() => {
     return this.params[this.View()];

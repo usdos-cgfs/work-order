@@ -4,17 +4,19 @@ import { Assignment } from "../../entities/Assignment.js";
 
 export default class RequestsByStatusModule {
   // TODO: each request could be a subcomponent
-  constructor({ status, view, showAssignments }) {
+  constructor({ status, view, showAssignments, data, openAssignments }) {
     this.filter = status;
     this.view = view;
     this.ShowAssignees(showAssignments);
+    this.OpenAssignments = openAssignments;
+    this.FilteredRequests = data;
   }
   filter = null;
 
   IsLoading = ko.observable();
   HasLoaded = ko.observable(false);
   ShowAssignees = ko.observable(true);
-  FilteredRequests = ko.observableArray();
+  // FilteredRequests = ko.observableArray();
 
   Cursor = null;
 
@@ -30,6 +32,10 @@ export default class RequestsByStatusModule {
       this.FilteredRequests().map((request) => {
         return request.Assignments.refresh(Assignment.Views.Dashboard);
       })
+    );
+    this.OpenAssignments([]);
+    this.FilteredRequests().map((request) =>
+      this.OpenAssignments.push(...request.Assignments.list.All())
     );
   };
 
@@ -63,7 +69,9 @@ export default class RequestsByStatusModule {
     if (this.HasLoaded() || this.IsLoading()) {
       return;
     }
-    await this.refreshRequests();
+    if (!this.FilteredRequests().length) {
+      await this.refreshRequests();
+    }
     this.Table = makeDataTable(this.getTableElementId());
   };
 }

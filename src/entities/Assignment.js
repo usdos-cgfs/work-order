@@ -6,6 +6,7 @@ export const assignmentStates = {
   Completed: "Completed",
   Approved: "Approved",
   Rejected: "Rejected",
+  Cancelled: "Cancelled",
 };
 
 export const assignmentRoles = {
@@ -65,7 +66,7 @@ export class Assignment {
       "PipelineStage",
       "Request",
     ],
-    Dashboard: ["Role", "Assignee", "Status"],
+    Dashboard: ["Role", "Assignee", "Status", "Request"],
   };
 
   static ListDef = {

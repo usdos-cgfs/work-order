@@ -1,0 +1,78 @@
+<div class="d-flex justify-content-between mb-3">
+  <div class="ms-auto" style="min-width: 20rem">
+    <div class="accordion">
+      <div
+        class="accordion-item pe-5 py-1 alert"
+        data-bind="class: MyOpenAssignments().length > 0 ? 'alert-danger' : 'alert-success'"
+      >
+        <div class="accordion-header">
+          <div
+            class="accordion-title btn btn-link py-0"
+            data-bs-toggle="collapse"
+            data-bs-target="#quick-open-assignments"
+          >
+            <span data-bind="text: MyOpenAssignments().length"></span> open
+            assignments
+          </div>
+        </div>
+        <div id="quick-open-assignments" class="accordion-collapse collapse">
+          <table class="table table-sm table-hover m-0">
+            <thead>
+              <tr>
+                <th>Request</th>
+                <th>Assignee</th>
+                <th>Role</th>
+              </tr>
+            </thead>
+            <tbody data-bind="foreach: MyOpenAssignments">
+              <tr
+                class="pointer"
+                data-bind="click: $root.ViewRequest.bind($data.Request)"
+              >
+                <td data-bind="text: Request.Title"></td>
+                <td data-bind="text: Assignee?.Title"></td>
+                <td data-bind="text: Role"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- ko if: ShowActionOfficeInfo -->
+    <div class="accordion">
+      <div
+        class="accordion-item pe-5 py-1 alert"
+        data-bind="class: LateRequests().length > 0 ? 'alert-danger' : 'alert-success'"
+      >
+        <div class="accordion-header">
+          <div
+            class="accordion-title btn btn-link py-0"
+            data-bs-toggle="collapse"
+            data-bs-target="#quick-late-requests"
+          >
+            <span data-bind="text: LateRequests().length"></span> late requests
+          </div>
+        </div>
+        <div id="quick-late-requests" class="accordion-collapse collapse">
+          <table class="table table-sm table-hover m-0">
+            <thead>
+              <tr>
+                <th>Request</th>
+                <th>Service Type</th>
+                <th>Est. Closed Date</th>
+              </tr>
+            </thead>
+            <tbody data-bind="foreach: LateRequests">
+              <tr class="pointer" data-bind="click: $root.ViewRequest">
+                <td data-bind="text: Title"></td>
+                <td data-bind="text: ServiceType.Def()?.Title"></td>
+                <td data-bind="text: Dates.EstClosed.toLocaleDateString()"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- /ko -->
+  </div>
+</div>

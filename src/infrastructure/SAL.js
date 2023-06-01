@@ -1345,8 +1345,9 @@ export function SPList(listDef) {
     return [queryFields, expandFields];
   }
 
+  // { column, value, type = "LookupValue" }
   async function findByLookupColumnAsync(
-    { column, value, type = "LookupValue" },
+    columnFilters,
     { orderByColumn = null, sortAsc },
     { count = null },
     fields,
@@ -1357,11 +1358,20 @@ export function SPList(listDef) {
       ? `$orderby=${orderByColumn} ${sortAsc ? "asc" : "desc"}`
       : "";
     // TODO: fieldfilter should use 'lookupcolumnId' e.g. ServiceTypeId eq 1
-    const fieldFilter = `${column} eq '${value}'`;
-    const fsObjTypeFilter = `FSObjType eq '0'`;
-    const filter = !includeFolders
-      ? `$filter=(${fieldFilter}) and (${fsObjTypeFilter})`
-      : `$filter=${fieldFilter}`;
+    const colFilterArr = [];
+    columnFilters.forEach((colFilter) =>
+      colFilterArr.push(`${colFilter.column} eq '${colFilter.value}'`)
+    );
+    if (!includeFolders) colFilterArr.push(`FSObjType eq '0'`);
+
+    const filter = "$filter=(" + colFilterArr.join(`) and (`) + ")";
+
+    //const fsObjTypeFilter = `FSObjType eq '0'`;
+    // const fieldFilter = `${column} eq '${value}'`;
+    // const filter2 = !includeFolders
+    //   ? `$filter=(${fieldFilter}) and (${fsObjTypeFilter})`
+    //   : `$filter=${fieldFilter}`;
+
     const include = "$select=" + queryFields;
     const expand = `$expand=` + expandFields;
     const page = count ? `$top=${count}` : "";
@@ -1376,7 +1386,7 @@ export function SPList(listDef) {
       _next: result?.d?.__next,
     };
 
-    if (window.DEBUG) console.log(cursor);
+    // if (window.DEBUG) console.log(cursor);
     return cursor;
   }
 

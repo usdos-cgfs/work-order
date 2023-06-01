@@ -29,6 +29,9 @@
   </div>
 </div>
 <div id="app" class="container">
+  <div
+    data-bind="component: {name: 'quick-info', params: quickInfoParams}"
+  ></div>
   <ul class="nav nav-tabs" id="section-tabs" role="tablist">
     <li class="nav-item" role="presentation">
       <button

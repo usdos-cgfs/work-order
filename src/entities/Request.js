@@ -336,11 +336,6 @@ export class RequestEntity {
           );
       }),
       Dashboard: ko.pureComputed(() => {
-        if (DEBUG) console.log("Loading Assignments");
-        // if (!this.Assignments.HaveLoaded()) {
-        //   this.Assignments.refresh(Assignment.Views.Dashboard);
-        //   return [];
-        // }
         return this.Assignments.list.All();
       }),
       CurrentUserAssignments: ko.pureComputed(() => {
