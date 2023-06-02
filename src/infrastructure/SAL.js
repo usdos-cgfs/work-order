@@ -1329,6 +1329,7 @@ export function SPList(listDef) {
       }
       switch (fieldSchema.TypeAsString) {
         case "User":
+        case "LookupMulti":
         case "Lookup":
           const idString = f + "/ID";
           const titleString = f + "/Title";
@@ -1346,7 +1347,7 @@ export function SPList(listDef) {
   }
 
   // { column, value, type = "LookupValue" }
-  async function findByLookupColumnAsync(
+  async function findByColumnValueAsync(
     columnFilters,
     { orderByColumn = null, sortAsc },
     { count = null },
@@ -1360,7 +1361,9 @@ export function SPList(listDef) {
     // TODO: fieldfilter should use 'lookupcolumnId' e.g. ServiceTypeId eq 1
     const colFilterArr = [];
     columnFilters.forEach((colFilter) =>
-      colFilterArr.push(`${colFilter.column} eq '${colFilter.value}'`)
+      colFilterArr.push(
+        `${colFilter.column} ${colFilter.op ?? "eq"} '${colFilter.value}'`
+      )
     );
     if (!includeFolders) colFilterArr.push(`FSObjType eq '0'`);
 
@@ -2744,7 +2747,7 @@ export function SPList(listDef) {
     getListItems: getListItems,
     getListItemsAsync: getListItemsAsync,
     findByTitleAsync,
-    findByLookupColumnAsync,
+    findByColumnValueAsync,
     loadNextPage,
     findByIdAsync,
     updateListItem: updateListItem,

@@ -174,6 +174,13 @@ ko.components.register("requests-by-status", {
   },
 });
 
+registerComponent(
+  "requests-by-status-table",
+  "RequestsByStatus",
+  "RequestsByStatusTableModule",
+  "RequestsByStatusTableTemplate"
+);
+
 ko.components.register("quick-info", {
   template: {
     fromPath: "/components/QuickInfo/QuickInfoTemplate.html",
@@ -182,6 +189,17 @@ ko.components.register("quick-info", {
     viaLoader: "/components/QuickInfo/QuickInfoModule.js",
   },
 });
+
+function registerComponent(name, folder, moduleFilename, templateFilename) {
+  ko.components.register(name, {
+    template: {
+      fromPath: `/components/${folder}/${templateFilename}.html`,
+    },
+    viewModel: {
+      viaLoader: `/components/${folder}/${moduleFilename}.js`,
+    },
+  });
+}
 
 export function registerServiceTypeComponent(
   componentName,

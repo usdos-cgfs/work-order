@@ -28,11 +28,38 @@
     <!-- /ko -->
   </div>
 </div>
-<div id="app" class="container">
+<div class="container" data-bind="hidden: HasLoaded">
+  <div class="d-flex justify-content-center">
+    <progress class="w-75"></progress>
+  </div>
+</div>
+<div
+  id="app"
+  class="container"
+  style="display: none"
+  data-bind="visible: $root"
+>
+  <!-- ko if: CurrentUser()?.IsActionOffice -->
   <div
     data-bind="component: {name: 'quick-info', params: quickInfoParams}"
   ></div>
+  <!-- /ko -->
   <ul class="nav nav-tabs" id="section-tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button
+        class="nav-link"
+        id="office-requests-tab"
+        data-bs-toggle="tab"
+        data-bs-target="#office-requests"
+        data-bind="click: TabClicked"
+        type="button"
+        role="tab"
+        aria-controls="office-requests"
+        aria-selected="true"
+      >
+        Office Orders
+      </button>
+    </li>
     <li class="nav-item" role="presentation">
       <button
         class="nav-link"
@@ -83,6 +110,16 @@
     <div
       class="tab-pane"
       role="tabpanel"
+      aria-labelledby="office-requests-tab"
+      id="office-requests"
+    >
+      <div
+        data-bind="template: {name: 'tmpl-office-requests-view', data: OfficeRequestsView}"
+      ></div>
+    </div>
+    <div
+      class="tab-pane"
+      role="tabpanel"
       aria-labelledby="my-requests-tab"
       id="my-requests"
     >
@@ -122,6 +159,30 @@
   <div id="service-type-templates"></div>
 
   <div id="tmpl-views">
+    <script type="text/html" id="tmpl-office-requests-view">
+      <h2>My Office Requests</h2>
+      <div class="d-flex">
+        <div
+          class="list-group me-3"
+          id="section-office-requests-tabs"
+          data-bind="foreach: StatusOptions"
+        >
+          <button
+            class="list-group-item list-group-action"
+            type="button"
+            data-bind="text: $data,
+              css: {'active': $parent.ActiveKey() == $data },
+              click: ()=> $parent.ActiveKey($data)"
+          ></button>
+        </div>
+        <div class="w-100">
+          <div
+            data-bind="component: {name: 'requests-by-status-table', params: ActiveTableParams}"
+          ></div>
+        </div>
+      </div>
+    </script>
+
     <script type="text/html" id="tmpl-my-requests-view">
       <h2>My Requests</h2>
       <div class="d-flex">

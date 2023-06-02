@@ -1,5 +1,6 @@
 import { RequestDetailView, DisplayModes } from "./views/RequestDetailView.js";
 import { NewRequestView } from "./views/NewRequestView.js";
+import { OfficeRequestsView } from "./views/OfficeRequestsView.js";
 import { MyRequestsView } from "./views/MyRequestsView.js";
 
 import { RequestOrg, requestOrgStore } from "./entities/RequestOrg.js";
@@ -66,8 +67,11 @@ export const Tabs = {
 class App {
   constructor() {
     this.Tab.subscribe(tabWatcher);
+    this.HasLoaded(true);
   }
+  HasLoaded = ko.observable(false);
 
+  CurrentUser = currentUser;
   context = getAppContext();
 
   Tab = ko.observable();
@@ -90,6 +94,7 @@ class App {
   };
 
   // Views
+  OfficeRequestsView = new OfficeRequestsView();
   MyRequestsView = new MyRequestsView({
     openRequests: this.OpenRequests,
     openAssignments: this.OpenAssignments,
@@ -128,8 +133,7 @@ class App {
     }
 
     user: {
-      this.currentUser = await User.Create();
-      currentUser(this.currentUser);
+      this.CurrentUser(await User.Create());
     }
 
     routing: {
@@ -154,7 +158,6 @@ class App {
 
   NewRequest = (data, e) => {
     const props = {
-      currentUser: this.currentUser,
       context: this.context,
       displayMode: DisplayModes.New,
     };
@@ -177,7 +180,6 @@ class App {
       new RequestDetailView({
         ID: request.ID,
         Title: request.Title,
-        currentUser: this.currentUser,
         context: this.context,
       })
     );

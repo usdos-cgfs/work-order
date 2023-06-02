@@ -71,6 +71,7 @@ class EntitySet {
   }
 
   // Queries
+  // TODO: Queries should return options to read e.g. toList, first, toCursor
   FindById = async (id, fields) => {
     const result = await this.ListRef.findByIdAsync(id, fields);
     if (!result) return null;
@@ -79,8 +80,8 @@ class EntitySet {
     return newEntity;
   };
 
-  FindByLookupColumn = async (
-    { column, value, type = lookupType.value },
+  FindByColumnValue = async (
+    columnFilters,
     { orderByColumn, sortAsc },
     { count = null },
     fields,
@@ -91,8 +92,8 @@ class EntitySet {
     count = count ?? 5000;
     // else, we should apply a count of 5000 and keep fetching
 
-    const results = await this.ListRef.findByLookupColumnAsync(
-      [{ column, value, type }],
+    const results = await this.ListRef.findByColumnValueAsync(
+      columnFilters,
       { orderByColumn, sortAsc },
       { count },
       fields,
@@ -170,7 +171,7 @@ class EntitySet {
 
   FindByRequestId = async function (requestId, fields) {
     if (!requestId) return;
-    const results = await this.ListRef.findByLookupColumnAsync(
+    const results = await this.ListRef.findByColumnValueAsync(
       [{ column: "Request", value: requestId, type: lookupType.id }],
       { orderByColumn: "ID", sortAsc: false },
       { count: null },

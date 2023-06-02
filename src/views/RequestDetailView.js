@@ -114,7 +114,7 @@ export class RequestDetailView {
     Closed: ko.observable(),
   };
 
-  RequestOrgs = ko.observable();
+  RequestOrgs = ko.observableArray();
 
   ServiceType = {
     IsLoading: ko.observable(false),
@@ -702,11 +702,25 @@ export class RequestDetailView {
 
     activities.map(async (action) => {
       emitRequestNotification(this, action);
-      if (action.activity == actionTypes.Rejected) {
-        // Request was rejected, close it out
-        console.warn("Closing request");
-        //
-        await this.closeAndFinalize(requestStates.rejected);
+      switch (action.activity) {
+        case actionTypes.Assigned:
+        case actionTypes.Unassigned:
+          // update the Request Orgs
+          this.RequestOrgs(
+            this.Assignments.list
+              .All()
+              .map((assignment) => assignment.RequestOrg)
+          );
+          await this._context.Requests.UpdateEntity(this, ["RequestOrgs"]);
+          break;
+        case actionTypes.Rejected:
+          {
+            // Request was rejected, close it out
+            console.warn("Closing request");
+            //
+            await this.closeAndFinalize(requestStates.rejected);
+          }
+          break;
       }
     });
   };
@@ -1031,16 +1045,14 @@ export class RequestDetailView {
     Title = null,
     serviceType: serviceTypeDef = null,
     context,
-    currentUser,
   }) {
     this._context = context;
-    this._currentUser = currentUser;
     this.ID = ID;
     this.Title = Title;
     this.LookupValue = Title;
 
     if (displayMode == DisplayModes.New) {
-      this.RequestorInfo.Requestor(new People(currentUser));
+      this.RequestorInfo.Requestor(new People(currentUser()));
       this.ObservableTitle(createNewRequestTitle());
       this.State.Status(requestStates.draft);
       this.State.IsActive(true);

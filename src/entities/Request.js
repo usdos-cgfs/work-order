@@ -159,7 +159,7 @@ export class RequestEntity {
     ClosedDate: this.Dates.Closed,
     RequestOrgs: {
       set: (inputArr) =>
-        this.RequestOrgs(inputArr.map((val) => RequestOrg.Create(val))),
+        this.RequestOrgs(inputArr.results.map((val) => RequestOrg.Create(val))),
       get: this.RequestOrgs,
     },
     ServiceType: {
@@ -534,7 +534,6 @@ export class RequestEntity {
         this
       );
       this.Assignments.refresh();
-
       //this.request.ActivityLog.assignmentAdded(assignment);
       this.ActivityQueue.push({
         activity: actionTypes.Assigned,
@@ -683,6 +682,7 @@ export class RequestEntity {
       "EstClosedDate",
       "ClosedDate",
       "RequestStatus",
+      "RequestOrgs",
     ],
   };
 

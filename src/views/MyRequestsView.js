@@ -12,7 +12,7 @@ export class MyRequestsView {
       open: {
         view: this,
         status: requestStates.open,
-        showAssignments: true,
+        showAssignments: false,
         data: this.AllOpenRequests,
         openAssignments: this.AllOpenAssignments,
       },

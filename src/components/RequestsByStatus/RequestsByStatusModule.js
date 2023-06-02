@@ -44,8 +44,8 @@ export default class RequestsByStatusModule {
     const start = new Date();
 
     const requestsByStatus =
-      await this.view._context.Requests.FindByLookupColumn(
-        { column: "RequestStatus", value: this.filter },
+      await this.view._context.Requests.FindByColumnValue(
+        [{ column: "RequestStatus", value: this.filter }],
         { orderByColumn: "Title", sortAsc: false },
         {},
         RequestEntity.Views.ByStatus,

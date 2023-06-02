@@ -95,9 +95,9 @@ export class User {
     return this.Groups.map((group) => group.ID);
   }
 
-  isInRequestOrg(reqOrg) {
+  isInRequestOrg = (reqOrg) => {
     return this.RequestOrgs().find((userReqOrg) => userReqOrg.ID == reqOrg.ID);
-  }
+  };
 
   RequestOrgs = ko.pureComputed(() => {
     const groupIds = this.getGroupIds();
@@ -117,6 +117,8 @@ export class User {
       (reqOrg) => reqOrg.OrgType == OrgTypes.ActionOffice
     );
   });
+
+  IsActionOffice = ko.pureComputed(() => this.ActionOffices().length);
 
   static Create = async function () {
     // TODO: Switch to getUserPropertiesAsync since that includes phone # etc
