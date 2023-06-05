@@ -30,7 +30,12 @@ export class OfficeRequestsView {
           request.RequestOrgs().find(currentUser().isInRequestOrg)
         )
     );
-    return { activeRequestSet, filteredRequests };
+    return {
+      activeRequestSet,
+      filteredRequests,
+      enableActionOfficeFeatures: true,
+      showAssignees: true,
+    };
   });
 
   showAssignmentsWatcher = (showAssignments) => {

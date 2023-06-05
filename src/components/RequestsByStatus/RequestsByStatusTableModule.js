@@ -6,7 +6,7 @@ export default class RequestsByStatusTableModule {
   constructor({
     activeRequestSet,
     filteredRequests = null,
-    actionOfficeFeatures: enableActionOfficeFeatures = false,
+    enableActionOfficeFeatures = false,
     showAssignees = false,
   }) {
     this.enableActionOfficeFeatures = enableActionOfficeFeatures;
@@ -19,7 +19,7 @@ export default class RequestsByStatusTableModule {
     this.ShowAssignees(showAssignees);
   }
 
-  ShowAssignees = ko.observable(false);
+  ShowAssignees = ko.observable();
 
   getTableElementId = () => "tbl-requests-status-" + this.filter?.toLowerCase();
 

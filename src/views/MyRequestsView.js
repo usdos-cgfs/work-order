@@ -1,59 +1,32 @@
 import { getUrlParam, setUrlParam } from "../common/Router.js";
 import { requestStates } from "../entities/Request.js";
 import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
+import { requestsByStatusMap } from "../stores/Requests.js";
 
 export class MyRequestsView {
-  constructor({ openRequests, openAssignments }) {
-    this._context = getAppContext();
-    this.AllOpenRequests = openRequests;
-    this.AllOpenAssignments = openAssignments;
-
-    this.params = {
-      open: {
-        view: this,
-        status: requestStates.open,
-        showAssignments: false,
-        data: this.AllOpenRequests,
-        openAssignments: this.AllOpenAssignments,
-      },
-      closed: {
-        view: this,
-        status: requestStates.closed,
-        data: ko.observableArray(),
-      },
-      cancelled: {
-        view: this,
-        status: requestStates.cancelled,
-        data: ko.observableArray(),
-      },
-    };
-
-    this.View.subscribe(this.viewWatcher);
-
-    this.View(this.views.open);
+  constructor() {
+    this.RequestsByStatusMap = requestsByStatusMap;
+    this.init();
+    this.ActiveKey(requestStates.open);
   }
 
-  // AllOpenAssignments = ko.observableArray();
+  async init() {
+    const openRequests = this.RequestsByStatusMap.get(requestStates.open);
+    await openRequests.init();
+    this.HasLoaded(true);
+  }
 
-  views = {
-    open: "open",
-    closed: "closed",
-    cancelled: "cancelled",
-  };
-
-  View = ko.observable();
-
-  viewTabClicked = (data, e) => this.View(e.target.dataset.target);
-
-  viewWatcher = (newViewId) => {
-    if (!newViewId) {
-      return;
-    }
-    //var tabTriggerElement = document.getElementById(newTab);
-    setUrlParam("view", newViewId);
-  };
+  HasLoaded = ko.observable(false);
+  ActiveKey = ko.observable();
 
   ActiveTableParams = ko.pureComputed(() => {
-    return this.params[this.View()];
+    const activeRequestSet = this.RequestsByStatusMap.get(this.ActiveKey());
+    return {
+      activeRequestSet,
+    };
+  });
+
+  StatusOptions = ko.pureComputed(() => {
+    return [...this.RequestsByStatusMap.keys()];
   });
 }

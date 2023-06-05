@@ -1,8 +1,11 @@
 import { assignmentStates } from "../../entities/Assignment.js";
+import { requestStates } from "../../entities/Request.js";
 import { currentUser } from "../../infrastructure/Authorization.js";
+
+import { requestsByStatusMap } from "../../stores/Requests.js";
+
 export default class QuickInfoModule {
-  constructor({ allOpenAssignments, allOpenRequests }) {
-    this.AllOpenRequests = allOpenRequests;
+  constructor({ allOpenAssignments }) {
     this.AllOpenAssignments = allOpenAssignments;
   }
 
@@ -19,8 +22,13 @@ export default class QuickInfoModule {
   });
 
   LateRequests = ko.pureComputed(() => {
-    return this.AllOpenRequests().filter((request) => {
-      return request.Dates.EstClosed.ObservableDateTime() <= new Date();
-    });
+    return (
+      requestsByStatusMap
+        .get(requestStates.open)
+        ?.List()
+        ?.filter((request) => {
+          return request.Dates.EstClosed.ObservableDateTime() <= new Date();
+        }) ?? []
+    );
   });
 }

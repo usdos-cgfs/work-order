@@ -3,6 +3,19 @@
     <h2 class="mx-0" data-bind="text: filter"></h2>
     <i class="fa fa-sync pointer" data-bind="click: refresh"></i>
   </div>
+  <!-- ko if: enableActionOfficeFeatures -->
+  <div class="form-check form-switch">
+    <label class="form-check-label">
+      <input
+        class="form-check-input"
+        type="checkbox"
+        role="switch"
+        data-bind="checked: ShowAssignees"
+      />
+      Show Assignments</label
+    >
+  </div>
+  <!-- /ko -->
   <!-- <input type="checkbox" data-bind="checked: ShowAssignees" /> -->
   <!-- <div>
     <button

@@ -186,6 +186,30 @@
     <script type="text/html" id="tmpl-my-requests-view">
       <h2>My Requests</h2>
       <div class="d-flex">
+        <div
+          class="list-group me-3"
+          id="section-my-requests-tabs"
+          data-bind="foreach: StatusOptions"
+        >
+          <button
+            class="list-group-item list-group-action"
+            type="button"
+            data-bind="text: $data,
+              css: {'active': $parent.ActiveKey() == $data },
+              click: ()=> $parent.ActiveKey($data)"
+          ></button>
+        </div>
+        <div class="w-100">
+          <div
+            data-bind="component: {name: 'requests-by-status-table', params: ActiveTableParams}"
+          ></div>
+        </div>
+      </div>
+    </script>
+
+    <!-- <script type="text/html" id="tmpl-my-requests-view">
+      <h2>My Requests</h2>
+      <div class="d-flex">
         <div class="list-group me-3" id="section-my-requests-tabs">
           <button
             class="list-group-item list-group-action"
@@ -224,7 +248,7 @@
           ></div>
         </div>
       </div>
-    </script>
+    </script> -->
 
     <script type="text/html" id="tmpl-new-request-view">
       <h2>Select the type of work order you would like to open:</h2>
