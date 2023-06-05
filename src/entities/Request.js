@@ -1,11 +1,60 @@
-import { RequestOrg } from "./RequestOrg.js";
-import { Assignment, assignmentStates } from "./Assignment.js";
-import { People } from "../components/People.js";
-import { ServiceType } from "./ServiceType.js";
-import { PipelineStage } from "./PipelineStage.js";
+import { RequestOrg } from "../entities/RequestOrg.js";
+import {
+  serviceTypeStore,
+  ServiceType,
+  getModuleFilePath,
+} from "../entities/ServiceType.js";
+import { actionTypes } from "../entities/Action.js";
+import {
+  PipelineStage,
+  pipelineStageStore,
+} from "../entities/PipelineStage.js";
+import {
+  Assignment,
+  assignmentRoles,
+  assignmentStates,
+  assignmentRoleComponentMap,
+  activeAssignmentsError,
+} from "../entities/Assignment.js";
+import { Attachment } from "../entities/Attachment.js";
+import { Comment } from "../entities/Comment.js";
+import { Action } from "../entities/Action.js";
 
+import { People } from "../components/People.js";
+import { ServiceTypeComponent } from "../components/ServiceTypeComponent.js";
+import { ActivityLogComponent } from "../components/ActivityLogComponent.js";
+import { NewAssignmentComponent } from "../components/NewAssignmentComponent.js";
 import { DateField } from "../components/DateField.js";
+
+import {
+  createNewRequestTitle,
+  sortByField,
+} from "../common/EntityUtilities.js";
+import {
+  calculateEffectiveSubmissionDate,
+  businessDaysFromDate,
+} from "../common/DateUtilities.js";
+import * as Router from "../common/Router.js";
+import { registerServiceTypeComponent } from "../common/KnockoutExtensions.js";
+
+import { addTask, finishTask, taskDefs } from "../stores/Tasks.js";
+
+import {
+  currentUser,
+  getRequestFolderPermissions,
+  stageActionRoleMap,
+  AssignmentFunctions,
+  permissions,
+} from "../infrastructure/Authorization.js";
+import {
+  emitCommentNotification,
+  emitRequestNotification,
+} from "../infrastructure/Notifications.js";
 import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
+
+import { DisplayModes } from "../views/RequestDetailView.js";
+
+import { Tabs } from "../app.js";
 
 export const requestStates = {
   draft: "Draft",
@@ -17,12 +66,25 @@ export const requestStates = {
 };
 
 export class RequestEntity {
-  constructor({ ID, Title }) {
+  constructor({ ID = null, Title = null, ServiceType = null }) {
     this.ID = ID;
     this.Title = Title;
     this.LookupValue = Title;
     this._context = getAppContext();
+
+    if (!ID) {
+      this.DisplayMode(DisplayModes.New);
+    }
+
+    this.ActivityQueue.subscribe(
+      this.activityQueueWatcher,
+      this,
+      "arrayChange"
+    );
   }
+
+  DisplayMode = ko.observable(DisplayModes.View);
+  Displaymodes = DisplayModes;
 
   get ID() {
     return this.ObservableID();
@@ -74,10 +136,6 @@ export class RequestEntity {
     IsLoading: ko.observable(false),
     Entity: ko.observable(),
     Def: ko.observable(),
-    definitionWatcher: (newSvcType) => {
-      // This should only be needed when creating a new request.
-      this.ServiceType.instantiateEntity(newSvcType);
-    },
     instantiateEntity: async (newSvcType = this.ServiceType.Def()) => {
       const newEntity = await newSvcType.instantiateEntity(this);
       this.ServiceType.Entity(newEntity);
@@ -159,7 +217,9 @@ export class RequestEntity {
     ClosedDate: this.Dates.Closed,
     RequestOrgs: {
       set: (inputArr) =>
-        this.RequestOrgs(inputArr.results.map((val) => RequestOrg.Create(val))),
+        this.RequestOrgs(
+          (inputArr.results ?? inputArr).map((val) => RequestOrg.Create(val))
+        ),
       get: this.RequestOrgs,
     },
     ServiceType: {
@@ -168,7 +228,9 @@ export class RequestEntity {
     }, // {id, title},
   };
 
+  // TODO: isCurrentStage through userHasCurr... should be in a component
   Pipeline = {
+    Icon: ko.pureComputed(() => this.ServiceType.Def()?.Icon),
     Stages: ko.pureComputed(() => {
       if (!this.ServiceType.Def()) return [];
       return pipelineStageStore()
@@ -180,6 +242,13 @@ export class RequestEntity {
       const nextStepNum = thisStepNum + 1;
       return this.Pipeline.Stages()?.find((stage) => stage.Step == nextStepNum);
     }),
+    isCurrentStage: (stage) => stage.Step == this.State.Stage()?.Step,
+    isPrevStage: (stage) => {
+      return ko.pureComputed(() => stage.Step < this.State.Stage()?.Step);
+    },
+    userHasCurrentStageActions: ko.pureComputed(
+      () => this.Assignments.CurrentStage.list.UserActionAssignments().length
+    ),
     advance: async () => {
       if (this.promptAdvanceModal) this.promptAdvanceModal.hide();
 
@@ -646,6 +715,177 @@ export class RequestEntity {
   };
 
   ActivityQueue = ko.observableArray();
+  ActivityLogger = new ActivityLogComponent(this.Actions, this.ActivityQueue);
+  IsLoading = ko.observable();
+  LoadedAt = ko.observable();
+
+  activityQueueWatcher = (changes) => {
+    const activities = changes
+      .filter((change) => change.status == "added")
+      .map((change) => change.value);
+
+    activities.map(async (action) => {
+      emitRequestNotification(this, action);
+      switch (action.activity) {
+        case actionTypes.Assigned:
+        case actionTypes.Unassigned:
+          // update the Request Orgs
+          this.RequestOrgs(
+            this.Assignments.list
+              .All()
+              .map((assignment) => assignment.RequestOrg)
+          );
+          await this._context.Requests.UpdateEntity(this, ["RequestOrgs"]);
+          break;
+        case actionTypes.Rejected:
+          {
+            // Request was rejected, close it out
+            console.warn("Closing request");
+            //
+            await this.closeAndFinalize(requestStates.rejected);
+          }
+          break;
+      }
+    });
+  };
+
+  Validation = {
+    Errors: {
+      Request: ko.observableArray(),
+      ServiceType: ko.pureComputed(() => []),
+      All: ko.pureComputed(() => [
+        ...this.Validation.Errors.Request(),
+        ...this.Validation.Errors.ServiceType(),
+        ...this.Validation.CurrentStage.Errors(),
+      ]),
+    },
+    IsValid: ko.pureComputed(() => !this.Validation.Errors.All().length),
+    CurrentStage: {
+      IsValid: () => this.Assignments.CurrentStage.Validation.IsValid(),
+      Errors: ko.pureComputed(() =>
+        this.Assignments.CurrentStage.Validation.Errors()
+      ),
+    },
+  };
+
+  Authorization = {
+    currentUserIsActionOffice: ko.pureComputed(() => {
+      return this.Assignments.list
+        .CurrentUserAssignments()
+        .find((assignment) =>
+          [assignmentRoles.ActionResolver, assignmentRoles.Approver].includes(
+            assignment.ActionType
+          )
+        );
+    }),
+    currentUserCanAdvance: ko.pureComputed(() => {
+      return this.Assignments.CurrentStage.list.UserActionAssignments().length;
+    }),
+    currentUserCanSupplement: ko.pureComputed(() => {
+      // determines whether the current user can add attachments or
+      const user = currentUser();
+      if (!user) {
+        console.warn("Current user not set!");
+        return false;
+      }
+      if (!this.State.IsActive()) return false;
+      if (this.Assignments.list.CurrentUserAssignments().length) return true;
+      if (this.RequestorInfo.Requestor()?.ID == user.ID) return true;
+    }),
+    ensureAccess: async (accessValuePairs) => {
+      const relFolderPath = this.getRelativeFolderPath();
+      const listRefs = this.getAllListRefs();
+      await Promise.all(
+        listRefs.map(async (listRef) => {
+          // Apply folder permissions
+          await listRef.EnsureFolderPermissions(
+            relFolderPath,
+            accessValuePairs
+          );
+        })
+      );
+    },
+    setReadonly: async () => {
+      const relFolderPath = this.getRelativeFolderPath();
+      const listRefs = this.getAllListRefs();
+      await Promise.all(
+        listRefs.map(async (listRef) => {
+          // Apply folder permissions
+          await listRef.SetFolderReadOnly(relFolderPath);
+        })
+      );
+    },
+  };
+
+  getAppLink = () =>
+    `${Router.webRoot}/Pages/WO_DB.aspx?reqId=${this.Title}&tab=${Tabs.RequestDetail}`;
+
+  getAppLinkElement = () =>
+    `<a href="${this.getAppLink()}" target="blank">${this.Title}</a>`;
+  /**
+   * Returns the generic relative path without the list/library name
+   * e.g. EX/2929-20199
+   */
+  getRelativeFolderPath = ko.pureComputed(
+    () => `${this.RequestorInfo.Office().Title}/${this.ObservableTitle()}`
+  );
+
+  getFolderPermissions = () => getRequestFolderPermissions(this);
+
+  calculateEffectiveSubmissionDate = () => {
+    const submissionDate = this.Dates.Submitted.get() ?? new Date();
+    if (
+      submissionDate.getUTCHours() >= 19 ||
+      submissionDate.getUTCHours() < 4
+    ) {
+      console.log("its after 3, this is submitted tomorrow");
+      const tomorrow = businessDaysFromDate(submissionDate, 1);
+      tomorrow.setUTCHours(13);
+      tomorrow.setUTCMinutes(0);
+      return tomorrow;
+    } else {
+      return submissionDate;
+    }
+  };
+
+  // Controls
+  refreshAll = async () => {
+    this.IsLoading(true);
+    await this.refreshRequest();
+    // These can be started when we have the ID
+    this.Attachments.refresh();
+    this.Actions.refresh();
+    this.Comments.refresh();
+    await this.ServiceType.refreshEntity();
+    // Assignments are dependent on the serviceType being loaded
+    this.Assignments.refresh();
+    this.LoadedAt(new Date());
+    this.IsLoading(false);
+  };
+
+  refreshRequest = async () => {
+    if (!this.ID && !this.Title) return;
+    await this._context.Requests.LoadEntity(this);
+  };
+
+  getAllListRefs() {
+    const listRefs = this.getInitialListRefs();
+    listRefs.concat([this._context.Comments, this._context.Attachments]);
+    return listRefs;
+  }
+
+  getInitialListRefs() {
+    const listRefs = [
+      this._context.Requests,
+      this._context.Actions,
+      this._context.Assignments,
+      this._context.Notifications,
+    ];
+    if (this.ServiceType.Def()?.getListRef()) {
+      listRefs.push(this.ServiceType.Def().getListRef());
+    }
+    return listRefs;
+  }
 
   static Views = {
     All: [
@@ -664,6 +904,7 @@ export class RequestEntity {
       "PipelineStage",
       "RequestStagePrev",
       "RequestStatus",
+      "Status",
       "RequestStatusPrev",
       "InternalStatus",
       "RequestSubmitted",

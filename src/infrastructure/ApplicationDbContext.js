@@ -80,6 +80,15 @@ class EntitySet {
     return newEntity;
   };
 
+  /**
+   * Takes an array of columns and filter values with an optional comparison operator
+   * @param {[{column, op?, value}]} columnFilters
+   * @param {*} param1
+   * @param {*} param2
+   * @param {*} fields
+   * @param {*} includeFolders
+   * @returns
+   */
   FindByColumnValue = async (
     columnFilters,
     { orderByColumn, sortAsc },

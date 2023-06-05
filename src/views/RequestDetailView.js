@@ -50,6 +50,7 @@ import {
   emitCommentNotification,
   emitRequestNotification,
 } from "../infrastructure/Notifications.js";
+import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
 
 import { Tabs } from "../app.js";
 
@@ -61,808 +62,31 @@ export const DisplayModes = {
   View: "View",
 };
 
-const templates = {
-  New: "tmpl-request-header-new",
-  View: "tmpl-request-header-view",
-  Edit: "tmpl-request-header-edit",
+const reqHeaderComponentsMap = {
+  New: "request-header-edit",
+  View: "request-header-view",
+  Edit: "request-header-edit",
 };
 
 export class RequestDetailView {
-  _context;
-
-  get ID() {
-    return this.ObservableID();
-  }
-  set ID(id) {
-    this.ObservableID(id);
-  }
-  get Title() {
-    return this.ObservableTitle();
-  }
-  set Title(title) {
-    this.ObservableTitle(title);
-  }
-
-  ObservableID = ko.observable();
-  ObservableTitle = ko.observable();
-
-  RequestSubject = ko.observable();
-  RequestDescription = ko.observable();
-
-  RequestorInfo = {
-    Requestor: ko.observable(),
-    Name: ko.observable(),
-    Phone: ko.observable(),
-    Email: ko.observable(),
-    Office: ko.observable(),
-    Supervisor: ko.observable(),
-    ManagingDirector: ko.observable(),
-  };
-
-  State = {
-    IsActive: ko.observable(),
-    Stage: ko.observable(),
-    PreviousStage: ko.observable(),
-    Status: ko.observable(),
-    PreviousStatus: ko.observable(),
-    InternalStatus: ko.observable(),
-  };
-
-  Dates = {
-    Submitted: ko.observable(),
-    EstClosed: ko.observable(),
-    Closed: ko.observable(),
-  };
-
-  RequestOrgs = ko.observableArray();
-
-  ServiceType = {
-    IsLoading: ko.observable(false),
-    Entity: ko.observable(),
-    Def: ko.observable(),
-    definitionWatcher: (newSvcType) => {
-      // This should only be needed when creating a new request.
-      this.ServiceType.instantiateEntity(newSvcType);
-    },
-    instantiateEntity: async (newSvcType = this.ServiceType.Def()) => {
-      const newEntity = await newSvcType.instantiateEntity(this);
-      this.ServiceType.Entity(newEntity);
-    },
-    refreshEntity: async () => {
-      if (DEBUG) console.log("ServiceType: Refresh Triggered");
-      if (!this.ServiceType.Def()?.HasTemplate) return;
-      if (!this.ID) return;
-
-      this.ServiceType.IsLoading(true);
-      if (!this.ServiceType.Entity()) {
-        if (DEBUG)
-          console.log("ServiceType: Refresh null entity, Instantiating");
-        await this.ServiceType.instantiateEntity();
-      }
-      var template = this.ServiceType.Entity();
-      template.Title = this.Title;
-      await this.ServiceType.Def()
-        ?.getListRef()
-        ?.LoadEntityByRequestId(template, this.ID);
-
-      this.ServiceType.IsLoading(false);
-    },
-    createEntity: async (newEntity = this.ServiceType.Entity()) => {
-      if (!newEntity) return;
-      newEntity.Title = this.Title;
-      const folderPath = this.getRelativeFolderPath();
-      const newSvcTypeItemId = await this.ServiceType.Def()
-        .getListRef()
-        .AddEntity(newEntity, folderPath, this);
-      newEntity.ID = newSvcTypeItemId;
-      return newSvcTypeItemId;
-    },
-    updateEntity: async (fields) => {
-      if (!this.ServiceType.Entity()) return;
-      await this.ServiceType.Def()
-        ?.getListRef()
-        ?.UpdateEntity(this.ServiceType.Entity(), fields);
-    },
-  };
-
-  // FieldMaps are used by the ApplicationDbContext and define
-  // how to store and retrieve the entity properties
-  FieldMap = {
-    ID: this.ObservableID,
-    Title: this.ObservableTitle,
-    RequestSubject: this.RequestSubject,
-    RequestDescription: this.RequestDescription,
-    Requestor: {
-      set: (val) => this.RequestorInfo.Requestor(People.Create(val)),
-      get: this.RequestorInfo.Requestor,
-    },
-    RequestorName: this.RequestorInfo.Name,
-    RequestorPhone: this.RequestorInfo.Phone,
-    RequestorEmail: this.RequestorInfo.Email,
-    RequestorSupervisor: {
-      set: (val) => this.RequestorInfo.Supervisor(People.Create(val)),
-      get: this.RequestorInfo.Supervisor,
-    },
-    ManagingDirector: {
-      set: (val) => this.RequestorInfo.ManagingDirector(People.Create(val)),
-      get: this.RequestorInfo.ManagingDirector,
-    },
-    RequestorOrg: {
-      set: (val) => this.RequestorInfo.Office(RequestOrg.Create(val)),
-      get: this.RequestorInfo.Office,
-    },
-    IsActive: this.State.IsActive,
-    PipelineStage: {
-      factory: PipelineStage.FindInStore,
-      obs: this.State.Stage,
-    },
-    RequestStagePrev: this.State.PreviousStage,
-    RequestStatus: this.State.Status,
-    RequestStatusPrev: this.State.PreviousStatus,
-    InternalStatus: this.State.InternalStatus,
-    RequestSubmitted: this.Dates.Submitted,
-    EstClosedDate: this.Dates.EstClosed,
-    ClosedDate: this.Dates.Closed,
-    RequestOrgs: {
-      set: (inputArr) =>
-        this.RequestOrgs(inputArr.map((val) => RequestOrg.Create(val))),
-      get: this.RequestOrgs,
-    },
-    ServiceType: {
-      set: (val) => this.ServiceType.Def(ServiceType.Create(val)),
-      get: this.ServiceType.Def,
-    }, // {id, title},
-  };
-
-  Pipeline = {
-    Stages: ko.pureComputed(() => {
-      if (!this.ServiceType.Def()) return [];
-      return pipelineStageStore()
-        .filter((stage) => stage.ServiceType.ID == this.ServiceType.Def()?.ID)
-        .sort(sortByField("Step"));
-    }),
-    getNextStage: ko.pureComputed(() => {
-      const thisStepNum = this.State.Stage()?.Step ?? 0;
-      const nextStepNum = thisStepNum + 1;
-      return this.Pipeline.Stages()?.find((stage) => stage.Step == nextStepNum);
-    }),
-    advance: async () => {
-      if (this.promptAdvanceModal) this.promptAdvanceModal.hide();
-
-      const nextStage = this.Pipeline.getNextStage();
-
-      if (!nextStage) {
-        // End of the Pipeline; time to close
-        console.log("Closing Request");
-        this.closeAndFinalize(requestStates.fulfilled);
-        return null;
-      }
-      this.State.Stage(nextStage);
-
-      await this._context.Requests.UpdateEntity(this, ["PipelineStage"]);
-
-      this.ActivityQueue.push({
-        activity: actionTypes.Advanced,
-        data: nextStage,
-      });
-      this.Assignments.createStageAssignments(nextStage);
-      return;
-    },
-  };
-
-  Attachments = {
-    AreLoading: ko.observable(),
-    list: {
-      All: ko.observableArray(),
-      Active: ko.pureComputed(() =>
-        this.Attachments.list.All().filter((attachment) => attachment.IsActive)
-      ),
-    },
-    userCanAttach: ko.pureComputed(() =>
-      this.Authorization.currentUserCanSupplement()
-    ),
-    addNew: async () => {
-      const folderPath = this.getRelativeFolderPath();
-      const folderPerms = this.getFolderPermissions();
-
-      try {
-        await this._context.Attachments.UpsertFolderPath(folderPath);
-        await this._context.Attachments.SetFolderPermissions(
-          folderPath,
-          folderPerms
-        );
-        await this._context.Attachments.UploadNewDocument(folderPath, {
-          RequestId: this.ID,
-          RequestTitle: this.Title,
-        });
-        this.Attachments.refresh();
-      } catch (e) {
-        console.error("Error creating folder: ");
-      }
-    },
-    refresh: async () => {
-      if (!this.Title) return;
-      this.Attachments.AreLoading(true);
-      try {
-        const attachments =
-          await this._context.Attachments.GetItemsByFolderPath(
-            this.getRelativeFolderPath(),
-            Attachment.Views.All
-          );
-        this.Attachments.list.All(attachments);
-      } catch (e) {
-        console.warn("Looks like there are no attachments", e);
-      }
-      this.Attachments.AreLoading(false);
-    },
-    view: (attachment) => {
-      //console.log("viewing", attachment);
-      this._context.Attachments.ShowForm(
-        "DispForm.aspx",
-        "View " + attachment.Title,
-        { id: attachment.ID }
-      );
-    },
-    userCanRemove: (attachment) => {
-      return ko.pureComputed(() => {
-        if (!this.Authorization.currentUserCanSupplement()) return false;
-        return true;
-      });
-    },
-    remove: async (attachment) => {
-      console.log("removing", attachment);
-      attachment.IsActive = false;
-      await this._context.Attachments.UpdateEntity(attachment, ["IsActive"]);
-      this.Attachments.refresh();
-    },
-  };
-
-  Comments = {
-    AreLoading: ko.observable(),
-    list: {
-      All: ko.observableArray(),
-      Active: ko.pureComputed(() => {
-        return this.Comments.list.All().filter((comment) => comment.IsActive);
-      }),
-    },
-    userCanComment: ko.pureComputed(() => {
-      return this.Authorization.currentUserCanSupplement();
-    }),
-    addNew: async (comment) => {
-      const folderPath = this.getRelativeFolderPath();
-      const folderPerms = this.getFolderPermissions();
-
-      try {
-        const commentFolderId = await this._context.Comments.UpsertFolderPath(
-          folderPath
-        );
-
-        await this._context.Comments.SetItemPermissions(
-          commentFolderId,
-          folderPerms
-        );
-
-        await this._context.Comments.AddEntity(comment, folderPath);
-        this.Comments.refresh();
-      } catch (e) {
-        console.error("Error creating folder: ");
-      }
-    },
-    update: async (comment) => {
-      // TODO ?
-    },
-    refresh: async () => {
-      this.Comments.AreLoading(true);
-      const folderPath = this.getRelativeFolderPath();
-      const comments = await this._context.Comments.GetItemsByFolderPath(
-        folderPath,
-        Comment.Views.All
-      );
-      this.Comments.list.All(comments);
-      this.Comments.AreLoading(false);
-    },
-    sendNotification: async (comment) => {
-      await emitCommentNotification(comment, this);
-      comment.NotificationSent = true;
-      await this._context.Comments.UpdateEntity(comment, ["NotificationSent"]);
-      this.Comments.refresh();
-    },
-  };
-
-  Assignments = {
-    AreLoading: ko.observable(),
-    list: {
-      All: ko.observableArray(),
-      InProgress: ko.pureComputed(() =>
-        this.Assignments.list
-          .All()
-          .filter(
-            (assignment) => assignment.Status == assignmentStates.InProgress
-          )
-      ),
-      CurrentUserAssignments: ko.pureComputed(() => {
-        // We need find assignments where the current user is directly assigned:
-        // or They're in a group that's been assigned:
-        const userGroupIds = currentUser().getGroupIds();
-        // or Where they're in a requestOrg that's been assigned:
-        const userReqOrgIds = currentUser()
-          .ActionOffices()
-          .map((org) => org.ID);
-
-        const assignments = this.Assignments.list
-          .All()
-          .filter(
-            (assignment) =>
-              assignment.Assignee?.ID == currentUser()?.ID ||
-              userGroupIds.includes(assignment.Assignee?.ID) ||
-              userReqOrgIds.includes(assignment.RequestOrg?.ID)
-          );
-
-        return assignments;
-      }),
-    },
-    CurrentStage: {
-      list: {
-        ActionAssignments: ko.pureComputed(() => {
-          return this.Assignments.list
-            .All()
-            .filter(
-              (assignment) =>
-                assignment.PipelineStage?.ID == this.State.Stage()?.ID &&
-                (assignment.Role == assignmentRoles.ActionResolver ||
-                  assignment.Role == assignmentRoles.Approver)
-            );
-        }),
-        UserActionAssignments: ko.pureComputed(() => {
-          return this.Assignments.list
-            .CurrentUserAssignments()
-            .filter(
-              (assignment) =>
-                assignment.PipelineStage?.ID == this.State.Stage()?.ID &&
-                (assignment.Role == assignmentRoles.ActionResolver ||
-                  assignment.Role == assignmentRoles.Approver)
-            );
-        }),
-      },
-      Validation: {
-        IsValid: ko.pureComputed(
-          () =>
-            !this.Assignments.CurrentStage.Validation.ActiveAssignmentsError() &&
-            !this.Assignments.CurrentStage.Validation.Errors().length
-        ),
-        Errors: ko.observableArray(),
-        ActiveAssignmentsError: ko.pureComputed(() => {
-          // TODO: this should be a subscription event
-          const activeAssignments = this.Assignments.CurrentStage.list
-            .UserActionAssignments()
-            .find(
-              (assignment) => assignment.Status == assignmentStates.InProgress
-            );
-          if (activeAssignments) {
-            // If we have assignment components and there isn't already a variable set
-            // this.Assignments.CurrentStage.Validation.Errors(
-            //   this.Assignments.CurrentStage.Validation.Errors()
-            //     .filter(
-            //       (error) => error.source != activeAssignmentsError.source
-            //     )
-            //     .push(activeAssignmentsError)
-            // );
-            if (
-              this.Assignments.CurrentStage.Validation.Errors.indexOf(
-                activeAssignmentsError
-              ) < 0
-            ) {
-              this.Assignments.CurrentStage.Validation.Errors.push(
-                activeAssignmentsError
-              );
-            }
-            return true;
-          } else {
-            this.Assignments.CurrentStage.Validation.Errors.remove(
-              activeAssignmentsError
-            );
-            return false;
-          }
-        }),
-        setActiveAssignmentsError: (activeAssignments) => {},
-      },
-      UserCanAdvance: ko.pureComputed(() => {
-        return this.Assignments.CurrentStage.list.UserActionAssignments()
-          .length;
-      }),
-      AssignmentComponents: {
-        Generic: ko.pureComputed(() => {
-          const stage = this.State.Stage();
-          if (!stage) {
-            return [];
-          }
-          const assignmentComponents = this.Assignments.CurrentStage.list
-            .UserActionAssignments()
-            .map((assignment) => {
-              return {
-                assignment,
-                completeAssignment: this.Assignments.complete,
-                errors: this.Assignments.CurrentStage.Validation.Errors,
-                actionComponentName: ko.observable(
-                  assignmentRoleComponentMap[assignment.Role]
-                ),
-              };
-            });
-
-          return assignmentComponents;
-        }),
-        Custom: ko.pureComputed(() => {
-          const stage = this.State.Stage();
-          const serviceType = this.ServiceType.Def();
-          const serviceTypeEntity = this.ServiceType.Entity();
-          if (
-            !serviceType?.UID ||
-            !stage?.ActionComponentName ||
-            !serviceTypeEntity ||
-            this.ServiceType.IsLoading()
-          ) {
-            return;
-          }
-          // Check if the user is assigned to this stage
-          if (
-            !this.Assignments.CurrentStage.list.UserActionAssignments().length
-          ) {
-            return;
-          }
-          try {
-            registerServiceTypeComponent(
-              stage.ActionComponentName,
-              stage.ActionComponentName,
-              serviceType.UID
-            );
-            return {
-              actionComponentName: stage.ActionComponentName,
-              serviceType: this.ServiceType,
-              request: this,
-              errors: this.Assignments.CurrentStage.Validation.Errors,
-            };
-          } catch (e) {
-            console.error(
-              `Error registering declared assignment action: ${stage.ActionComponentName}`,
-              e
-            );
-          }
-        }),
-        Any: ko.pureComputed(
-          () =>
-            this.Assignments.CurrentStage.AssignmentComponents.Generic()
-              .length ||
-            this.Assignments.CurrentStage.AssignmentComponents.Custom()
-        ),
-      },
-    },
-    refresh: async () => {
-      this.Assignments.AreLoading(true);
-      // Create a list of Assignment instances from raw entities
-      const assignmentObjs = await this._context.Assignments.FindByRequestId(
-        this.ID,
-        Assignment.Views.All
-      );
-      const assignments =
-        assignmentObjs?.map(Assignment.CreateFromObject) ?? [];
-
-      this.Assignments.list.All(assignments);
-      this.Assignments.AreLoading(false);
-    },
-    userCanAssign: ko.pureComputed(() => {
-      // TODO
-      if (!this.State.IsActive()) return false;
-      return true;
-    }),
-    addNew: async (assignment = null) => {
-      if (!this.ID || !assignment) return;
-
-      if (!assignment.RequestOrg) {
-        assignment.RequestOrg = this.State.Stage()?.RequestOrg;
-      }
-
-      if (!assignment.PipelineStage) {
-        assignment.PipelineStage = this.State.Stage();
-      }
-
-      assignment.Status = assignment.Role.initialStatus;
-
-      const folderPath = this.getRelativeFolderPath();
-
-      const newAssignmentId = await this._context.Assignments.AddEntity(
-        assignment,
-        folderPath,
-        this
-      );
-      this.Assignments.refresh();
-
-      //this.request.ActivityLog.assignmentAdded(assignment);
-      this.ActivityQueue.push({
-        activity: actionTypes.Assigned,
-        data: assignment,
-      });
-      if (assignment.Role?.permissions) {
-        // assignment.Assignee.Roles = [assignment.Role.permissions];
-        this.Authorization.ensureAccess([
-          [assignment.Assignee, assignment.Role.permissions],
-        ]);
-      }
-    },
-    view: (assignment) => {
-      //console.log("viewing", attachment);
-      this._context.Assignments.ShowForm(
-        "DispForm.aspx",
-        "View " + assignment.Assignee.Title,
-        { id: assignment.ID }
-      );
-    },
-    remove: async (assignment) => {
-      if (!confirm("Are you sure you want to remove this assignment?")) return;
-      try {
-        await this._context.Assignments.RemoveEntity(assignment);
-      } catch (e) {
-        console.error("Unable to remove assignment", e);
-        return;
-      }
-      this.Assignments.refresh();
-
-      //this.request.ActivityLog.assignmentRemoved(assignment);
-      this.ActivityQueue.push({
-        activity: actionTypes.Unassigned,
-        data: assignment,
-      });
-    },
-    complete: async (assignment, action) => {
-      const updateEntity = {
-        ID: assignment.ID,
-        Status: assignmentStates[action],
-        Comment: assignment.Comment,
-        CompletionDate: new Date().toISOString(),
-        ActionTaker: currentUser(),
-      };
-      await this._context.Assignments.UpdateEntity(updateEntity);
-
-      this.ActivityQueue.push({
-        activity: actionTypes[action],
-        data: updateEntity,
-      });
-
-      this.Assignments.refresh();
-    },
-    createStageAssignments: async (stage = null) => {
-      stage = stage ?? this.State.Stage();
-      const newAssignment = {
-        RequestOrg: stage.RequestOrg,
-        PipelineStage: stage,
-        IsActive: true,
-        Role: stageActionRoleMap[stage.ActionType],
-      };
-
-      if (
-        stage.AssignmentFunction &&
-        AssignmentFunctions[stage.AssignmentFunction]
-      ) {
-        const people =
-          AssignmentFunctions[stage.AssignmentFunction].bind(this)();
-
-        if (people && people.Title) {
-          newAssignment.Assignee = people;
-        }
-      } else {
-        newAssignment.Assignee = RequestOrg.FindInStore(
-          stage.RequestOrg
-        )?.UserGroup;
-      }
-
-      await this.Assignments.addNew(newAssignment);
-    },
-  };
-
-  Actions = {
-    AreLoading: ko.observable(),
-    list: {
-      All: ko.observableArray(),
-    },
-    refresh: async () => {
-      if (!this.ID) return;
-      this.Actions.AreLoading(true);
-      const actions = await this._context.Actions.GetItemsByFolderPath(
-        this.getRelativeFolderPath(),
-        Action.Views.All
-      );
-      this.Actions.list.All(actions);
-      this.Actions.AreLoading(false);
-    },
-    addNew: async (action) => {
-      if (!this.ID || !action) return;
-
-      const folderPath = this.getRelativeFolderPath();
-      // const actionObj = Object.assign(new Action(), action);
-      const newActionId = await this._context.Actions.AddEntity(
-        action,
-        folderPath,
-        this.request
-      );
-      this.Actions.refresh();
-    },
-  };
-
-  // AssignmentsArr = ko.observableArray();
-
-  ActivityQueue = ko.observableArray();
-  ActivityLogger = new ActivityLogComponent(this.Actions, this.ActivityQueue);
-
-  IsLoading = ko.observable();
-  LoadedAt = ko.observable();
-
-  activityQueueWatcher = (changes) => {
-    const activities = changes
-      .filter((change) => change.status == "added")
-      .map((change) => change.value);
-
-    activities.map(async (action) => {
-      emitRequestNotification(this, action);
-      switch (action.activity) {
-        case actionTypes.Assigned:
-        case actionTypes.Unassigned:
-          // update the Request Orgs
-          this.RequestOrgs(
-            this.Assignments.list
-              .All()
-              .map((assignment) => assignment.RequestOrg)
-          );
-          await this._context.Requests.UpdateEntity(this, ["RequestOrgs"]);
-          break;
-        case actionTypes.Rejected:
-          {
-            // Request was rejected, close it out
-            console.warn("Closing request");
-            //
-            await this.closeAndFinalize(requestStates.rejected);
-          }
-          break;
-      }
-    });
-  };
-
-  Validation = {
-    Errors: {
-      Request: ko.observableArray(),
-      ServiceType: ko.pureComputed(() => []),
-      All: ko.pureComputed(() => [
-        ...this.Validation.Errors.Request(),
-        ...this.Validation.Errors.ServiceType(),
-        ...this.Validation.CurrentStage.Errors(),
-      ]),
-    },
-    IsValid: ko.pureComputed(() => !this.Validation.Errors.All().length),
-    CurrentStage: {
-      IsValid: () => this.Assignments.CurrentStage.Validation.IsValid(),
-      Errors: ko.pureComputed(() =>
-        this.Assignments.CurrentStage.Validation.Errors()
-      ),
-    },
-  };
-
-  Authorization = {
-    currentUserIsActionOffice: ko.pureComputed(() => {
-      return this.Assignments.list
-        .CurrentUserAssignments()
-        .find((assignment) =>
-          [assignmentRoles.ActionResolver, assignmentRoles.Approver].includes(
-            assignment.ActionType
-          )
-        );
-    }),
-    currentUserCanAdvance: ko.pureComputed(() => {
-      return this.Assignments.CurrentStage.list.UserActionAssignments().length;
-    }),
-    currentUserCanSupplement: ko.pureComputed(() => {
-      // determines whether the current user can add attachments or
-      const user = currentUser();
-      if (!user) {
-        console.warn("Current user not set!");
-        return false;
-      }
-      if (!this.State.IsActive()) return false;
-      if (this.Assignments.list.CurrentUserAssignments().length) return true;
-      if (this.RequestorInfo.Requestor()?.ID == user.ID) return true;
-    }),
-    ensureAccess: async (accessValuePairs) => {
-      const relFolderPath = this.getRelativeFolderPath();
-      const listRefs = this.getAllListRefs();
-      await Promise.all(
-        listRefs.map(async (listRef) => {
-          // Apply folder permissions
-          await listRef.EnsureFolderPermissions(
-            relFolderPath,
-            accessValuePairs
-          );
-        })
-      );
-    },
-    setReadonly: async () => {
-      const relFolderPath = this.getRelativeFolderPath();
-      const listRefs = this.getAllListRefs();
-      await Promise.all(
-        listRefs.map(async (listRef) => {
-          // Apply folder permissions
-          await listRef.SetFolderReadOnly(relFolderPath);
-        })
-      );
-    },
-  };
-
-  getAppLink = () =>
-    `${Router.webRoot}/Pages/WO_DB.aspx?reqId=${this.Title}&tab=${Tabs.RequestDetail}`;
-
-  getAppLinkElement = () =>
-    `<a href="${this.getAppLink()}" target="blank">${this.Title}</a>`;
-  /**
-   * Returns the generic relative path without the list/library name
-   * e.g. EX/2929-20199
-   */
-  getRelativeFolderPath = ko.pureComputed(
-    () => `${this.RequestorInfo.Office().Title}/${this.ObservableTitle()}`
-  );
-
-  getFolderPermissions = () => getRequestFolderPermissions(this);
-
-  calculateEffectiveSubmissionDate = () => {
-    const submissionDate = this.Dates.Submitted() ?? new Date();
-    if (
-      submissionDate.getUTCHours() >= 19 ||
-      submissionDate.getUTCHours() < 4
-    ) {
-      console.log("its after 3, this is submitted tomorrow");
-      const tomorrow = businessDaysFromDate(submissionDate, 1);
-      tomorrow.setUTCHours(13);
-      tomorrow.setUTCMinutes(0);
-      return tomorrow;
-    } else {
-      return submissionDate;
-    }
-  };
-
-  // Controls
-  refreshAll = async () => {
-    this.IsLoading(true);
-    await this.refreshRequest();
-    // These can be started when we have the ID
-    this.Attachments.refresh();
-    this.Actions.refresh();
-    this.Comments.refresh();
-    await this.ServiceType.refreshEntity();
-    // Assignments are dependent on the serviceType being loaded
-    this.Assignments.refresh();
-    this.LoadedAt(new Date());
-    this.IsLoading(false);
-  };
-
-  refreshRequest = async () => {
-    if (!this.ID && !this.Title) return;
-    await this._context.Requests.LoadEntity(this);
-  };
-
   /************************************************************************
       RequestDetail Component Specific Items
   ************************************************************************/
 
-  AvailableServiceTypes = ko.pureComputed(() => {
-    return serviceTypeStore().filter((serviceType) =>
-      serviceType.userCanInitiate(currentUser())
-    );
-  });
+  refreshAll = async () => {
+    await this.request.refreshAll();
+  };
 
   DisplayModes = DisplayModes;
   DisplayMode = ko.observable();
 
+  HeaderComponentName = ko.pureComputed(() => {
+    return reqHeaderComponentsMap[this.DisplayMode()];
+  });
+
   ShowActionsArea = ko.pureComputed(
     () =>
-      !this.IsLoading() &&
-      !this.Assignments.AreLoading() &&
-      !this.ServiceType.IsLoading() &&
-      this.Assignments.CurrentStage.list.UserActionAssignments().length
+      this.request.Assignments.CurrentStage.list.UserActionAssignments().length
   );
 
   // TODO: this should probably be it's own component w/ template
@@ -872,7 +96,7 @@ export class RequestDetailView {
       const comment = {
         Comment: this.NewCommentComponent.CommentText(),
       };
-      await this.Comments.addNew(comment);
+      await this.request.Comments.addNew(comment);
       this.NewCommentComponent.CommentText("");
     },
   };
@@ -881,7 +105,7 @@ export class RequestDetailView {
     // 1. Validate Request
     //if (!this.isValid()) return;
 
-    const serviceType = this.ServiceType.Def();
+    const serviceType = this.request.ServiceType.Def();
     if (!serviceType) {
       // We should have caught this in validation.
       throw "no service type provided";
@@ -890,13 +114,13 @@ export class RequestDetailView {
     //const saveTaskId = addTask(taskDefs.save);
 
     // 2. Create Folder Structure
-    const folderPath = this.getRelativeFolderPath();
+    const folderPath = this.request.getRelativeFolderPath();
 
     createFolders: {
       //const breakingPermissionsTask = addTask(taskDefs.permissions);
-      const folderPerms = this.getFolderPermissions();
+      const folderPerms = this.request.getFolderPermissions();
 
-      const listRefs = this.getInitialListRefs();
+      const listRefs = this.request.getInitialListRefs();
 
       await Promise.all(
         listRefs.map(async (listRef) => {
@@ -917,38 +141,42 @@ export class RequestDetailView {
     }
 
     // Initialize dates
-    const effectiveSubmissionDate = this.calculateEffectiveSubmissionDate();
-    this.Dates.Submitted(effectiveSubmissionDate);
-    this.Dates.EstClosed(
+    const effectiveSubmissionDate =
+      this.request.calculateEffectiveSubmissionDate();
+    this.request.Dates.Submitted.set(effectiveSubmissionDate);
+    this.request.Dates.EstClosed.set(
       businessDaysFromDate(
         effectiveSubmissionDate,
         serviceType.DaysToCloseBusiness
       )
     );
 
-    this.State.Status(requestStates.open);
-    this.State.IsActive(true);
+    this.request.State.Status(requestStates.open);
+    this.request.State.IsActive(true);
 
     createItems: {
       const newRequestItemId = await this._context.Requests.AddEntity(
-        this,
+        this.request,
         folderPath
       );
 
-      this.ID = newRequestItemId;
+      this.request.ID = newRequestItemId;
 
-      await this.ServiceType.createEntity();
+      await this.request.ServiceType.createEntity();
     }
 
-    Router.setUrlParam("reqId", this.ObservableTitle());
+    Router.setUrlParam("reqId", this.request.Title);
 
     // Send New WorkOrder Notification to User
     // Create new Action Log Item
     // Initial Assignments
-    this.ActivityQueue.push({ activity: actionTypes.Created, data: this });
+    this.request.ActivityQueue.push({
+      activity: actionTypes.Created,
+      data: this.request,
+    });
 
     // Progress Request
-    this.Pipeline.advance();
+    this.request.Pipeline.advance();
   };
 
   editRequestHandler = async () => {
@@ -969,44 +197,25 @@ export class RequestDetailView {
     //1. set all assignments to inactive
 
     //2. Set request properties
-    this.State.Status(status);
-    this.State.IsActive(false);
-    this.Dates.Closed(new Date());
-    this.State.Stage(null);
-    await this._context.Requests.UpdateEntity(this, [
+    this.request.State.Status(status);
+    this.request.State.IsActive(false);
+    this.request.Dates.Closed.set(new Date());
+    this.request.State.Stage(null);
+    await this._context.Requests.UpdateEntity(this.request, [
       "RequestStatus",
       "IsActive",
       "ClosedDate",
       "PipelineStage",
     ]);
     // 3. Emit closeout action
-    this.ActivityQueue.push({
+    this.request.ActivityQueue.push({
       activity: actionTypes.Closed,
-      data: this,
+      data: this.request,
     });
     // 4. Update Permissions;
-    await this.Authorization.setReadonly();
+    await this.request.Authorization.setReadonly();
     this.refreshAll();
   };
-
-  getAllListRefs() {
-    const listRefs = this.getInitialListRefs();
-    listRefs.concat([this._context.Comments, this._context.Attachments]);
-    return listRefs;
-  }
-
-  getInitialListRefs() {
-    const listRefs = [
-      this._context.Requests,
-      this._context.Actions,
-      this._context.Assignments,
-      this._context.Notifications,
-    ];
-    if (this.ServiceType.Def()?.getListRef()) {
-      listRefs.push(this.ServiceType.Def().getListRef());
-    }
-    return listRefs;
-  }
 
   promptClose = () => {
     if (confirm("Close and finalize request? This action cannot be undone!")) {
@@ -1015,7 +224,7 @@ export class RequestDetailView {
   };
 
   validationWatcher = (isValid) => {
-    if (isValid && this.Authorization.currentUserCanAdvance()) {
+    if (isValid && this.request.Authorization.currentUserCanAdvance()) {
       this.promptAdvance();
     }
   };
@@ -1031,6 +240,15 @@ export class RequestDetailView {
     this.promptAdvanceModal.show();
   };
 
+  confirmAdvanceHandler = () => {
+    if (!this.request.Pipeline.getNextStage()) {
+      this.closeAndFinalize();
+      return;
+    }
+    this.request.Pipeline.advance();
+    this.promptAdvanceModal.hide();
+  };
+
   approveRequestHandler = () => {
     this.approveRequest();
   };
@@ -1039,56 +257,44 @@ export class RequestDetailView {
     this.promptAdvance();
   }
 
-  constructor({
-    displayMode = DisplayModes.View,
-    ID = null,
-    Title = null,
-    serviceType: serviceTypeDef = null,
-    context,
-  }) {
-    this._context = context;
-    this.ID = ID;
-    this.Title = Title;
-    this.LookupValue = Title;
+  serviceTypeDefinitionWatcher = (newSvcType) => {
+    // This should only be needed when creating a new request.
+    this.request.ServiceType.instantiateEntity(newSvcType);
+  };
+
+  constructor({ request, displayMode = DisplayModes.View, serviceType }) {
+    this.request = request;
+    this._context = getAppContext();
 
     if (displayMode == DisplayModes.New) {
-      this.RequestorInfo.Requestor(new People(currentUser()));
-      this.ObservableTitle(createNewRequestTitle());
-      this.State.Status(requestStates.draft);
-      this.State.IsActive(true);
-      this.ServiceType.Def.subscribe(this.ServiceType.definitionWatcher);
-    } else {
-      this.ObservableID(ID);
-      this.ObservableTitle(Title);
+      this.request.RequestorInfo.Requestor(new People(currentUser()));
+      this.request.Title = createNewRequestTitle();
+      this.request.State.Status(requestStates.draft);
+      this.request.State.IsActive(true);
+      this.request.ServiceType.Def.subscribe(this.serviceTypeDefinitionWatcher);
     }
 
-    if (serviceTypeDef) {
-      this.ServiceType.Def(
-        serviceTypeStore().find((service) => service.ID == serviceTypeDef.ID)
-      );
+    if (serviceType) {
+      this.request.ServiceType.Def(serviceType);
       // this.ServiceType.instantiateEntity();
     }
 
-    this.ServiceType.Component = new ServiceTypeComponent({
-      request: this,
-      ...this.ServiceType,
+    this.ServiceTypeComponent = new ServiceTypeComponent({
+      request,
+      ...this.request.ServiceType,
+      displayMode: this.DisplayMode,
     });
 
-    this.Assignments.NewAssignmentComponent = new NewAssignmentComponent({
-      addAssignment: this.Assignments.addNew,
-    });
+    this.request.Assignments.NewAssignmentComponent =
+      new NewAssignmentComponent({
+        addAssignment: this.request.Assignments.addNew,
+      });
 
-    this.ActivityQueue.subscribe(
-      this.activityQueueWatcher,
-      this,
-      "arrayChange"
-    );
-
-    this.Validation.IsValid.subscribe(this.validationWatcher);
+    this.request.Validation.IsValid.subscribe(this.validationWatcher);
     // this.DisplayMode.subscribe(this.displayModeWatcher);
     this.DisplayMode(displayMode);
 
-    this.LoadedAt(new Date());
+    this.request.LoadedAt(new Date());
     if (displayMode != DisplayModes.New) {
       this.refreshAll();
     }

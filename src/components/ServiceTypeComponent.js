@@ -1,10 +1,14 @@
-import { registerServiceTypeTemplate } from "../common/KnockoutExtensions.js";
+import {
+  registerServiceTypeComponent,
+  registerServiceTypeTemplate,
+} from "../common/KnockoutExtensions.js";
 import {
   getTemplateElementId,
   getTemplateFilePath,
   getModuleFilePath,
 } from "../entities/ServiceType.js";
 
+import { DisplayModes } from "../views/RequestDetailView.js";
 const DEBUG = true;
 
 export class ServiceTypeComponent {
@@ -15,10 +19,14 @@ export class ServiceTypeComponent {
     IsLoading,
     refreshEntity,
     instantiateEntity,
+    displayMode,
   }) {
+    this.request = request;
+    this.RequestDescription = this.request.RequestDescription;
+    this.DisplayMode = displayMode;
+
     this.Def = Def;
     this.ElementId = this.Def()?.UID;
-    this.Request = request;
     this.Entity = Entity;
     this.IsLoading = IsLoading;
     this.refreshEntity = refreshEntity;
@@ -31,24 +39,35 @@ export class ServiceTypeComponent {
     }
   }
 
+  DisplayModes = DisplayModes;
   ElementId = null;
   ComponentsAreLoading = ko.observable();
 
   Entity;
 
-  // submitServiceTypeEntity = async () => {
-  //   if (!this.Entity()) return;
+  HasComponent = ko.pureComputed(
+    () => this.Def()?.HasTemplate && this.Def()?.UID
+  );
 
-  //   const newEntity = this.Entity();
-  //   newEntity.Title = this.Request.ObservableTitle();
+  CurrentComponentName = ko.pureComputed(() => {
+    if (!this.Def()?.HasTemplate) return null;
+    return this.Def()?.UID;
+  });
 
-  //   const folderPath = this.Request.getRelativeFolderPath();
-  //   const newSvcTypeItemId = await this.Def()
-  //     .getListRef()
-  //     .AddEntity(newEntity, folderPath, this.Request);
+  CurrentComponentParams = ko.pureComputed(() => {
+    return {
+      entity: this.Entity(),
+      displayMode: this.DisplayMode,
+    };
+  });
 
-  //   return newSvcTypeItemId;
-  // };
+  registerComponents = (newSvcType) => {
+    registerServiceTypeComponent({
+      componentName: newSvcType.UID,
+      moduleName: newSvcType.UID,
+      serviceTypeUid: newSvcType.UID,
+    });
+  };
 
   loadTemplate = async (newSvcType) => {
     // This should only be triggered when a new RequestDetailView is created
@@ -68,10 +87,21 @@ export class ServiceTypeComponent {
     this.ComponentsAreLoading(false);
   };
 
+  TemplateData = ko.pureComputed(() => {
+    return { DisplayMode: this.DisplayMode, DisplayModes, ...this.Entity() };
+  });
   serviceTypeWatcher = (newSvcType, oldSvcType) => {
     if (newSvcType?.UID == oldSvcType?.UID) return;
     if (DEBUG)
       console.log("ServiceTypeComponent: ServiceType Changed", newSvcType);
     this.loadTemplate(newSvcType);
+    //this.registerComponents();
   };
+}
+
+class ServiceTypeEntityComponent {
+  constructor(entity, displayMode) {
+    this.DisplayMode = displayMode;
+    Object.assign(this, entity);
+  }
 }

@@ -24,7 +24,8 @@ export class People {
   isInPicker = (elementId) => this.SetPeoplePickers.includes(elementId);
 
   static Create = function (props) {
-    if (!props) return null;
+    if (!props || (!props.ID && !(props.Title || props.LookupValue)))
+      return null;
     return new People({
       ID: props.ID,
       Title: props.Title ?? props.LookupValue,

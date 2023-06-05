@@ -9,8 +9,9 @@ export class DateField {
   }
 
   toLocaleDateString = () => this.ObservableDateTime()?.toLocaleDateString();
+  toLocaleString = () => this.ObservableDateTime()?.toLocaleString();
 
-  get = () => {
+  get = ko.pureComputed(() => {
     if (
       !this.ObservableDateTime() ||
       isNaN(this.ObservableDateTime().valueOf())
@@ -19,7 +20,7 @@ export class DateField {
     }
 
     return this.ObservableDateTime().toISOString();
-  };
+  });
 
   set = (newDate) => {
     if (!newDate) return null;

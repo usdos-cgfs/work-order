@@ -35,7 +35,7 @@ export class ActivityLogComponent {
   async requestCreated(request) {
     this.addNew({
       ActionType: actionTypes.Created,
-      Description: `The request was submitted with an effective submission date of ${request.Dates.Submitted()?.toLocaleDateString()}.`,
+      Description: `The request was submitted with an effective submission date of ${request.Dates.Submitted.toLocaleDateString()}.`,
     });
   }
 

@@ -174,12 +174,26 @@ ko.components.register("requests-by-status", {
   },
 });
 
-registerComponent(
-  "requests-by-status-table",
-  "RequestsByStatus",
-  "RequestsByStatusTableModule",
-  "RequestsByStatusTableTemplate"
-);
+registerComponent({
+  name: "requests-by-status-table",
+  folder: "RequestsByStatus",
+  module: "RequestsByStatusTableModule",
+  template: "RequestsByStatusTableTemplate",
+});
+
+registerComponent({
+  name: "request-header-view",
+  folder: "RequestHeader",
+  module: "RequestHeaderModule",
+  template: "RequestHeaderViewTemplate",
+});
+
+registerComponent({
+  name: "request-header-edit",
+  folder: "RequestHeader",
+  module: "RequestHeaderModule",
+  template: "RequestHeaderEditTemplate",
+});
 
 ko.components.register("quick-info", {
   template: {
@@ -190,7 +204,12 @@ ko.components.register("quick-info", {
   },
 });
 
-function registerComponent(name, folder, moduleFilename, templateFilename) {
+function registerComponent({
+  name,
+  folder,
+  module: moduleFilename,
+  template: templateFilename,
+}) {
   ko.components.register(name, {
     template: {
       fromPath: `/components/${folder}/${templateFilename}.html`,

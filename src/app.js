@@ -3,6 +3,7 @@ import { NewRequestView } from "./views/NewRequestView.js";
 import { OfficeRequestsView } from "./views/OfficeRequestsView.js";
 import { MyRequestsView } from "./views/MyRequestsView.js";
 
+import { RequestEntity } from "./entities/Request.js";
 import { RequestOrg, requestOrgStore } from "./entities/RequestOrg.js";
 import { PipelineStage, pipelineStageStore } from "./entities/PipelineStage.js";
 import { ServiceType, serviceTypeStore } from "./entities/ServiceType.js";
@@ -140,7 +141,7 @@ class App {
       var startTab = getUrlParam("tab") || Tabs.MyRequests;
       var reqId = getUrlParam("reqId");
       if (reqId) {
-        this.ViewRequest({ Title: reqId });
+        this.viewRequestByTitle(reqId);
       } else if (startTab == Tabs.RequestDetail) {
         startTab = Tabs.NewRequest;
       }
@@ -158,7 +159,7 @@ class App {
 
   NewRequest = (data, e) => {
     const props = {
-      context: this.context,
+      request: new RequestEntity({}),
       displayMode: DisplayModes.New,
     };
     if (data && data.ID) {
@@ -167,6 +168,21 @@ class App {
     setUrlParam("reqId", "");
     this.RequestDetailView(new RequestDetailView(props));
     this.Tab(Tabs.RequestDetail);
+  };
+
+  viewRequestByTitle = async (title) => {
+    const results = await this.context.Requests.FindByColumnValue(
+      [{ column: "Title", value: title }],
+      {},
+      {},
+      RequestEntity.Views.All,
+      false
+    );
+    if (!results.results.length) {
+      console.warn("Request not found: ", title);
+      return;
+    }
+    this.ViewRequest(results.results[0]);
   };
 
   ViewRequest = async (request) => {
@@ -178,8 +194,7 @@ class App {
     setUrlParam("reqId", request.Title);
     this.RequestDetailView(
       new RequestDetailView({
-        ID: request.ID,
-        Title: request.Title,
+        request,
         context: this.context,
       })
     );

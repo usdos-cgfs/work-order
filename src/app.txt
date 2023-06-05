@@ -276,7 +276,7 @@
       <div class="">
         <h2>
           Service Request Detail:
-          <span data-bind="text: ServiceType.Def()?.Title"></span>
+          <span data-bind="text: request.ServiceType.Def()?.Title"></span>
         </h2>
         <div>
           <div
@@ -292,25 +292,35 @@
             <!-- ko if: ShowActionsArea -->
             <div
               id="request-pipeline"
-              data-bind="template: {name: 'tmpl-request-pipeline-actions', data: Assignments}"
+              data-bind="template: {name: 'tmpl-request-pipeline-actions', data: request.Assignments}"
             ></div>
             <!-- /ko -->
           </div>
-          <!-- ko if: State.Status() != 'Draft' -->
+          <!-- ko if: request.State.Status() != 'Draft' -->
           <div
             class="my-3"
-            data-bind="template: {name: 'tmpl-assignments-component', data: Assignments}"
+            data-bind="template: {name: 'tmpl-assignments-component', data: request.Assignments}"
           ></div>
           <!-- /ko -->
-          <div
+          <!-- <div
             class="my-3"
             data-bind="template: {name: 'tmpl-request-header'}"
-          ></div>
+          ></div> -->
+          <div class="my-3">
+            <div class="card mb-3 w-100">
+              <div class="card-body">
+                <h3 class="card-title">Requestor Information</h3>
+                <div
+                  data-bind="component: {name: HeaderComponentName, params: request }"
+                ></div>
+              </div>
+            </div>
+          </div>
           <div
-            data-bind="template: {name: 'tmpl-service-type-component'}"
+            data-bind="template: {name: 'tmpl-service-type-component', data: ServiceTypeComponent}"
           ></div>
           <div class="row my-3">
-            <div class="col-4">
+            <div class="col-4" data-bind="using: request">
               <div class="card">
                 <div class="card-body">
                   <div class="card-title">
@@ -379,10 +389,10 @@
             </div>
             <div
               class="col-8"
-              data-bind="template: {name: 'tmpl-activity-log-component', data: Actions}"
+              data-bind="template: {name: 'tmpl-activity-log-component', data: request.Actions}"
             ></div>
           </div>
-          <div class="card my-3 w-100">
+          <div class="card my-3 w-100" data-bind="using: request">
             <div class="card-body">
               <h3 class="card-title">Comments</h3>
               <div class="alert alert-warning">
@@ -430,7 +440,7 @@
               </table>
               <!-- ko if: Comments.userCanComment -->
               <div>Provide additional comments/instructions here:</div>
-              <div data-bind="using: NewCommentComponent">
+              <div data-bind="using: $parent.NewCommentComponent">
                 <textarea
                   class="form-control mb-2"
                   data-bind="value: CommentText"
@@ -481,13 +491,13 @@
               ></button>
             </div>
             <div class="modal-body">
-              <!-- ko ifnot: Assignments.list.InProgress().length -->
+              <!-- ko ifnot: request.Assignments.list.InProgress().length -->
               This request is ready to advance.
               <!-- /ko -->
-              <!-- ko if: Assignments.list.InProgress().length -->
+              <!-- ko if: request.Assignments.list.InProgress().length -->
               This request still has
               <span
-                data-bind="text: Assignments.list.InProgress().length"
+                data-bind="text: request.Assignments.list.InProgress().length"
               ></span>
               open assignments.
               <!-- /ko -->
@@ -503,7 +513,7 @@
               <button
                 type="button"
                 class="btn btn-primary"
-                data-bind="click: Pipeline.advance"
+                data-bind="click: confirmAdvanceHandler"
               >
                 Advance
               </button>
@@ -519,12 +529,14 @@
       >
         <div class="m-2">
           <h6 class="mb-1">
-            Request: <span data-bind="text: ObservableTitle"></span>
+            Request: <span data-bind="text: request.ObservableTitle"></span>
           </h6>
           <div class="d-flex align-items-center">
             <div class="me-2">
               Loaded:
-              <span data-bind="text: LoadedAt()?.toLocaleString()"></span>
+              <span
+                data-bind="text: request.LoadedAt()?.toLocaleString()"
+              ></span>
             </div>
             <i
               class="fa fa-sync pointer"
@@ -534,37 +546,30 @@
           </div>
         </div>
         <div class="d-flex justify-content-between">
-          <!-- <button
-            type="button"
-            class="btn btn-success ms-3"
-            data-bind="click: approveRequestHandler"
-          >
-            Approve
-          </button> -->
           <!-- ko if: DisplayMode() == DisplayModes.New -->
           <button
             type="button"
             class="btn btn-success ms-3"
-            data-bind="click: submitNewRequest, enable: Validation.IsValid"
+            data-bind="click: submitNewRequest, enable: request.Validation.IsValid"
           >
             Submit
           </button>
           <!-- /ko -->
-          <!-- ko if: Authorization.currentUserCanAdvance -->
-          <!-- ko if: Pipeline.getNextStage -->
+          <!-- ko if: request.Authorization.currentUserCanAdvance -->
+          <!-- ko if: request.Pipeline.getNextStage -->
           <button
             type="button"
             class="btn btn-success ms-3"
-            data-bind="click: promptAdvance, enable: Assignments.CurrentStage.Validation.IsValid"
+            data-bind="click: promptAdvance, enable: request.Assignments.CurrentStage.Validation.IsValid"
           >
             Next Stage <span class="fa fa-chevron-right"></span>
           </button>
           <!-- /ko -->
-          <!-- ko ifnot: Pipeline.getNextStage -->
+          <!-- ko ifnot: request.Pipeline.getNextStage -->
           <button
             type="button"
             class="btn btn-success ms-3"
-            data-bind="click: promptClose, enable: Assignments.CurrentStage.Validation.IsValid"
+            data-bind="click: promptClose, enable: request.Assignments.CurrentStage.Validation.IsValid"
           >
             Close and Finalize
           </button>
@@ -575,26 +580,26 @@
     </script>
 
     <script type="text/html" id="tmpl-request-pipeline">
-      <div class="d-flex m-0">
+      <div class="d-flex m-0" data-bind="using: request.Pipeline">
         <ol class="list-group-horizontal p-0 m-0 d-flex">
           <li
             class="list-group-item d-flex flex-column justify-content-center fix-service-icon-border"
           >
-            <i class="fa fa-3x" data-bind="class: ServiceType.Def()?.Icon"></i>
+            <i class="fa fa-3x" data-bind="class: Icon"></i>
           </li>
-          <!-- ko foreach: Pipeline.Stages -->
+          <!-- ko foreach: Stages -->
           <li
             class="list-group-item d-flex flex-column justify-content-center"
-            data-bind="css: {'border-bottom-0': Step == $parent.State.Stage()?.Step &&
-            $parent.ShowActionsArea,
-            'list-group-item-secondary': Step < $parent.State.Stage()?.Step}"
+            data-bind="css: {'border-bottom-0': $parent.isCurrentStage($data) &&
+            $parent.userHasCurrentStageActions(),
+            'list-group-item-secondary': $parent.isPrevStage($data)}"
           >
             <div
               class="d-flex align-items-center"
-              data-bind="css: {'text-primary': Step == $parent.State.Stage()?.Step }"
+              data-bind="css: {'text-primary': $parent.isCurrentStage($data) }"
             >
               <h4
-                data-bind="text: Step, css: {'text-primary': Step == $parent.State.Stage()?.Step }"
+                data-bind="text: Step, css: {'text-primary': $parent.isCurrentStage($data) }"
               ></h4>
               <div class="mx-2"></div>
               <div>
@@ -605,7 +610,7 @@
           </li>
           <!-- /ko -->
         </ol>
-        <!-- ko if: ShowActionsArea -->
+        <!-- ko if: userHasCurrentStageActions -->
         <div class="flex-grow-1 border-bottom"></div>
         <!-- /ko -->
       </div>
@@ -744,6 +749,7 @@
         </div>
       </div>
     </script>
+
     <script type="text/html" id="tmpl-request-header">
       <!-- Report.RequestDetailView -->
       <div class="card mb-3 w-100">
@@ -831,10 +837,10 @@
                   data-bind="text: State.Status, class: 'state-' + State.Status()?.toLowerCase()"
                 ></p>
               </div>
-              <!-- ko if: Dates.Closed -->
+              <!-- ko if: Dates.Closed.get -->
               <div class="col-6">
                 <h6>Closed:</h6>
-                <p data-bind="text: Dates.Closed().toLocaleDateString()"></p>
+                <p data-bind="text: Dates.Closed.toLocaleDateString()"></p>
               </div>
               <!-- /ko -->
             </div>
@@ -865,7 +871,7 @@
               </div>
               <div class="col-6">
                 <h6>Submitted Date:</h6>
-                <p data-bind="text: Dates.Submitted()?.toLocaleString()"></p>
+                <p data-bind="text: Dates.Submitted.toLocaleString()"></p>
               </div>
               <div class="col-6">
                 <h6>Service Type:</h6>
@@ -916,8 +922,41 @@
       </div>
     </script>
 
+    <script type="text/html" id="tmpl-service-type-component-base">
+      <div class="card mb-3 w-100">
+        <div class="card-body">
+          <div class="card-title d-flex justify-content-between">
+            <h3 class="mx-0" data-bind="text: Def()?.Title"></h3>
+            <i class="fa fa-sync pointer" data-bind="click: refreshEntity"></i>
+          </div>
+          <!-- ko if: Def()?.HasTemplate -->
+          <div data-bind="component: {name: }"></div>
+          <!-- /ko -->
+          <div class="col-12 pb-6">
+            <label for=""
+              ><h6>
+                <span
+                  data-bind="text: Def()?.DescriptionTitle ?? 'Description'"
+                ></span
+                >:
+              </h6>
+            </label>
+            <!-- ko if: DisplayMode() != DisplayModes.View -->
+            <textarea
+              class="form-control"
+              data-bind="value: RequestDescription"
+            ></textarea>
+            <!-- /ko -->
+            <!-- ko if: DisplayMode() == DisplayModes.View -->
+            <div data-bind="html: RequestDescription"></div>
+            <!-- /ko -->
+          </div>
+        </div>
+      </div>
+    </script>
+
     <script type="text/html" id="tmpl-service-type-component">
-      <div class="card mb-3 w-100" data-bind="using: ServiceType.Component">
+      <div class="card mb-3 w-100">
         <div class="card-body">
           <div class="card-title d-flex justify-content-between">
             <h3 class="mx-0" data-bind="text: Def()?.Title"></h3>
@@ -940,7 +979,9 @@
           </div>
           <!-- /ko -->
           <!-- ko ifnot: IsLoading -->
-          <div data-bind="template: {name: ElementId, data: Entity}"></div>
+          <div
+            data-bind="template: {name: ElementId, data: TemplateData}"
+          ></div>
           <!-- /ko -->
           <!-- /ko -->
           <!-- /ko -->
@@ -953,14 +994,14 @@
                 >:
               </h6>
             </label>
-            <!-- ko if: Request.DisplayMode() != Request.DisplayModes.View -->
+            <!-- ko if: DisplayMode() != DisplayModes.View -->
             <textarea
               class="form-control"
-              data-bind="value: Request.RequestDescription"
+              data-bind="value: RequestDescription"
             ></textarea>
             <!-- /ko -->
-            <!-- ko if: Request.DisplayMode() == Request.DisplayModes.View -->
-            <div data-bind="html: Request.RequestDescription"></div>
+            <!-- ko if: DisplayMode() == DisplayModes.View -->
+            <div data-bind="html: RequestDescription"></div>
             <!-- /ko -->
           </div>
         </div>
