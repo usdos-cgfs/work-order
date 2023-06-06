@@ -26,6 +26,7 @@
         <th>Requestor</th>
         <th>Submitted Date</th>
         <th>Est. Completion Date</th>
+        <th>Closed Date</th>
       </tr>
     </thead>
     <tbody data-bind="">
@@ -43,8 +44,9 @@
         <td data-bind="text: ServiceType.Def()?.Title"></td>
         <td data-bind="text: RequestorInfo.Office()?.Title"></td>
         <td data-bind="text: RequestorInfo.Requestor()?.Title"></td>
-        <td data-bind="text: Dates.Submitted.toLocaleDateString()"></td>
-        <td data-bind="text: Dates.EstClosed.toLocaleDateString()"></td>
+        <td data-bind="text: Dates.Submitted.toSortableDateString()"></td>
+        <td data-bind="text: Dates.EstClosed.toSortableDateString()"></td>
+        <td data-bind="text: Dates.Closed.toSortableDateString()"></td>
       </tr>
       <!-- /ko -->
       <!-- /ko -->
@@ -57,6 +59,7 @@
         <th data-filter="select-filter"></th>
         <th data-filter="select-filter"></th>
         <th data-filter="select-filter"></th>
+        <th></th>
       </tr>
     </tfoot>
   </table>

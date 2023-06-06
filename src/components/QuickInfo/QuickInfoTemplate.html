@@ -27,7 +27,7 @@
             <tbody data-bind="foreach: MyOpenAssignments">
               <tr
                 class="pointer"
-                data-bind="click: () => $root.ViewRequest($data.Request)"
+                data-bind="click: () => $root.viewRequestByTitle($data.Request.Title)"
               >
                 <td data-bind="text: Request.Title"></td>
                 <td data-bind="text: Assignee?.Title"></td>

@@ -12,15 +12,22 @@ export default class RequestsByStatusTableModule {
     this.FilteredRequests = filteredRequests ?? this.ActiveSet.List;
     this.IsLoading = this.ActiveSet.IsLoading;
     this.HasLoaded = this.ActiveSet.HasLoaded;
-    this.FilteredRequests.subscribe(
+    this.listBeforeChangeSubscriber = this.FilteredRequests.subscribe(
       this.listBeforeChangeWatcher,
       this,
       "beforeChange"
     );
-    this.FilteredRequests.subscribe(this.listWatcher);
+    this.listChangeSubscriber = this.FilteredRequests.subscribe(
+      this.listWatcher
+    );
   }
 
   hasInitialized = false;
+
+  requestDateBackground = (request) => {
+    if (new Date() > request.Dates.EstClosed.ObservableDateTime())
+      return "table-danger";
+  };
 
   getTableElementId = () =>
     "tbl-requests-status-" + this.key + this.filter?.toLowerCase();
@@ -53,5 +60,10 @@ export default class RequestsByStatusTableModule {
     await this.ActiveSet.init();
     this.Table = makeDataTable(this.getTableElementId());
     this.hasInitialized = true;
+  };
+
+  dispose = () => {
+    this.listBeforeChangeSubscriber.dispose();
+    this.listChangeSubscriber.dispose();
   };
 }

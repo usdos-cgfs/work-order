@@ -1,4 +1,4 @@
-import { Assignment } from "../entities/Assignment.js";
+import { Assignment, assignmentStates } from "../entities/Assignment.js";
 
 import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
 
@@ -14,6 +14,16 @@ class AssignmentsSet {
       (assignment) => assignment.Request.ID == request.ID
     );
   };
+
+  getOpenByUser = (user) =>
+    ko.pureComputed(() =>
+      this.List().filter(
+        (assignment) =>
+          assignment.Status == assignmentStates.InProgress &&
+          assignment.userIsDirectlyAssigned(user)
+      )
+    );
+
   load = async () => {
     this.IsLoading(true);
     const start = new Date();

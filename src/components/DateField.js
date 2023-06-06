@@ -8,6 +8,7 @@ export class DateField {
     this.ObservableDateTime(date);
   }
 
+  toSortableDateString = () => this.ObservableDateTime()?.format("yyyy-MM-dd");
   toLocaleDateString = () => this.ObservableDateTime()?.toLocaleDateString();
   toLocaleString = () => this.ObservableDateTime()?.toLocaleString();
 

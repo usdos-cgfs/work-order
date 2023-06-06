@@ -19,6 +19,7 @@ import ApplicationDbContext, {
   setAppContext,
 } from "./infrastructure/ApplicationDbContext.js";
 import { InitSal } from "./infrastructure/SAL.js";
+import MyAssignmentsView from "./views/MyAssignmentsView.js";
 
 export const assetsPath = window.appRoot + "/src";
 
@@ -82,11 +83,6 @@ class App {
   OpenRequests = ko.observableArray();
   OpenAssignments = ko.observableArray();
 
-  quickInfoParams = {
-    allOpenRequests: this.OpenRequests,
-    allOpenAssignments: this.OpenAssignments,
-  };
-
   Config = {
     pipelineStageStore,
     requestOrgStore,
@@ -97,6 +93,7 @@ class App {
   // Views
   OfficeRequestsView = new OfficeRequestsView();
   MyRequestsView = new MyRequestsView();
+  MyAssignmentsView = new MyAssignmentsView();
   NewRequestView = new NewRequestView();
   RequestDetailView = ko.observable();
 
