@@ -165,20 +165,25 @@ ko.components.register("resolver-actions", {
   viewModel: { viaLoader: "/components/AssignmentActions/ResolverModule.js" },
 });
 
-ko.components.register("requests-by-status", {
-  template: {
-    fromPath: "/components/RequestsByStatus/RequestsByStatusTemplate.html",
-  },
-  viewModel: {
-    viaLoader: "/components/RequestsByStatus/RequestsByStatusModule.js",
-  },
+registerComponent({
+  name: "open-requests-table",
+  folder: "RequestsByStatus",
+  module: "RequestsByStatusTableModule",
+  template: "OpenRequestsTableTemplate",
 });
 
 registerComponent({
-  name: "requests-by-status-table",
+  name: "open-office-requests-table",
   folder: "RequestsByStatus",
   module: "RequestsByStatusTableModule",
-  template: "RequestsByStatusTableTemplate",
+  template: "OpenOfficeRequestsTableTemplate",
+});
+
+registerComponent({
+  name: "closed-requests-table",
+  folder: "RequestsByStatus",
+  module: "RequestsByStatusTableModule",
+  template: "ClosedRequestsTableTemplate",
 });
 
 registerComponent({
@@ -210,6 +215,9 @@ function registerComponent({
   module: moduleFilename,
   template: templateFilename,
 }) {
+  if (ko.components.isRegistered(name)) {
+    return;
+  }
   ko.components.register(name, {
     template: {
       fromPath: `/components/${folder}/${templateFilename}.html`,

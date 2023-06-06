@@ -1,37 +1,39 @@
-import { getAppContext } from "./ApplicationDbContext.js";
-import { RequestEntity } from "../entities/Request.js";
 import { Assignment } from "../entities/Assignment.js";
 
-export class RequestsByStatusSet {
-  constructor(status) {
-    this.filter = status;
-  }
+import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
 
+class AssignmentsSet {
+  constructor() {}
   IsLoading = ko.observable();
   HasLoaded = ko.observable(false);
 
   List = ko.observableArray();
 
+  getByRequest = (request) => {
+    return this.List().filter(
+      (assignment) => assignment.Request.ID == request.ID
+    );
+  };
   load = async () => {
     this.IsLoading(true);
     const start = new Date();
 
-    const requestsByStatus = await getAppContext().Requests.FindByColumnValue(
-      [{ column: "RequestStatus", value: this.filter }],
+    const allAssignments = await getAppContext().Assignments.FindByColumnValue(
+      [{ column: "Request/ID", op: "ne", value: null }],
       { orderByColumn: "Title", sortAsc: false },
       {},
-      RequestEntity.Views.ByStatus,
+      Assignment.Views.Dashboard,
       false
     );
 
-    this.List(requestsByStatus.results);
+    this.List(allAssignments.results);
 
     const end = new Date();
     if (window.DEBUG)
       console.log(
-        `Request by status Set - ${this.filter}: ${
-          requestsByStatus.results.length
-        } cnt in ${end - start}`
+        `All Assignments loaded: ${allAssignments.results.length} cnt in ${
+          end - start
+        }`
       );
     this.HasLoaded(true);
     this.IsLoading(false);
@@ -49,6 +51,6 @@ export class RequestsByStatusSet {
     }
     await this.load();
   };
-
-  includeAssignments = async () => {};
 }
+
+export const assignmentsStore = new AssignmentsSet();

@@ -96,10 +96,7 @@ class App {
 
   // Views
   OfficeRequestsView = new OfficeRequestsView();
-  MyRequestsView = new MyRequestsView({
-    openRequests: this.OpenRequests,
-    openAssignments: this.OpenAssignments,
-  });
+  MyRequestsView = new MyRequestsView();
   NewRequestView = new NewRequestView();
   RequestDetailView = ko.observable();
 

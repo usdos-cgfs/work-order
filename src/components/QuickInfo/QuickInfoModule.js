@@ -24,7 +24,7 @@ export default class QuickInfoModule {
   LateRequests = ko.pureComputed(() => {
     return (
       requestsByStatusMap
-        .get(requestStates.open)
+        .get(requestStates.open.Title)
         ?.List()
         ?.filter((request) => {
           return request.Dates.EstClosed.ObservableDateTime() <= new Date();

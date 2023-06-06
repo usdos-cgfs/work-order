@@ -1322,6 +1322,11 @@ export function SPList(listDef) {
 
     const listFields = await getListFields();
     fields.map((f) => {
+      if (f.includes("/")) {
+        queryFields.push(f);
+        expandFields.push(f.split("/")[0]);
+        return;
+      }
       const fieldSchema = listFields.find((lf) => lf.StaticName == f);
       if (!fieldSchema) {
         alert(`Field '${f}' not found on list ${self.config.def.name}`);
@@ -1335,8 +1340,8 @@ export function SPList(listDef) {
           const titleString = f + "/Title";
           queryFields.push(idString);
           queryFields.push(titleString);
-          expandFields.push(idString);
-          expandFields.push(titleString);
+          expandFields.push(f);
+          // expandFields.push(titleString);
           break;
         case "Choice":
         default:

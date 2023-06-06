@@ -9,8 +9,8 @@ requestsByStatusMap.set(
   new RequestsByStatusSet(requestStates.open)
 );
 requestsByStatusMap.set(
-  requestStates.closed,
-  new RequestsByStatusSet(requestStates.closed)
+  requestStates.fulfilled,
+  new RequestsByStatusSet(requestStates.fulfilled)
 );
 requestsByStatusMap.set(
   requestStates.cancelled,

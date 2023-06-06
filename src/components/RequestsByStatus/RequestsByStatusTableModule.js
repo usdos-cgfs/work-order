@@ -2,32 +2,47 @@ import { makeDataTable } from "../../common/DataTableExtensions.js";
 import { RequestEntity } from "../../entities/Request.js";
 import { Assignment } from "../../entities/Assignment.js";
 
+import { assignmentsStore } from "../../stores/Assignments.js";
+
 export default class RequestsByStatusTableModule {
-  constructor({
-    activeRequestSet,
-    filteredRequests = null,
-    enableActionOfficeFeatures = false,
-    showAssignees = false,
-  }) {
-    this.enableActionOfficeFeatures = enableActionOfficeFeatures;
+  constructor({ activeRequestSet, filteredRequests = null, key = "office" }) {
+    this.key = key;
     this.ActiveSet = activeRequestSet;
-    console.log("New active Table Module");
     this.filter = this.ActiveSet.filter;
     this.FilteredRequests = filteredRequests ?? this.ActiveSet.List;
     this.IsLoading = this.ActiveSet.IsLoading;
     this.HasLoaded = this.ActiveSet.HasLoaded;
-    this.ShowAssignees(showAssignees);
+    this.FilteredRequests.subscribe(
+      this.listBeforeChangeWatcher,
+      this,
+      "beforeChange"
+    );
+    this.FilteredRequests.subscribe(this.listWatcher);
   }
 
-  ShowAssignees = ko.observable();
+  hasInitialized = false;
 
-  getTableElementId = () => "tbl-requests-status-" + this.filter?.toLowerCase();
+  getTableElementId = () =>
+    "tbl-requests-status-" + this.key + this.filter?.toLowerCase();
 
   refresh = async () => {
-    this.Table.clear();
-    this.Table.destroy();
     await this.ActiveSet.load();
-    this.Table = makeDataTable(this.getTableElementId());
+  };
+
+  getRequestAssignments = assignmentsStore.getByRequest;
+
+  listBeforeChangeWatcher = () => {
+    if (!this.Table) return;
+    this.Table.clear().destroy();
+  };
+
+  listWatcher = () => {
+    if (this.hasInitialized)
+      setTimeout(
+        () => (this.Table = makeDataTable(this.getTableElementId())),
+        20
+      );
+    //this.Table.draw();
   };
 
   myPostProcessingLogic = (nodes) => {
@@ -37,5 +52,6 @@ export default class RequestsByStatusTableModule {
   init = async () => {
     await this.ActiveSet.init();
     this.Table = makeDataTable(this.getTableElementId());
+    this.hasInitialized = true;
   };
 }

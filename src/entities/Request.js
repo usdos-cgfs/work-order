@@ -56,13 +56,19 @@ import { DisplayModes } from "../views/RequestDetailView.js";
 
 import { Tabs } from "../app.js";
 
+// export const requestStates = {
+//   draft: { ID: 1, Title: "Draft" },
+//   open: { ID: 2, Title: "Open" },
+//   fulfilled: { ID: 3, Title: "Completed" },
+//   cancelled: { ID: 4, Title: "Cancelled" },
+//   rejected: { ID: 5, Title: "Rejected" },
+// };
 export const requestStates = {
   draft: "Draft",
   open: "Open",
+  fulfilled: "Completed",
   cancelled: "Cancelled",
-  closed: "Closed",
   rejected: "Rejected",
-  fulfilled: "Fulfilled",
 };
 
 export class RequestEntity {
@@ -120,6 +126,7 @@ export class RequestEntity {
     Stage: ko.observable(),
     PreviousStage: ko.observable(),
     Status: ko.observable(),
+    StatusDeprecated: ko.observable(),
     PreviousStatus: ko.observable(),
     InternalStatus: ko.observable(),
   };
@@ -128,6 +135,10 @@ export class RequestEntity {
     Submitted: new DateField(),
     EstClosed: new DateField(),
     Closed: new DateField(),
+  };
+
+  Deprecated = {
+    Status: ko.observable(),
   };
 
   RequestOrgs = ko.observable();
@@ -602,7 +613,8 @@ export class RequestEntity {
         folderPath,
         this
       );
-      this.Assignments.refresh();
+      // Have to await this for the next permissions set.
+      await this.Assignments.refresh();
       //this.request.ActivityLog.assignmentAdded(assignment);
       this.ActivityQueue.push({
         activity: actionTypes.Assigned,
@@ -918,11 +930,13 @@ export class RequestEntity {
       "Title",
       "ServiceType",
       "RequestorOrg",
+      "RequestOrgs",
       "Requestor",
       "RequestSubmitted",
       "EstClosedDate",
       "ClosedDate",
       "RequestStatus",
+      "Status",
       "RequestOrgs",
     ],
   };

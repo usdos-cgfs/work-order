@@ -177,7 +177,7 @@
         </div>
         <div class="w-100">
           <div
-            data-bind="component: {name: 'requests-by-status-table', params: ActiveTableParams}"
+            data-bind="component: {name: ActiveTableComponentName, params: ActiveTableParams}"
           ></div>
         </div>
       </div>
@@ -201,7 +201,7 @@
         </div>
         <div class="w-100">
           <div
-            data-bind="component: {name: 'requests-by-status-table', params: ActiveTableParams}"
+            data-bind="component: {name: 'open-requests-table', params: ActiveTableParams}"
           ></div>
         </div>
       </div>
@@ -296,7 +296,7 @@
             ></div>
             <!-- /ko -->
           </div>
-          <!-- ko if: request.State.Status() != 'Draft' -->
+          <!-- ko if: request.State.Status()?.Title != 'Draft' -->
           <div
             class="my-3"
             data-bind="template: {name: 'tmpl-assignments-component', data: request.Assignments}"
@@ -746,140 +746,6 @@
             </div>
             <!-- /ko -->
           </div>
-        </div>
-      </div>
-    </script>
-
-    <script type="text/html" id="tmpl-request-header">
-      <!-- Report.RequestDetailView -->
-      <div class="card mb-3 w-100">
-        <div class="card-body">
-          <h3 class="card-title">Requestor Information</h3>
-          <!-- ko if: DisplayMode() != DisplayModes.View -->
-          <div class="container-fluid">
-            <div class="row">
-              <div class="col-6 pb-2">
-                <h6>Request Status:</h6>
-                <p>Draft</p>
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-6 pb-2">
-                <label
-                  ><h6>Request ID:</h6>
-                  <p data-bind="text: ObservableTitle"></p
-                ></label>
-              </div>
-              <div class="col-6 pb-2">
-                <div class="form-group">
-                  <label><h6>Requestor Office:</h6></label>
-                  <select
-                    class="form-control"
-                    data-bind="value: RequestorInfo.Office,
-                options: $root.currentUser.RequestingOffices,
-                optionsText: (ro) => ro.Title"
-                  ></select>
-                  <!-- <p>
-                    GTM:
-                    <span
-                      data-bind="text: RequestorInfo.Office()?.GTM?.LookupValue"
-                    ></span>
-                  </p> -->
-                </div>
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-6 pb-2">
-                <h6>Requestor:</h6>
-                <div
-                  id="people-requestor"
-                  data-bind="people: RequestorInfo.Requestor"
-                ></div>
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-6 pb-2">
-                <h6>Requestor Phone:</h6>
-                <input
-                  type="tel"
-                  class="form-control"
-                  data-bind="value: RequestorInfo.Phone"
-                />
-              </div>
-              <div class="col-6 pb-2">
-                <h6>Requestor Email:</h6>
-                <input
-                  type="email"
-                  class="form-control"
-                  class="fluid"
-                  data-bind="value: RequestorInfo.Email"
-                />
-              </div>
-              <div class="col-12 pb-2">
-                <h6>Service Type:</h6>
-                <select
-                  class="form-control"
-                  class="fluid"
-                  data-bind="value: ServiceType.Def,
-                    options: AvailableServiceTypes,
-                    optionsText: (st) => st.Title"
-                ></select>
-              </div>
-            </div>
-          </div>
-          <!-- /ko -->
-          <!-- ko if: DisplayMode() == DisplayModes.View -->
-          <div class="container-fluid" data-bind="">
-            <div class="row">
-              <div class="col-6">
-                <h6>Request Status:</h6>
-                <p
-                  data-bind="text: State.Status, class: 'state-' + State.Status()?.toLowerCase()"
-                ></p>
-              </div>
-              <!-- ko if: Dates.Closed.get -->
-              <div class="col-6">
-                <h6>Closed:</h6>
-                <p data-bind="text: Dates.Closed.toLocaleDateString()"></p>
-              </div>
-              <!-- /ko -->
-            </div>
-            <div class="row">
-              <div class="col-6">
-                <h6>Request ID:</h6>
-                <p data-bind="text: ObservableTitle"></p>
-              </div>
-              <div class="col-6">
-                <h6>Requestor Office:</h6>
-                <p data-bind="text: RequestorInfo.Office()?.Title"></p>
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-6">
-                <h6>Requestor:</h6>
-                <p data-bind="text: RequestorInfo.Requestor()?.Title"></p>
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-6">
-                <h6>Requestor Phone:</h6>
-                <p data-bind="text: RequestorInfo.Phone"></p>
-              </div>
-              <div class="col-6">
-                <h6>Requestor Email:</h6>
-                <p data-bind="text: RequestorInfo.Email"></p>
-              </div>
-              <div class="col-6">
-                <h6>Submitted Date:</h6>
-                <p data-bind="text: Dates.Submitted.toLocaleString()"></p>
-              </div>
-              <div class="col-6">
-                <h6>Service Type:</h6>
-                <p data-bind="text: ServiceType.Def()?.Title"></p>
-              </div>
-            </div>
-          </div>
-          <!-- /ko -->
         </div>
       </div>
     </script>

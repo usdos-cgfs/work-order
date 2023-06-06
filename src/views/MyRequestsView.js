@@ -21,8 +21,11 @@ export class MyRequestsView {
 
   ActiveTableParams = ko.pureComputed(() => {
     const activeRequestSet = this.RequestsByStatusMap.get(this.ActiveKey());
+    const filteredRequests = activeRequestSet.List;
     return {
       activeRequestSet,
+      filteredRequests,
+      key: "my",
     };
   });
 

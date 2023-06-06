@@ -3,19 +3,7 @@
     <h2 class="mx-0" data-bind="text: filter.Title"></h2>
     <i class="fa fa-sync pointer" data-bind="click: refresh"></i>
   </div>
-  <!-- ko if: enableActionOfficeFeatures -->
-  <div class="form-check form-switch">
-    <label class="form-check-label">
-      <input
-        class="form-check-input"
-        type="checkbox"
-        role="switch"
-        data-bind="checked: ShowAssignees"
-      />
-      Show Assignments</label
-    >
-  </div>
-  <!-- /ko -->
+
   <!-- <input type="checkbox" data-bind="checked: ShowAssignees" /> -->
   <!-- <div>
     <button
@@ -38,9 +26,6 @@
         <th>Requestor</th>
         <th>Submitted Date</th>
         <th>Est. Completion Date</th>
-        <!-- ko if: enableActionOfficeFeatures && ShowAssignees() -->
-        <th>Assignments</th>
-        <!-- /ko -->
       </tr>
     </thead>
     <tbody data-bind="">
@@ -60,19 +45,6 @@
         <td data-bind="text: RequestorInfo.Requestor()?.Title"></td>
         <td data-bind="text: Dates.Submitted.toLocaleDateString()"></td>
         <td data-bind="text: Dates.EstClosed.toLocaleDateString()"></td>
-        <!-- ko if: $parent.enableActionOfficeFeatures && $parent.ShowAssignees() -->
-        <td>
-          <table class="table table-sm m-0">
-            <tbody data-bind="foreach: Assignments.list.Dashboard">
-              <tr>
-                <td data-bind="text: Assignee?.Title"></td>
-                <td data-bind="text: Role"></td>
-                <td data-bind="text: Status"></td>
-              </tr>
-            </tbody>
-          </table>
-        </td>
-        <!-- /ko -->
       </tr>
       <!-- /ko -->
       <!-- /ko -->
@@ -85,9 +57,6 @@
         <th data-filter="select-filter"></th>
         <th data-filter="select-filter"></th>
         <th data-filter="select-filter"></th>
-        <!-- ko if: enableActionOfficeFeatures && ShowAssignees() -->
-        <th data-filter="search-filter"></th>
-        <!-- /ko -->
       </tr>
     </tfoot>
   </table>

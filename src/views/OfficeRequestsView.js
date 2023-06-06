@@ -2,6 +2,13 @@ import { requestStates } from "../entities/Request.js";
 import { currentUser } from "../infrastructure/Authorization.js";
 
 import { requestsByStatusMap } from "../stores/Requests.js";
+import { assignmentsStore } from "../stores/Assignments.js";
+
+const tableComponentMap = {};
+tableComponentMap[requestStates.open] = "open-office-requests-table";
+tableComponentMap[requestStates.fulfilled] = "closed-requests-table";
+tableComponentMap[requestStates.cancelled] = "closed-requests-table";
+tableComponentMap[requestStates.rejected] = "closed-requests-table";
 
 export class OfficeRequestsView {
   constructor() {
@@ -14,6 +21,8 @@ export class OfficeRequestsView {
   async init() {
     const openRequests = this.RequestsByStatusMap.get(requestStates.open);
     await openRequests.init();
+    await assignmentsStore.init();
+
     this.HasLoaded(true);
   }
 
@@ -21,6 +30,9 @@ export class OfficeRequestsView {
   ShowAssignments = ko.observable(false);
   ActiveKey = ko.observable();
 
+  ActiveTableComponentName = ko.pureComputed(
+    () => tableComponentMap[this.ActiveKey()]
+  );
   ActiveTableParams = ko.pureComputed(() => {
     const activeRequestSet = this.RequestsByStatusMap.get(this.ActiveKey());
     const filteredRequests = ko.pureComputed(() =>
@@ -33,8 +45,7 @@ export class OfficeRequestsView {
     return {
       activeRequestSet,
       filteredRequests,
-      enableActionOfficeFeatures: true,
-      showAssignees: true,
+      key: "office",
     };
   });
 
