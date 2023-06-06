@@ -30,6 +30,16 @@ export default class Requisition {
       set: (val) => this.Items(JSON.parse(val)),
     },
   };
+
+  static Views = {
+    All: ["ID", "Title", "RequisitionType", "Quantity", "ItemsBlob"],
+  };
+
+  static ListDef = {
+    name: "st_requisition",
+    title: "st_requisition",
+    fields: Requisition.Views.All,
+  };
 }
 
 const requisitionTypes = ["Requisition", "De-Obligation", "Re-Alignment"];

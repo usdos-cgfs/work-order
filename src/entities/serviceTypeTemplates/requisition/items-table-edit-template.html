@@ -3,25 +3,33 @@
     <thead>
       <tr>
         <th>ID</th>
-        <th>Name</th>
+        <th>Title</th>
+        <th>Vendor</th>
+        <th>Description</th>
         <th>Quantity</th>
-        <th>Purchase Price</th>
+        <th>Unit</th>
+        <th>Price</th>
+        <th>Amount</th>
         <th>Actions</th>
       </tr>
     </thead>
     <!-- ko ifnot: ItemArray().length -->
     <tbody>
       <tr>
-        <td colspan="5" class="text-center">Nothing to Show</td>
+        <td colspan="9" class="text-center">Nothing to Show</td>
       </tr>
     </tbody>
     <!-- /ko -->
     <tbody data-bind="visible: ItemArray().length, foreach: ItemArray">
       <tr>
         <td data-bind="text: ID"></td>
-        <td data-bind="text: Name"></td>
+        <td data-bind="text: Title"></td>
+        <td data-bind="text: Vendor"></td>
+        <td data-bind="text: Description"></td>
         <td data-bind="text: Quantity"></td>
-        <td data-bind="text: PurchasePrice"></td>
+        <td data-bind="text: Unit"></td>
+        <td data-bind="text: Price"></td>
+        <td data-bind="text: Amount"></td>
         <td>
           <i
             class="fas fa-trash pointer"
@@ -37,8 +45,20 @@
     <div class="d-flex align-items-end pb-2" data-bind="using: NewItem">
       <div class="">
         <label>
-          <h6>Name<span class="required">*</span>:</h6>
-          <input class="form-control" data-bind="value: Name" />
+          <h6>Title<span class="required">*</span>:</h6>
+          <input class="form-control" data-bind="value: Title" />
+        </label>
+      </div>
+      <div class="ms-1">
+        <label
+          ><h6>Vendor<span class="required">*</span>:</h6>
+          <input class="form-control" data-bind="value: Vendor" />
+        </label>
+      </div>
+      <div class="ms-1">
+        <label
+          ><h6>Description<span class="required">*</span>:</h6>
+          <input class="form-control" data-bind="value: Description" />
         </label>
       </div>
       <div class="ms-1">
@@ -53,8 +73,20 @@
       </div>
       <div class="ms-1">
         <label
-          ><h6>Purchase Price<span class="required">*</span>:</h6>
-          <input class="form-control" data-bind="value: PurchasePrice" />
+          ><h6>Unit<span class="required">*</span>:</h6>
+          <input class="form-control" data-bind="value: Unit" />
+        </label>
+      </div>
+      <div class="ms-1">
+        <label
+          ><h6>Price<span class="required">*</span>:</h6>
+          <input class="form-control" data-bind="value: Price" />
+        </label>
+      </div>
+      <div class="ms-1">
+        <label
+          ><h6>Amount<span class="required">*</span>:</h6>
+          <input class="form-control" data-bind="value: Amount" />
         </label>
       </div>
       <button

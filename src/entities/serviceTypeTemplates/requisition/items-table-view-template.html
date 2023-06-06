@@ -3,24 +3,32 @@
     <thead>
       <tr>
         <th>ID</th>
-        <th>Name</th>
+        <th>Title</th>
+        <th>Vendor</th>
+        <th>Description</th>
         <th>Quantity</th>
-        <th>Purchase Price</th>
+        <th>Unit</th>
+        <th>Price</th>
+        <th>Amount</th>
       </tr>
     </thead>
     <!-- ko ifnot: ItemArray().length -->
     <tbody>
       <tr>
-        <td colspan="5" class="text-center">Nothing to Show</td>
+        <td colspan="8" class="text-center">Nothing to Show</td>
       </tr>
     </tbody>
     <!-- /ko -->
     <tbody data-bind="visible: ItemArray().length, foreach: ItemArray">
       <tr>
         <td data-bind="text: ID"></td>
-        <td data-bind="text: Name"></td>
+        <td data-bind="text: Title"></td>
+        <td data-bind="text: Vendor"></td>
+        <td data-bind="text: Description"></td>
         <td data-bind="text: Quantity"></td>
-        <td data-bind="text: PurchasePrice"></td>
+        <td data-bind="text: Unit"></td>
+        <td data-bind="text: Price"></td>
+        <td data-bind="text: Amount"></td>
       </tr>
     </tbody>
   </table>

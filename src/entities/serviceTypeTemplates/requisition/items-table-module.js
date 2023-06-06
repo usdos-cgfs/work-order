@@ -36,13 +36,11 @@ class RequisitionItem {
   constructor(id) {
     this.ID = id;
   }
-  Name = ko.observable();
+  Title = ko.observable();
+  Vendor = ko.observable();
+  Description = ko.observable();
   Quantity = ko.observable();
-  PurchasePrice = ko.observable();
-
-  static FieldMap = {
-    Name: { displayName: "Name" },
-    Quantity: { displayName: "Quantity" },
-    PurchasePrice: { displayName: "Purchase Price" },
-  };
+  Unit = ko.observable();
+  Price = ko.observable();
+  Amount = ko.observable();
 }
