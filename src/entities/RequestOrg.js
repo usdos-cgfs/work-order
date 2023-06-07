@@ -34,7 +34,6 @@ export class RequestOrg {
       "UserGroup",
       "ContactInfo",
       "OrgType",
-      "GTM",
       "BreakAccess",
       "PreferredEmail",
     ],

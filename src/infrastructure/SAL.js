@@ -2299,9 +2299,11 @@ export function SPList(listDef) {
       }
 
       function ongetLibFilesFailed(sender, args) {
-        console.warn("Unable load folder contents:");
-        console.error(sender);
-        console.error(args);
+        if (window.DEBUG) {
+          console.warn("Unable load folder contents:");
+          console.error(sender);
+          console.error(args);
+        }
         reject(sender, args);
       }
 

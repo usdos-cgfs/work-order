@@ -58,16 +58,20 @@ export default class ApplicationDbContext {
 
 class EntitySet {
   constructor(constructor) {
+    if (!constructor.ListDef) {
+      console.error("Missing constructor listdef for", constructor);
+      return;
+    }
+
     // Check if the object we passed in defines a ListDef
     this.constructor = constructor;
-    if (constructor.ListDef) {
-      constructor = constructor.ListDef;
-    }
-    this.ListDef = constructor;
-    this.Title = constructor.title;
-    this.Name = constructor.name;
 
-    this.ListRef = new SPList(constructor);
+    this.ListDef = constructor.ListDef;
+    this.Views = constructor.Views;
+    this.Title = constructor.ListDef.title;
+    this.Name = constructor.ListDef.name;
+
+    this.ListRef = new SPList(constructor.ListDef);
   }
 
   // Queries
@@ -93,7 +97,7 @@ class EntitySet {
     columnFilters,
     { orderByColumn, sortAsc },
     { count = null },
-    fields,
+    fields = this.ListDef.fields,
     includeFolders = false
   ) => {
     // if we pass in a count, we are expecting a cursor result
@@ -148,88 +152,36 @@ class EntitySet {
   /**
    * Return all items in list
    */
-  ToList = async () => {};
-
-  // Mutators
-  Add = async (entity) => {};
-  Update = async (entity) => {};
-  Remove = async (entity) => {};
-
-  Load = async (entity) => {};
-
-  // LEGACY: Replace below!
-  //
-  FindAll = async function (fields, filter = null) {
-    return await this.ListRef.getListItemsAsync({ fields, caml: filter });
-  };
-
-  Find = async function (entity, fields) {
-    if (!entity.ID && !entity.Title) {
-      console.error("entity missing Id or title", entity);
-      return null;
-    }
-    var item;
-    if (entity.ID) {
-      // Prefer find by Id
-      item = await this.ListRef.findByIdAsync(entity.ID, fields);
-    } else if (entity.Title) {
-      item = await this.ListRef.findByTitleAsync(entity.Title, fields, 1);
-    }
-    return item;
-  };
-
-  FindByRequestId = async function (requestId, fields) {
-    if (!requestId) return;
-    const results = await this.ListRef.findByColumnValueAsync(
-      [{ column: "Request", value: requestId, type: lookupType.id }],
-      { orderByColumn: "ID", sortAsc: false },
-      { count: null },
-      fields,
-      false
-    );
-    return results.results;
+  ToList = async (fields = this.Views.All) => {
+    const results = await this.ListRef.getListItemsAsync({ fields });
+    return results.map((item) => {
+      const newEntity = new this.constructor(item);
+      mapObjectToEntity(item, newEntity);
+      return newEntity;
+    });
   };
 
   LoadEntity = async function (entity) {
-    if (!entity.ID && !entity.Title) {
-      console.error("entity missing Id or title", entity);
+    if (!entity.ID) {
+      console.error("entity missing Id", entity);
       return false;
     }
-    var item = await this.Find(entity, Object.keys(entity.FieldMap));
+    const item = await this.ListRef.findByIdAsync(
+      entity.ID,
+      this.ListDef.fields
+    );
     if (!item) {
       console.warn("ApplicationDbContext Could not find entity", entity);
       return false;
     }
-    if (entity.FieldMap) {
-      mapObjectPropsToViewFields(item, entity.FieldMap);
-    }
+    mapObjectToEntity(item, entity);
     return true;
   };
 
-  LoadEntityByRequestId = async function (entity, requestId) {
-    var items = await this.FindByRequestId(
-      requestId,
-      Object.keys(entity.FieldMap)
-    );
-    if (!items.length) return false;
-    if (entity.FieldMap) {
-      mapObjectPropsToViewFields(items[0], entity.FieldMap);
-      if (!entity.ID && items[0].ID) {
-        entity.ID = items[0].ID;
-      }
-      return true;
-    }
-    Object.assign(entity, items[0]);
-    return true;
-  };
-
+  // Mutators
   AddEntity = async function (entity, folderPath, request = null) {
-    // if (entity.FieldMap) {
-    //   entity = mapViewFieldsToValuePairs(entity.FieldMap);
-    // } else if (this.ListDef.fields) {
     const creationfunc = createWritableObject.bind(this);
     const writeableEntity = creationfunc(entity);
-    // }
 
     if (request) {
       writeableEntity.Request = request;
@@ -241,7 +193,7 @@ class EntitySet {
       folderPath
     );
     mapObjectToEntity({ ID: newId }, entity);
-    return newId;
+    return;
   };
 
   UpdateEntity = async function (entity, fields = null) {
@@ -258,6 +210,7 @@ class EntitySet {
     return true;
   };
 
+  // Permissions
   SetItemPermissions = async function (entityId, valuePairs, reset = false) {
     const salValuePairs = valuePairs
       .filter((vp) => vp[0] && vp[1])
@@ -270,9 +223,6 @@ class EntitySet {
   };
 
   // Folder Methods
-  SetFolderReadOnly = async function (relFolderPath) {
-    return this.ListRef.setFolderReadonlyAsync(relFolderPath);
-  };
 
   GetItemsByFolderPath = function (folderPath, fields) {
     return this.ListRef.getFolderContentsAsync(folderPath, fields);
@@ -280,6 +230,10 @@ class EntitySet {
 
   UpsertFolderPath = async function (folderPath) {
     return this.ListRef.upsertFolderPathAsync(folderPath);
+  };
+
+  SetFolderReadOnly = async function (relFolderPath) {
+    return this.ListRef.setFolderReadonlyAsync(relFolderPath);
   };
 
   SetFolderPermissions = async function (folderPath, valuePairs, reset = true) {
@@ -306,6 +260,7 @@ class EntitySet {
     );
   };
 
+  // Other Functions
   UploadNewDocument = async function (folderPath, args) {
     return this.ListRef.uploadNewDocumentAsync(
       folderPath,
@@ -338,13 +293,6 @@ function mapValueToEntityProperty(propertyName, inputValue, targetEntity) {
   // 2. This is just a regular property, set it
   targetEntity[propertyName] = inputValue;
   return;
-}
-
-function mapObjectPropsToViewFields(inputObject, fieldMappings) {
-  Object.keys(fieldMappings).forEach((key) => {
-    if (DEBUG) console.log(`ORM Setting ${key} to`, inputObject[key]);
-    mapObjectToViewField(inputObject[key], fieldMappings[key]);
-  });
 }
 
 function mapObjectToViewField(inVal, fieldMap) {
@@ -391,28 +339,6 @@ function generateObject(inVal, fieldMap) {
   return fieldMap.factory ? fieldMap.factory(inVal) : inVal;
 }
 
-function mapViewFieldToValue(fieldMap) {
-  // Fieldmap has Three options for getting,
-  // 1. observable - the fieldmap represents an observable or other function that returns a value
-  // 2. get - the fieldmap is an object that exposes a getter function
-  // 3. factory/obs - the fieldmap is an object exposes a factory and an observable.
-  if (typeof fieldMap == "function") {
-    return fieldMap();
-  }
-  if (fieldMap.get && typeof fieldMap.get == "function") {
-    return fieldMap.get();
-  }
-
-  if (fieldMap.obs) {
-    return fieldMap.obs();
-  }
-
-  return fieldMap;
-
-  // console.error("Error setting fieldMap", fieldMap);
-  // throw "Error getting fieldmap";
-}
-
 function createWritableObject(input, selectedFields = null) {
   const entity = {};
   // We either predefine the fields in the ListDef, or provide a complete fieldmap
@@ -443,4 +369,26 @@ function createWritableObject(input, selectedFields = null) {
     });
 
   return entity;
+}
+
+function mapViewFieldToValue(fieldMap) {
+  // Fieldmap has Three options for getting,
+  // 1. observable - the fieldmap represents an observable or other function that returns a value
+  // 2. get - the fieldmap is an object that exposes a getter function
+  // 3. factory/obs - the fieldmap is an object exposes a factory and an observable.
+  if (typeof fieldMap == "function") {
+    return fieldMap();
+  }
+  if (fieldMap.get && typeof fieldMap.get == "function") {
+    return fieldMap.get();
+  }
+
+  if (fieldMap.obs) {
+    return fieldMap.obs();
+  }
+
+  return fieldMap;
+
+  // console.error("Error setting fieldMap", fieldMap);
+  // throw "Error getting fieldmap";
 }

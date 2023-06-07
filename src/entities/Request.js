@@ -113,32 +113,20 @@ export class RequestEntity {
 
   RequestorInfo = {
     Requestor: ko.observable(),
-    Name: ko.observable(),
     Phone: ko.observable(),
     Email: ko.observable(),
     Office: ko.observable(),
-    Supervisor: ko.observable(),
-    ManagingDirector: ko.observable(),
   };
 
   State = {
     IsActive: ko.observable(),
-    Stage: ko.observable(),
-    PreviousStage: ko.observable(),
     Status: ko.observable(),
-    StatusDeprecated: ko.observable(),
-    PreviousStatus: ko.observable(),
-    InternalStatus: ko.observable(),
   };
 
   Dates = {
     Submitted: new DateField(),
     EstClosed: new DateField(),
     Closed: new DateField(),
-  };
-
-  Deprecated = {
-    Status: ko.observable(),
   };
 
   RequestOrgs = ko.observable();
@@ -154,31 +142,37 @@ export class RequestEntity {
     refreshEntity: async () => {
       if (DEBUG) console.log("ServiceType: Refresh Triggered");
       if (!this.ServiceType.Def()?.HasTemplate) return;
-      if (!this.ID) return;
 
       this.ServiceType.IsLoading(true);
-      if (!this.ServiceType.Entity()) {
-        if (DEBUG)
-          console.log("ServiceType: Refresh null entity, Instantiating");
+      if (!this.ID) {
         await this.ServiceType.instantiateEntity();
+        this.ServiceType.IsLoading(false);
+        return;
       }
-      var template = this.ServiceType.Entity();
-      template.Title = this.Title;
-      await this.ServiceType.Def()
+      await this.ServiceType.Def()?.initializeEntity();
+      const results = await this.ServiceType.Def()
         ?.getListRef()
-        ?.LoadEntityByRequestId(template, this.ID);
+        ?.FindByColumnValue([{ column: "Request", value: this.ID }], {}, {});
 
+      if (!results.results.length) {
+        console.error("cannot find servicetype entity");
+        this.ServiceType.IsLoading(false);
+        return;
+      }
+
+      const entity = results.results[0];
+      entity.Request = this;
+      this.ServiceType.Entity(entity);
       this.ServiceType.IsLoading(false);
     },
     createEntity: async (newEntity = this.ServiceType.Entity()) => {
       if (!newEntity) return;
       newEntity.Title = this.Title;
       const folderPath = this.getRelativeFolderPath();
-      const newSvcTypeItemId = await this.ServiceType.Def()
+      await this.ServiceType.Def()
         .getListRef()
         .AddEntity(newEntity, folderPath, this);
-      newEntity.ID = newSvcTypeItemId;
-      return newSvcTypeItemId;
+      // newEntity.ID = newSvcTypeItemId;
     },
     updateEntity: async (fields) => {
       if (!this.ServiceType.Entity()) return;
@@ -188,59 +182,9 @@ export class RequestEntity {
     },
   };
 
-  // FieldMaps are used by the ApplicationDbContext and define
-  // how to store and retrieve the entity properties
-  FieldMap = {
-    ID: this.ObservableID,
-    Title: this.ObservableTitle,
-    RequestSubject: this.RequestSubject,
-    RequestDescription: this.RequestDescription,
-    Requestor: {
-      set: (val) => this.RequestorInfo.Requestor(People.Create(val)),
-      get: this.RequestorInfo.Requestor,
-    },
-    RequestorName: this.RequestorInfo.Name,
-    RequestorPhone: this.RequestorInfo.Phone,
-    RequestorEmail: this.RequestorInfo.Email,
-    RequestorSupervisor: {
-      set: (val) => this.RequestorInfo.Supervisor(People.Create(val)),
-      get: this.RequestorInfo.Supervisor,
-    },
-    ManagingDirector: {
-      set: (val) => this.RequestorInfo.ManagingDirector(People.Create(val)),
-      get: this.RequestorInfo.ManagingDirector,
-    },
-    RequestorOrg: {
-      set: (val) => this.RequestorInfo.Office(RequestOrg.Create(val)),
-      get: this.RequestorInfo.Office,
-    },
-    IsActive: this.State.IsActive,
-    PipelineStage: {
-      factory: PipelineStage.FindInStore,
-      obs: this.State.Stage,
-    },
-    RequestStagePrev: this.State.PreviousStage,
-    RequestStatus: this.State.Status,
-    RequestStatusPrev: this.State.PreviousStatus,
-    InternalStatus: this.State.InternalStatus,
-    RequestSubmitted: this.Dates.Submitted,
-    EstClosedDate: this.Dates.EstClosed,
-    ClosedDate: this.Dates.Closed,
-    RequestOrgs: {
-      set: (inputArr) =>
-        this.RequestOrgs(
-          (inputArr.results ?? inputArr).map((val) => RequestOrg.Create(val))
-        ),
-      get: this.RequestOrgs,
-    },
-    ServiceType: {
-      set: (val) => this.ServiceType.Def(ServiceType.Create(val)),
-      get: this.ServiceType.Def,
-    }, // {id, title},
-  };
-
   // TODO: isCurrentStage through userHasCurr... should be in a component
   Pipeline = {
+    Stage: ko.observable(),
     Icon: ko.pureComputed(() => this.ServiceType.Def()?.Icon),
     Stages: ko.pureComputed(() => {
       if (!this.ServiceType.Def()) return [];
@@ -249,13 +193,13 @@ export class RequestEntity {
         .sort(sortByField("Step"));
     }),
     getNextStage: ko.pureComputed(() => {
-      const thisStepNum = this.State.Stage()?.Step ?? 0;
+      const thisStepNum = this.Pipeline.Stage()?.Step ?? 0;
       const nextStepNum = thisStepNum + 1;
       return this.Pipeline.Stages()?.find((stage) => stage.Step == nextStepNum);
     }),
-    isCurrentStage: (stage) => stage.Step == this.State.Stage()?.Step,
+    isCurrentStage: (stage) => stage.Step == this.Pipeline.Stage()?.Step,
     isPrevStage: (stage) => {
-      return ko.pureComputed(() => stage.Step < this.State.Stage()?.Step);
+      return ko.pureComputed(() => stage.Step < this.Pipeline.Stage()?.Step);
     },
     userHasCurrentStageActions: ko.pureComputed(
       () => this.Assignments.CurrentStage.list.UserActionAssignments().length
@@ -271,7 +215,7 @@ export class RequestEntity {
         this.closeAndFinalize(requestStates.fulfilled);
         return null;
       }
-      this.State.Stage(nextStage);
+      this.Pipeline.Stage(nextStage);
 
       await this._context.Requests.UpdateEntity(this, ["PipelineStage"]);
 
@@ -371,8 +315,8 @@ export class RequestEntity {
           folderPath
         );
 
-        await this._context.Comments.SetItemPermissions(
-          commentFolderId,
+        await this._context.Comments.SetFolderPermissions(
+          folderPath,
           folderPerms
         );
 
@@ -446,7 +390,7 @@ export class RequestEntity {
             .All()
             .filter(
               (assignment) =>
-                assignment.PipelineStage?.ID == this.State.Stage()?.ID &&
+                assignment.PipelineStage?.ID == this.Pipeline.Stage()?.ID &&
                 (assignment.Role == assignmentRoles.ActionResolver ||
                   assignment.Role == assignmentRoles.Approver)
             );
@@ -456,7 +400,7 @@ export class RequestEntity {
             .CurrentUserAssignments()
             .filter(
               (assignment) =>
-                assignment.PipelineStage?.ID == this.State.Stage()?.ID &&
+                assignment.PipelineStage?.ID == this.Pipeline.Stage()?.ID &&
                 (assignment.Role == assignmentRoles.ActionResolver ||
                   assignment.Role == assignmentRoles.Approver)
             );
@@ -510,7 +454,7 @@ export class RequestEntity {
       }),
       AssignmentComponents: {
         Generic: ko.pureComputed(() => {
-          const stage = this.State.Stage();
+          const stage = this.Pipeline.Stage();
           if (!stage) {
             return [];
           }
@@ -530,7 +474,7 @@ export class RequestEntity {
           return assignmentComponents;
         }),
         Custom: ko.pureComputed(() => {
-          const stage = this.State.Stage();
+          const stage = this.Pipeline.Stage();
           const serviceType = this.ServiceType.Def();
           const serviceTypeEntity = this.ServiceType.Entity();
           if (
@@ -574,13 +518,14 @@ export class RequestEntity {
         ),
       },
     },
-    refresh: async (view = Assignment.Views.All) => {
+    refresh: async () => {
       this.Assignments.AreLoading(true);
       // Create a list of Assignment instances from raw entities
-      const assignmentObjs = await this._context.Assignments.FindByRequestId(
-        this.ID,
-        view
-      );
+      const assignmentObjs =
+        await this._context.Assignments.GetItemsByFolderPath(
+          this.getRelativeFolderPath(),
+          Assignment.Views.All
+        );
       const assignments =
         assignmentObjs?.map(Assignment.CreateFromObject) ?? [];
 
@@ -597,22 +542,18 @@ export class RequestEntity {
       if (!this.ID || !assignment) return;
 
       if (!assignment.RequestOrg) {
-        assignment.RequestOrg = this.State.Stage()?.RequestOrg;
+        assignment.RequestOrg = this.Pipeline.Stage()?.RequestOrg;
       }
 
       if (!assignment.PipelineStage) {
-        assignment.PipelineStage = this.State.Stage();
+        assignment.PipelineStage = this.Pipeline.Stage();
       }
 
       assignment.Status = assignment.Role.initialStatus;
 
       const folderPath = this.getRelativeFolderPath();
 
-      const newAssignmentId = await this._context.Assignments.AddEntity(
-        assignment,
-        folderPath,
-        this
-      );
+      await this._context.Assignments.AddEntity(assignment, folderPath, this);
       // Have to await this for the next permissions set.
       await this.Assignments.refresh();
       //this.request.ActivityLog.assignmentAdded(assignment);
@@ -669,7 +610,7 @@ export class RequestEntity {
       this.Assignments.refresh();
     },
     createStageAssignments: async (stage = null) => {
-      stage = stage ?? this.State.Stage();
+      stage = stage ?? this.Pipeline.Stage();
       const newAssignment = {
         RequestOrg: stage.RequestOrg,
         PipelineStage: stage,
@@ -717,11 +658,7 @@ export class RequestEntity {
 
       const folderPath = this.getRelativeFolderPath();
       // const actionObj = Object.assign(new Action(), action);
-      const newActionId = await this._context.Actions.AddEntity(
-        action,
-        folderPath,
-        this.request
-      );
+      await this._context.Actions.AddEntity(action, folderPath, this.request);
       this.Actions.refresh();
     },
   };
@@ -876,7 +813,7 @@ export class RequestEntity {
   };
 
   refreshRequest = async () => {
-    if (!this.ID && !this.Title) return;
+    if (!this.ID) return;
     await this._context.Requests.LoadEntity(this);
   };
 
@@ -899,6 +836,45 @@ export class RequestEntity {
     return listRefs;
   }
 
+  // FieldMaps are used by the ApplicationDbContext and define
+  // how to store and retrieve the entity properties
+  FieldMap = {
+    ID: this.ObservableID,
+    Title: this.ObservableTitle,
+    RequestSubject: this.RequestSubject,
+    RequestDescription: this.RequestDescription,
+    Requestor: {
+      set: (val) => this.RequestorInfo.Requestor(People.Create(val)),
+      get: this.RequestorInfo.Requestor,
+    },
+    RequestorPhone: this.RequestorInfo.Phone,
+    RequestorEmail: this.RequestorInfo.Email,
+    RequestorOrg: {
+      set: (val) => this.RequestorInfo.Office(RequestOrg.Create(val)),
+      get: this.RequestorInfo.Office,
+    },
+    IsActive: this.State.IsActive,
+    PipelineStage: {
+      factory: PipelineStage.FindInStore,
+      obs: this.Pipeline.Stage,
+    },
+    RequestStatus: this.State.Status,
+    RequestSubmitted: this.Dates.Submitted,
+    EstClosedDate: this.Dates.EstClosed,
+    ClosedDate: this.Dates.Closed,
+    RequestOrgs: {
+      set: (inputArr) =>
+        this.RequestOrgs(
+          (inputArr.results ?? inputArr).map((val) => RequestOrg.Create(val))
+        ),
+      get: this.RequestOrgs,
+    },
+    ServiceType: {
+      set: (val) => this.ServiceType.Def(ServiceType.Create(val)),
+      get: this.ServiceType.Def,
+    }, // {id, title},
+  };
+
   static Views = {
     All: [
       "ID",
@@ -906,19 +882,12 @@ export class RequestEntity {
       "RequestSubject",
       "RequestDescription",
       "Requestor",
-      "RequestorName",
       "RequestorPhone",
       "RequestorEmail",
-      "RequestorSupervisor",
-      "ManagingDirector",
       "RequestorOrg",
       "IsActive",
       "PipelineStage",
-      "RequestStagePrev",
       "RequestStatus",
-      "Status",
-      "RequestStatusPrev",
-      "InternalStatus",
       "RequestSubmitted",
       "EstClosedDate",
       "ClosedDate",
@@ -933,10 +902,10 @@ export class RequestEntity {
       "RequestOrgs",
       "Requestor",
       "RequestSubmitted",
+      "PipelineStage",
       "EstClosedDate",
       "ClosedDate",
       "RequestStatus",
-      "Status",
       "RequestOrgs",
     ],
   };

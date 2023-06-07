@@ -131,8 +131,8 @@ export class RequestDetailView {
             return;
           }
           // Apply folder permissions
-          const result = await listRef.SetItemPermissions(
-            folderId,
+          const result = await listRef.SetFolderPermissions(
+            folderPath,
             folderPerms
           );
         })
@@ -155,12 +155,7 @@ export class RequestDetailView {
     this.request.State.IsActive(true);
 
     createItems: {
-      const newRequestItemId = await this._context.Requests.AddEntity(
-        this.request,
-        folderPath
-      );
-
-      this.request.ID = newRequestItemId;
+      await this._context.Requests.AddEntity(this.request, folderPath);
 
       await this.request.ServiceType.createEntity();
     }

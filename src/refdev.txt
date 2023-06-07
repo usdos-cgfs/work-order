@@ -10,7 +10,6 @@
   href="/sites/workorder/Style Library/Apps/wo/lib/fontawesome-6.4.0/css/all.min.css"
   rel="stylesheet"
 />
-
 <link
   href="/sites/workorder/Style Library/Apps/wo/src/app.css"
   rel="stylesheet"

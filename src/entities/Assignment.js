@@ -56,7 +56,6 @@ export class Assignment {
       "Assignee",
       "Role",
       "Status",
-      "ActionOffice",
       "RequestOrg",
       "IsActive",
       "Comment",

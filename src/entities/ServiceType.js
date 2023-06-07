@@ -121,36 +121,30 @@ export class ServiceType {
     return serviceTypeStore().find((service) => service.ID == serviceType.ID);
   };
 
+  // TODO: ReportingRequestOrgs
   static Views = {
     All: [
       "ID",
       "Title",
       "Active",
       "HasTemplate",
-      "st_list",
-      "DescriptionRequired",
       "DescriptionTitle",
       "Description",
       "Icon",
       "AttachmentsRequiredCnt",
+      "DescriptionRequired",
       "AttachmentDescription",
       "DaysToCloseBusiness",
-      "ReminderDays",
       "KPIThresholdYellow",
       "KPIThresholdGreen",
       "UID",
-      "TemplateName", //Deprecate
-      "RequestOrgs",
-      "ActionOffices", // Which one?
-      "SupervisorRequired",
       "EmailPipelineOnClose",
-      "HideReport",
     ],
   };
 
   static ListDef = {
     name: "ConfigServiceTypes",
     title: "ConfigServiceTypes",
-    fields: this.Views.All,
+    fields: ServiceType.Views.All,
   };
 }

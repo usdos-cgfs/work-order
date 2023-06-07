@@ -162,10 +162,7 @@ async function createNotification(notification, relFolderPath) {
   notification.BCCString = emailStringMapper(notification.BCC);
   notification.BCC = entityPeopleMapper(notification.BCC);
 
-  const notificationId = await context.Notifications.AddEntity(
-    notification,
-    relFolderPath
-  );
+  await context.Notifications.AddEntity(notification, relFolderPath);
 }
 
 /**

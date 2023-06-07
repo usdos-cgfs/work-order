@@ -57,16 +57,15 @@ export default class CH_OverTime {
       );
 
       // Break the Permissions
-      await this.supplementSet.SetItemPermissions(listFolderId, folderPerms);
+      await this.supplementSet.SetFolderPermissions(relFolderPath, folderPerms);
 
       contractorSupplement.Contractor(this.Contractor());
       // Create the item
-      const supplementId = await this.supplementSet.AddEntity(
+      await this.supplementSet.AddEntity(
         contractorSupplement,
         relFolderPath,
         this.Request
       );
-      contractorSupplement.ID = supplementId;
       this.ContractorSupplement.entity(contractorSupplement);
       await this.Request.ServiceType.updateEntity(["ContractorSupplement"]);
     },

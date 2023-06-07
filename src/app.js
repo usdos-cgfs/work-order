@@ -80,25 +80,21 @@ class App {
 
   Init = async function () {
     configLists: {
-      var pipelinesPromise = this.context.ConfigPipelines.FindAll(
-        PipelineStage.Views.All
-      ).then(this.Config.pipelineStageStore);
-
-      var requestOrgsPromise = this.context.ConfigRequestOrgs.FindAll(
-        RequestOrg.Views.All
-      ).then((arr) => this.Config.requestOrgStore(arr.sort(sortByTitle)));
-
-      var serviceTypePromise = this.context.ConfigServiceTypes.FindAll(
-        ServiceType.Views.All
-      ).then((arr) =>
-        this.Config.serviceTypeStore(
-          arr.sort(sortByTitle).map((val) => new ServiceType(val))
-        )
+      var pipelinesPromise = this.context.ConfigPipelines.ToList().then(
+        this.Config.pipelineStageStore
       );
 
-      const holidaysPromise = this.context.ConfigHolidays.FindAll(
-        Holiday.Views.All
-      ).then(this.Config.holidayStore);
+      var requestOrgsPromise = this.context.ConfigRequestOrgs.ToList().then(
+        (arr) => this.Config.requestOrgStore(arr.sort(sortByTitle))
+      );
+
+      var serviceTypePromise = this.context.ConfigServiceTypes.ToList().then(
+        (arr) => this.Config.serviceTypeStore(arr.sort(sortByTitle))
+      );
+
+      const holidaysPromise = this.context.ConfigHolidays.ToList().then(
+        this.Config.holidayStore
+      );
 
       const configResults = await Promise.all([
         requestOrgsPromise,
