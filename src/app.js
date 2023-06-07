@@ -23,35 +23,10 @@ import MyAssignmentsView from "./views/MyAssignmentsView.js";
 
 export const assetsPath = window.appRoot + "/src";
 
-const datatablesSheet = await import(
-  window.appRoot + "/lib/datatables/datatables.min.css",
-  {
-    assert: { type: "css" },
-  }
-);
-const appSheet = await import(window.appRoot + "/src/app.css", {
-  assert: { type: "css" },
-});
-const faSheet = await import(
-  window.appRoot + "/lib/fontawesome-6.4.0/css/all.min.css",
-  {
-    assert: { type: "css" },
-  }
-);
-
-document.adoptedStyleSheets = [
-  datatablesSheet.default,
-  appSheet.default,
-  faSheet.default,
-];
-
 window.WorkOrder = window.WorkOrder || {};
 
 async function CreateApp() {
-  // TODO: deferred import dependencies (SAL) here and DI into App
-
   ko.options.deferUpdates = true;
-  //const { WorkOrder } = await import("./models/WorkOrder.js");
   await InitSal();
 
   const context = new ApplicationDbContext();
@@ -71,6 +46,12 @@ class App {
     this.Tab.subscribe(tabWatcher);
     this.HasLoaded(true);
   }
+
+  ToggleActionOfficeFeatures = ko.observable(true);
+  ShowActionOfficeFeatures = ko.pureComputed(
+    () =>
+      this.CurrentUser()?.IsActionOffice() && this.ToggleActionOfficeFeatures()
+  );
   HasLoaded = ko.observable(false);
 
   CurrentUser = currentUser;

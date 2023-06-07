@@ -1,0 +1,18 @@
+<link
+  href="/sites/CGFS/Style Library/Apps/wo/lib/DataTables/datatables.min.css"
+  rel="stylesheet"
+/>
+<link
+  href="/sites/CGFS/Style Library/Apps/wo/lib/fontawesome-6.4.0/css/all.min.css"
+  rel="stylesheet"
+/>
+<link
+  href="/sites/CGFS/Style Library/Apps/wo/lib/bootstrap-5.3.0/css/bootstrap.min.css"
+  rel="stylesheet"
+/>
+<link href="/sites/CGFS/Style Library/Apps/wo/src/app.css" rel="stylesheet" />
+
+<script src="/sites/CGFS/Style Library/Apps/wo/lib/bootstrap-5.3.0/js/bootstrap.min.js"></script>
+<script src="/sites/CGFS/Style Library/Apps/wo/lib/knockout/knockout-3.5.1.js"></script>
+<script src="/sites/CGFS/Style Library/Apps/wo/lib/knockout/knockout.mapping-latest.js"></script>
+<script src="/sites/CGFS/Style Library/Apps/wo/lib/DataTables/datatables.min.js"></script>

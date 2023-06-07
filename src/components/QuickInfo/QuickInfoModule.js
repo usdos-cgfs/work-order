@@ -6,10 +6,13 @@ import { requestsByStatusMap } from "../../stores/Requests.js";
 import { assignmentsStore } from "../../stores/Assignments.js";
 
 export default class QuickInfoModule {
-  constructor() {}
+  constructor({ ShowActionOfficeFeatures, ToggleActionOfficeFeatures }) {
+    this.ShowActionOfficeFeatures = ShowActionOfficeFeatures;
+    this.ToggleActionOfficeFeatures = ToggleActionOfficeFeatures;
+  }
 
-  ShowActionOfficeInfo = ko.pureComputed(() => {
-    return currentUser()?.ActionOffices().length;
+  ShowActionOfficeToggle = ko.pureComputed(() => {
+    return currentUser()?.IsActionOffice() && false;
   });
 
   MyOpenAssignments = assignmentsStore.getOpenByUser(currentUser());

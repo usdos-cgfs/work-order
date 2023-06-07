@@ -188,7 +188,6 @@ export function getRequestFolderPermissions(request) {
 
 export const AssignmentFunctions = {
   TestFunc: function () {
-    console.log("Hello", this);
     return this.RequestorInfo.Requestor();
   },
   getGovManager: function () {
