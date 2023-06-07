@@ -2,11 +2,7 @@ import { People } from "../components/People.js";
 import { assignmentStates } from "../entities/Assignment.js";
 import { OrgTypes, requestOrgStore } from "../entities/RequestOrg.js";
 
-import {
-  getCurrentUserPropertiesAsync,
-  getUserPropsAsync,
-  getDefaultGroups,
-} from "./SAL.js";
+import { getUserPropsAsync, getDefaultGroups } from "./SAL.js";
 
 export const permissions = {
   FullControl: "Full Control",
@@ -127,10 +123,6 @@ export class User {
 
     return new User(userProps);
   };
-}
-
-export class UserManager {
-  static getUserPropertiesAsync = getCurrentUserPropertiesAsync;
 }
 
 export function getRequestFolderPermissions(request) {

@@ -97,7 +97,7 @@ class EntitySet {
     columnFilters,
     { orderByColumn, sortAsc },
     { count = null },
-    fields = this.ListDef.fields,
+    fields = this.Views.All,
     includeFolders = false
   ) => {
     // if we pass in a count, we are expecting a cursor result
