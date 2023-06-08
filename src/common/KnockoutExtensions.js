@@ -200,6 +200,13 @@ registerComponent({
   template: "RequestHeaderEditTemplate",
 });
 
+registerComponent({
+  name: "pipeline-component",
+  folder: "Pipeline",
+  module: "PipelineModule",
+  template: "PipelineTemplate",
+});
+
 ko.components.register("quick-info", {
   template: {
     fromPath: "/components/QuickInfo/QuickInfoTemplate.html",

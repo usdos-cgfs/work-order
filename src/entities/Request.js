@@ -182,7 +182,6 @@ export class RequestEntity {
     },
   };
 
-  // TODO: isCurrentStage through userHasCurr... should be in a component
   Pipeline = {
     Stage: ko.observable(),
     Icon: ko.pureComputed(() => this.ServiceType.Def()?.Icon),
@@ -197,13 +196,6 @@ export class RequestEntity {
       const nextStepNum = thisStepNum + 1;
       return this.Pipeline.Stages()?.find((stage) => stage.Step == nextStepNum);
     }),
-    isCurrentStage: (stage) => stage.Step == this.Pipeline.Stage()?.Step,
-    isPrevStage: (stage) => {
-      return ko.pureComputed(() => stage.Step < this.Pipeline.Stage()?.Step);
-    },
-    userHasCurrentStageActions: ko.pureComputed(
-      () => this.Assignments.CurrentStage.list.UserActionAssignments().length
-    ),
     advance: async () => {
       if (this.promptAdvanceModal) this.promptAdvanceModal.hide();
 
@@ -728,7 +720,10 @@ export class RequestEntity {
         );
     }),
     currentUserCanAdvance: ko.pureComputed(() => {
-      return this.Assignments.CurrentStage.list.UserActionAssignments().length;
+      return (
+        this.State.Status() == requestStates.open &&
+        this.Assignments.CurrentStage.list.UserActionAssignments().length
+      );
     }),
     currentUserCanSupplement: ko.pureComputed(() => {
       // determines whether the current user can add attachments or
@@ -843,12 +838,10 @@ export class RequestEntity {
     this.State.Status(status);
     this.State.IsActive(false);
     this.Dates.Closed.set(new Date());
-    this.Pipeline.Stage(null);
     await this._context.Requests.UpdateEntity(this, [
       "RequestStatus",
       "IsActive",
       "ClosedDate",
-      "PipelineStage",
     ]);
     // 3. Emit closeout action
     this.ActivityQueue.push({

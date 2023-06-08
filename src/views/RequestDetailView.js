@@ -86,6 +86,7 @@ export class RequestDetailView {
 
   ShowActionsArea = ko.pureComputed(
     () =>
+      this.request.State.IsActive() &&
       this.request.Assignments.CurrentStage.list.UserActionAssignments().length
   );
 

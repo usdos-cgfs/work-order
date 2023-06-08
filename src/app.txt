@@ -326,11 +326,9 @@
             data-bind="template: {name: 'tmpl-quick-actions-bar'}"
           ></div>
           <div class="my-3">
-            <div
-              id="request-pipeline"
-              class=""
-              data-bind="template: {name: 'tmpl-request-pipeline'}"
-            ></div>
+            <pipeline-component
+              params="request: request, ShowActionsArea: ShowActionsArea"
+            ></pipeline-component>
             <!-- ko if: ShowActionsArea -->
             <div
               id="request-pipeline"
@@ -618,43 +616,6 @@
           <!-- /ko -->
           <!-- /ko -->
         </div>
-      </div>
-    </script>
-
-    <script type="text/html" id="tmpl-request-pipeline">
-      <div class="d-flex m-0" data-bind="using: request.Pipeline">
-        <ol class="list-group list-group-horizontal p-0 m-0 d-flex">
-          <li
-            class="list-group-item d-flex flex-column justify-content-center fix-service-icon-border"
-          >
-            <i class="fa fa-3x" data-bind="class: Icon"></i>
-          </li>
-          <!-- ko foreach: Stages -->
-          <li
-            class="list-group-item d-flex flex-column justify-content-center"
-            data-bind="css: {'border-bottom-0': $parent.isCurrentStage($data) &&
-            $parent.userHasCurrentStageActions(),
-            'list-group-item-secondary': $parent.isPrevStage($data)}"
-          >
-            <div
-              class="d-flex align-items-center"
-              data-bind="css: {'text-primary': $parent.isCurrentStage($data) }"
-            >
-              <h4
-                data-bind="text: Step, css: {'text-primary': $parent.isCurrentStage($data) }"
-              ></h4>
-              <div class="mx-2"></div>
-              <div>
-                <div class="fw-bold" data-bind="text: Title"></div>
-                <p data-bind="text: ActionType"></p>
-              </div>
-            </div>
-          </li>
-          <!-- /ko -->
-        </ol>
-        <!-- ko if: userHasCurrentStageActions -->
-        <div class="flex-grow-1 border-bottom"></div>
-        <!-- /ko -->
       </div>
     </script>
 
