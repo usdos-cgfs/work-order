@@ -29,7 +29,7 @@ class AssignmentsSet {
     const start = new Date();
 
     const allAssignments = await getAppContext().Assignments.FindByColumnValue(
-      [{ column: "Request/ID", op: "ne", value: null }],
+      [{ column: "Request/ID", op: "gt", value: 0 }],
       { orderByColumn: "Title", sortAsc: false },
       {},
       Assignment.Views.Dashboard,

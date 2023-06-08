@@ -35,6 +35,7 @@ function groupItemToObj(oListItem) {
     LoginName: oListItem.get_loginName(),
     IsEnsured: true,
     IsGroup: true,
+    oGroup: oListItem,
   };
 }
 
@@ -512,11 +513,7 @@ sal.getSPSiteGroupByName = function (groupName) {
       return group.Title == groupName;
     });
   }
-  if (userGroup) {
-    return userGroup.group;
-  } else {
-    return null;
-  }
+  return userGroup;
 };
 
 export function SPList(listDef) {
@@ -1150,8 +1147,8 @@ export function SPList(listDef) {
       //   currCtx
       // );
       const resolvedGroup = sal.getSPSiteGroupByName(vp[0]);
-      if (resolvedGroup) {
-        resolvedGroups.push([resolvedGroup, vp[1]]);
+      if (resolvedGroup?.oGroup) {
+        resolvedGroups.push([resolvedGroup.oGroup, vp[1]]);
 
         // roleDefBindingColl.add(web.get_roleDefinitions().getByName(vp[1]));
         // oListItem.get_roleAssignments().add(resolvedGroup, roleDefBindingColl);
@@ -1845,8 +1842,8 @@ export function SPList(listDef) {
 
     valuePairs.forEach(function (vp) {
       var resolvedGroup = sal.getSPSiteGroupByName(vp[0]);
-      if (resolvedGroup) {
-        resolvedGroups.push([resolvedGroup, vp[1]]);
+      if (resolvedGroup?.oGroup) {
+        resolvedGroups.push([resolvedGroup.oGroup, vp[1]]);
       } else {
         //This doesn't appear to be a group, let's see if we can find a user
         users.push([currCtx.get_web().ensureUser(vp[0]), vp[1]]);
