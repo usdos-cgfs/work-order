@@ -836,6 +836,30 @@ export class RequestEntity {
     return listRefs;
   }
 
+  closeAndFinalize = async (status) => {
+    //1. set all assignments to inactive
+
+    //2. Set request properties
+    this.State.Status(status);
+    this.State.IsActive(false);
+    this.Dates.Closed.set(new Date());
+    this.Pipeline.Stage(null);
+    await this._context.Requests.UpdateEntity(this, [
+      "RequestStatus",
+      "IsActive",
+      "ClosedDate",
+      "PipelineStage",
+    ]);
+    // 3. Emit closeout action
+    this.ActivityQueue.push({
+      activity: actionTypes.Closed,
+      data: this,
+    });
+    // 4. Update Permissions;
+    await this.Authorization.setReadonly();
+    this.refreshAll();
+  };
+
   // FieldMaps are used by the ApplicationDbContext and define
   // how to store and retrieve the entity properties
   FieldMap = {

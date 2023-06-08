@@ -4,6 +4,9 @@ import { Assignment } from "../../entities/Assignment.js";
 
 import { assignmentsStore } from "../../stores/Assignments.js";
 
+// TODO: Add Closed Dates to closed Work Orders table
+// TODO: Add Current Stage to Open Orders table
+
 export default class RequestsByStatusTableModule {
   constructor({ activeRequestSet, filteredRequests = null, key = "office" }) {
     this.key = key;

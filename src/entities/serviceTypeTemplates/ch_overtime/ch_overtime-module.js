@@ -205,11 +205,17 @@ export class ContractorSupplement {
       "Title",
       "TaskOrderNumber",
       "LaborCategory",
+      "RequisitionNumber",
       "ContractorType",
       "Request",
       "Contractor",
     ],
-    APMUpdate: ["TaskOrderNumber", "LaborCategory", "ContractorType"],
+    APMUpdate: [
+      "TaskOrderNumber",
+      "LaborCategory",
+      "ContractorType",
+      "RequisitionNumber",
+    ],
   };
 
   static ListDef = {

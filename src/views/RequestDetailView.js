@@ -188,33 +188,9 @@ export class RequestDetailView {
     this.DisplayMode(DisplayModes.View);
   };
 
-  closeAndFinalize = async (status) => {
-    //1. set all assignments to inactive
-
-    //2. Set request properties
-    this.request.State.Status(status);
-    this.request.State.IsActive(false);
-    this.request.Dates.Closed.set(new Date());
-    this.request.State.Stage(null);
-    await this._context.Requests.UpdateEntity(this.request, [
-      "RequestStatus",
-      "IsActive",
-      "ClosedDate",
-      "PipelineStage",
-    ]);
-    // 3. Emit closeout action
-    this.request.ActivityQueue.push({
-      activity: actionTypes.Closed,
-      data: this.request,
-    });
-    // 4. Update Permissions;
-    await this.request.Authorization.setReadonly();
-    this.refreshAll();
-  };
-
   promptClose = () => {
     if (confirm("Close and finalize request? This action cannot be undone!")) {
-      this.closeAndFinalize(requestStates.closed);
+      this.request.closeAndFinalize(requestStates.fulfilled);
     }
   };
 
@@ -237,7 +213,8 @@ export class RequestDetailView {
 
   confirmAdvanceHandler = () => {
     if (!this.request.Pipeline.getNextStage()) {
-      this.closeAndFinalize();
+      this.promptClose();
+      this.promptAdvanceModal.hide();
       return;
     }
     this.request.Pipeline.advance();
