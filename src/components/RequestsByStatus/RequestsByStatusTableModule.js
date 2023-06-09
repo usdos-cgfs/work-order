@@ -1,5 +1,5 @@
 import { makeDataTable } from "../../common/DataTableExtensions.js";
-import { RequestEntity } from "../../entities/Request.js";
+import { requestStates } from "../../entities/Request.js";
 import { Assignment } from "../../entities/Assignment.js";
 
 import { assignmentsStore } from "../../stores/Assignments.js";

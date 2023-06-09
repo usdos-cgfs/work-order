@@ -1,0 +1,40 @@
+<div data-bind="">
+  <div class="mb-3">
+    <label for="contractor-task-order"><h6>Task Order Number:</h6></label>
+    <input
+      id="contractor-task-order"
+      type="text"
+      class="form-control"
+      data-bind="value: TaskOrderNumber"
+    />
+  </div>
+  <div class="mb-3">
+    <label for="contractor-requisition-number"
+      ><h6>Requisition Number:</h6></label
+    >
+    <input
+      id="contractor-requisition-number"
+      type="text"
+      class="form-control"
+      data-bind="value: RequisitionNumber"
+    />
+  </div>
+  <div class="mb-3">
+    <label for="contractor-labor-category"><h6>Labor Category:</h6></label>
+    <input
+      id="contractor-labor-category"
+      type="text"
+      class="form-control"
+      data-bind="value: LaborCategory"
+    />
+  </div>
+  <div class="mb-3">
+    <label for="contractor-type"><h6>Contractor Type:</h6></label>
+    <select
+      id="contractor-type"
+      class="form-select"
+      data-bind="value: ContractorType, options: ContractorTypeOptsArr,
+    optionsCaption: 'Select...'"
+    ></select>
+  </div>
+</div>

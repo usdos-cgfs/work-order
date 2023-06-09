@@ -3,11 +3,16 @@ import { currentUser } from "../infrastructure/Authorization.js";
 import { assignmentsStore } from "../stores/Assignments.js";
 import { requestsByStatusMap } from "../stores/Requests.js";
 
+import { makeDataTable } from "../common/DataTableExtensions.js";
+
 export default class MyAssignmentsView {
-  constructor() {}
+  constructor() {
+    this.init();
+  }
 
   init = async () => {
     await assignmentsStore.init();
+    makeDataTable("my-assignments-table");
   };
 
   MyOpenAssignmentsByRequest = ko.pureComputed(() => {

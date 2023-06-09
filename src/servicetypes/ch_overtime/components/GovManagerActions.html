@@ -1,0 +1,18 @@
+<div data-bind="visible: hasBeenValidated, foreach: Errors">
+  <div
+    class="alert alert-warning"
+    role="alert"
+    data-bind="text: description"
+  ></div>
+</div>
+<div class="pb-2">
+  <label for="ch_overtime-people-apm"><h6>APM:</h6></label>
+  <div id="ch_overtime-people-apm" data-bind="people: APM"></div>
+</div>
+<div class="pb-2">
+  <label for="ch_overtime-people-gtm"><h6>GTM:</h6></label>
+  <div id="ch_overtime-people-gtm" data-bind="people: GTM"></div>
+</div>
+<button type="button" class="btn fluid btn-primary" data-bind="click: submit">
+  Save
+</button>

@@ -83,7 +83,3 @@ export default function ApprovalActions(params) {
     assignmentStates,
   };
 }
-
-ApprovalActions.prototype.dispose = function () {
-  console.log("disposing approval");
-};

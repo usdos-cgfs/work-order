@@ -1,9 +1,5 @@
 import { RequestOrg } from "../entities/RequestOrg.js";
-import {
-  serviceTypeStore,
-  ServiceType,
-  getModuleFilePath,
-} from "../entities/ServiceType.js";
+import { ServiceType } from "../entities/ServiceType.js";
 import { actionTypes } from "../entities/Action.js";
 import {
   PipelineStage,
@@ -21,7 +17,6 @@ import { Comment } from "../entities/Comment.js";
 import { Action } from "../entities/Action.js";
 
 import { People } from "../components/People.js";
-import { ServiceTypeComponent } from "../components/ServiceTypeComponent.js";
 import { ActivityLogComponent } from "../components/ActivityLogComponent.js";
 import { NewAssignmentComponent } from "../components/NewAssignmentComponent.js";
 import { DateField } from "../components/DateField.js";
@@ -35,7 +30,7 @@ import {
   businessDaysFromDate,
 } from "../common/DateUtilities.js";
 import * as Router from "../common/Router.js";
-import { registerServiceTypeComponent } from "../common/KnockoutExtensions.js";
+import { registerServiceTypeActionComponent } from "../common/KnockoutExtensions.js";
 
 import { addTask, finishTask, taskDefs } from "../stores/Tasks.js";
 
@@ -135,17 +130,14 @@ export class RequestEntity {
     IsLoading: ko.observable(false),
     Entity: ko.observable(),
     Def: ko.observable(),
-    instantiateEntity: async (newSvcType = this.ServiceType.Def()) => {
-      const newEntity = await newSvcType.instantiateEntity(this);
-      this.ServiceType.Entity(newEntity);
-    },
+    instantiateEntity: async (newSvcType = this.ServiceType.Def()) => {},
     refreshEntity: async () => {
       if (DEBUG) console.log("ServiceType: Refresh Triggered");
       if (!this.ServiceType.Def()?.HasTemplate) return;
-
       this.ServiceType.IsLoading(true);
       if (!this.ID) {
-        await this.ServiceType.instantiateEntity();
+        const newEntity = await this.ServiceType.Def().instantiateEntity(this);
+        this.ServiceType.Entity(newEntity);
         this.ServiceType.IsLoading(false);
         return;
       }
@@ -484,11 +476,10 @@ export class RequestEntity {
             return;
           }
           try {
-            registerServiceTypeComponent(
-              stage.ActionComponentName,
-              stage.ActionComponentName,
-              serviceType.UID
-            );
+            registerServiceTypeActionComponent({
+              componentName: stage.ActionComponentName,
+              uid: serviceType.UID,
+            });
             return {
               actionComponentName: stage.ActionComponentName,
               serviceType: this.ServiceType,

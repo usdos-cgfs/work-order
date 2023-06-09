@@ -13,12 +13,15 @@ import "./common/KnockoutExtensions.js";
 import { sortByTitle } from "./common/EntityUtilities.js";
 import { getUrlParam, setUrlParam } from "./common/Router.js";
 
+import { assignmentsStore } from "./stores/Assignments.js";
+
 import { User, currentUser } from "./infrastructure/Authorization.js";
 import ApplicationDbContext, {
   getAppContext,
   setAppContext,
 } from "./infrastructure/ApplicationDbContext.js";
 import { InitSal } from "./infrastructure/SAL.js";
+
 import MyAssignmentsView from "./views/MyAssignmentsView.js";
 
 export const assetsPath = window.appRoot + "/src";
@@ -62,7 +65,12 @@ class App {
 
   RequestDetail = ko.observable();
   OpenRequests = ko.observableArray();
-  OpenAssignments = ko.observableArray();
+  MyOpenAssignments = assignmentsStore.getOpenByRequest;
+  //   MyOpenAssignments = ko.pureComputed(() =>
+  //   this.CurrentUser()
+  //     ? assignmentsStore.getOpenByUser(this.CurrentUser())()
+  //     : []
+  // );
 
   Config = {
     pipelineStageStore,

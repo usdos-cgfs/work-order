@@ -15,24 +15,7 @@ export default class QuickInfoModule {
     return currentUser()?.IsActionOffice() && false;
   });
 
-  MyOpenAssignments = ko.pureComputed(() => {
-    const openAssignments = [];
-    const openRequests =
-      requestsByStatusMap.get(requestStates.open)?.List() ?? [];
-
-    openRequests.map((request) => {
-      openAssignments.push(
-        ...assignmentsStore.getByRequest(request).filter((assignment) => {
-          return (
-            assignment.Status == assignmentStates.InProgress &&
-            assignment.userIsDirectlyAssigned(currentUser())
-          );
-        })
-      );
-    });
-    return openAssignments;
-    //assignmentsStore.getOpenByUser(currentUser());
-  });
+  MyOpenAssignments = assignmentsStore.getOpenByRequest;
 
   LateRequests = ko.pureComputed(() => {
     return (

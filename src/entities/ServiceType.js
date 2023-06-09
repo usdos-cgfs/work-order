@@ -1,17 +1,16 @@
-import { registerServiceTypeComponent } from "../common/KnockoutExtensions.js";
+import { registerServiceTypeViewComponents } from "../common/KnockoutExtensions.js";
 import { assetsPath } from "../app.js";
 import ApplicationDbContext from "../infrastructure/ApplicationDbContext.js";
 
 export const getTemplateElementId = (uid) => `tmpl-${uid}`;
 
-const getServiceTypePathByUid = (uid) =>
-  `${assetsPath}/entities/ServiceTypeTemplates/${uid}/`;
+const getServiceTypePathByUid = (uid) => `${assetsPath}/servicetypes/${uid}/`;
 
 export const getTemplateFilePath = (uid) =>
   getServiceTypePathByUid(uid) + `${uid}-template.html`;
 
 export const getModuleFilePath = (uid) =>
-  getServiceTypePathByUid(uid) + `${uid}-module.js`;
+  getServiceTypePathByUid(uid) + `${uid}.js`;
 
 export const serviceTypeStore = ko.observableArray();
 
@@ -50,19 +49,24 @@ export class ServiceType {
     return this._listRef;
   };
 
-  _componentName = null;
-  getComponentName = () => {
-    if (this._componentName) return this._componentName;
+  _components = null;
+  getViewComponents = () => {
+    if (this._components) return this._components;
     if (!this.UID) {
       return null;
     }
-    this._componentName = this.UID;
-    registerServiceTypeComponent(
-      this._componentName,
-      this._componentName,
-      this.UID
-    );
-    return this._componentName;
+    this._components = {
+      View: "svc-view-" + this.UID,
+      Edit: "svc-edit-" + this.UID,
+    };
+
+    registerServiceTypeViewComponents({
+      uid: this.UID,
+      components: this._components,
+    });
+    // TODO: this is hacky, maybe we should pass the filename as well
+    this._components.New = this._components.Edit;
+    return this._components;
   };
 
   _constructor = null;
@@ -92,13 +96,13 @@ export class ServiceType {
     }
     // this.ServiceType.IsLoading(true);
     try {
-      const service = await import(getModuleFilePath(this.UID));
-      if (!service) {
+      const serviceModule = await import(getModuleFilePath(this.UID));
+      if (!serviceModule) {
         console.error("Could not find service module");
         return null;
       }
       this._initialized = true;
-      this._constructor = service.default;
+      this._constructor = serviceModule.default;
     } catch (e) {
       console.error("Cannot import service type module", e);
     }

@@ -68,6 +68,10 @@
         aria-selected="true"
       >
         My Assignments
+        <span
+          class="badge text-bg-danger"
+          data-bind="visible: MyOpenAssignments().length, text: MyOpenAssignments().length"
+        ></span>
       </button>
     </li>
     <li class="nav-item" role="presentation">
@@ -208,7 +212,7 @@
         </div>
         <div class="w-100">
           <div
-            data-bind="component: {name: 'open-requests-table', params: ActiveTableParams}"
+            data-bind="component: {name: ActiveTableComponentName, params: ActiveTableParams}"
           ></div>
         </div>
       </div>
@@ -216,7 +220,7 @@
 
     <script type="text/html" id="tmpl-my-assignments-view">
       <h2>My Open Assignments</h2>
-      <table class="table table-striped table-hover w-100">
+      <table id="my-assignments-table" class="table table-striped table-hover w-100">
         <thead>
           <tr>
             <th>Request</td>
@@ -357,8 +361,11 @@
             </div>
           </div>
           <div
-            data-bind="template: {name: 'tmpl-service-type-component', data: ServiceTypeComponent}"
+            data-bind="component: {name: BodyComponentName, params: {DisplayMode, request} }"
           ></div>
+          <!-- <div
+            data-bind="template: {name: 'tmpl-service-type-component', data: ServiceTypeComponent}"
+          ></div> -->
           <div class="row my-3">
             <div class="col-4" data-bind="using: request">
               <div class="card">
@@ -773,92 +780,6 @@
               ><h6>
                 <span
                   data-bind="text: ServiceType.Def()?.DescriptionTitle ?? 'Description'"
-                ></span
-                >:
-              </h6>
-            </label>
-            <!-- ko if: DisplayMode() != DisplayModes.View -->
-            <textarea
-              class="form-control"
-              data-bind="value: RequestDescription"
-            ></textarea>
-            <!-- /ko -->
-            <!-- ko if: DisplayMode() == DisplayModes.View -->
-            <div data-bind="html: RequestDescription"></div>
-            <!-- /ko -->
-          </div>
-        </div>
-      </div>
-    </script>
-
-    <script type="text/html" id="tmpl-service-type-component-base">
-      <div class="card mb-3 w-100">
-        <div class="card-body">
-          <div class="card-title d-flex justify-content-between">
-            <h3 class="mx-0" data-bind="text: Def()?.Title"></h3>
-            <i class="fa fa-sync pointer" data-bind="click: refreshEntity"></i>
-          </div>
-          <!-- ko if: Def()?.HasTemplate -->
-          <div data-bind="component: {name: }"></div>
-          <!-- /ko -->
-          <div class="col-12 pb-6">
-            <label for=""
-              ><h6>
-                <span
-                  data-bind="text: Def()?.DescriptionTitle ?? 'Description'"
-                ></span
-                >:
-              </h6>
-            </label>
-            <!-- ko if: DisplayMode() != DisplayModes.View -->
-            <textarea
-              class="form-control"
-              data-bind="value: RequestDescription"
-            ></textarea>
-            <!-- /ko -->
-            <!-- ko if: DisplayMode() == DisplayModes.View -->
-            <div data-bind="html: RequestDescription"></div>
-            <!-- /ko -->
-          </div>
-        </div>
-      </div>
-    </script>
-
-    <script type="text/html" id="tmpl-service-type-component">
-      <div class="card mb-3 w-100">
-        <div class="card-body">
-          <div class="card-title d-flex justify-content-between">
-            <h3 class="mx-0" data-bind="text: Def()?.Title"></h3>
-            <i class="fa fa-sync pointer" data-bind="click: refreshEntity"></i>
-          </div>
-          <!-- ko if: Def()?.HasTemplate -->
-          <!-- ko if: ComponentsAreLoading -->
-          <div class="d-flex justify-content-center">
-            <div class="spinner-border" role="status">
-              <span class="visually-hidden">Loading...</span>
-            </div>
-          </div>
-          <!-- /ko -->
-          <!-- ko if: !ComponentsAreLoading() && Entity() -->
-          <!-- ko if: IsLoading -->
-          <div class="d-flex justify-content-center">
-            <div class="spinner-border" role="status">
-              <span class="visually-hidden">Loading...</span>
-            </div>
-          </div>
-          <!-- /ko -->
-          <!-- ko ifnot: IsLoading -->
-          <div
-            data-bind="template: {name: ElementId, data: TemplateData}"
-          ></div>
-          <!-- /ko -->
-          <!-- /ko -->
-          <!-- /ko -->
-          <div class="col-12 pb-6">
-            <label for=""
-              ><h6>
-                <span
-                  data-bind="text: Def()?.DescriptionTitle ?? 'Description'"
                 ></span
                 >:
               </h6>

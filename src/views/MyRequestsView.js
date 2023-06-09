@@ -3,6 +3,12 @@ import { requestStates } from "../entities/Request.js";
 import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
 import { requestsByStatusMap } from "../stores/Requests.js";
 
+const tableComponentMap = {};
+tableComponentMap[requestStates.open] = "open-requests-table";
+tableComponentMap[requestStates.fulfilled] = "closed-requests-table";
+tableComponentMap[requestStates.cancelled] = "closed-requests-table";
+tableComponentMap[requestStates.rejected] = "closed-requests-table";
+
 export class MyRequestsView {
   constructor() {
     this.RequestsByStatusMap = requestsByStatusMap;
@@ -18,6 +24,10 @@ export class MyRequestsView {
 
   HasLoaded = ko.observable(false);
   ActiveKey = ko.observable();
+
+  ActiveTableComponentName = ko.pureComputed(
+    () => tableComponentMap[this.ActiveKey()]
+  );
 
   ActiveTableParams = ko.pureComputed(() => {
     const activeRequestSet = this.RequestsByStatusMap.get(this.ActiveKey());

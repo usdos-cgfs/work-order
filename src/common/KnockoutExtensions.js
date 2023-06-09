@@ -1,6 +1,7 @@
 import { People } from "../components/People.js";
 import { ensureUserByKeyAsync } from "../infrastructure/SAL.js";
 import { assetsPath } from "../app.js";
+import ServiceTypeModule from "../components/ServiceType/ServiceTypeModule.js";
 
 ko.subscribable.fn.subscribeChanged = function (callback) {
   var oldValue;
@@ -155,135 +156,136 @@ const fromPathViewModelLoader = {
 
 ko.components.loaders.unshift(fromPathViewModelLoader);
 
-ko.components.register("approver-actions", {
-  template: { fromPath: "/components/AssignmentActions/ApprovalTemplate.html" },
-  viewModel: { viaLoader: "/components/AssignmentActions/ApprovalModule.js" },
-});
+{
+  registerComponent({
+    name: "approver-actions",
+    folder: "AssignmentActions",
+    module: "ApprovalModule",
+    template: "ApprovalTemplate",
+  });
 
-ko.components.register("resolver-actions", {
-  template: { fromPath: "/components/AssignmentActions/ResolverTemplate.html" },
-  viewModel: { viaLoader: "/components/AssignmentActions/ResolverModule.js" },
-});
+  registerComponent({
+    name: "resolver-actions",
+    folder: "AssignmentActions",
+    module: "ResolverModule",
+    template: "ResolverTemplate",
+  });
 
-registerComponent({
-  name: "open-requests-table",
-  folder: "RequestsByStatus",
-  module: "RequestsByStatusTableModule",
-  template: "OpenRequestsTableTemplate",
-});
+  registerComponent({
+    name: "open-requests-table",
+    folder: "RequestsByStatus",
+    module: "RequestsByStatusTableModule",
+    template: "OpenRequestsTableTemplate",
+  });
 
-registerComponent({
-  name: "open-office-requests-table",
-  folder: "RequestsByStatus",
-  module: "RequestsByStatusTableModule",
-  template: "OpenOfficeRequestsTableTemplate",
-});
+  registerComponent({
+    name: "open-office-requests-table",
+    folder: "RequestsByStatus",
+    module: "RequestsByStatusTableModule",
+    template: "OpenOfficeRequestsTableTemplate",
+  });
 
-registerComponent({
-  name: "closed-requests-table",
-  folder: "RequestsByStatus",
-  module: "RequestsByStatusTableModule",
-  template: "ClosedRequestsTableTemplate",
-});
+  registerComponent({
+    name: "closed-requests-table",
+    folder: "RequestsByStatus",
+    module: "RequestsByStatusTableModule",
+    template: "ClosedRequestsTableTemplate",
+  });
 
-registerComponent({
-  name: "request-header-view",
-  folder: "RequestHeader",
-  module: "RequestHeaderModule",
-  template: "RequestHeaderViewTemplate",
-});
+  registerComponent({
+    name: "request-header-view",
+    folder: "RequestHeader",
+    module: "RequestHeaderModule",
+    template: "RequestHeaderViewTemplate",
+  });
 
-registerComponent({
-  name: "request-header-edit",
-  folder: "RequestHeader",
-  module: "RequestHeaderModule",
-  template: "RequestHeaderEditTemplate",
-});
+  registerComponent({
+    name: "request-header-edit",
+    folder: "RequestHeader",
+    module: "RequestHeaderModule",
+    template: "RequestHeaderEditTemplate",
+  });
 
-registerComponent({
-  name: "pipeline-component",
-  folder: "Pipeline",
-  module: "PipelineModule",
-  template: "PipelineTemplate",
-});
+  registerComponent({
+    name: "request-body-view",
+    folder: "RequestBody",
+    module: "RequestBodyModule",
+    template: "RequestBodyViewTemplate",
+  });
+  registerComponent({
+    name: "request-body-edit",
+    folder: "RequestBody",
+    module: "RequestBodyModule",
+    template: "RequestBodyEditTemplate",
+  });
 
-ko.components.register("quick-info", {
-  template: {
-    fromPath: "/components/QuickInfo/QuickInfoTemplate.html",
-  },
-  viewModel: {
-    viaLoader: "/components/QuickInfo/QuickInfoModule.js",
-  },
-});
+  registerComponent({
+    name: "pipeline-component",
+    folder: "Pipeline",
+    module: "PipelineModule",
+    template: "PipelineTemplate",
+  });
 
-function registerComponent({
-  name,
-  folder,
-  module: moduleFilename,
-  template: templateFilename,
-}) {
-  if (ko.components.isRegistered(name)) {
-    return;
+  registerComponent({
+    name: "quick-info",
+    folder: "QuickInfo",
+    module: "QuickInfoModule",
+    template: "QuickInfoTemplate",
+  });
+
+  function registerComponent({
+    name,
+    folder,
+    module: moduleFilename,
+    template: templateFilename,
+  }) {
+    if (ko.components.isRegistered(name)) {
+      return;
+    }
+    ko.components.register(name, {
+      template: {
+        fromPath: `/components/${folder}/${templateFilename}.html`,
+      },
+      viewModel: {
+        viaLoader: `/components/${folder}/${moduleFilename}.js`,
+      },
+    });
   }
-  ko.components.register(name, {
-    template: {
-      fromPath: `/components/${folder}/${templateFilename}.html`,
-    },
-    viewModel: {
-      viaLoader: `/components/${folder}/${moduleFilename}.js`,
-    },
+}
+
+export function registerServiceTypeViewComponents({ uid, components }) {
+  Object.keys(components).forEach((view) => {
+    const componentName = components[view];
+    if (!ko.components.isRegistered(componentName)) {
+      ko.components.register(componentName, {
+        template: {
+          fromPath: `/servicetypes/${uid}/views/${view}.html`,
+        },
+        viewModel: ServiceTypeModule,
+      });
+    }
   });
 }
 
-export function registerServiceTypeComponent(
+export function registerServiceTypeActionComponent({
+  uid,
   componentName,
-  moduleName,
-  serviceTypeUid
-) {
+  templateName = null,
+  moduleName = null,
+}) {
   if (ko.components.isRegistered(componentName)) {
     return;
   }
   ko.components.register(componentName, {
     template: {
-      fromPath: `/entities/ServiceTypeTemplates/${serviceTypeUid}/${componentName}-template.html`,
+      fromPath: `/servicetypes/${uid}/components/${
+        templateName ?? componentName
+      }.html`,
     },
     viewModel: {
-      viaLoader: `/entities/ServiceTypeTemplates/${serviceTypeUid}/${moduleName}-module.js`,
+      viaLoader: `/servicetypes/${uid}/components/${
+        moduleName ?? componentName
+      }.js`,
     },
   });
-}
-
-export async function registerServiceTypeTemplate(
-  templateName,
-  serviceTypeUid
-) {
-  const templateId = "tmpl-" + templateName;
-  if (!document.getElementById(templateId)) {
-    const templateRelPath = `/entities/ServiceTypeTemplates/${serviceTypeUid}/${templateName}-template.html`;
-    await fetchTemplate(templateId, templateRelPath);
-  }
-  return templateId;
-}
-
-async function fetchTemplate(templateId, templatePath) {
-  const response = await fetch(assetsPath + templatePath);
-
-  if (!response.ok) {
-    console.error(
-      `Fetching the HTML file went wrong - ${response.statusText}`,
-      templatePath
-    );
-    // throw new Error(
-    //   `Fetching the HTML file went wrong - ${response.statusText}`
-    // );
-  }
-
-  const text = await response.text();
-  const element = document.createElement("script");
-
-  element.setAttribute("type", "text/html");
-  element.setAttribute("id", templateId);
-  element.text = text;
-
-  document.getElementById("service-type-templates").append(element);
 }

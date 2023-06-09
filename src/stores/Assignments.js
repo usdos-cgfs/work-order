@@ -1,6 +1,8 @@
 import { Assignment, assignmentStates } from "../entities/Assignment.js";
-
+import { requestStates } from "../entities/Request.js";
+import { requestsByStatusMap } from "./Requests.js";
 import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
+import { currentUser } from "../infrastructure/Authorization.js";
 
 class AssignmentsSet {
   constructor() {}
@@ -15,6 +17,25 @@ class AssignmentsSet {
     );
   };
 
+  getOpenByRequest = ko.pureComputed(() => {
+    const openAssignments = [];
+    const openRequests =
+      requestsByStatusMap.get(requestStates.open)?.List() ?? [];
+
+    openRequests.map((request) => {
+      openAssignments.push(
+        ...assignmentsStore.getByRequest(request).filter((assignment) => {
+          return (
+            assignment.Status == assignmentStates.InProgress &&
+            assignment.userIsDirectlyAssigned(currentUser())
+          );
+        })
+      );
+    });
+    return openAssignments;
+    //assignmentsStore.getOpenByUser(currentUser());
+  });
+
   getOpenByUser = (user) =>
     ko.pureComputed(() =>
       this.List().filter(
@@ -24,6 +45,9 @@ class AssignmentsSet {
       )
     );
 
+  remove = (assignmentToRemove) => {
+    this.List.remove((assignment) => assignment.ID == assignmentToRemove);
+  };
   load = async () => {
     this.IsLoading(true);
     const start = new Date();

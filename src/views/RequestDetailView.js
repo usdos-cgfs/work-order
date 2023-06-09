@@ -1,55 +1,17 @@
-import { RequestOrg } from "../entities/RequestOrg.js";
-import {
-  serviceTypeStore,
-  ServiceType,
-  getModuleFilePath,
-} from "../entities/ServiceType.js";
-import { RequestEntity, requestStates } from "../entities/Request.js";
+import { requestStates } from "../entities/Request.js";
 import { actionTypes } from "../entities/Action.js";
-import {
-  PipelineStage,
-  pipelineStageStore,
-} from "../entities/PipelineStage.js";
-import {
-  Assignment,
-  assignmentRoles,
-  assignmentStates,
-  assignmentRoleComponentMap,
-  activeAssignmentsError,
-} from "../entities/Assignment.js";
-import { Attachment } from "../entities/Attachment.js";
-import { Comment } from "../entities/Comment.js";
-import { Action } from "../entities/Action.js";
 
 import { People } from "../components/People.js";
-import { ServiceTypeComponent } from "../components/ServiceTypeComponent.js";
-import { ActivityLogComponent } from "../components/ActivityLogComponent.js";
 import { NewAssignmentComponent } from "../components/NewAssignmentComponent.js";
 
-import {
-  createNewRequestTitle,
-  sortByField,
-} from "../common/EntityUtilities.js";
-import {
-  calculateEffectiveSubmissionDate,
-  businessDaysFromDate,
-} from "../common/DateUtilities.js";
+import { createNewRequestTitle } from "../common/EntityUtilities.js";
+import { businessDaysFromDate } from "../common/DateUtilities.js";
 import * as Router from "../common/Router.js";
-import { registerServiceTypeComponent } from "../common/KnockoutExtensions.js";
 
 import { addTask, finishTask, taskDefs } from "../stores/Tasks.js";
 
-import {
-  currentUser,
-  getRequestFolderPermissions,
-  stageActionRoleMap,
-  AssignmentFunctions,
-  permissions,
-} from "../infrastructure/Authorization.js";
-import {
-  emitCommentNotification,
-  emitRequestNotification,
-} from "../infrastructure/Notifications.js";
+import { currentUser } from "../infrastructure/Authorization.js";
+
 import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
 
 import { Tabs } from "../app.js";
@@ -68,6 +30,12 @@ const reqHeaderComponentsMap = {
   Edit: "request-header-edit",
 };
 
+const reqBodyComponentsMap = {
+  New: "request-body-edit",
+  View: "request-body-view",
+  Edit: "request-body-edit",
+};
+
 export class RequestDetailView {
   /************************************************************************
       RequestDetail Component Specific Items
@@ -82,6 +50,10 @@ export class RequestDetailView {
 
   HeaderComponentName = ko.pureComputed(() => {
     return reqHeaderComponentsMap[this.DisplayMode()];
+  });
+
+  BodyComponentName = ko.pureComputed(() => {
+    return reqBodyComponentsMap[this.DisplayMode()];
   });
 
   ShowActionsArea = ko.pureComputed(
@@ -232,7 +204,7 @@ export class RequestDetailView {
 
   serviceTypeDefinitionWatcher = (newSvcType) => {
     // This should only be needed when creating a new request.
-    this.request.ServiceType.instantiateEntity(newSvcType);
+    this.request.ServiceType.refreshEntity(newSvcType);
   };
 
   constructor({ request, displayMode = DisplayModes.View, serviceType }) {
@@ -251,12 +223,6 @@ export class RequestDetailView {
       this.request.ServiceType.Def(serviceType);
       // this.ServiceType.instantiateEntity();
     }
-
-    this.ServiceTypeComponent = new ServiceTypeComponent({
-      request,
-      ...this.request.ServiceType,
-      displayMode: this.DisplayMode,
-    });
 
     this.request.Assignments.NewAssignmentComponent =
       new NewAssignmentComponent({
