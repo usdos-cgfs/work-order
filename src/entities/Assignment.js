@@ -12,6 +12,7 @@ export const assignmentStates = {
 export const assignmentRoles = {
   ActionResolver: "Action Resolver",
   Approver: "Approver",
+  Assigner: "Assigner",
   Viewer: "Viewer",
   Subscriber: "Subscriber",
 };
@@ -19,6 +20,7 @@ export const assignmentRoles = {
 export const assignmentRoleComponentMap = {
   "Action Resolver": "resolver-actions",
   Approver: "approver-actions",
+  Assigner: "assigner-actions",
 };
 
 export const activeAssignmentsError = {
@@ -40,6 +42,14 @@ export class Assignment {
 
   userIsInRequestOrg = (user) => {
     return user.isInRequestOrg(this.RequestOrg);
+  };
+
+  isActionable = () => {
+    return [
+      assignmentRoles.ActionResolver,
+      assignmentRoles.Approver,
+      assignmentRoles.Assigner,
+    ].includes(this.Role);
   };
 
   static CreateFromObject = function (assignment) {

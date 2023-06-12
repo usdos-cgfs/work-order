@@ -172,6 +172,13 @@ ko.components.loaders.unshift(fromPathViewModelLoader);
   });
 
   registerComponent({
+    name: "assigner-actions",
+    folder: "AssignmentActions",
+    module: "AssignModule",
+    template: "AssignTemplate",
+  });
+
+  registerComponent({
     name: "open-requests-table",
     folder: "RequestsByStatus",
     module: "RequestsByStatusTableModule",
@@ -196,8 +203,8 @@ ko.components.loaders.unshift(fromPathViewModelLoader);
     name: "my-assignments-table",
     folder: "MyAssignments",
     module: "MyAssignmentsModule",
-    template: "MyAssignmentsTemplate"
-  })
+    template: "MyAssignmentsTemplate",
+  });
 
   registerComponent({
     name: "request-header-view",
@@ -238,6 +245,13 @@ ko.components.loaders.unshift(fromPathViewModelLoader);
     folder: "QuickInfo",
     module: "QuickInfoModule",
     template: "QuickInfoTemplate",
+  });
+
+  registerComponent({
+    name: "new-assignment",
+    folder: "NewAssignment",
+    module: "NewAssignmentModule",
+    template: "NewAssignmentTemplate",
   });
 
   function registerComponent({

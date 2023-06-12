@@ -28,6 +28,13 @@ export const roles = {
     permissions: permissions.RestrictedContribute,
     initialStatus: assignmentStates.InProgress,
   },
+  Assigner: {
+    LookupValue: "Assigner",
+    description: "Assigns the next stage in the pipeline.",
+    isAssignable: true,
+    permissions: permissions.RestrictedContribute,
+    initialStatus: assignmentStates.InProgress,
+  },
   Approver: {
     LookupValue: "Approver",
     description: "Approves or Rejects the request.",
@@ -51,7 +58,7 @@ export const roles = {
 };
 
 export const stageActionRoleMap = {
-  "Pending Assignment": roles.ActionResolver,
+  "Pending Assignment": roles.Assigner,
   "Pending Approval": roles.Approver,
   "Pending Action": roles.ActionResolver,
   "Pending Resolution": roles.ActionResolver,

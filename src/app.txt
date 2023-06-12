@@ -220,56 +220,13 @@
 
     <script type="text/html" id="tmpl-my-assignments-view">
       <h2>My Open Assignments</h2>
-      <!-- ko ifnot: HasLoaded -->
+      <!-- ko if: IsLoading -->
       <progress class="w-100"></progress>
       <!-- /ko -->
-      <!-- ko if: HasLoaded -->
+      <!-- ko ifnot: IsLoading -->
       <my-assignments-table></my-assignments-table>
       <!-- /ko -->
     </script>
-
-    <!-- <script type="text/html" id="tmpl-my-requests-view">
-      <h2>My Requests</h2>
-      <div class="d-flex">
-        <div class="list-group me-3" id="section-my-requests-tabs">
-          <button
-            class="list-group-item list-group-action"
-            id="my-open-requests-tab"
-            data-target="open"
-            data-bind="click: viewTabClicked, 
-            css: {'active': views.open == View()}"
-            type="button"
-          >
-            Open
-          </button>
-          <button
-            class="list-group-item list-group-action"
-            id="my-closed-requests-tab"
-            data-target="closed"
-            data-bind="click: viewTabClicked, 
-            css: {'active': views.closed == View()}"
-            type="button"
-          >
-            Closed
-          </button>
-          <button
-            class="list-group-item list-group-action"
-            id="my-cancelled-requests-tab"
-            data-target="cancelled"
-            data-bind="click: viewTabClicked, 
-            css: {'active': views.cancelled == View()}"
-            type="button"
-          >
-            Cancelled
-          </button>
-        </div>
-        <div class="w-100">
-          <div
-            data-bind="component: {name: 'requests-by-status', params: ActiveTableParams}"
-          ></div>
-        </div>
-      </div>
-    </script> -->
 
     <script type="text/html" id="tmpl-new-request-view">
       <h2>Select the type of work order you would like to open:</h2>
@@ -321,10 +278,6 @@
             data-bind="template: {name: 'tmpl-assignments-component', data: request.Assignments}"
           ></div>
           <!-- /ko -->
-          <!-- <div
-            class="my-3"
-            data-bind="template: {name: 'tmpl-request-header'}"
-          ></div> -->
           <div class="my-3">
             <div class="card mb-3 w-100">
               <div class="card-body">
@@ -338,9 +291,6 @@
           <div
             data-bind="component: {name: BodyComponentName, params: {DisplayMode, request} }"
           ></div>
-          <!-- <div
-            data-bind="template: {name: 'tmpl-service-type-component', data: ServiceTypeComponent}"
-          ></div> -->
           <div class="row my-3">
             <div class="col-4" data-bind="using: request">
               <div class="card">
@@ -513,15 +463,33 @@
               ></button>
             </div>
             <div class="modal-body">
-              <!-- ko ifnot: request.Assignments.list.InProgress().length -->
+              <!-- ko ifnot: request.Assignments.CurrentStage.list.InProgress().length -->
               This request is ready to advance.
               <!-- /ko -->
-              <!-- ko if: request.Assignments.list.InProgress().length -->
+              <!-- ko if: request.Assignments.CurrentStage.list.InProgress().length -->
               This request still has
               <span
-                data-bind="text: request.Assignments.list.InProgress().length"
+                data-bind="text: request.Assignments.CurrentStage.list.InProgress().length"
               ></span>
               open assignments.
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Assignee</th>
+                    <th>Role</th>
+                    <th>Stage</th>
+                  </tr>
+                </thead>
+                <tbody
+                  data-bind="foreach: request.Assignments.CurrentStage.list.InProgress"
+                >
+                  <tr>
+                    <td data-bind="text: Assignee?.Title"></td>
+                    <td data-bind="text: Role"></td>
+                    <td data-bind="text: PipelineStage?.Title"></td>
+                  </tr>
+                </tbody>
+              </table>
               <!-- /ko -->
             </div>
             <div class="modal-footer">
@@ -796,6 +764,7 @@
               <table class="table">
                 <thead>
                   <tr>
+                    <th>Stage</th>
                     <th>Action Taker</th>
                     <th>Action Type</th>
                     <th>Description</th>
@@ -805,13 +774,20 @@
                 <tbody>
                   <!-- ko if: AreLoading -->
                   <tr class="">
-                    <td colspan="4" class="p-0">
+                    <td colspan="5" class="p-0">
                       <progress class="w-100"></progress>
                     </td>
                   </tr>
                   <!-- /ko -->
                   <!-- ko foreach: list.All -->
                   <tr>
+                    <td data-bind="if: PipelineStage">
+                      <span
+                        class=""
+                        data-bind="text: 'Step ' + PipelineStage?.Step + ': ' + PipelineStage?.Title"
+                      >
+                      </span>
+                    </td>
                     <td data-bind="text: Author?.Title"></td>
                     <td data-bind="text: ActionType"></td>
                     <td data-bind="html: Description"></td>

@@ -1,3 +1,5 @@
+import { PipelineStage } from "./PipelineStage.js";
+
 export const actionTypes = {
   Assigned: "Assigned",
   Unassigned: "Unassigned",
@@ -12,6 +14,7 @@ export const actionTypes = {
 export class Action {
   constructor() {}
 
+  PipelineStage;
   //   FieldMap = {
   //     Description: {
   //       get: () => encodeURIComponent(this.Description),
@@ -19,8 +22,25 @@ export class Action {
   //     },
   //   };
 
+  FieldMap = {
+    PipelineStage: {
+      get: () => this.PipelineStage,
+      set: (val) => {
+        this.PipelineStage = PipelineStage.FindInStore(val);
+      },
+    },
+  };
+
   static Views = {
-    All: ["ID", "Title", "ActionType", "Description", "Author", "Created"],
+    All: [
+      "ID",
+      "Title",
+      "PipelineStage",
+      "ActionType",
+      "Description",
+      "Author",
+      "Created",
+    ],
   };
 
   static ListDef = {

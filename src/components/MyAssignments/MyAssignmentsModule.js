@@ -8,8 +8,18 @@ import { currentUser } from "../../infrastructure/Authorization.js";
 import { makeDataTable } from "../../common/DataTableExtensions.js";
 
 export default class MyAssignmentsModule {
-  constructor(Assignments) {}
+  constructor(Assignments) {
+    this.listBeforeChangeSubscritption = this.MyAssignments.subscribe(
+      this.listBeforeChangeWatcher,
+      this,
+      "beforeChange"
+    );
+    this.listAfterChangeSubscription = this.MyAssignments.subscribe(
+      this.listAfterChangeWatcher
+    );
+  }
   HasLoaded = ko.observable(false);
+
   MyAssignments = ko.pureComputed(() => {
     const requestsAssignmentMap = new Map();
     const requestsMap = {};
@@ -35,12 +45,27 @@ export default class MyAssignmentsModule {
     return results;
   });
 
+  listBeforeChangeWatcher = () => {
+    if (!this.Table) return;
+    this.Table.clear().destroy();
+  };
+
+  listAfterChangeWatcher = () => {
+    setTimeout(() => (this.Table = makeDataTable("my-assignments-table")), 20);
+    //this.Table.draw();
+  };
+
   myPostProcessingLogic = (nodes) => {
     this.init();
   };
 
   init = async () => {
     this.HasLoaded(true);
-    makeDataTable("my-assignments-table");
+    this.Table = makeDataTable("my-assignments-table");
+  };
+
+  dispose = () => {
+    this.listAfterChangeSubscription.dispose();
+    this.listAfterChangeSubscription.dispose();
   };
 }

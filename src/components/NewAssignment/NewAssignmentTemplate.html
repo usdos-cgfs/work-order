@@ -1,0 +1,21 @@
+<div class="input-group">
+  <span class="input-group-text">New Assignment</span>
+  <div id="people-new-assignee" data-bind="people: Assignee"></div>
+  <select
+    name=""
+    id=""
+    class="form-select"
+    data-bind="value: Role,
+      options: Roles,
+      optionsText: (role) => role.LookupValue,
+      optionsCaption: 'Select...'"
+  ></select>
+  <button
+    type="button"
+    class="btn btn-primary"
+    data-bind="click: submit,
+    enable: Role() && Assignee()"
+  >
+    Submit
+  </button>
+</div>

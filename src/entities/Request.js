@@ -4,6 +4,7 @@ import { actionTypes } from "../entities/Action.js";
 import {
   PipelineStage,
   pipelineStageStore,
+  stageActionTypes,
 } from "../entities/PipelineStage.js";
 import {
   Assignment,
@@ -191,6 +192,7 @@ export class RequestEntity {
     advance: async () => {
       if (this.promptAdvanceModal) this.promptAdvanceModal.hide();
 
+      const thisStage = this.Pipeline.Stage();
       const nextStage = this.Pipeline.getNextStage();
 
       if (!nextStage) {
@@ -337,6 +339,7 @@ export class RequestEntity {
     list: {
       All: ko.observableArray(),
       InProgress: ko.pureComputed(() => {
+        // TODO: this should maybe be in the component
         return this.Assignments.list
           .All()
           .filter(
@@ -375,8 +378,16 @@ export class RequestEntity {
             .filter(
               (assignment) =>
                 assignment.PipelineStage?.ID == this.Pipeline.Stage()?.ID &&
-                (assignment.Role == assignmentRoles.ActionResolver ||
-                  assignment.Role == assignmentRoles.Approver)
+                assignment.isActionable()
+            );
+        }),
+        InProgress: ko.pureComputed(() => {
+          // TODO: some of these views should maybe be in whatever components are using them
+          return this.Assignments.list
+            .InProgress()
+            .filter(
+              (assignment) =>
+                assignment.PipelineStage?.ID == this.Pipeline.Stage()?.ID
             );
         }),
         UserActionAssignments: ko.pureComputed(() => {
@@ -385,8 +396,7 @@ export class RequestEntity {
             .filter(
               (assignment) =>
                 assignment.PipelineStage?.ID == this.Pipeline.Stage()?.ID &&
-                (assignment.Role == assignmentRoles.ActionResolver ||
-                  assignment.Role == assignmentRoles.Approver)
+                assignment.isActionable()
             );
         }),
       },
@@ -446,7 +456,9 @@ export class RequestEntity {
             .UserActionAssignments()
             .map((assignment) => {
               return {
+                request: this,
                 assignment,
+                addAssignment: this.Assignments.addNew,
                 completeAssignment: this.Assignments.complete,
                 errors: this.Assignments.CurrentStage.Validation.Errors,
                 actionComponentName: ko.observable(
@@ -592,9 +604,23 @@ export class RequestEntity {
 
       this.Assignments.refresh();
     },
-    createStageAssignments: async (stage = null) => {
-      stage = stage ?? this.Pipeline.Stage();
+    createStageAssignments: async (stage = this.Pipeline.Stage()) => {
+      if (!stage?.ActionType) return;
+
+      // If this stage is already assigned, skip it
+      if (
+        this.Pipeline.Stages().find((stage) =>
+          this.Assignments.list
+            .All()
+            .map((assignment) => assignment.PipelineStage?.ID)
+            .includes(stage.ID)
+        )
+      )
+        return;
+
       const newAssignment = {
+        Assignee:
+          stage.Assignee ?? RequestOrg.FindInStore(stage.RequestOrg)?.UserGroup,
         RequestOrg: stage.RequestOrg,
         PipelineStage: stage,
         IsActive: true,
@@ -611,10 +637,6 @@ export class RequestEntity {
         if (people && people.Title) {
           newAssignment.Assignee = people;
         }
-      } else {
-        newAssignment.Assignee = RequestOrg.FindInStore(
-          stage.RequestOrg
-        )?.UserGroup;
       }
 
       await this.Assignments.addNew(newAssignment);
@@ -641,6 +663,7 @@ export class RequestEntity {
 
       const folderPath = this.getRelativeFolderPath();
       // const actionObj = Object.assign(new Action(), action);
+      action.PipelineStage = action.PipelineStage ?? this.Pipeline.Stage();
       await this._context.Actions.AddEntity(action, folderPath, this.request);
       this.Actions.refresh();
     },

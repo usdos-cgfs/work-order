@@ -8,19 +8,47 @@ st\_\*
 WorkOrderDocuments
 WorkOrderEmails
 
-WorkOrder:
-RequestorOffice -> ConfigRequestOrg
+| WorkOrder                                            |
+| ---------------------------------------------------- |
+| RequestorOffice -> RequestorOrg \[ConfigRequestOrg\] |
+| RequestStage -> PipelineStage \[ConfigPipeline\]     |
+| \- RequestorName                                     |
+| \- RequestStagePrev (v)                              |
+| \- RequestStagePrev (v)                              |
+| \- InternalStatus (v)                                |
+| \- ManagingDirector (migrate to ServiceType)         |
+| \- RequestorSupervisor (migrate to ServiceType)      |
 
-ConfigRequestOrg:
-Add PreferredEmail field
+| ConfigRequestOrg |
+| ---------------- |
+| + PreferredEmail |
 
-ConfigServiceTypes:
-HasTemplate? Replace with has UID
-Do we need internal status?
+| ConfigServiceTypes                     |
+| -------------------------------------- |
+| + HasTemplate (? Replace with has UID) |
+| \- TemplateName                        |
+| \- st_list                             |
+| \- ReminderDays (v)                    |
+| \- RequestOrgs (v)                     |
+| \- ActionOffices (v)                   |
+| \- SupervisorRequired (v)              |
+| \- HideReport (v)                      |
 
-Action:
-do we still need Request lookup?
+| Action          |
+| --------------- |
+| - SendEmail (v) |
+| - Request       |
 
-Assignment:
-do we still need Request lookup?
-PipelineStage is now a LookUp (maybe we should flatten it instead?)
+| Assignments             |
+| ----------------------- |
+| + Request \[WorkOrder\] |
+| - ReqId                 |
+| - ActionOffice          |
+
+| PipelineStage                           |
+| --------------------------------------- |
+| + ActionTargetStage \[ConfigPipelines\] |
+| + Assignee \[Person or Group\]          |
+| + AssignmentFunction                    |
+| + ActionComponentName                   |
+| - WildCardAssignee                      |

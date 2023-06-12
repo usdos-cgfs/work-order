@@ -224,8 +224,17 @@ class EntitySet {
 
   // Folder Methods
 
-  GetItemsByFolderPath = function (folderPath, fields) {
-    return this.ListRef.getFolderContentsAsync(folderPath, fields);
+  GetItemsByFolderPath = async function (folderPath, fields) {
+    //return this.ListRef.getFolderContentsAsync(folderPath, fields);
+    const results = await this.ListRef.getFolderContentsAsync(
+      folderPath,
+      fields
+    );
+    return results.map((result) => {
+      const newEntity = new this.constructor(result);
+      mapObjectToEntity(result, newEntity);
+      return newEntity;
+    });
   };
 
   UpsertFolderPath = async function (folderPath) {
