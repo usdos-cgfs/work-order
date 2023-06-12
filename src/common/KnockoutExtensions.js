@@ -193,6 +193,13 @@ ko.components.loaders.unshift(fromPathViewModelLoader);
   });
 
   registerComponent({
+    name: "my-assignments-table",
+    folder: "MyAssignments",
+    module: "MyAssignmentsModule",
+    template: "MyAssignmentsTemplate"
+  })
+
+  registerComponent({
     name: "request-header-view",
     folder: "RequestHeader",
     module: "RequestHeaderModule",
