@@ -139,10 +139,7 @@ export class ServiceType {
       "DescriptionRequired",
       "AttachmentDescription",
       "DaysToCloseBusiness",
-      "KPIThresholdYellow",
-      "KPIThresholdGreen",
       "UID",
-      "EmailPipelineOnClose",
     ],
   };
 

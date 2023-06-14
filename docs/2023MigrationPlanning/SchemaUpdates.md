@@ -1,23 +1,25 @@
-The following lists need to have their respective Titles mapped to Lookup
-Fields:
-Assignment
-Action
-Comment
-DateRanges
-st\_\*
-WorkOrderDocuments
-WorkOrderEmails
+The following lists need to have their respective Titles mapped to Request Lookup Fields:
 
-| WorkOrder                                            |
-| ---------------------------------------------------- |
-| RequestorOffice -> RequestorOrg \[ConfigRequestOrg\] |
-| RequestStage -> PipelineStage \[ConfigPipeline\]     |
-| \- RequestorName                                     |
-| \- RequestStagePrev (v)                              |
-| \- RequestStagePrev (v)                              |
-| \- InternalStatus (v)                                |
-| \- ManagingDirector (migrate to ServiceType)         |
-| \- RequestorSupervisor (migrate to ServiceType)      |
+- Assignment
+- Action
+- Comment
+- DateRanges
+- st\_\*
+- WorkOrderDocuments
+- WorkOrderEmails
+
+## List Schema Changes
+
+| WorkOrder                                                |
+| -------------------------------------------------------- |
+| RequestorOffice -> RequestingOffice \[ConfigRequestOrg\] |
+| RequestStage -> PipelineStage \[ConfigPipeline\]         |
+| \- RequestorName                                         |
+| \- RequestStagePrev (v)                                  |
+| \- RequestStagePrev (v)                                  |
+| \- InternalStatus (v)                                    |
+| \- ManagingDirector (migrate to ServiceType)             |
+| \- RequestorSupervisor (migrate to ServiceType)          |
 
 | ConfigRequestOrg |
 | ---------------- |
@@ -39,11 +41,12 @@ WorkOrderEmails
 | - SendEmail (v) |
 | - Request       |
 
-| Assignments             |
-| ----------------------- |
-| + Request \[WorkOrder\] |
-| - ReqId                 |
-| - ActionOffice          |
+| Assignments                                            |
+| ------------------------------------------------------ |
+| PipelineStage -> PipelineStage \[ConfigPipelineStage\] |
+| + Request\* \[WorkOrder\]                              |
+| - ReqId                                                |
+| - ActionOffice                                         |
 
 | PipelineStage                           |
 | --------------------------------------- |

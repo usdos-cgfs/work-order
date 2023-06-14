@@ -880,7 +880,7 @@ export class RequestEntity {
     },
     RequestorPhone: this.RequestorInfo.Phone,
     RequestorEmail: this.RequestorInfo.Email,
-    RequestorOrg: {
+    RequestingOffice: {
       set: (val) => this.RequestorInfo.Office(RequestOrg.Create(val)),
       get: this.RequestorInfo.Office,
     },
@@ -910,12 +910,11 @@ export class RequestEntity {
     All: [
       "ID",
       "Title",
-      "RequestSubject",
       "RequestDescription",
       "Requestor",
       "RequestorPhone",
       "RequestorEmail",
-      "RequestorOrg",
+      "RequestingOffice",
       "IsActive",
       "PipelineStage",
       "RequestStatus",
@@ -929,7 +928,7 @@ export class RequestEntity {
       "ID",
       "Title",
       "ServiceType",
-      "RequestorOrg",
+      "RequestingOffice",
       "RequestOrgs",
       "Requestor",
       "RequestSubmitted",
