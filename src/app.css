@@ -1,0 +1,87 @@
+.pointer {
+  cursor: pointer;
+}
+
+#request-pipeline .fix-service-icon-border {
+  border-bottom-left-radius: 0;
+  border-top-left-radius: 0.25rem;
+}
+
+.accordion-title .indicator {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-left: auto;
+  background-repeat: no-repeat;
+  transition: transform 0.2s ease-in-out;
+}
+
+.accordion-title:not(.collapsed) .indicator {
+  transform: rotate(-180deg);
+}
+.dimmer {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.75);
+  opacity: 0;
+  animation-fill-mode: both;
+  animation-duration: 0.5s;
+  transition: all 0.5s linear;
+}
+
+.active.dimmer {
+  display: flex;
+  opacity: 1;
+}
+
+/* .sticky {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1 !important;
+} */
+
+#people-new-assignee > div {
+  height: 100%;
+}
+
+#people-new-assignee div.sp-peoplepicker-topLevel {
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+#people-new-assignee .sp-peoplepicker-initialHelpText {
+  position: inherit;
+  white-space: nowrap;
+  top: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+#people-new-assignee
+  .sp-peoplepicker-topLevelFocus
+  .sp-peoplepicker-initialHelpText {
+  display: none !important;
+}
+
+#people-new-assignee .sp-peoplepicker-resolveList {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.state-rejected,
+.state-cancelled {
+  color: red;
+  font-weight: bold;
+}
+
+.state-open,
+.state-fulfilled {
+  color: green;
+  font-weight: bold;
+}

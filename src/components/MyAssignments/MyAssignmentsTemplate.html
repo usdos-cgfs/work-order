@@ -1,0 +1,33 @@
+<div data-bind="childrenComplete: myPostProcessingLogic">
+<table id="my-assignments-table" class="table table-striped table-hover w-100">
+    <thead>
+      <tr>
+        <th>Request</td>
+        <th>Service Type</th>
+        <th>Requesting Office</th>
+        <th>Requestor</th>
+        <th>Est Closed</th>
+        <th>Role</th>
+      </tr>
+    </thead>
+    <tbody data-bind="foreach: MyAssignments">
+      <tr
+        class="pointer"
+        data-bind="click: () => $root.ViewRequest(request)"
+      >
+        <td data-bind="text: request.Title"></td>
+        <td data-bind="text: request.ServiceType.Def()?.Title"></td>
+        <td data-bind="text: request.RequestorInfo.Office()?.Title" ></td>
+        <td data-bind="text: request.RequestorInfo.Requestor()?.Title" ></td>
+        <td
+          data-bind="text: request.Dates.EstClosed.toSortableDateString()"
+        ></td>
+        <td>
+          <!-- ko foreach: assignments -->
+          <div data-bind="text: Role"></div>
+          <!-- /ko -->
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

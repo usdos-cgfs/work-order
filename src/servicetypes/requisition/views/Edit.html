@@ -1,0 +1,18 @@
+<div data-bind="">
+  <div class="row">
+    <div class="col-6 pb-2">
+      <label>Requisition Type<span class="required">*</span>:</label>
+      <select
+        class="form-select"
+        data-bind="value: Type, options: TypeOpts, optionsCaption: 'Select...'"
+      ></select>
+    </div>
+    <div class="col-6 pb-2">
+      <label> Quantity of requisitions<span class="required">*</span>: </label>
+      <input type="text" class="form-control" data-bind="value: Quantity" />
+    </div>
+  </div>
+  <div
+    data-bind="component: {name: 'items-table-edit', params: {itemArray: Items} }"
+  ></div>
+</div>

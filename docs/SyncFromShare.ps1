@@ -1,0 +1,1 @@
+robocopy "Y:\Style Library\Apps\wo" ..\src /mir /fft 

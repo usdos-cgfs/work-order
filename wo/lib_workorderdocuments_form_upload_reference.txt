@@ -1,7 +1,0 @@
-<link rel="stylesheet" href="../../SiteAssets/workorder/wo/workorder.css" />
-
-<script src="../../SiteAssets/workorder/vendor/jquery/jquery-3.3.1.min.js"></script>
-<script src="../../SiteAssets/workorder/common/sal.js"></script>
-<script src="../../SiteAssets/workorder/common/common.js"></script>
-
-<script src="../../SiteAssets/workorder/wo/lib_workorderdocuments_form_upload.js"></script>

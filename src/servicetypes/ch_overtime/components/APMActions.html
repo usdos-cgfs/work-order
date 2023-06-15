@@ -1,0 +1,40 @@
+<div data-bind="">
+  <!-- <div data-bind="visible: hasBeenValidated, foreach: Errors">
+    <div
+      class="alert alert-warning"
+      role="alert"
+      data-bind="text: description"
+    ></div>
+  </div> -->
+  <div data-bind="using: Entity">
+    <div class="pb-2">
+      <label for="ch_overtime-people-gtm"><h6>GTM:</h6></label>
+      <div id="ch_overtime-apm-people-gtm" data-bind="people: GTM"></div>
+    </div>
+    <div class="pb-2">
+      <label for="ch_overtime-people-cor"><h6>COR:</h6></label>
+      <div id="ch_overtime-apm-people-cor" data-bind="people: COR"></div>
+    </div>
+  </div>
+  <!-- ko if: Entity().GTM && Entity().COR -->
+  <div
+    data-bind="component: {name: Supplement.components.Edit, params: {Entity: contractorSupplementEntity }}"
+  ></div>
+  <!-- ko if: contractorSupplementEntity.ObservableID -->
+  <button
+    class="btn btn-primary"
+    data-bind="click: update, enable: contractorSupplementEntity.IsValid"
+  >
+    Update
+  </button>
+  <!-- /ko -->
+  <!-- ko ifnot: contractorSupplementEntity.ObservableID -->
+  <button
+    class="btn btn-primary"
+    data-bind="click: submit, enable: contractorSupplementEntity.IsValid"
+  >
+    Submit
+  </button>
+  <!-- /ko -->
+  <!-- /ko -->
+</div>
