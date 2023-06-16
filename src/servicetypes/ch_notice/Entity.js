@@ -1,8 +1,11 @@
 import SelectField from "../../fields/SelectField.js";
 import TextAreaField from "../../fields/TextAreaField.js";
+import BaseEntity from "../BaseEntity.js";
 
-export default class Entity {
-  constructor(request) {}
+export default class Entity extends BaseEntity {
+  constructor(params) {
+    super(params);
+  }
 
   FieldMap = {
     DistributionGroup: new SelectField({
@@ -12,9 +15,11 @@ export default class Entity {
         "DOS Offices in Charleston",
         "Both (CGFS and DOS Offices)",
       ],
+      isRequired: true,
     }),
     NoticeDates: new TextAreaField({
       displayName: "Notification Dates",
+      isRequired: true,
     }),
   };
 

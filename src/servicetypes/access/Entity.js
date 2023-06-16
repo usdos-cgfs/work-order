@@ -1,12 +1,11 @@
 import DateField from "../../fields/DateField.js";
 import SelectField from "../../fields/SelectField.js";
 import TextField from "../../fields/TextField.js";
-import ServiceTypeBase from "../ServiceTypeBase.js";
+import BaseEntity from "../BaseEntity.js";
 
-export default class Access extends ServiceTypeBase {
-  constructor(request) {
-    super();
-    this.Request = request;
+export default class Access extends BaseEntity {
+  constructor(params) {
+    super(params);
   }
 
   accessTypeOpts = ["Normal work day", "24/7", "FLETC", "Other"];

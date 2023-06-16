@@ -1,4 +1,4 @@
-import { People } from "../../components/People.js";
+import { People } from "../../entities/People.js";
 import DateField from "../../fields/DateField.js";
 import { requestOrgStore } from "../../entities/RequestOrg.js";
 

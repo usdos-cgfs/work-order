@@ -1,35 +1,33 @@
 import TextField from "../../fields/TextField.js";
-import SelectField from "../../fields/SelectField.js";
+import PeopleField from "../../fields/PeopleField.js";
 import BaseEntity from "../BaseEntity.js";
 
 export default class Entity extends BaseEntity {
   constructor(params) {
     super(params);
   }
+
   FieldMap = {
-    ReconfigType: new SelectField({
-      displayName: "Service Type",
-      options: [
-        "Office Furniture",
-        "Construction",
-        "Electrical Cabling",
-        "Other",
-      ],
+    Employee: new PeopleField({
+      displayName: "Employee Name",
+      isRequired: true,
+    }),
+    Phone: new TextField({
+      displayName: "Phone Number",
       isRequired: true,
     }),
     Location: new TextField({
       displayName: "Location",
-      isRequired: true,
     }),
   };
 
   static Views = {
-    All: ["ID", "Title", "Location", "ReconfigType"],
+    All: ["ID", "Title", "Employee", "Phone", "Location"],
   };
 
   static ListDef = {
-    name: "st_ch_reconfig",
-    title: "st_ch_reconfig",
+    name: "st_ch_voicemail",
+    title: "st_ch_voicemail",
     fields: Entity.Views.All,
   };
 }

@@ -1,9 +1,12 @@
 import TextField from "../../fields/TextField.js";
 import PeopleField from "../../fields/PeopleField.js";
 import SelectField from "../../fields/SelectField.js";
+import BaseEntity from "../BaseEntity.js";
 
-export default class AccessFletc {
-  constructor(request) {}
+export default class AccessFletc extends BaseEntity {
+  constructor(params) {
+    super(params);
+  }
 
   FieldMap = {
     Supervisor: new PeopleField({

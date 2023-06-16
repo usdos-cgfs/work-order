@@ -1,6 +1,9 @@
 import TextField from "../../fields/TextField.js";
+import PeopleField from "../../fields/PeopleField.js";
 import SelectField from "../../fields/SelectField.js";
 import DateField from "../../fields/DateField.js";
+import TextAreaField from "../../fields/TextAreaField.js";
+import CheckboxField from "../../fields/CheckboxField.js";
 import BaseEntity from "../BaseEntity.js";
 
 export default class Entity extends BaseEntity {
@@ -9,25 +12,23 @@ export default class Entity extends BaseEntity {
   }
 
   FieldMap = {
+    UserName: new PeopleField({
+      displayName: "User Name",
+      isRequired: true,
+    }),
     EmployeeType: new SelectField({
       displayName: "Employee Type",
       options: ["Direct Hire", "Contractor"],
       isRequired: true,
     }),
-    CourseTitle: new TextField({
-      displayName: "Course Title",
+    RequestType: new SelectField({
+      displayName: "Request Type",
+      options: ["New", "Replacement"],
       isRequired: true,
     }),
-    CourseNumber: new TextField({
-      displayName: "Course Number",
-    }),
-    Vendor: new TextField({
-      displayName: "Training Provider/Vendor",
+    Supervisor: new PeopleField({
+      displayName: "COR/Supervisor",
       isRequired: true,
-    }),
-    Date1: new DateField({ displayName: "Course Date" }),
-    Cost: new TextField({
-      displayName: "Training Cost",
     }),
   };
 
@@ -35,18 +36,16 @@ export default class Entity extends BaseEntity {
     All: [
       "ID",
       "Title",
+      "UserName",
       "EmployeeType",
-      "CourseTitle",
-      "CourseNumber",
-      "Vendor",
-      "Date1",
-      "Cost",
+      "RequestType",
+      "Supervisor",
     ],
   };
 
   static ListDef = {
-    name: "st_ch_hr_training",
-    title: "st_ch_hr_training",
+    name: "st_ironkey",
+    title: "st_ironkey",
     fields: Entity.Views.All,
   };
 }

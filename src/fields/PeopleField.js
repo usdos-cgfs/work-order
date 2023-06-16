@@ -1,22 +1,20 @@
 import { People } from "../entities/People.js";
 import { registerFieldComponent } from "../infrastructure/RegisterComponents.js";
+import BaseField from "./BaseField.js";
 
 const components = {
   view: "people-view",
   edit: "people-edit",
 };
-export default class PeopleField {
+
+registerFieldComponent("people", components);
+
+export default class PeopleField extends BaseField {
   constructor({ displayName, isRequired = false }) {
-    this.displayName = displayName;
-    this.isRequired = isRequired;
+    super({ displayName, isRequired });
   }
 
-  Value = ko.observable();
-
   set = (val) => this.Value(People.Create(val));
-  get = () => this.Value();
 
   components = components;
 }
-
-registerFieldComponent("people", components);

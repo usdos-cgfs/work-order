@@ -1,6 +1,8 @@
-export default class PeopleModule {
-  constructor(fieldmap) {
-    Object.assign(this, fieldmap);
+import BaseFieldModule from "../BaseFieldModule.js";
+
+export default class PeopleModule extends BaseFieldModule {
+  constructor(params) {
+    super(params);
   }
 
   getUniqueId = () => {

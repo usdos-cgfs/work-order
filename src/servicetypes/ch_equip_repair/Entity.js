@@ -1,14 +1,18 @@
 import TextField from "../../fields/TextField.js";
 import SelectField from "../../fields/SelectField.js";
+import BaseEntity from "../BaseEntity.js";
 
-export default class Entity {
-  constructor(request) {}
-
+export default class Entity extends BaseEntity {
+  constructor(params) {
+    super(params);
+  }
   FieldMap = {
     Location: new TextField({
       displayName: "Location",
+      isRequired: true,
     }),
     RepairType: new SelectField({
+      isRequired: true,
       displayName: "Type",
       options: ["Copier", "Fax Machine", "Appliance", "Furniture", "Other"],
     }),

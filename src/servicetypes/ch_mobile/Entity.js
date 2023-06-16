@@ -1,14 +1,17 @@
 import TextField from "../../fields/TextField.js";
 import PeopleField from "../../fields/PeopleField.js";
 import SelectField from "../../fields/SelectField.js";
-import DateField from "../../fields/DateField.js";
+import BaseEntity from "../BaseEntity.js";
 
-export default class Entity {
-  constructor(request) {}
+export default class Entity extends BaseEntity {
+  constructor(params) {
+    super(params);
+  }
 
   FieldMap = {
     Supervisor: new PeopleField({
       displayName: "Supervisor",
+      isRequired: true,
     }),
     PhoneNum: new TextField({
       displayName: "Phone Number",
@@ -21,12 +24,14 @@ export default class Entity {
         "Return/Deactivation",
         "Other",
       ],
+      isRequired: true,
     }),
     Serial: new TextField({
       displayName: "Serial Number",
     }),
     Carrier: new TextField({
       displayName: "Carrier",
+      isRequired: true,
     }),
   };
 

@@ -3,25 +3,39 @@ import PeopleField from "../../fields/PeopleField.js";
 import SelectField from "../../fields/SelectField.js";
 import DateField from "../../fields/DateField.js";
 import TextAreaField from "../../fields/TextAreaField.js";
+import CheckboxField from "../../fields/CheckboxField.js";
+import BaseEntity from "../BaseEntity.js";
 
-export default class Entity {
-  constructor(request) {}
+export default class Entity extends BaseEntity {
+  constructor(params) {
+    super(params);
+  }
 
   FieldMap = {
     SamplePeople: new PeopleField({
       displayName: "Supervisor",
+      isRequired: true,
     }),
     SampleSelect: new SelectField({
-      displayName: "Employee Type",
+      displayName: "EmployeeType",
       options: ["Direct Hire", "Contractor", "Visitor"],
+      isRequired: true,
     }),
     SampleText: new TextField({
-      displayName: "Full Name",
+      displayName: "FullName",
+      isRequired: true,
     }),
     SampleTextArea: new TextAreaField({
-      displayName: "Notification Dates",
+      displayName: "NotificationDates",
+      isRequired: true,
     }),
-    SampleDate: new DateField({ displayName: "Expiration Date" }),
+    SampleDate: new DateField({
+      displayName: "ExpirationDate",
+      isRequired: true,
+    }),
+    SampleCheckbox: new CheckboxField({
+      displayName: "SpecialOrder",
+    }),
   };
 
   static Views = {

@@ -1,5 +1,13 @@
 <label
   ><span data-bind="text: displayName"></span
   ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span>:
-  <div data-bind="attr: {id: getUniqueId()}, people: Value"></div>
+  <div
+    data-bind="attr: {id: getUniqueId()}, people: Value,
+      class: ValidationClass"
+  ></div>
 </label>
+<!-- ko if: ShowErrors -->
+<!-- ko foreach: Errors -->
+<div class="fw-semibold text-danger" data-bind="text: description"></div>
+<!-- /ko -->
+<!-- /ko -->
