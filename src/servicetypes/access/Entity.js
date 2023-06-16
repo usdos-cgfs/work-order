@@ -1,9 +1,11 @@
 import DateField from "../../fields/DateField.js";
 import SelectField from "../../fields/SelectField.js";
 import TextField from "../../fields/TextField.js";
+import ServiceTypeBase from "../ServiceTypeBase.js";
 
-export default class Access {
+export default class Access extends ServiceTypeBase {
   constructor(request) {
+    super();
     this.Request = request;
   }
 
@@ -12,10 +14,12 @@ export default class Access {
   employeeTypeOpts = ["CGFS Government", "CGFS Contractor", "Other"];
 
   AccessType = new SelectField({
+    isRequired: true,
     displayName: "Access Type",
     options: this.accessTypeOpts,
   });
   EmployeeType = new SelectField({
+    isRequired: true,
     displayName: "Employee Type",
     options: this.employeeTypeOpts,
   });

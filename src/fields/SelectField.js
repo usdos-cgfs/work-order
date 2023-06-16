@@ -1,24 +1,20 @@
 import { registerFieldComponent } from "../infrastructure/RegisterComponents.js";
+import BaseField from "./BaseField.js";
 
 const components = {
   view: "select-view",
   edit: "select-edit",
 };
 
-export default class SelectField {
+registerFieldComponent("select", components);
+
+export default class SelectField extends BaseField {
   constructor({ displayName, isRequired = false, options }) {
-    this.displayName = displayName;
+    super({ displayName, isRequired });
     this.Options(options);
-    this.isRequired = isRequired;
   }
 
-  Value = ko.observable();
   Options = ko.observableArray();
-
-  set = (val) => this.Value(val);
-  get = () => this.Value();
 
   components = components;
 }
-
-registerFieldComponent("select", components);

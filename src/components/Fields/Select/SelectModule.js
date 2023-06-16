@@ -1,5 +1,7 @@
-export default class SelectModule {
-  constructor(fieldmap) {
-    Object.assign(this, fieldmap);
+import BaseFieldModule from "../BaseFieldModule.js";
+
+export default class SelectModule extends BaseFieldModule {
+  constructor(params) {
+    super(params);
   }
 }

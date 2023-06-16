@@ -76,7 +76,7 @@ export class RequestDetailView {
 
   submitNewRequest = async () => {
     // 1. Validate Request
-    // if (!this.request.Validation.validate()) return;
+    if (!this.request.Validation.validate()) return;
 
     const serviceType = this.request.ServiceType.Def();
     if (!serviceType) {

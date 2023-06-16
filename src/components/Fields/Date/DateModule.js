@@ -1,5 +1,7 @@
-export default class DateModule {
-  constructor(fieldmap) {
-    Object.assign(this, fieldmap);
+import BaseFieldModule from "../BaseFieldModule.js";
+
+export default class DateModule extends BaseFieldModule {
+  constructor(params) {
+    super(params);
   }
 }

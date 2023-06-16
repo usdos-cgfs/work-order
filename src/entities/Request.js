@@ -708,10 +708,20 @@ export class RequestEntity {
     validate: () => {
       // 1. Validate Header
       // 2. Validate Body
+      this.Validation.validateBody();
+      return this.Validation.IsValid();
+    },
+    validateHeader: () => {},
+    validateBody: () => {
+      const serviceTypeEntity = this.ServiceType.Entity();
+      if (!serviceTypeEntity) return;
+      return serviceTypeEntity.validate();
     },
     Errors: {
       Request: ko.observableArray(),
-      ServiceType: ko.pureComputed(() => []),
+      ServiceType: ko.pureComputed(() => {
+        return this.ServiceType.Entity()?.Errors() ?? [];
+      }),
       All: ko.pureComputed(() => [
         ...this.Validation.Errors.Request(),
         ...this.Validation.Errors.ServiceType(),

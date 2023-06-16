@@ -1,4 +1,5 @@
 import { registerFieldComponent } from "../infrastructure/RegisterComponents.js";
+import BaseField from "./BaseField.js";
 
 const components = {
   view: "text-area-view",
@@ -9,17 +10,11 @@ registerFieldComponent("textarea", components);
 
 //TODO: What other options? e.g. cols, rows
 
-export default class TextAreaField {
+export default class TextAreaField extends BaseField {
   constructor({ displayName, isRequired = false, isRichText = false }) {
+    super({ displayName, isRequired });
     this.isRichText = isRichText;
-    this.displayName = displayName;
-    this.isRequired = isRequired;
   }
-
-  Value = ko.observable();
-
-  get = () => this.Value();
-  set = (val) => this.Value(val);
 
   components = components;
 }

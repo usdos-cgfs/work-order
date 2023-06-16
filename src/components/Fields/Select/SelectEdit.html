@@ -5,6 +5,14 @@
     class="form-select"
     name=""
     id=""
-    data-bind="options: Options, optionsCaption: 'Select...', value: Value"
+    data-bind="options: Options, 
+      optionsCaption: 'Select...', 
+      value: Value,
+      class: ValidationClass"
   ></select
 ></label>
+<!-- ko if: ShowErrors -->
+<!-- ko foreach: Errors -->
+<div class="fw-semibold text-danger" data-bind="text: description"></div>
+<!-- /ko -->
+<!-- /ko -->

@@ -1,4 +1,6 @@
 import { registerFieldComponent } from "../infrastructure/RegisterComponents.js";
+import BaseField from "./BaseField.js";
+// import ValidationError from "../primitives/ValidationError.js";
 
 const components = {
   view: "text-view",
@@ -7,16 +9,10 @@ const components = {
 
 registerFieldComponent("text", components);
 
-export default class TextField {
-  constructor({ displayName, isRequired = false }) {
-    this.displayName = displayName;
-    this.isRequired = isRequired;
+export default class TextField extends BaseField {
+  constructor(params) {
+    super(params);
   }
-
-  Value = ko.observable();
-
-  get = () => this.Value();
-  set = (val) => this.Value(val);
 
   components = components;
 }

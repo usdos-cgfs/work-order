@@ -1,4 +1,5 @@
 import { registerFieldComponent } from "../infrastructure/RegisterComponents.js";
+import BaseField from "./BaseField.js";
 
 const components = {
   view: "date-view",
@@ -12,13 +13,10 @@ registerFieldComponent("date", components);
  */
 
 // TODO: what other options do we need? e.g. date vs datetime
-export default class DateField {
-  constructor({ displayName, isRequired = false }) {
-    this.displayName = displayName;
-    this.isRequired = isRequired;
+export default class DateField extends BaseField {
+  constructor(params) {
+    super(params);
   }
-
-  Value = ko.observable();
 
   getString = () => {
     // if this is datetime vs date we expect different things
