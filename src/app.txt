@@ -429,7 +429,7 @@
             <button
               type="button"
               class="btn btn-success"
-              data-bind="click: submitNewRequest"
+              data-bind="click: submitNewRequest, enable: request.Validation.IsValid"
             >
               Submit Request
             </button>

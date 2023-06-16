@@ -1,0 +1,8 @@
+<div>
+  <div class="row row-cols-2" data-bind="foreach: Object.values(FieldMap)">
+    <div
+      class="col pb-2"
+      data-bind="component: {name: components.view, params: $data}"
+    ></div>
+  </div>
+</div>

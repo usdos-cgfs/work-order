@@ -1,4 +1,4 @@
-import { People } from "../components/People.js";
+import { People } from "../entities/People.js";
 import { assignmentStates } from "../entities/Assignment.js";
 import { OrgTypes, requestOrgStore } from "../entities/RequestOrg.js";
 

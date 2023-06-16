@@ -66,6 +66,7 @@ class EntitySet {
     // Check if the object we passed in defines a ListDef
     this.constructor = constructor;
 
+    // TODO: How can we get all fields? Views + ListDef?
     this.ListDef = constructor.ListDef;
     this.Views = constructor.Views;
     this.Title = constructor.ListDef.title;
@@ -180,7 +181,7 @@ class EntitySet {
 
   // Mutators
   AddEntity = async function (entity, folderPath, request = null) {
-    const creationfunc = createWritableObject.bind(this);
+    const creationfunc = mapEntityToObject.bind(this);
     const writeableEntity = creationfunc(entity);
 
     if (request) {
@@ -197,7 +198,7 @@ class EntitySet {
   };
 
   UpdateEntity = async function (entity, fields = null) {
-    const writeableEntity = createWritableObject.bind(this)(entity, fields);
+    const writeableEntity = mapEntityToObject.bind(this)(entity, fields);
     writeableEntity.ID =
       typeof entity.ID == "function" ? entity.ID() : entity.ID;
     if (DEBUG) console.log(writeableEntity);
@@ -300,6 +301,13 @@ function mapValueToEntityProperty(propertyName, inputValue, targetEntity) {
     return;
   }
   // 2. This is just a regular property, set it
+  if (
+    targetEntity[propertyName] &&
+    typeof targetEntity[propertyName] == "function"
+  ) {
+    targetEntity[propertyName](inputValue);
+    return;
+  }
   targetEntity[propertyName] = inputValue;
   return;
 }
@@ -331,7 +339,7 @@ function mapObjectToViewField(inVal, fieldMap) {
       return;
     }
     // If the input value is an array, then we are putting an array into the observable.
-    var outVal = Array.isArray(inVal)
+    const outVal = Array.isArray(inVal)
       ? inVal.map((item) => generateObject(item, fieldMap))
       : generateObject(inVal, fieldMap);
 
@@ -348,7 +356,7 @@ function generateObject(inVal, fieldMap) {
   return fieldMap.factory ? fieldMap.factory(inVal) : inVal;
 }
 
-function createWritableObject(input, selectedFields = null) {
+function mapEntityToObject(input, selectedFields = null) {
   const entity = {};
   // We either predefine the fields in the ListDef, or provide a complete fieldmap
   const allWriteableFieldsSet = new Set([]);

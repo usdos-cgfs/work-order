@@ -17,10 +17,10 @@ import { Attachment } from "../entities/Attachment.js";
 import { Comment } from "../entities/Comment.js";
 import { Action } from "../entities/Action.js";
 
-import { People } from "../components/People.js";
+import { People } from "./People.js";
 import { ActivityLogComponent } from "../components/ActivityLogComponent.js";
 import { NewAssignmentComponent } from "../components/NewAssignmentComponent.js";
-import { DateField } from "../components/DateField.js";
+import DateField from "../fields/DateField.js";
 
 import {
   createNewRequestTitle,
@@ -120,9 +120,9 @@ export class RequestEntity {
   };
 
   Dates = {
-    Submitted: new DateField(),
-    EstClosed: new DateField(),
-    Closed: new DateField(),
+    Submitted: new DateField({ displayName: "Submitted Date" }),
+    EstClosed: new DateField({ displayName: "Est. Closed Date" }),
+    Closed: new DateField({ displayName: "Closed Date" }),
   };
 
   RequestOrgs = ko.observable();
@@ -705,6 +705,10 @@ export class RequestEntity {
   };
 
   Validation = {
+    validate: () => {
+      // 1. Validate Header
+      // 2. Validate Body
+    },
     Errors: {
       Request: ko.observableArray(),
       ServiceType: ko.pureComputed(() => []),

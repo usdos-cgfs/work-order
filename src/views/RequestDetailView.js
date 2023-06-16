@@ -1,7 +1,7 @@
 import { requestStates } from "../entities/Request.js";
 import { actionTypes } from "../entities/Action.js";
 
-import { People } from "../components/People.js";
+import { People } from "../entities/People.js";
 import { NewAssignmentComponent } from "../components/NewAssignmentComponent.js";
 
 import { createNewRequestTitle } from "../common/EntityUtilities.js";
@@ -76,7 +76,7 @@ export class RequestDetailView {
 
   submitNewRequest = async () => {
     // 1. Validate Request
-    //if (!this.isValid()) return;
+    // if (!this.request.Validation.validate()) return;
 
     const serviceType = this.request.ServiceType.Def();
     if (!serviceType) {

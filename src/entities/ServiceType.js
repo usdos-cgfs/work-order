@@ -10,7 +10,7 @@ export const getTemplateFilePath = (uid) =>
   getServiceTypePathByUid(uid) + `${uid}-template.html`;
 
 export const getModuleFilePath = (uid) =>
-  getServiceTypePathByUid(uid) + `${uid}.js`;
+  getServiceTypePathByUid(uid) + `Entity.js`;
 
 export const serviceTypeStore = ko.observableArray();
 

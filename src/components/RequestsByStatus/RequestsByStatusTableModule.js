@@ -28,7 +28,7 @@ export default class RequestsByStatusTableModule {
   hasInitialized = false;
 
   requestDateBackground = (request) => {
-    if (new Date() > request.Dates.EstClosed.ObservableDateTime())
+    if (new Date() > request.Dates.EstClosed.Value())
       return "table-danger";
   };
 
