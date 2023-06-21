@@ -6,10 +6,16 @@ import TextAreaField from "../../fields/TextAreaField.js";
 import CheckboxField from "../../fields/CheckboxField.js";
 import BaseEntity from "../BaseEntity.js";
 
+import { currentUser } from "../../infrastructure/Authorization.js";
+
 export default class Entity extends BaseEntity {
   constructor(params) {
     super(params);
   }
+
+  CostThreshold = ko.pureComputed(
+    () => parseInt(this.FieldMap.Cost.Value()) > 500
+  );
 
   FieldMap = {
     Name: new TextField({
@@ -20,7 +26,7 @@ export default class Entity extends BaseEntity {
       displayName: "Quantity",
       isRequired: true,
     }),
-    POC: new TextField({
+    POCName: new TextField({
       displayName: "POC",
       isRequired: true,
     }),
@@ -36,21 +42,22 @@ export default class Entity extends BaseEntity {
     PurchaseFrequency: new SelectField({
       displayName: "Purchase Frequency",
       options: ["One Time", "Recurring"],
-      isRequired: true,
+      isRequired: this.CostThreshold,
     }),
     ApprovedPurchase: new SelectField({
       displayName: "Approved Purchase",
       options: ["Yes", "No"],
-      isRequired: true,
+      isRequired: this.CostThreshold,
     }),
     FundingSource: new SelectField({
-      displayName: "Fuding Source",
+      displayName: "Funding Source",
       options: ["Project", "Contract", "Other"],
-      isRequired: true,
+      isRequired: this.CostThreshold,
     }),
     PRNumber: new TextField({
       displayName: "PR #",
       isRequired: true,
+      Visible: currentUser().IsActionOffice,
     }),
   };
 

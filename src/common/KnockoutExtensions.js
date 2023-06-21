@@ -109,6 +109,7 @@ ko.bindingHandlers.dateField = {
 const fromPathTemplateLoader = {
   loadTemplate: function (name, templateConfig, callback) {
     if (templateConfig.fromPath) {
+      // TODO: fix error cathing and fallback flow
       fetch(assetsPath + templateConfig.fromPath)
         .then((response) => {
           if (!response.ok) {
@@ -138,7 +139,9 @@ const fromPathTemplateLoader = {
             );
         })
         .then((text) =>
-          ko.components.defaultLoader.loadTemplate(name, text, callback)
+          text
+            ? ko.components.defaultLoader.loadTemplate(name, text, callback)
+            : null
         );
     } else {
       callback(null);

@@ -5,6 +5,8 @@ import BaseEntity from "../BaseEntity.js";
 import BlobField from "../../fields/BlobField.js";
 import DateField from "../../fields/DateField.js";
 
+import { currentUser } from "../../infrastructure/Authorization.js";
+
 export default class Entity extends BaseEntity {
   constructor(params) {
     super(params);
@@ -25,7 +27,9 @@ export default class Entity extends BaseEntity {
     }),
     Office: new SelectField({
       displayName: "Department",
-      options: ["placeholder"],
+      options: currentUser()
+        .RequestingOffices()
+        .map((office) => office.Title),
       isRequired: true,
     }),
     RequisitionNumber: new TextField({
@@ -65,6 +69,7 @@ export default class Entity extends BaseEntity {
       "Task",
       "Hours",
       "ContractorType",
+      "DatesRaw",
     ],
   };
 

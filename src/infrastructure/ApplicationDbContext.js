@@ -67,6 +67,22 @@ class EntitySet {
     this.constructor = constructor;
 
     // TODO: How can we get all fields? Views + ListDef?
+
+    try {
+      const allFieldsSet = new Set();
+      constructor.Views?.All?.map((field) => allFieldsSet.add(field));
+      const newEntity = new this.constructor({ ID: null, Title: null });
+      if (newEntity.FieldMap) {
+        Object.keys(newEntity.FieldMap).map((field) => allFieldsSet.add(field));
+      }
+      // const fieldMapKeysSet = new Set(...);
+      // constructor.Views.All.map((field) => fieldMapKeysSet.add(field));
+      this.AllDeclaredFields = [...allFieldsSet];
+    } catch (e) {
+      console.warn("Could not instantiate", constructor), console.warn(e);
+      this.AllDeclaredFields = constructor.Views?.All ?? [];
+    }
+
     this.ListDef = constructor.ListDef;
     this.Views = constructor.Views;
     this.Title = constructor.ListDef.title;
@@ -98,7 +114,7 @@ class EntitySet {
     columnFilters,
     { orderByColumn, sortAsc },
     { count = null },
-    fields = this.Views.All,
+    fields = this.AllDeclaredFields,
     includeFolders = false
   ) => {
     // if we pass in a count, we are expecting a cursor result

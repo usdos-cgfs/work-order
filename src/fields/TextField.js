@@ -12,6 +12,7 @@ registerFieldComponent("text", components);
 export default class TextField extends BaseField {
   constructor(params) {
     super(params);
+    this.attr = params.attr ?? {};
   }
 
   components = components;

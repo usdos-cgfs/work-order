@@ -18,7 +18,7 @@ export default class BaseField {
   get = () => this.Value();
   set = (val) => this.Value(val);
 
-  toString = () => this.Value();
+  toString = ko.pureComputed(() => this.Value());
 
   validate = () => {
     this.ShowErrors(true);
@@ -26,7 +26,11 @@ export default class BaseField {
 
   Errors = ko.pureComputed(() => {
     if (!this.ShowErrors() || !this.Visible()) return [];
-    if (!this.isRequired) return [];
+    const isRequired =
+      typeof this.isRequired == "function"
+        ? this.isRequired()
+        : this.isRequired;
+    if (!isRequired) return [];
     return this.Value()
       ? []
       : [
