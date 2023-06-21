@@ -113,10 +113,29 @@ const fromPathTemplateLoader = {
         .then((response) => {
           if (!response.ok) {
             throw new Error(
-              `Fetching the HTML file went wrong - ${response.statusText}`
+              `Error Fetching HTML Template - ${response.statusText}`
             );
           }
           return response.text();
+        })
+        .catch((error) => {
+          if (!templateConfig.fallback) return;
+          console.warn(
+            "Primary template not found, attempting fallback",
+            templateConfig
+          );
+          fetch(assetsPath + templateConfig.fallback)
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(
+                  `Error Fetching fallback HTML Template - ${response.statusText}`
+                );
+              }
+              return response.text();
+            })
+            .then((text) =>
+              ko.components.defaultLoader.loadTemplate(name, text, callback)
+            );
         })
         .then((text) =>
           ko.components.defaultLoader.loadTemplate(name, text, callback)

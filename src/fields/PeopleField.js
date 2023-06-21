@@ -10,8 +10,8 @@ const components = {
 registerFieldComponent("people", components);
 
 export default class PeopleField extends BaseField {
-  constructor({ displayName, isRequired = false }) {
-    super({ displayName, isRequired });
+  constructor(params) {
+    super(params);
   }
 
   set = (val) => this.Value(People.Create(val));

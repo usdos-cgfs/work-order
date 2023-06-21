@@ -1,4 +1,4 @@
-import { registerServiceTypeViewComponents } from "../common/KnockoutExtensions.js";
+import { registerServiceTypeViewComponents } from "../infrastructure/RegisterComponents.js";
 import { assetsPath } from "../app.js";
 import ApplicationDbContext from "../infrastructure/ApplicationDbContext.js";
 
@@ -64,7 +64,7 @@ export class ServiceType {
       uid: this.UID,
       components: this._components,
     });
-    // TODO: this is hacky, maybe we should pass the filename as well
+    // TODO: this is hacky, maybe we should pass the filename as well when we register
     this._components.New = this._components.Edit;
     return this._components;
   };

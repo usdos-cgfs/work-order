@@ -1,6 +1,11 @@
 import { registerFieldComponent } from "../infrastructure/RegisterComponents.js";
 import BaseField from "./BaseField.js";
 
+export const dateFieldTypes = {
+  date: "date",
+  datetime: "datetime-local",
+};
+
 const components = {
   view: "date-view",
   edit: "date-edit",
@@ -16,16 +21,34 @@ registerFieldComponent("date", components);
 export default class DateField extends BaseField {
   constructor(params) {
     super(params);
+    this.type = params.type ?? dateFieldTypes.date;
   }
 
-  getString = () => {
+  toString = () => {
     // if this is datetime vs date we expect different things
-    return this.toLocaleDateString();
+    switch (this.type) {
+      case dateFieldTypes.date:
+        return this.toLocaleDateString();
+      case dateFieldTypes.datetime:
+        return this.toLocaleString();
+      default:
+        return "";
+    }
   };
 
   toSortableDateString = () => this.Value()?.format("yyyy-MM-dd");
   toLocaleDateString = () => this.Value()?.toLocaleDateString();
   toLocaleString = () => this.Value()?.toLocaleString();
+
+  toInputDateString = () => {
+    const d = this.Value();
+    return [
+      d.getUTCFullYear().toString().padStart(4, "0"),
+      (d.getUTCMonth() + 1).toString().padStart(2, "0"),
+      d.getUTCDate().toString().padStart(2, "0"),
+    ].join("-");
+  };
+  toInputDateTimeString = () => this.Value().format("yyyy-MM-ddThh:mm");
 
   get = ko.pureComputed(() => {
     if (!this.Value() || isNaN(this.Value().valueOf())) {
@@ -49,12 +72,14 @@ export default class DateField extends BaseField {
   inputBinding = ko.pureComputed({
     read: () => {
       if (!this.Value()) return null;
-      const d = this.Value();
-      return [
-        d.getUTCFullYear().toString().padStart(4, "0"),
-        (d.getUTCMonth() + 1).toString().padStart(2, "0"),
-        d.getUTCDate().toString().padStart(2, "0"),
-      ].join("-");
+      switch (this.type) {
+        case dateFieldTypes.date:
+          return this.toInputDateString();
+        case dateFieldTypes.datetime:
+          return this.toInputDateTimeString();
+        default:
+          return null;
+      }
     },
     write: (val) => {
       if (!val) return;

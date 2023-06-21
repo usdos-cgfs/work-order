@@ -11,9 +11,9 @@ registerFieldComponent("textarea", components);
 //TODO: What other options? e.g. cols, rows
 
 export default class TextAreaField extends BaseField {
-  constructor({ displayName, isRequired = false, isRichText = false }) {
-    super({ displayName, isRequired });
-    this.isRichText = isRichText;
+  constructor(params) {
+    super(params);
+    this.isRichText = params.isRichText;
   }
 
   components = components;

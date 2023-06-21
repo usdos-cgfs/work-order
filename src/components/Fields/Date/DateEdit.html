@@ -3,8 +3,7 @@
   ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span>:
   <input
     class="form-control"
-    type="date"
-    data-bind="value: inputBinding, class: ValidationClass"
+    data-bind="value: inputBinding, class: ValidationClass, attr: {'type': type}"
   />
 </label>
 <!-- ko if: ShowErrors -->

@@ -1,3 +1,5 @@
+import ServiceTypeModule from "../components/ServiceType/ServiceTypeModule.js";
+
 export function RegisterComponents() {
   // Regular Components
   registerComponent({
@@ -136,5 +138,21 @@ export function registerFieldComponent(name, components) {
         viaLoader: `/components/Fields/${name}/${name}Module.js`,
       },
     });
+  });
+}
+
+export function registerServiceTypeViewComponents({ uid, components }) {
+  // If we don't specify a view, default to the template views
+  Object.keys(components).forEach((view) => {
+    const componentName = components[view];
+    if (!ko.components.isRegistered(componentName)) {
+      ko.components.register(componentName, {
+        template: {
+          fromPath: `/servicetypes/${uid}/views/${view}.html`,
+          fallback: `/components/ServiceType/Default${view}.html`,
+        },
+        viewModel: ServiceTypeModule,
+      });
+    }
   });
 }

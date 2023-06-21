@@ -1,9 +1,16 @@
 import { ValidationError } from "../primitives/ValidationError.js";
 
 export default class BaseField {
-  constructor({ displayName, isRequired = false }) {
+  constructor({
+    displayName,
+    isRequired = false,
+    width,
+    Visible = () => true,
+  }) {
     this.displayName = displayName;
     this.isRequired = isRequired;
+    this.Visible = Visible;
+    this.width = width ? "col-" + width : "col";
   }
 
   Value = ko.observable();
@@ -11,12 +18,14 @@ export default class BaseField {
   get = () => this.Value();
   set = (val) => this.Value(val);
 
+  toString = () => this.Value();
+
   validate = () => {
     this.ShowErrors(true);
   };
 
   Errors = ko.pureComputed(() => {
-    if (!this.ShowErrors()) return [];
+    if (!this.ShowErrors() || !this.Visible()) return [];
     if (!this.isRequired) return [];
     return this.Value()
       ? []
