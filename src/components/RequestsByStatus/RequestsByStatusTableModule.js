@@ -1,10 +1,6 @@
 import { makeDataTable } from "../../common/DataTableExtensions.js";
-import { requestStates } from "../../entities/Request.js";
-import { Assignment } from "../../entities/Assignment.js";
 
 import { assignmentsStore } from "../../stores/Assignments.js";
-
-// TODO: Medium - Add Current Stage to Open Orders table
 
 export default class RequestsByStatusTableModule {
   constructor({ activeRequestSet, filteredRequests = null, key = "office" }) {

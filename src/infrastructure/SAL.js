@@ -1954,6 +1954,7 @@ export function SPList(listDef) {
     if (args.id) {
       id = args.id;
     }
+    const options = SP.UI.$create_DialogOptions();
 
     var listPath = self.config.def.isLib
       ? "/" + self.config.def.name + "/"
@@ -1970,7 +1971,7 @@ export function SPList(listDef) {
       ? "/" + self.config.def.name + "/Forms/"
       : "/Lists/" + self.config.def.name + "/";
 
-    const options = {
+    Object.assign(options, {
       title: title,
       dialogReturnValueCallback: callback,
       args: JSON.stringify(args),
@@ -1984,14 +1985,14 @@ export function SPList(listDef) {
         location.pathname +
         "&RootFolder=" +
         rootFolder,
-    };
-    // SP.UI.ModalDialog.showModalDialog(options);
+    });
+    SP.UI.ModalDialog.showModalDialog(options);
 
-    SP.SOD.execute(
-      "sp.ui.dialog.js",
-      "SP.UI.ModalDialog.showModalDialog",
-      options
-    );
+    // SP.SOD.execute(
+    //   "sp.ui.dialog.js",
+    //   "SP.UI.ModalDialog.showModalDialog",
+    //   options
+    // );
   }
 
   function uploadNewDocumentAsync(folderPath, title, args) {
@@ -2008,7 +2009,8 @@ export function SPList(listDef) {
           var siteString =
             sal.globalConfig.siteUrl == "/" ? "" : sal.globalConfig.siteUrl;
 
-          const options = {
+          const options = SP.UI.$create_DialogOptions();
+          Object.assign(options, {
             title: title,
             dialogReturnValueCallback: resolve,
             args: JSON.stringify(args),
@@ -2026,14 +2028,14 @@ export function SPList(listDef) {
               location.pathname +
               "&args=" +
               encodeURI(JSON.stringify(args)),
-          };
+          });
           //console.log("Options url: " + options.url);
-          // SP.UI.ModalDialog.showModalDialog(options);
-          SP.SOD.execute(
-            "sp.ui.dialog.js",
-            "SP.UI.ModalDialog.showModalDialog",
-            options
-          );
+          SP.UI.ModalDialog.showModalDialog(options);
+          // SP.SOD.execute(
+          //   "sp.ui.dialog.js",
+          //   "SP.UI.ModalDialog.showModalDialog",
+          //   options
+          // );
         },
         function (sender, args) {
           console.error("Error showing file modal: ");
