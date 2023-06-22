@@ -209,8 +209,11 @@ export class RequestEntity {
         activity: actionTypes.Advanced,
         data: nextStage,
       });
-      this.Assignments.createStageAssignments(nextStage);
-      return;
+
+      // If this is a notification stage, advance.
+      if (nextStage.ActionType == stageActionTypes.Notification) {
+        this.Pipeline.advance();
+      }
     },
   };
 
@@ -536,6 +539,9 @@ export class RequestEntity {
     addNew: async (assignment = null) => {
       if (!this.ID || !assignment) return;
 
+      // Overwrite our title
+      assignment.Title = this.Title;
+
       if (!assignment.RequestOrg) {
         assignment.RequestOrg = this.Pipeline.Stage()?.RequestOrg;
       }
@@ -618,6 +624,7 @@ export class RequestEntity {
       )
         return;
 
+      // TODO: Use assignment entity constructor
       const newAssignment = {
         Assignee:
           stage.Assignee ?? RequestOrg.FindInStore(stage.RequestOrg)?.UserGroup,
@@ -675,10 +682,12 @@ export class RequestEntity {
   LoadedAt = ko.observable();
 
   activityQueueWatcher = (changes) => {
+    // Filter out the items in our activity queue that are new additions
     const activities = changes
       .filter((change) => change.status == "added")
       .map((change) => change.value);
 
+    // iterate through our actions: {activity, data}
     activities.map(async (action) => {
       emitRequestNotification(this, action);
       switch (action.activity) {
@@ -699,6 +708,9 @@ export class RequestEntity {
             //
             await this.closeAndFinalize(requestStates.rejected);
           }
+          break;
+        case actionTypes.Advanced:
+          await this.Assignments.createStageAssignments(action.data);
           break;
       }
     });
@@ -790,7 +802,7 @@ export class RequestEntity {
   };
 
   getAppLink = () =>
-    `${Router.webRoot}/Pages/WO_DB.aspx?reqId=${this.Title}&tab=${Tabs.RequestDetail}`;
+    `${Router.appRoot}?reqId=${this.Title}&tab=${Tabs.RequestDetail}`;
 
   getAppLinkElement = () =>
     `<a href="${this.getAppLink()}" target="blank">${this.Title}</a>`;

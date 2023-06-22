@@ -205,3 +205,9 @@ if (document.readyState === "ready" || document.readyState === "complete") {
     }
   };
 }
+
+// try {
+//   SP.SOD.executeFunc("sp.js", "SP.ClientContext", () => {});
+// } catch (e) {
+//   console.warn("SP.SOD SP.ClientContext Error", e);
+// }

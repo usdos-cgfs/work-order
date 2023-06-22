@@ -1,6 +1,7 @@
 import { currentUser } from "./Authorization.js";
 import { getAppContext } from "./ApplicationDbContext.js";
 import { RequestOrg } from "../entities/RequestOrg.js";
+import { assignmentRoles } from "../entities/Assignment.js";
 
 const requestActionTypeFunctionMap = {
   Created: requestCreatedNotification,
@@ -101,20 +102,35 @@ function requestAdvancedNotification(request) {
 }
 
 async function requestAssignedNotification(request, action) {
-  console.log("Sending Request Assigned Notification for: ", request);
-  console.log(action);
+  if (window.DEBUG)
+    console.log("Sending Request Assigned Notification for: ", request);
+  if (window.DEBUG) console.log(action);
+  const role = action.data?.Role?.LookupValue;
+  let roleBasedMessage = "";
+  switch (role) {
+    case assignmentRoles.Subscriber:
+    case assignmentRoles.Viewer:
+      roleBasedMessage =
+        "<p>This notification was generated for information purposes only. You have no pending actions on this request.</p>";
+      break;
+    default:
+  }
+
   const assignedNotification = {
     Title: formatNotificationTitle(request, "Assigned"),
     Body:
       `<p>Greetings Colleagues,<br><br>You have been assigned the role of\
-       <strong>${action.data?.Role?.LookupValue}</strong> on the following\
-     workorder request:<br>` +
+       <strong>${role}</strong> on the following\
+       workorder request:<br>` +
       request.getAppLinkElement() +
       "</p>" +
+      roleBasedMessage +
       "<p>To view the request, please click the link above,\
        or copy and paste the below URL into your browser: <br> " +
       request.getAppLink() +
-      "</p>",
+      "</p>" +
+      "<strong>Note:</strong> if you are a <strong>Subscriber</strong> or\
+       <strong>Viewer</strong> you have no action to take.",
     Request: request,
   };
 

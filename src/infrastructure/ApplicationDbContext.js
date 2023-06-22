@@ -202,7 +202,6 @@ class EntitySet {
 
     if (request) {
       writeableEntity.Request = request;
-      // vp.push(["ReqId", request]);
     }
     if (DEBUG) console.log(writeableEntity);
     const newId = await this.ListRef.createListItemAsync(

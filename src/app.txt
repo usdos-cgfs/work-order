@@ -835,6 +835,10 @@
   <script type="text/javascript" src="../Apps/_layouts/15/sp.js"></script>
   <script
     type="text/javascript"
+    src="../Apps/_layouts/15/sp.ui.dialog.js"
+  ></script>
+  <script
+    type="text/javascript"
     src="../Apps/_layouts/15/clienttemplates.js"
   ></script>
   <script

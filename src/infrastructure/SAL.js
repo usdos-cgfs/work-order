@@ -50,10 +50,10 @@ export function getDefaultGroups() {
 }
 
 // Used in router
-export const siteRoot =
-  _spPageContextInfo.webServerRelativeUrl == "/"
+export const webRoot =
+  _spPageContextInfo.webAbsoluteUrl == "/"
     ? ""
-    : _spPageContextInfo.webServerRelativeUrl;
+    : _spPageContextInfo.webAbsoluteUrl;
 
 export async function InitSal() {
   sal.globalConfig.siteGroups = [];
