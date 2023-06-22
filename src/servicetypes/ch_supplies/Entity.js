@@ -7,7 +7,7 @@ export default class Entity extends BaseEntity {
     super(params);
   }
 
-  // TODO: Vendor should really be SupplyDesc
+
   FieldMap = {
     Vendor: new TextField({
       displayName: "Supplies Requested",

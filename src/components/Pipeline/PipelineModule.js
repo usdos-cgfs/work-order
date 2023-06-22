@@ -7,7 +7,7 @@ export default class PipelineModule {
     this.ShowActionsArea = ShowActionsArea;
   }
 
-  // TODO: Show the completion date of each stage
+  // TODO: Minor - Show the completion date of each stage
   listItemShowBorderlessBottom = (stage) => {
     return this.Pipeline.Stage()?.Step == stage.Step && this.ShowActionsArea();
   };

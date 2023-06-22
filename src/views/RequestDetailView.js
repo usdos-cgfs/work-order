@@ -62,7 +62,7 @@ export class RequestDetailView {
       this.request.Assignments.CurrentStage.list.UserActionAssignments().length
   );
 
-  // TODO: this should probably be it's own component w/ template
+  // TODO: Minor - this should probably be it's own component w/ template
   NewCommentComponent = {
     CommentText: ko.observable(),
     submit: async () => {

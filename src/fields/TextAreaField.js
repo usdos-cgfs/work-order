@@ -8,12 +8,11 @@ const components = {
 
 registerFieldComponent("textarea", components);
 
-//TODO: What other options? e.g. cols, rows
-
 export default class TextAreaField extends BaseField {
   constructor(params) {
     super(params);
     this.isRichText = params.isRichText;
+    this.attr = params.attr ?? {};
   }
 
   components = components;

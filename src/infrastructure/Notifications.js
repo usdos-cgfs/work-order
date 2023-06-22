@@ -151,8 +151,9 @@ async function requestAssignedNotification(request, action) {
 }
 
 async function requestClosedNotification(request, action) {
-  // TODO: CC the action offices
-  console.log("Sending Request Closed Notification for: ", request);
+  // TODO: Medium - CC the action offices
+  if (window.DEBUG)
+    console.log("Sending Request Closed Notification for: ", request);
   const closedNotification = {
     To: [request.RequestorInfo.Requestor()],
     Title: formatNotificationTitle(request, "Closed " + request.State.Status()),

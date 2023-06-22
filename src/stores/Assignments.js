@@ -78,12 +78,18 @@ class AssignmentsSet {
       return;
     }
     if (this.IsLoading()) {
-      // TODO: Dispose of subscription
       return new Promise((resolve, reject) => {
-        this.IsLoading.subscribe((isLoading) => resolve());
+        this.isLoadingSubscription = this.IsLoading.subscribe((isLoading) => {
+          this.isLoadingSubscription.dispose();
+          resolve();
+        });
       });
     }
     await this.load();
+  };
+
+  dispose = () => {
+    if (this.isLoadingSubscription) this.isLoadingSubscription.dispose();
   };
 }
 

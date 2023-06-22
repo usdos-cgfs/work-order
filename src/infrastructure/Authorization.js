@@ -124,7 +124,7 @@ export class User {
   IsActionOffice = ko.pureComputed(() => this.ActionOffices().length);
 
   static Create = async function () {
-    // TODO: Switch to getUserPropertiesAsync since that includes phone # etc
+    // TODO: Major - Switch to getUserPropertiesAsync since that includes phone # etc
     const userProps = await getUserPropsAsync();
     //const userProps2 = await UserManager.getUserPropertiesAsync();
 

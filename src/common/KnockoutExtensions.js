@@ -50,7 +50,7 @@ ko.bindingHandlers.people = {
       //console.log(JSON.stringify(pickerElement.GetControlValueAsJSObject()[0]));
     };
 
-    //  TODO: You can provide schema settings as options
+    // TODO: Minor - accept schema settings as options
     //var mergedOptions = Object.assign(schema, obs.schemaOpts);
 
     //  Initialize the Control, MS enforces to pass the Element ID hence we need to provide
@@ -109,7 +109,7 @@ ko.bindingHandlers.dateField = {
 const fromPathTemplateLoader = {
   loadTemplate: function (name, templateConfig, callback) {
     if (templateConfig.fromPath) {
-      // TODO: fix error cathing and fallback flow
+      // TODO: Minor - fix error catching and fallback flow
       fetch(assetsPath + templateConfig.fromPath)
         .then((response) => {
           if (!response.ok) {

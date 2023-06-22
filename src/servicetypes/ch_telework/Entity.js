@@ -10,7 +10,6 @@ export default class Entity extends BaseEntity {
     super(params);
   }
 
-  // TODO: verify this is loaded
   departmentOptions = requestOrgStore()
     .filter((org) => org.OrgType == OrgTypes.Department)
     .map((org) => org.Title);

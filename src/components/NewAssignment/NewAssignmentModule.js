@@ -30,7 +30,7 @@ export default class NewAssignmentComponent {
       Role: this.Role(),
       Assignee: this.Assignee(),
       PipelineStage: this.stage,
-      RequestOrg: this.stage.RequestOrg,
+      RequestOrg: this.stage?.RequestOrg,
     };
     try {
       await this.addAssignment(assignment);

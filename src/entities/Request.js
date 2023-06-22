@@ -67,6 +67,7 @@ export const requestStates = {
   rejected: "Rejected",
 };
 
+// TODO: implement as BaseEntity
 export class RequestEntity {
   constructor({ ID = null, Title = null, ServiceType = null }) {
     this.ID = ID;
@@ -342,7 +343,7 @@ export class RequestEntity {
     list: {
       All: ko.observableArray(),
       InProgress: ko.pureComputed(() => {
-        // TODO: this should maybe be in the component
+        // TODO: this should maybe be in the component, also CurrentStage.list.InProgress
         return this.Assignments.list
           .All()
           .filter(
@@ -411,7 +412,7 @@ export class RequestEntity {
         ),
         Errors: ko.observableArray(),
         ActiveAssignmentsError: ko.pureComputed(() => {
-          // TODO: this should be a subscription event
+          // TODO: Minor - this should be a subscription event
           const activeAssignments = this.Assignments.CurrentStage.list
             .UserActionAssignments()
             .find(
@@ -532,7 +533,7 @@ export class RequestEntity {
       this.Assignments.AreLoading(false);
     },
     userCanAssign: ko.pureComputed(() => {
-      // TODO
+      // TODO: Major
       if (!this.State.IsActive()) return false;
       return false;
     }),
@@ -613,7 +614,7 @@ export class RequestEntity {
     createStageAssignments: async (stage = this.Pipeline.Stage()) => {
       if (!stage?.ActionType) return;
 
-      // If this stage is already assigned, skip it
+      // If this stage is already assigned (e.g. from a previous assignment stage), skip it
       if (
         this.Pipeline.Stages().find((stage) =>
           this.Assignments.list
@@ -624,7 +625,7 @@ export class RequestEntity {
       )
         return;
 
-      // TODO: Use assignment entity constructor
+      // TODO: Minor - Use assignment entity constructor
       const newAssignment = {
         Assignee:
           stage.Assignee ?? RequestOrg.FindInStore(stage.RequestOrg)?.UserGroup,

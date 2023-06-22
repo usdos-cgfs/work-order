@@ -64,7 +64,7 @@ export class ServiceType {
       uid: this.UID,
       components: this._components,
     });
-    // TODO: this is hacky, maybe we should pass the filename as well when we register
+    // TODO: Minor - this is hacky, maybe we should pass the filename as well when we register
     this._components.New = this._components.Edit;
     return this._components;
   };
@@ -108,7 +108,7 @@ export class ServiceType {
     }
   };
 
-  // TODO: this should be in a servicetype manager service
+  // TODO: Minor - this should be in a servicetype manager service
   userCanInitiate = (user) => {
     if (!this.Active) return false;
     return true;
@@ -125,7 +125,7 @@ export class ServiceType {
     return serviceTypeStore().find((service) => service.ID == serviceType.ID);
   };
 
-  // TODO: ReportingRequestOrgs
+  // TODO: Major - ReportingRequestOrgs
   static Views = {
     All: [
       "ID",

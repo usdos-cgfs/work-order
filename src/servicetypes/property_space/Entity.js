@@ -159,7 +159,7 @@ export default class Entity extends BaseEntity {
       }),
     }),
     // Property Bottom
-    //TODO: This is using a single line of text instead of a lookup
+    //TODO: Minor - This is using a single line of text instead of a lookup, formatting is weird
     PropertyType: new SelectField({
       displayName: "Type of Property",
       options: this.propertyTypeOptions,

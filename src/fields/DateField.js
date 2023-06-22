@@ -17,7 +17,6 @@ registerFieldComponent("date", components);
  * This field needs to convert between locale and UTC Dates stored on the server;
  */
 
-// TODO: what other options do we need? e.g. date vs datetime
 export default class DateField extends BaseField {
   constructor(params) {
     super(params);

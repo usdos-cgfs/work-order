@@ -66,8 +66,6 @@ class EntitySet {
     // Check if the object we passed in defines a ListDef
     this.constructor = constructor;
 
-    // TODO: How can we get all fields? Views + ListDef?
-
     try {
       const allFieldsSet = new Set();
       constructor.Views?.All?.map((field) => allFieldsSet.add(field));
@@ -92,7 +90,7 @@ class EntitySet {
   }
 
   // Queries
-  // TODO: Queries should return options to read e.g. toList, first, toCursor
+  // TODO: Feature - Queries should return options to read e.g. toList, first, toCursor
   FindById = async (id, fields) => {
     const result = await this.ListRef.findByIdAsync(id, fields);
     if (!result) return null;
