@@ -75,6 +75,8 @@ export class User {
     ID,
     Title,
     LoginName = null,
+    WorkPhone = null,
+    EMail = null,
     IsGroup = null,
     IsEnsured = false,
     Groups = null,
@@ -83,6 +85,8 @@ export class User {
     this.Title = Title;
     this.LookupValue = Title;
     this.LoginName = LoginName;
+    this.WorkPhone = WorkPhone;
+    this.EMail = EMail;
     this.IsGroup = IsGroup;
     // Has the user data been fetched? Used for binding handlers.
     this.IsEnsured = IsEnsured;

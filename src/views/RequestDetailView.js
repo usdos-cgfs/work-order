@@ -213,6 +213,8 @@ export class RequestDetailView {
 
     if (displayMode == DisplayModes.New) {
       this.request.RequestorInfo.Requestor(new People(currentUser()));
+      this.request.RequestorInfo.Phone(currentUser().WorkPhone);
+      this.request.RequestorInfo.Email(currentUser().EMail);
       this.request.Title = createNewRequestTitle();
       this.request.State.Status(requestStates.draft);
       this.request.State.IsActive(true);
