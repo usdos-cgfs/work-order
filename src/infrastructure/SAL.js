@@ -176,25 +176,36 @@ sal.NewAppConfig = function () {
 // Used in Authorization
 export async function getUserPropsAsync(userId = _spPageContextInfo.userId) {
   // We need to make two api calls, one to user info list, and one to web
-  const userInfoUrl = `/Web/lists/getbytitle('User%20Information%20List')/Items(${userId})`;
-  const userGroupUrl = `/Web/GetUserById(${userId})/Groups`;
+  // const userInfoUrl = `/Web/lists/getbytitle('User%20Information%20List')/Items(${userId})`;
+  // const userInfoUrl = `/sp.userprofiles.peoplemanager/getmyproperties`;
+  // const userGroupUrl = `/Web/GetUserById(${userId})/Groups`;
 
   // Get more user info:
-  // const userGroupUrl = `/Web/GetUserById(${userId})/$expand=Groups`;
+  const userInfoUrl = `/Web/GetUserById(${userId})/?$expand=Groups`;
 
   const userInfo = (await fetchData(userInfoUrl)).d;
-  const userGroups = (await fetchData(userGroupUrl)).d.results;
+
+  // TODO: See if we can just select the properties we need
+  const userPropsUrl = `/sp.userprofiles.peoplemanager/getpropertiesfor(@v)?@v='${encodeURIComponent(
+    userInfo.LoginName
+  )}'`;
+
+  const userProps = (await fetchData(userPropsUrl))?.d.UserProfileProperties
+    .results;
+
+  function findPropValue(props, key) {
+    return props.find((prop) => prop.Key == key)?.Value;
+  }
 
   return {
-    ...userInfo,
     ID: userId,
     Title: userInfo.Title,
     LoginName: userInfo.Name,
-    WorkPhone: userInfo.WorkPhone,
-    EMail: userInfo.EMail, // this is fucked up microsoft
+    WorkPhone: findPropValue(userProps, "WorkPhone"),
+    EMail: findPropValue(userProps, "Email"), // TODO: Do we still need this spelling?
     IsEnsured: true,
     IsGroup: false,
-    Groups: userGroups.map((group) => {
+    Groups: userInfo.Groups?.results?.map((group) => {
       return {
         ...group,
         ID: group.Id,
@@ -204,6 +215,7 @@ export async function getUserPropsAsync(userId = _spPageContextInfo.userId) {
     }),
   };
 }
+
 // TODO: DEPRECATED remove after verification
 async function getUserPropsAsyncDeprecated() {
   // TODO: We aren't getting the phone number, need to query userprofile service
