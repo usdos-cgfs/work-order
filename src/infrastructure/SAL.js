@@ -177,7 +177,7 @@ sal.NewAppConfig = function () {
 export async function getUserPropsAsync(userId = _spPageContextInfo.userId) {
   // We need to make two api calls, one to user info list, and one to web
   // const userInfoUrl = `/Web/lists/getbytitle('User%20Information%20List')/Items(${userId})`;
-  // const userInfoUrl = `/sp.userprofiles.peoplemanager/getmyproperties`;
+  const userPropsUrl = `/sp.userprofiles.peoplemanager/getmyproperties`;
   // const userGroupUrl = `/Web/GetUserById(${userId})/Groups`;
 
   // Get more user info:
@@ -186,9 +186,9 @@ export async function getUserPropsAsync(userId = _spPageContextInfo.userId) {
   const userInfo = (await fetchData(userInfoUrl)).d;
 
   // TODO: See if we can just select the properties we need
-  const userPropsUrl = `/sp.userprofiles.peoplemanager/getpropertiesfor(@v)?@v='${encodeURIComponent(
-    userInfo.LoginName
-  )}'`;
+  // const userPropsUrl = `/sp.userprofiles.peoplemanager/getpropertiesfor(@v)?@v='${encodeURIComponent(
+  //   userInfo.LoginName
+  // )}'`;
 
   const userProps = (await fetchData(userPropsUrl))?.d.UserProfileProperties
     .results;
@@ -200,7 +200,7 @@ export async function getUserPropsAsync(userId = _spPageContextInfo.userId) {
   return {
     ID: userId,
     Title: userInfo.Title,
-    LoginName: userInfo.Name,
+    LoginName: userInfo.LoginName,
     WorkPhone: findPropValue(userProps, "WorkPhone"),
     EMail: findPropValue(userProps, "Email"), // TODO: Do we still need this spelling?
     IsEnsured: true,
