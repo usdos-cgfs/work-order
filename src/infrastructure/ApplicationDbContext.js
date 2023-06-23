@@ -238,7 +238,10 @@ class EntitySet {
 
   // Folder Methods
 
-  GetItemsByFolderPath = async function (folderPath, fields) {
+  GetItemsByFolderPath = async function (
+    folderPath,
+    fields = this.AllDeclaredFields
+  ) {
     //return this.ListRef.getFolderContentsAsync(folderPath, fields);
     const results = await this.ListRef.getFolderContentsAsync(
       folderPath,

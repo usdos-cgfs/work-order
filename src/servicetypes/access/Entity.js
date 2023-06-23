@@ -54,8 +54,8 @@ export default class Access extends BaseEntity {
   };
 
   static ListDef = {
-    name: "st_ch_access",
-    title: "st_ch_access",
+    name: "st_access",
+    title: "st_access",
     isServiceType: true,
     fields: Access.Views.All,
   };

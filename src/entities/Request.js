@@ -146,15 +146,19 @@ export class RequestEntity {
       await this.ServiceType.Def()?.initializeEntity();
       const results = await this.ServiceType.Def()
         ?.getListRef()
-        ?.FindByColumnValue([{ column: "Request", value: this.ID }], {}, {});
+        ?.GetItemsByFolderPath(this.getRelativeFolderPath());
 
-      if (!results.results.length) {
+      if (!results.length) {
         console.error("cannot find servicetype entity");
         this.ServiceType.IsLoading(false);
         return;
       }
 
-      const entity = results.results[0];
+      // This should never happen if we index our Request Lookup Column
+      if (results.length > 1)
+        alert("Multiple service type entities found for this request!");
+
+      const entity = results[0];
       entity.Request = this;
       this.ServiceType.Entity(entity);
       this.ServiceType.IsLoading(false);
