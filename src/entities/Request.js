@@ -816,7 +816,11 @@ export class RequestEntity {
    * e.g. EX/2929-20199
    */
   getRelativeFolderPath = ko.pureComputed(
-    () => `${this.RequestorInfo.Office().Title}/${this.ObservableTitle()}`
+    () =>
+      `${this.RequestorInfo.Office().Title.replace(
+        "/",
+        "_"
+      )}/${this.ObservableTitle()}`
   );
 
   getFolderPermissions = () => getRequestFolderPermissions(this);

@@ -31,9 +31,9 @@ ko.bindingHandlers.people = {
     //schema["Width"] = "280px";
     schema["OnUserResolvedClientScript"] = async function (elemId, userKeys) {
       //  get reference of People Picker Control
-      var pickerElement = SPClientPeoplePicker.SPClientPeoplePickerDict[elemId];
+      var pickerControl = SPClientPeoplePicker.SPClientPeoplePickerDict[elemId];
       var observable = valueAccessor();
-      var userJSObject = pickerElement.GetControlValueAsJSObject()[0];
+      var userJSObject = pickerControl.GetControlValueAsJSObject()[0];
       if (!userJSObject) {
         observable(null);
         return;
@@ -43,11 +43,8 @@ ko.bindingHandlers.people = {
         if (userJSObject.Key == observable()?.LoginName) return;
         var user = await ensureUserByKeyAsync(userJSObject.Key);
         var person = new People(user);
-        // person.SetPeoplePickers.push(element.id);
         observable(person);
       }
-      //observable(pickerElement.GetControlValueAsJSObject()[0]);
-      //console.log(JSON.stringify(pickerElement.GetControlValueAsJSObject()[0]));
     };
 
     // TODO: Minor - accept schema settings as options
@@ -70,10 +67,6 @@ ko.bindingHandlers.people = {
   ) {
     var pickerControl =
       SPClientPeoplePicker.SPClientPeoplePickerDict[element.id + "_TopSpan"];
-    const editorElement = document.getElementById(
-      pickerControl.EditorElementId
-    );
-
     var userValue = ko.utils.unwrapObservable(valueAccessor());
 
     if (!userValue) {
@@ -88,9 +81,7 @@ ko.bindingHandlers.people = {
         .GetAllUserInfo()
         .find((pickerUser) => pickerUser.DisplayText == userValue.LookupValue)
     ) {
-      editorElement.value = userValue.LookupValue;
-      // Resolve the User
-      pickerControl.AddUnresolvedUserFromEditor(true);
+      pickerControl.AddUserKeys(userValue.LoginName);
     }
   },
 };

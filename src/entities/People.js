@@ -13,15 +13,12 @@ export class People {
     this.IsGroup = IsGroup;
     // Has the user data been fetched? Used for binding handlers.
     this.IsEnsured = IsEnsured;
-    this.SetPeoplePickers = [];
   }
 
   ID = null;
   Title = null;
   LoginName = null;
   LookupValue = null;
-
-  isInPicker = (elementId) => this.SetPeoplePickers.includes(elementId);
 
   static Create = function (props) {
     if (!props || (!props.ID && !(props.Title || props.LookupValue)))
