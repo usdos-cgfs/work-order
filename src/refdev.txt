@@ -16,6 +16,8 @@
   rel="stylesheet"
 />
 
+<link href="https://cdn.quilljs.com/1.0.0/quill.snow.css" rel="stylesheet" />
+
 <script src="/sites/workorder/Style Library/Apps/wo/lib/DataTables/datatables.min.js"></script>
 
 <!-- <link
@@ -30,3 +32,5 @@
 <script src="/sites/workorder/Style Library/Apps/wo/lib/bootstrap-5.3.0/js/bootstrap.bundle.min.js"></script>
 <script src="/sites/workorder/Style Library/Apps/wo/lib/knockout/knockout-3.5.1.js"></script>
 <script src="/sites/workorder/Style Library/Apps/wo/lib/knockout/knockout.mapping-latest.js"></script>
+
+<script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>

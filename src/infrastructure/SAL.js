@@ -2088,6 +2088,7 @@ async function fetchData(uri, method = "GET") {
     method: method,
     headers: {
       Accept: "application/json; odata=verbose",
+      "X-RequestDigest": document.getElementById("__REQUESTDIGEST").value,
     },
   });
 

@@ -3,6 +3,14 @@ export default class BaseFieldModule {
     Object.assign(this, params);
   }
 
+  _id;
+  getUniqueId = () => {
+    if (!this._id) {
+      this._id = "field-" + new Date().getTime();
+    }
+    return this._id;
+  };
+
   Errors = ko.pureComputed(() => {
     if (!this.ShowErrors()) return [];
     if (!this.isRequired) return [];

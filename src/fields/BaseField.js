@@ -10,7 +10,7 @@ export default class BaseField {
     this.displayName = displayName;
     this.isRequired = isRequired;
     this.Visible = Visible;
-    this.width = width ? "col-" + width : "col";
+    this.width = width ? "col-md-" + width : "col-md-6";
   }
 
   Value = ko.observable();

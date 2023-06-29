@@ -1,16 +1,42 @@
-<label
-  ><span data-bind="text: displayName"></span
-  ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span>:
+<div class="component field">
   <!-- ko if: isRichText -->
+  <label
+    ><span data-bind="text: displayName"></span
+    ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span
+    >:</label
+  >
+  <div class="richtext-field" data-bind="childrenComplete: childrenHaveLoaded">
+    <!-- <div data-bind="attr: {'id': getToolbarId()}">
+    <button class="ql-bold">Bold</button>
+    <button class="ql-italic">Italic</button>
+  </div> -->
+    <!-- Create the editor container -->
+    <div
+      class="form-control"
+      data-bind="attr: {'id': getUniqueId()}, class: ValidationClass"
+      style="height: 150px"
+    >
+      <div data-bind="html: Value"></div>
+    </div>
+  </div>
   <!-- /ko -->
   <!-- ko ifnot: isRichText -->
-  <textarea
-    name=""
-    id=""
-    cols="30"
-    rows="10"
-    class="form-control"
-    data-bind="textInput: Value, class: ValidationClass, attr: attr"
-  ></textarea>
+  <label
+    ><span data-bind="text: displayName"></span
+    ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span>:
+    <textarea
+      name=""
+      id=""
+      cols="30"
+      rows="10"
+      class="form-control"
+      data-bind="textInput: Value, class: ValidationClass, attr: attr"
+    ></textarea>
+  </label>
   <!-- /ko -->
-</label>
+  <!-- ko if: ShowErrors -->
+  <!-- ko foreach: Errors -->
+  <div class="fw-semibold text-danger" data-bind="text: description"></div>
+  <!-- /ko -->
+  <!-- /ko -->
+</div>

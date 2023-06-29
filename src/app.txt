@@ -1,3 +1,6 @@
+<!-- <input id="text-trix" type="hidden" name="content" />
+<trix-editor input="text-trix"></trix-editor> -->
+
 <div class="position-fixed bottom-0 end-0">
   <div class="toast-container">
     <!-- ko if: false -->
@@ -832,7 +835,10 @@
     type="text/javascript"
     src="../Apps/_layouts/15/sp.runtime.js"
   ></script>
-  <script type="text/javascript" src="/_layouts/15/ScriptResx.ashx?name=sp.res&culture=en-us"></script>
+  <script
+    type="text/javascript"
+    src="/_layouts/15/ScriptResx.ashx?name=sp.res&culture=en-us"
+  ></script>
   <script type="text/javascript" src="../Apps/_layouts/15/sp.js"></script>
   <script type="text/javascript" src="../Apps/_layouts/15/sp.init.js"></script>
   <script

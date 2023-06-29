@@ -20,6 +20,7 @@ export default class Entity extends BaseEntity {
     NoticeDates: new TextAreaField({
       displayName: "Notification Dates",
       isRequired: true,
+      width: "12",
     }),
   };
 
