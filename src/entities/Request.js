@@ -19,34 +19,27 @@ import { Action } from "../entities/Action.js";
 
 import { People } from "./People.js";
 import { ActivityLogComponent } from "../components/ActivityLogComponent.js";
-import { NewAssignmentComponent } from "../components/NewAssignmentComponent.js";
 import DateField from "../fields/DateField.js";
 
-import {
-  createNewRequestTitle,
-  sortByField,
-} from "../common/EntityUtilities.js";
-import {
-  calculateEffectiveSubmissionDate,
-  businessDaysFromDate,
-} from "../common/DateUtilities.js";
+import { sortByField } from "../common/EntityUtilities.js";
+import { businessDaysFromDate } from "../common/DateUtilities.js";
 import * as Router from "../common/Router.js";
 import { registerServiceTypeActionComponent } from "../common/KnockoutExtensions.js";
-
-import { addTask, finishTask, taskDefs } from "../stores/Tasks.js";
 
 import {
   currentUser,
   getRequestFolderPermissions,
   stageActionRoleMap,
   AssignmentFunctions,
-  permissions,
 } from "../infrastructure/Authorization.js";
 import {
   emitCommentNotification,
   emitRequestNotification,
 } from "../infrastructure/Notifications.js";
 import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
+
+import TextField from "../fields/TextField.js";
+import TextAreaField from "../fields/TextAreaField.js";
 
 import { DisplayModes } from "../views/RequestDetailView.js";
 
@@ -67,7 +60,7 @@ export const requestStates = {
   rejected: "Rejected",
 };
 
-// TODO: implement as BaseEntity
+// TODO: implement as ConstrainedEntity
 export class RequestEntity {
   constructor({ ID = null, Title = null, ServiceType = null }) {
     this.ID = ID;
@@ -106,7 +99,16 @@ export class RequestEntity {
   ObservableTitle = ko.observable();
 
   RequestSubject = ko.observable();
-  RequestDescription = ko.observable();
+  RequestDescription = new TextAreaField({
+    displayName: ko.pureComputed(
+      () => this.ServiceType.Def()?.DescriptionTitle ?? "Description"
+    ),
+    isRichText: true,
+    isRequired: ko.pureComputed(
+      () => this.ServiceType.Def()?.DescriptionRequired ?? false
+    ),
+    width: "12",
+  });
 
   RequestorInfo = {
     Requestor: ko.observable(),

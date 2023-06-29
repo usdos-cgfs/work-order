@@ -4,11 +4,11 @@ import SelectField from "../../fields/SelectField.js";
 import DateField, { dateFieldTypes } from "../../fields/DateField.js";
 import TextAreaField from "../../fields/TextAreaField.js";
 import CheckboxField from "../../fields/CheckboxField.js";
-import BaseEntity from "../BaseEntity.js";
+import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
 
 import { currentUser } from "../../infrastructure/Authorization.js";
 
-export default class Entity extends BaseEntity {
+export default class Entity extends ConstrainedEntity {
   constructor(params) {
     super(params);
   }

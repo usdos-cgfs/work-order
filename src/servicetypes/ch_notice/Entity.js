@@ -1,8 +1,8 @@
 import SelectField from "../../fields/SelectField.js";
 import TextAreaField from "../../fields/TextAreaField.js";
-import BaseEntity from "../BaseEntity.js";
+import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
 
-export default class Entity extends BaseEntity {
+export default class Entity extends ConstrainedEntity {
   constructor(params) {
     super(params);
   }
@@ -20,7 +20,6 @@ export default class Entity extends BaseEntity {
     NoticeDates: new TextAreaField({
       displayName: "Notification Dates",
       isRequired: true,
-      width: "12",
     }),
   };
 

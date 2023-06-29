@@ -37,7 +37,9 @@ export default class BaseField {
           new ValidationError(
             "text-field",
             "required-field",
-            this.displayName + ` is required!`
+            typeof this.displayName == "function"
+              ? this.displayName()
+              : this.displayName + ` is required!`
           ),
         ];
   });

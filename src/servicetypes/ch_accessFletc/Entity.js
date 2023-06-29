@@ -1,9 +1,9 @@
 import TextField from "../../fields/TextField.js";
 import PeopleField from "../../fields/PeopleField.js";
 import SelectField from "../../fields/SelectField.js";
-import BaseEntity from "../BaseEntity.js";
+import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
 
-export default class AccessFletc extends BaseEntity {
+export default class AccessFletc extends ConstrainedEntity {
   constructor(params) {
     super(params);
   }

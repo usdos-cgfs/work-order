@@ -1,13 +1,13 @@
 import TextField from "../../fields/TextField.js";
 import PeopleField from "../../fields/PeopleField.js";
 import SelectField from "../../fields/SelectField.js";
-import BaseEntity from "../BaseEntity.js";
+import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
 import BlobField from "../../fields/BlobField.js";
 import DateField from "../../fields/DateField.js";
 
 import { currentUser } from "../../infrastructure/Authorization.js";
 
-export default class Entity extends BaseEntity {
+export default class Entity extends ConstrainedEntity {
   constructor(params) {
     super(params);
   }
@@ -80,7 +80,7 @@ export default class Entity extends BaseEntity {
   };
 }
 
-class DatesBlob extends BaseEntity {
+class DatesBlob extends ConstrainedEntity {
   constructor() {
     super();
   }

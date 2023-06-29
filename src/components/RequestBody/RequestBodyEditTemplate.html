@@ -10,19 +10,9 @@
       data-bind="component: {name: ServiceTypeComponentName, params: {Entity: Entity()}}"
     ></div>
     <!-- /ko -->
-    <div class="col-12 pb-6">
-      <label for=""
-        ><h6>
-          <span
-            data-bind="text: Def()?.DescriptionTitle ?? 'Description'"
-          ></span
-          >:
-        </h6>
-      </label>
-      <textarea
-        class="form-control"
-        data-bind="value: RequestDescription"
-      ></textarea>
-    </div>
+    <div
+      class="col-12 pb-6"
+      data-bind="component: {name: 'text-area-edit', params: RequestDescription}"
+    ></div>
   </div>
 </div>

@@ -1,12 +1,11 @@
 import TextField from "../../fields/TextField.js";
 import CheckboxField from "../../fields/CheckboxField.js";
-import BaseEntity from "../BaseEntity.js";
+import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
 
-export default class Entity extends BaseEntity {
+export default class Entity extends ConstrainedEntity {
   constructor(params) {
     super(params);
   }
-
 
   FieldMap = {
     Vendor: new TextField({

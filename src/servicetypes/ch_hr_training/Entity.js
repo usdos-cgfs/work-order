@@ -1,9 +1,9 @@
 import TextField from "../../fields/TextField.js";
 import SelectField from "../../fields/SelectField.js";
 import DateField from "../../fields/DateField.js";
-import BaseEntity from "../BaseEntity.js";
+import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
 
-export default class Entity extends BaseEntity {
+export default class Entity extends ConstrainedEntity {
   constructor(params) {
     super(params);
   }

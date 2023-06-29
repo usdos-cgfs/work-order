@@ -2,9 +2,9 @@ import { registerServiceTypeActionComponent } from "../../common/KnockoutExtensi
 import SelectField from "../../fields/SelectField.js";
 import TextField from "../../fields/TextField.js";
 import BlobField from "../../fields/BlobField.js";
-import BaseEntity from "../BaseEntity.js";
+import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
 
-export default class Requisition extends BaseEntity {
+export default class Requisition extends ConstrainedEntity {
   constructor(request) {
     super(request);
     this.Request = request;
@@ -58,7 +58,7 @@ export default class Requisition extends BaseEntity {
   };
 }
 
-class RequisitionItem extends BaseEntity {
+class RequisitionItem extends ConstrainedEntity {
   constructor() {
     super();
   }
