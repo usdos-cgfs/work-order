@@ -66,6 +66,21 @@ class EntitySet {
     // Check if the object we passed in defines a ListDef
     this.constructor = constructor;
 
+    try {
+      const allFieldsSet = new Set();
+      constructor.Views?.All?.map((field) => allFieldsSet.add(field));
+      const newEntity = new this.constructor({ ID: null, Title: null });
+      if (newEntity.FieldMap) {
+        Object.keys(newEntity.FieldMap).map((field) => allFieldsSet.add(field));
+      }
+      // const fieldMapKeysSet = new Set(...);
+      // constructor.Views.All.map((field) => fieldMapKeysSet.add(field));
+      this.AllDeclaredFields = [...allFieldsSet];
+    } catch (e) {
+      console.warn("Could not instantiate", constructor), console.warn(e);
+      this.AllDeclaredFields = constructor.Views?.All ?? [];
+    }
+
     this.ListDef = constructor.ListDef;
     this.Views = constructor.Views;
     this.Title = constructor.ListDef.title;
@@ -75,7 +90,7 @@ class EntitySet {
   }
 
   // Queries
-  // TODO: Queries should return options to read e.g. toList, first, toCursor
+  // TODO: Feature - Queries should return options to read e.g. toList, first, toCursor
   FindById = async (id, fields) => {
     const result = await this.ListRef.findByIdAsync(id, fields);
     if (!result) return null;
@@ -97,7 +112,7 @@ class EntitySet {
     columnFilters,
     { orderByColumn, sortAsc },
     { count = null },
-    fields = this.Views.All,
+    fields = this.AllDeclaredFields,
     includeFolders = false
   ) => {
     // if we pass in a count, we are expecting a cursor result
@@ -180,12 +195,11 @@ class EntitySet {
 
   // Mutators
   AddEntity = async function (entity, folderPath, request = null) {
-    const creationfunc = createWritableObject.bind(this);
+    const creationfunc = mapEntityToObject.bind(this);
     const writeableEntity = creationfunc(entity);
 
     if (request) {
       writeableEntity.Request = request;
-      // vp.push(["ReqId", request]);
     }
     if (DEBUG) console.log(writeableEntity);
     const newId = await this.ListRef.createListItemAsync(
@@ -197,7 +211,7 @@ class EntitySet {
   };
 
   UpdateEntity = async function (entity, fields = null) {
-    const writeableEntity = createWritableObject.bind(this)(entity, fields);
+    const writeableEntity = mapEntityToObject.bind(this)(entity, fields);
     writeableEntity.ID =
       typeof entity.ID == "function" ? entity.ID() : entity.ID;
     if (DEBUG) console.log(writeableEntity);
@@ -224,7 +238,10 @@ class EntitySet {
 
   // Folder Methods
 
-  GetItemsByFolderPath = async function (folderPath, fields) {
+  GetItemsByFolderPath = async function (
+    folderPath,
+    fields = this.AllDeclaredFields
+  ) {
     //return this.ListRef.getFolderContentsAsync(folderPath, fields);
     const results = await this.ListRef.getFolderContentsAsync(
       folderPath,
@@ -300,6 +317,13 @@ function mapValueToEntityProperty(propertyName, inputValue, targetEntity) {
     return;
   }
   // 2. This is just a regular property, set it
+  if (
+    targetEntity[propertyName] &&
+    typeof targetEntity[propertyName] == "function"
+  ) {
+    targetEntity[propertyName](inputValue);
+    return;
+  }
   targetEntity[propertyName] = inputValue;
   return;
 }
@@ -331,7 +355,7 @@ function mapObjectToViewField(inVal, fieldMap) {
       return;
     }
     // If the input value is an array, then we are putting an array into the observable.
-    var outVal = Array.isArray(inVal)
+    const outVal = Array.isArray(inVal)
       ? inVal.map((item) => generateObject(item, fieldMap))
       : generateObject(inVal, fieldMap);
 
@@ -348,7 +372,7 @@ function generateObject(inVal, fieldMap) {
   return fieldMap.factory ? fieldMap.factory(inVal) : inVal;
 }
 
-function createWritableObject(input, selectedFields = null) {
+function mapEntityToObject(input, selectedFields = null) {
   const entity = {};
   // We either predefine the fields in the ListDef, or provide a complete fieldmap
   const allWriteableFieldsSet = new Set([]);

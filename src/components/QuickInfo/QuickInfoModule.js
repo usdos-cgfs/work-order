@@ -23,7 +23,7 @@ export default class QuickInfoModule {
         .get(requestStates.open)
         ?.List()
         ?.filter((request) => {
-          return request.Dates.EstClosed.ObservableDateTime() <= new Date();
+          return request.Dates.EstClosed.Value() <= new Date();
         }) ?? []
     );
   });

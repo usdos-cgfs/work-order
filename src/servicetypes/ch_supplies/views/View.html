@@ -1,0 +1,24 @@
+<div>
+  <div class="row row-cols-2" data-bind="using: FieldMap">
+    <div
+      class="col pb-2"
+      data-bind="component: {name: Vendor.components.view, params: Vendor}"
+    ></div>
+    <div
+      class="col pb-2"
+      data-bind="component: {name: ItemNum.components.view, params: ItemNum}"
+    ></div>
+    <div
+      class="col pb-2"
+      data-bind="component: {name: Quantity.components.view, params: Quantity}"
+    ></div>
+    <div class="col pb-2">
+      <div
+        data-bind="component: {name: InStock.components.view, params: InStock}"
+      ></div>
+      <div
+        data-bind="component: {name: SpecialOrder.components.view, params: SpecialOrder}"
+      ></div>
+    </div>
+  </div>
+</div>

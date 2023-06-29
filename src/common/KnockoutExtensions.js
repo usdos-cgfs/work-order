@@ -1,4 +1,4 @@
-import { People } from "../components/People.js";
+import { People } from "../entities/People.js";
 import { ensureUserByKeyAsync } from "../infrastructure/SAL.js";
 import { assetsPath } from "../app.js";
 import ServiceTypeModule from "../components/ServiceType/ServiceTypeModule.js";
@@ -28,12 +28,12 @@ ko.bindingHandlers.people = {
     schema["AllowEmailAddresses"] = true;
     schema["AllowMultipleValues"] = false;
     schema["MaximumEntitySuggestions"] = 50;
-    schema["Width"] = "280px";
+    //schema["Width"] = "280px";
     schema["OnUserResolvedClientScript"] = async function (elemId, userKeys) {
       //  get reference of People Picker Control
-      var pickerElement = SPClientPeoplePicker.SPClientPeoplePickerDict[elemId];
+      var pickerControl = SPClientPeoplePicker.SPClientPeoplePickerDict[elemId];
       var observable = valueAccessor();
-      var userJSObject = pickerElement.GetControlValueAsJSObject()[0];
+      var userJSObject = pickerControl.GetControlValueAsJSObject()[0];
       if (!userJSObject) {
         observable(null);
         return;
@@ -43,14 +43,11 @@ ko.bindingHandlers.people = {
         if (userJSObject.Key == observable()?.LoginName) return;
         var user = await ensureUserByKeyAsync(userJSObject.Key);
         var person = new People(user);
-        // person.SetPeoplePickers.push(element.id);
         observable(person);
       }
-      //observable(pickerElement.GetControlValueAsJSObject()[0]);
-      //console.log(JSON.stringify(pickerElement.GetControlValueAsJSObject()[0]));
     };
 
-    //  TODO: You can provide schema settings as options
+    // TODO: Minor - accept schema settings as options
     //var mergedOptions = Object.assign(schema, obs.schemaOpts);
 
     //  Initialize the Control, MS enforces to pass the Element ID hence we need to provide
@@ -70,10 +67,6 @@ ko.bindingHandlers.people = {
   ) {
     var pickerControl =
       SPClientPeoplePicker.SPClientPeoplePickerDict[element.id + "_TopSpan"];
-    const editorElement = document.getElementById(
-      pickerControl.EditorElementId
-    );
-
     var userValue = ko.utils.unwrapObservable(valueAccessor());
 
     if (!userValue) {
@@ -88,9 +81,7 @@ ko.bindingHandlers.people = {
         .GetAllUserInfo()
         .find((pickerUser) => pickerUser.DisplayText == userValue.LookupValue)
     ) {
-      editorElement.value = userValue.LookupValue;
-      // Resolve the User
-      pickerControl.AddUnresolvedUserFromEditor(true);
+      pickerControl.AddUserKeys(userValue.LoginName);
     }
   },
 };
@@ -109,17 +100,39 @@ ko.bindingHandlers.dateField = {
 const fromPathTemplateLoader = {
   loadTemplate: function (name, templateConfig, callback) {
     if (templateConfig.fromPath) {
+      // TODO: Minor - fix error catching and fallback flow
       fetch(assetsPath + templateConfig.fromPath)
         .then((response) => {
           if (!response.ok) {
             throw new Error(
-              `Fetching the HTML file went wrong - ${response.statusText}`
+              `Error Fetching HTML Template - ${response.statusText}`
             );
           }
           return response.text();
         })
+        .catch((error) => {
+          if (!templateConfig.fallback) return;
+          console.warn(
+            "Primary template not found, attempting fallback",
+            templateConfig
+          );
+          fetch(assetsPath + templateConfig.fallback)
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(
+                  `Error Fetching fallback HTML Template - ${response.statusText}`
+                );
+              }
+              return response.text();
+            })
+            .then((text) =>
+              ko.components.defaultLoader.loadTemplate(name, text, callback)
+            );
+        })
         .then((text) =>
-          ko.components.defaultLoader.loadTemplate(name, text, callback)
+          text
+            ? ko.components.defaultLoader.loadTemplate(name, text, callback)
+            : null
         );
     } else {
       callback(null);
@@ -155,124 +168,6 @@ const fromPathViewModelLoader = {
 };
 
 ko.components.loaders.unshift(fromPathViewModelLoader);
-
-{
-  registerComponent({
-    name: "approver-actions",
-    folder: "AssignmentActions",
-    module: "ApprovalModule",
-    template: "ApprovalTemplate",
-  });
-
-  registerComponent({
-    name: "resolver-actions",
-    folder: "AssignmentActions",
-    module: "ResolverModule",
-    template: "ResolverTemplate",
-  });
-
-  registerComponent({
-    name: "assigner-actions",
-    folder: "AssignmentActions",
-    module: "AssignModule",
-    template: "AssignTemplate",
-  });
-
-  registerComponent({
-    name: "open-requests-table",
-    folder: "RequestsByStatus",
-    module: "RequestsByStatusTableModule",
-    template: "OpenRequestsTableTemplate",
-  });
-
-  registerComponent({
-    name: "open-office-requests-table",
-    folder: "RequestsByStatus",
-    module: "RequestsByStatusTableModule",
-    template: "OpenOfficeRequestsTableTemplate",
-  });
-
-  registerComponent({
-    name: "closed-requests-table",
-    folder: "RequestsByStatus",
-    module: "RequestsByStatusTableModule",
-    template: "ClosedRequestsTableTemplate",
-  });
-
-  registerComponent({
-    name: "my-assignments-table",
-    folder: "MyAssignments",
-    module: "MyAssignmentsModule",
-    template: "MyAssignmentsTemplate",
-  });
-
-  registerComponent({
-    name: "request-header-view",
-    folder: "RequestHeader",
-    module: "RequestHeaderModule",
-    template: "RequestHeaderViewTemplate",
-  });
-
-  registerComponent({
-    name: "request-header-edit",
-    folder: "RequestHeader",
-    module: "RequestHeaderModule",
-    template: "RequestHeaderEditTemplate",
-  });
-
-  registerComponent({
-    name: "request-body-view",
-    folder: "RequestBody",
-    module: "RequestBodyModule",
-    template: "RequestBodyViewTemplate",
-  });
-  registerComponent({
-    name: "request-body-edit",
-    folder: "RequestBody",
-    module: "RequestBodyModule",
-    template: "RequestBodyEditTemplate",
-  });
-
-  registerComponent({
-    name: "pipeline-component",
-    folder: "Pipeline",
-    module: "PipelineModule",
-    template: "PipelineTemplate",
-  });
-
-  registerComponent({
-    name: "quick-info",
-    folder: "QuickInfo",
-    module: "QuickInfoModule",
-    template: "QuickInfoTemplate",
-  });
-
-  registerComponent({
-    name: "new-assignment",
-    folder: "NewAssignment",
-    module: "NewAssignmentModule",
-    template: "NewAssignmentTemplate",
-  });
-
-  function registerComponent({
-    name,
-    folder,
-    module: moduleFilename,
-    template: templateFilename,
-  }) {
-    if (ko.components.isRegistered(name)) {
-      return;
-    }
-    ko.components.register(name, {
-      template: {
-        fromPath: `/components/${folder}/${templateFilename}.html`,
-      },
-      viewModel: {
-        viaLoader: `/components/${folder}/${moduleFilename}.js`,
-      },
-    });
-  }
-}
 
 export function registerServiceTypeViewComponents({ uid, components }) {
   Object.keys(components).forEach((view) => {

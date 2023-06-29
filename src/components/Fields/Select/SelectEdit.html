@@ -1,0 +1,33 @@
+<label
+  ><span data-bind="text: displayName"></span
+  ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span>:
+  <!-- ko if: multiple -->
+  <select
+    class="form-select"
+    name=""
+    id=""
+    multiple="true"
+    data-bind="options: Options, 
+    optionsCaption: 'Select...', 
+    selectedOptions: SelectedOptions,
+    class: ValidationClass,
+    attr: {'multiple': multiple}"
+  ></select>
+  <!-- /ko -->
+  <!-- ko ifnot: multiple -->
+  <select
+    class="form-select"
+    name=""
+    id=""
+    data-bind="options: Options, 
+      optionsCaption: 'Select...', 
+      value: Value,
+      class: ValidationClass"
+  ></select>
+  <!-- /ko -->
+</label>
+<!-- ko if: ShowErrors -->
+<!-- ko foreach: Errors -->
+<div class="fw-semibold text-danger" data-bind="text: description"></div>
+<!-- /ko -->
+<!-- /ko -->

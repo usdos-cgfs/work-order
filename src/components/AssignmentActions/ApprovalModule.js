@@ -68,7 +68,7 @@ export default function ApprovalActions(params) {
   };
 
   const undo = async () => {
-    // TODO: We should have an undo option instead of a "Reject Instead"
+    // TODO: Minor - We should have an undo option instead of a "Reject Instead"
   };
 
   return {

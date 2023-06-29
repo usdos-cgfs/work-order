@@ -1,0 +1,16 @@
+<label
+  ><span data-bind="text: displayName"></span
+  ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span>:
+  <!-- ko if: isRichText -->
+  <!-- /ko -->
+  <!-- ko ifnot: isRichText -->
+  <textarea
+    name=""
+    id=""
+    cols="30"
+    rows="10"
+    class="form-control"
+    data-bind="textInput: Value, class: ValidationClass, attr: attr"
+  ></textarea>
+  <!-- /ko -->
+</label>

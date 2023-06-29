@@ -1,11 +1,6 @@
 import { makeDataTable } from "../../common/DataTableExtensions.js";
-import { requestStates } from "../../entities/Request.js";
-import { Assignment } from "../../entities/Assignment.js";
 
 import { assignmentsStore } from "../../stores/Assignments.js";
-
-// TODO: Add Closed Dates to closed Work Orders table
-// TODO: Add Current Stage to Open Orders table
 
 export default class RequestsByStatusTableModule {
   constructor({ activeRequestSet, filteredRequests = null, key = "office" }) {
@@ -28,8 +23,7 @@ export default class RequestsByStatusTableModule {
   hasInitialized = false;
 
   requestDateBackground = (request) => {
-    if (new Date() > request.Dates.EstClosed.ObservableDateTime())
-      return "table-danger";
+    if (new Date() > request.Dates.EstClosed.Value()) return "table-danger";
   };
 
   getTableElementId = () =>

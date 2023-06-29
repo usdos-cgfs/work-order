@@ -1,0 +1,22 @@
+<h5>
+  <span data-bind="text: displayName"></span
+  ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span>:
+</h5>
+<table class="table">
+  <thead>
+    <tr data-bind="">
+      <!-- ko foreach: Cols -->
+      <th data-bind="text: displayName"></th>
+      <!-- /ko -->
+    </tr>
+  </thead>
+  <tbody data-bind="">
+    <!-- ko foreach: {data: Value, as: 'row'} -->
+    <tr data-bind="">
+      <!-- ko foreach: {data: $parent.ColKeys, as: 'col'} -->
+      <td data-bind="text: row[col]"></td>
+      <!-- /ko -->
+    </tr>
+    <!-- /ko -->
+  </tbody>
+</table>

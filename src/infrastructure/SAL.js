@@ -50,10 +50,10 @@ export function getDefaultGroups() {
 }
 
 // Used in router
-export const siteRoot =
-  _spPageContextInfo.webServerRelativeUrl == "/"
+export const webRoot =
+  _spPageContextInfo.webAbsoluteUrl == "/"
     ? ""
-    : _spPageContextInfo.webServerRelativeUrl;
+    : _spPageContextInfo.webAbsoluteUrl;
 
 export async function InitSal() {
   sal.globalConfig.siteGroups = [];
@@ -174,7 +174,50 @@ sal.NewAppConfig = function () {
 };
 
 // Used in Authorization
-export async function getUserPropsAsync() {
+export async function getUserPropsAsync(userId = _spPageContextInfo.userId) {
+  // We need to make two api calls, one to user info list, and one to web
+  // const userInfoUrl = `/Web/lists/getbytitle('User%20Information%20List')/Items(${userId})`;
+  const userPropsUrl = `/sp.userprofiles.peoplemanager/getmyproperties`;
+  // const userGroupUrl = `/Web/GetUserById(${userId})/Groups`;
+
+  // Get more user info:
+  const userInfoUrl = `/Web/GetUserById(${userId})/?$expand=Groups`;
+
+  const userInfo = (await fetchData(userInfoUrl)).d;
+
+  // TODO: See if we can just select the properties we need
+  // const userPropsUrl = `/sp.userprofiles.peoplemanager/getpropertiesfor(@v)?@v='${encodeURIComponent(
+  //   userInfo.LoginName
+  // )}'`;
+
+  const userProps = (await fetchData(userPropsUrl))?.d.UserProfileProperties
+    .results;
+
+  function findPropValue(props, key) {
+    return props.find((prop) => prop.Key == key)?.Value;
+  }
+
+  return {
+    ID: userId,
+    Title: userInfo.Title,
+    LoginName: userInfo.LoginName,
+    WorkPhone: findPropValue(userProps, "WorkPhone"),
+    EMail: findPropValue(userProps, "Email"), // TODO: Do we still need this spelling?
+    IsEnsured: true,
+    IsGroup: false,
+    Groups: userInfo.Groups?.results?.map((group) => {
+      return {
+        ...group,
+        ID: group.Id,
+        IsGroup: true,
+        IsEnsured: true,
+      };
+    }),
+  };
+}
+
+// TODO: DEPRECATED remove after verification
+async function getUserPropsAsyncDeprecated() {
   // TODO: We aren't getting the phone number, need to query userprofile service
   return new Promise((resolve, reject) => {
     var currCtx = new SP.ClientContext.get_current();
@@ -958,27 +1001,6 @@ export function SPList(listDef) {
       results: result?.d?.results,
       _next: result?.d?.__next,
     };
-  }
-
-  async function fetchData(uri, method = "GET") {
-    const siteEndpoint = uri.startsWith("http")
-      ? uri
-      : sal.globalConfig.siteUrl + "/_api" + uri;
-    const response = await fetch(siteEndpoint, {
-      method: method,
-      headers: {
-        Accept: "application/json; odata=verbose",
-      },
-    });
-
-    if (!response.ok) {
-      if (response.status == 404) {
-        return;
-      }
-      console.error(response);
-    }
-    const result = await response.json();
-    return result;
   }
 
   function findById(id, fields, callback) {
@@ -1944,6 +1966,7 @@ export function SPList(listDef) {
     if (args.id) {
       id = args.id;
     }
+    const options = SP.UI.$create_DialogOptions();
 
     var listPath = self.config.def.isLib
       ? "/" + self.config.def.name + "/"
@@ -1960,7 +1983,7 @@ export function SPList(listDef) {
       ? "/" + self.config.def.name + "/Forms/"
       : "/Lists/" + self.config.def.name + "/";
 
-    const options = {
+    Object.assign(options, {
       title: title,
       dialogReturnValueCallback: callback,
       args: JSON.stringify(args),
@@ -1974,14 +1997,14 @@ export function SPList(listDef) {
         location.pathname +
         "&RootFolder=" +
         rootFolder,
-    };
-    // SP.UI.ModalDialog.showModalDialog(options);
+    });
+    SP.UI.ModalDialog.showModalDialog(options);
 
-    SP.SOD.execute(
-      "sp.ui.dialog.js",
-      "SP.UI.ModalDialog.showModalDialog",
-      options
-    );
+    // SP.SOD.execute(
+    //   "sp.ui.dialog.js",
+    //   "SP.UI.ModalDialog.showModalDialog",
+    //   options
+    // );
   }
 
   function uploadNewDocumentAsync(folderPath, title, args) {
@@ -1998,7 +2021,8 @@ export function SPList(listDef) {
           var siteString =
             sal.globalConfig.siteUrl == "/" ? "" : sal.globalConfig.siteUrl;
 
-          const options = {
+          const options = SP.UI.$create_DialogOptions();
+          Object.assign(options, {
             title: title,
             dialogReturnValueCallback: resolve,
             args: JSON.stringify(args),
@@ -2016,14 +2040,14 @@ export function SPList(listDef) {
               location.pathname +
               "&args=" +
               encodeURI(JSON.stringify(args)),
-          };
+          });
           //console.log("Options url: " + options.url);
-          // SP.UI.ModalDialog.showModalDialog(options);
-          SP.SOD.execute(
-            "sp.ui.dialog.js",
-            "SP.UI.ModalDialog.showModalDialog",
-            options
-          );
+          SP.UI.ModalDialog.showModalDialog(options);
+          // SP.SOD.execute(
+          //   "sp.ui.dialog.js",
+          //   "SP.UI.ModalDialog.showModalDialog",
+          //   options
+          // );
         },
         function (sender, args) {
           console.error("Error showing file modal: ");
@@ -2054,4 +2078,25 @@ export function SPList(listDef) {
   };
 
   return publicMembers;
+}
+
+async function fetchData(uri, method = "GET") {
+  const siteEndpoint = uri.startsWith("http")
+    ? uri
+    : sal.globalConfig.siteUrl + "/_api" + uri;
+  const response = await fetch(siteEndpoint, {
+    method: method,
+    headers: {
+      Accept: "application/json; odata=verbose",
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status == 404) {
+      return;
+    }
+    console.error(response);
+  }
+  const result = await response.json();
+  return result;
 }

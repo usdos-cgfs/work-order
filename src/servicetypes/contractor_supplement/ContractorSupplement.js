@@ -1,4 +1,4 @@
-import { People } from "../../components/People.js";
+import { People } from "../../entities/People.js";
 
 export default class ContractorSupplement {
   constructor(params) {}

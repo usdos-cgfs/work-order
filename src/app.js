@@ -23,6 +23,7 @@ import ApplicationDbContext, {
 import { InitSal } from "./infrastructure/SAL.js";
 
 import MyAssignmentsView from "./views/MyAssignmentsView.js";
+import { RegisterComponents } from "./infrastructure/RegisterComponents.js";
 
 export const assetsPath = window.appRoot + "/src";
 
@@ -31,7 +32,7 @@ window.WorkOrder = window.WorkOrder || {};
 async function CreateApp() {
   ko.options.deferUpdates = true;
   await InitSal();
-
+  RegisterComponents();
   const context = new ApplicationDbContext();
   setAppContext(context);
   window.WorkOrder.Report = await App.Create();
@@ -204,3 +205,9 @@ if (document.readyState === "ready" || document.readyState === "complete") {
     }
   };
 }
+
+// try {
+//   SP.SOD.executeFunc("sp.js", "SP.ClientContext", () => {});
+// } catch (e) {
+//   console.warn("SP.SOD SP.ClientContext Error", e);
+// }

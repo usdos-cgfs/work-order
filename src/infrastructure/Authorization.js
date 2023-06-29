@@ -1,4 +1,4 @@
-import { People } from "../components/People.js";
+import { People } from "../entities/People.js";
 import { assignmentStates } from "../entities/Assignment.js";
 import { OrgTypes, requestOrgStore } from "../entities/RequestOrg.js";
 
@@ -75,6 +75,8 @@ export class User {
     ID,
     Title,
     LoginName = null,
+    WorkPhone = null,
+    EMail = null,
     IsGroup = null,
     IsEnsured = false,
     Groups = null,
@@ -83,6 +85,8 @@ export class User {
     this.Title = Title;
     this.LookupValue = Title;
     this.LoginName = LoginName;
+    this.WorkPhone = WorkPhone;
+    this.EMail = EMail;
     this.IsGroup = IsGroup;
     // Has the user data been fetched? Used for binding handlers.
     this.IsEnsured = IsEnsured;
@@ -124,7 +128,7 @@ export class User {
   IsActionOffice = ko.pureComputed(() => this.ActionOffices().length);
 
   static Create = async function () {
-    // TODO: Switch to getUserPropertiesAsync since that includes phone # etc
+    // TODO: Major - Switch to getUserPropertiesAsync since that includes phone # etc
     const userProps = await getUserPropsAsync();
     //const userProps2 = await UserManager.getUserPropertiesAsync();
 

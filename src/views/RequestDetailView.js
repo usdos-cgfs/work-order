@@ -1,7 +1,7 @@
 import { requestStates } from "../entities/Request.js";
 import { actionTypes } from "../entities/Action.js";
 
-import { People } from "../components/People.js";
+import { People } from "../entities/People.js";
 import { NewAssignmentComponent } from "../components/NewAssignmentComponent.js";
 
 import { createNewRequestTitle } from "../common/EntityUtilities.js";
@@ -62,7 +62,7 @@ export class RequestDetailView {
       this.request.Assignments.CurrentStage.list.UserActionAssignments().length
   );
 
-  // TODO: this should probably be it's own component w/ template
+  // TODO: Minor - this should probably be it's own component w/ template
   NewCommentComponent = {
     CommentText: ko.observable(),
     submit: async () => {
@@ -76,7 +76,7 @@ export class RequestDetailView {
 
   submitNewRequest = async () => {
     // 1. Validate Request
-    //if (!this.isValid()) return;
+    if (!this.request.Validation.validate()) return;
 
     const serviceType = this.request.ServiceType.Def();
     if (!serviceType) {
@@ -213,6 +213,8 @@ export class RequestDetailView {
 
     if (displayMode == DisplayModes.New) {
       this.request.RequestorInfo.Requestor(new People(currentUser()));
+      this.request.RequestorInfo.Phone(currentUser().WorkPhone);
+      this.request.RequestorInfo.Email(currentUser().EMail);
       this.request.Title = createNewRequestTitle();
       this.request.State.Status(requestStates.draft);
       this.request.State.IsActive(true);

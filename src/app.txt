@@ -429,7 +429,7 @@
             <button
               type="button"
               class="btn btn-success"
-              data-bind="click: submitNewRequest"
+              data-bind="click: submitNewRequest, enable: request.Validation.IsValid"
             >
               Submit Request
             </button>
@@ -832,7 +832,13 @@
     type="text/javascript"
     src="../Apps/_layouts/15/sp.runtime.js"
   ></script>
+  <script type="text/javascript" src="/_layouts/15/ScriptResx.ashx?name=sp.res&culture=en-us"></script>
   <script type="text/javascript" src="../Apps/_layouts/15/sp.js"></script>
+  <script type="text/javascript" src="../Apps/_layouts/15/sp.init.js"></script>
+  <script
+    type="text/javascript"
+    src="../Apps/_layouts/15/sp.ui.dialog.js"
+  ></script>
   <script
     type="text/javascript"
     src="../Apps/_layouts/15/clienttemplates.js"

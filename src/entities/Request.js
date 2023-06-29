@@ -17,10 +17,10 @@ import { Attachment } from "../entities/Attachment.js";
 import { Comment } from "../entities/Comment.js";
 import { Action } from "../entities/Action.js";
 
-import { People } from "../components/People.js";
+import { People } from "./People.js";
 import { ActivityLogComponent } from "../components/ActivityLogComponent.js";
 import { NewAssignmentComponent } from "../components/NewAssignmentComponent.js";
-import { DateField } from "../components/DateField.js";
+import DateField from "../fields/DateField.js";
 
 import {
   createNewRequestTitle,
@@ -67,6 +67,7 @@ export const requestStates = {
   rejected: "Rejected",
 };
 
+// TODO: implement as BaseEntity
 export class RequestEntity {
   constructor({ ID = null, Title = null, ServiceType = null }) {
     this.ID = ID;
@@ -120,9 +121,9 @@ export class RequestEntity {
   };
 
   Dates = {
-    Submitted: new DateField(),
-    EstClosed: new DateField(),
-    Closed: new DateField(),
+    Submitted: new DateField({ displayName: "Submitted Date" }),
+    EstClosed: new DateField({ displayName: "Est. Closed Date" }),
+    Closed: new DateField({ displayName: "Closed Date" }),
   };
 
   RequestOrgs = ko.observable();
@@ -145,15 +146,19 @@ export class RequestEntity {
       await this.ServiceType.Def()?.initializeEntity();
       const results = await this.ServiceType.Def()
         ?.getListRef()
-        ?.FindByColumnValue([{ column: "Request", value: this.ID }], {}, {});
+        ?.GetItemsByFolderPath(this.getRelativeFolderPath());
 
-      if (!results.results.length) {
+      if (!results.length) {
         console.error("cannot find servicetype entity");
         this.ServiceType.IsLoading(false);
         return;
       }
 
-      const entity = results.results[0];
+      // This should never happen if we index our Request Lookup Column
+      if (results.length > 1)
+        alert("Multiple service type entities found for this request!");
+
+      const entity = results[0];
       entity.Request = this;
       this.ServiceType.Entity(entity);
       this.ServiceType.IsLoading(false);
@@ -209,8 +214,11 @@ export class RequestEntity {
         activity: actionTypes.Advanced,
         data: nextStage,
       });
-      this.Assignments.createStageAssignments(nextStage);
-      return;
+
+      // If this is a notification stage, advance.
+      if (nextStage.ActionType == stageActionTypes.Notification) {
+        this.Pipeline.advance();
+      }
     },
   };
 
@@ -339,7 +347,7 @@ export class RequestEntity {
     list: {
       All: ko.observableArray(),
       InProgress: ko.pureComputed(() => {
-        // TODO: this should maybe be in the component
+        // TODO: this should maybe be in the component, also CurrentStage.list.InProgress
         return this.Assignments.list
           .All()
           .filter(
@@ -408,7 +416,7 @@ export class RequestEntity {
         ),
         Errors: ko.observableArray(),
         ActiveAssignmentsError: ko.pureComputed(() => {
-          // TODO: this should be a subscription event
+          // TODO: Minor - this should be a subscription event
           const activeAssignments = this.Assignments.CurrentStage.list
             .UserActionAssignments()
             .find(
@@ -529,12 +537,15 @@ export class RequestEntity {
       this.Assignments.AreLoading(false);
     },
     userCanAssign: ko.pureComputed(() => {
-      // TODO
+      // TODO: Major
       if (!this.State.IsActive()) return false;
       return false;
     }),
     addNew: async (assignment = null) => {
       if (!this.ID || !assignment) return;
+
+      // Overwrite our title
+      assignment.Title = this.Title;
 
       if (!assignment.RequestOrg) {
         assignment.RequestOrg = this.Pipeline.Stage()?.RequestOrg;
@@ -607,7 +618,7 @@ export class RequestEntity {
     createStageAssignments: async (stage = this.Pipeline.Stage()) => {
       if (!stage?.ActionType) return;
 
-      // If this stage is already assigned, skip it
+      // If this stage is already assigned (e.g. from a previous assignment stage), skip it
       if (
         this.Pipeline.Stages().find((stage) =>
           this.Assignments.list
@@ -618,6 +629,7 @@ export class RequestEntity {
       )
         return;
 
+      // TODO: Minor - Use assignment entity constructor
       const newAssignment = {
         Assignee:
           stage.Assignee ?? RequestOrg.FindInStore(stage.RequestOrg)?.UserGroup,
@@ -675,10 +687,12 @@ export class RequestEntity {
   LoadedAt = ko.observable();
 
   activityQueueWatcher = (changes) => {
+    // Filter out the items in our activity queue that are new additions
     const activities = changes
       .filter((change) => change.status == "added")
       .map((change) => change.value);
 
+    // iterate through our actions: {activity, data}
     activities.map(async (action) => {
       emitRequestNotification(this, action);
       switch (action.activity) {
@@ -700,14 +714,31 @@ export class RequestEntity {
             await this.closeAndFinalize(requestStates.rejected);
           }
           break;
+        case actionTypes.Advanced:
+          await this.Assignments.createStageAssignments(action.data);
+          break;
       }
     });
   };
 
   Validation = {
+    validate: () => {
+      // 1. Validate Header
+      // 2. Validate Body
+      this.Validation.validateBody();
+      return this.Validation.IsValid();
+    },
+    validateHeader: () => {},
+    validateBody: () => {
+      const serviceTypeEntity = this.ServiceType.Entity();
+      if (!serviceTypeEntity) return;
+      return serviceTypeEntity.validate();
+    },
     Errors: {
       Request: ko.observableArray(),
-      ServiceType: ko.pureComputed(() => []),
+      ServiceType: ko.pureComputed(() => {
+        return this.ServiceType.Entity()?.Errors() ?? [];
+      }),
       All: ko.pureComputed(() => [
         ...this.Validation.Errors.Request(),
         ...this.Validation.Errors.ServiceType(),
@@ -776,7 +807,7 @@ export class RequestEntity {
   };
 
   getAppLink = () =>
-    `${Router.webRoot}/Pages/WO_DB.aspx?reqId=${this.Title}&tab=${Tabs.RequestDetail}`;
+    `${Router.appRoot}?reqId=${this.Title}&tab=${Tabs.RequestDetail}`;
 
   getAppLinkElement = () =>
     `<a href="${this.getAppLink()}" target="blank">${this.Title}</a>`;
@@ -785,7 +816,11 @@ export class RequestEntity {
    * e.g. EX/2929-20199
    */
   getRelativeFolderPath = ko.pureComputed(
-    () => `${this.RequestorInfo.Office().Title}/${this.ObservableTitle()}`
+    () =>
+      `${this.RequestorInfo.Office().Title.replace(
+        "/",
+        "_"
+      )}/${this.ObservableTitle()}`
   );
 
   getFolderPermissions = () => getRequestFolderPermissions(this);

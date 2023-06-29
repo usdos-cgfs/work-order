@@ -5,7 +5,6 @@
       <i class="fa fa-sync pointer" data-bind="click: refreshEntity"></i>
     </div>
     <!-- ko if: ServiceTypeComponentName -->
-    <div data-bind="text: ServiceTypeComponentName"></div>
     <div
       data-bind="component: {name: ServiceTypeComponentName, params: {Entity: Entity()}}"
     ></div>
