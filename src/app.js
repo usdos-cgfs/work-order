@@ -24,6 +24,13 @@ import { InitSal } from "./infrastructure/SAL.js";
 
 import MyAssignmentsView from "./views/MyAssignmentsView.js";
 import { RegisterComponents } from "./infrastructure/RegisterComponents.js";
+import {
+  addTask,
+  blockingTasks,
+  finishTask,
+  runningTasks,
+  taskDefs,
+} from "./stores/Tasks.js";
 
 export const assetsPath = window.appRoot + "/src";
 
@@ -50,6 +57,9 @@ class App {
     this.Tab.subscribe(tabWatcher);
     this.HasLoaded(true);
   }
+
+  RunningTasks = runningTasks;
+  BlockingTasks = blockingTasks;
 
   ToggleActionOfficeFeatures = ko.observable(true);
   ShowActionOfficeFeatures = ko.pureComputed(

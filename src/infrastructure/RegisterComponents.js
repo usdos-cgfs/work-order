@@ -99,6 +99,13 @@ export function RegisterComponents() {
     template: "NewAssignmentTemplate",
   });
 
+  registerComponent({
+    name: "task-toast",
+    folder: "Toasts",
+    module: "TaskToastModule",
+    template: "TaskToastTemplate",
+  });
+
   // registerFieldComponent("people");
   //registerFieldComponent("select");
 }

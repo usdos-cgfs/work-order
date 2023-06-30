@@ -44,6 +44,7 @@ import TextAreaField from "../fields/TextAreaField.js";
 import { DisplayModes } from "../views/RequestDetailView.js";
 
 import { Tabs } from "../app.js";
+import { addTask, finishTask, taskDefs } from "../stores/Tasks.js";
 
 // export const requestStates = {
 //   draft: { ID: 1, Title: "Draft" },
@@ -197,6 +198,7 @@ export class RequestEntity {
       return this.Pipeline.Stages()?.find((stage) => stage.Step == nextStepNum);
     }),
     advance: async () => {
+      const pipelineAdvanceTask = addTask(taskDefs.pipeline);
       if (this.promptAdvanceModal) this.promptAdvanceModal.hide();
 
       const thisStage = this.Pipeline.Stage();
@@ -206,6 +208,7 @@ export class RequestEntity {
         // End of the Pipeline; time to close
         console.log("Closing Request");
         this.closeAndFinalize(requestStates.fulfilled);
+        finishTask(pipelineAdvanceTask);
         return null;
       }
       this.Pipeline.Stage(nextStage);
@@ -217,10 +220,11 @@ export class RequestEntity {
         data: nextStage,
       });
 
-      // If this is a notification stage, advance.
+      // If this is a notification stage, advance. The activity logger will emit our notification.
       if (nextStage.ActionType == stageActionTypes.Notification) {
         this.Pipeline.advance();
       }
+      finishTask(pipelineAdvanceTask);
     },
   };
 
@@ -236,6 +240,7 @@ export class RequestEntity {
       this.Authorization.currentUserCanSupplement()
     ),
     addNew: async () => {
+      const newAttachmentTask = addTask(taskDefs.newAttachment);
       const folderPath = this.getRelativeFolderPath();
       const folderPerms = this.getFolderPermissions();
 
@@ -252,10 +257,13 @@ export class RequestEntity {
         this.Attachments.refresh();
       } catch (e) {
         console.error("Error creating folder: ");
+      } finally {
+        finishTask(newAttachmentTask);
       }
     },
     refresh: async () => {
       if (!this.Title) return;
+      const refreshAttachmentsTask = addTask(taskDefs.refreshAttachments);
       this.Attachments.AreLoading(true);
       try {
         const attachments =
@@ -268,6 +276,7 @@ export class RequestEntity {
         console.warn("Looks like there are no attachments", e);
       }
       this.Attachments.AreLoading(false);
+      finishTask(refreshAttachmentsTask);
     },
     view: (attachment) => {
       //console.log("viewing", attachment);
@@ -303,6 +312,7 @@ export class RequestEntity {
       return this.Authorization.currentUserCanSupplement();
     }),
     addNew: async (comment) => {
+      const newCommentTask = addTask(taskDefs.newComment);
       const folderPath = this.getRelativeFolderPath();
       const folderPerms = this.getFolderPermissions();
 
@@ -320,12 +330,15 @@ export class RequestEntity {
         this.Comments.refresh();
       } catch (e) {
         console.error("Error creating folder: ");
+      } finally {
+        finishTask(newCommentTask);
       }
     },
     update: async (comment) => {
       // TODO ?
     },
     refresh: async () => {
+      const refreshCommentsTask = addTask(taskDefs.refreshComments);
       this.Comments.AreLoading(true);
       const folderPath = this.getRelativeFolderPath();
       const comments = await this._context.Comments.GetItemsByFolderPath(
@@ -334,12 +347,15 @@ export class RequestEntity {
       );
       this.Comments.list.All(comments);
       this.Comments.AreLoading(false);
+      finishTask(refreshCommentsTask);
     },
     sendNotification: async (comment) => {
+      const notifyCommentTask = addTask(taskDefs.no);
       await emitCommentNotification(comment, this);
       comment.NotificationSent = true;
       await this._context.Comments.UpdateEntity(comment, ["NotificationSent"]);
       this.Comments.refresh();
+      finishTask(notifyCommentTask);
     },
   };
 
@@ -663,6 +679,7 @@ export class RequestEntity {
       All: ko.observableArray(),
     },
     refresh: async () => {
+      const refreshActionsTask = addTask(taskDefs.refreshActions);
       if (!this.ID) return;
       this.Actions.AreLoading(true);
       const actions = await this._context.Actions.GetItemsByFolderPath(
@@ -671,15 +688,17 @@ export class RequestEntity {
       );
       this.Actions.list.All(actions);
       this.Actions.AreLoading(false);
+      finishTask(refreshActionsTask);
     },
     addNew: async (action) => {
       if (!this.ID || !action) return;
-
+      const newActionTask = addTask(taskDefs.newAction);
       const folderPath = this.getRelativeFolderPath();
       // const actionObj = Object.assign(new Action(), action);
       action.PipelineStage = action.PipelineStage ?? this.Pipeline.Stage();
       await this._context.Actions.AddEntity(action, folderPath, this.request);
       this.Actions.refresh();
+      finishTask(newActionTask);
     },
   };
 
@@ -845,6 +864,7 @@ export class RequestEntity {
 
   // Controls
   refreshAll = async () => {
+    const refreshId = addTask(taskDefs.refresh);
     this.IsLoading(true);
     await this.refreshRequest();
     // These can be started when we have the ID
@@ -856,6 +876,7 @@ export class RequestEntity {
     this.Assignments.refresh();
     this.LoadedAt(new Date());
     this.IsLoading(false);
+    finishTask(refreshId);
   };
 
   refreshRequest = async () => {
@@ -883,6 +904,7 @@ export class RequestEntity {
   }
 
   closeAndFinalize = async (status) => {
+    const closeId = addTask(taskDefs.closing);
     //1. set all assignments to inactive
 
     //2. Set request properties
@@ -902,6 +924,7 @@ export class RequestEntity {
     // 4. Update Permissions;
     await this.Authorization.setReadonly();
     this.refreshAll();
+    finishTask(closeId);
   };
 
   // FieldMaps are used by the ApplicationDbContext and define

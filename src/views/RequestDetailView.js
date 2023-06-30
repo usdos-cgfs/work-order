@@ -83,14 +83,14 @@ export class RequestDetailView {
       // We should have caught this in validation.
       throw "no service type provided";
     }
+    const saveTask = addTask(taskDefs.save);
     this.DisplayMode(DisplayModes.View);
-    //const saveTaskId = addTask(taskDefs.save);
 
     // 2. Create Folder Structure
     const folderPath = this.request.getRelativeFolderPath();
 
     createFolders: {
-      //const breakingPermissionsTask = addTask(taskDefs.permissions);
+      const breakingPermissionsTask = addTask(taskDefs.permissions);
       const folderPerms = this.request.getFolderPermissions();
 
       const listRefs = this.request.getInitialListRefs();
@@ -110,7 +110,7 @@ export class RequestDetailView {
           );
         })
       );
-      //finishTask(breakingPermissionsTask);
+      finishTask(breakingPermissionsTask);
     }
 
     // Initialize dates
@@ -145,6 +145,7 @@ export class RequestDetailView {
 
     // Progress Request
     this.request.Pipeline.advance();
+    finishTask(saveTask);
   };
 
   editRequestHandler = async () => {

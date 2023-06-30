@@ -1,15 +1,36 @@
 <!-- <input id="text-trix" type="hidden" name="content" />
 <trix-editor input="text-trix"></trix-editor> -->
 
-<div class="position-fixed bottom-0 end-0">
-  <div class="toast-container">
-    <!-- ko if: false -->
-    <!-- ko foreach: RequestDetailView().ActivityQueue -->
-    <div data-bind="template: {name: 'tmpl-activity-toast', data: $data}"></div>
+<div
+  style="display: none"
+  data-bind="visible: BlockingTasks().length"
+  class="position-fixed w-100 vh-100 top-0 start-0 active dimmer"
+>
+  <div
+    class="d-flex flex-column justify-content-center w-100 h-100 align-items-center text-light"
+  >
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <ul class="list-unstyled" data-bind="foreach: BlockingTasks">
+      <li data-bind="text: msg + '...'"></li>
+    </ul>
+  </div>
+</div>
+
+<div
+  style="display: none; z-index: 1201"
+  data-bind="visible: $root"
+  class="position-fixed w-100 vh-100 top-0 start-0 pe-none"
+>
+  <div class="toast-container p-3 bottom-0 end-0">
+    <!-- ko foreach: RunningTasks -->
+    <!-- ko component: {name: 'task-toast', params: $data} -->
     <!-- /ko -->
     <!-- /ko -->
   </div>
 </div>
+
 <div class="container" data-bind="hidden: HasLoaded">
   <div class="d-flex justify-content-center">
     <progress class="w-75"></progress>
