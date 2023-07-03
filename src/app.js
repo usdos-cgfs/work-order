@@ -4,10 +4,10 @@ import { OfficeRequestsView } from "./views/OfficeRequestsView.js";
 import { MyRequestsView } from "./views/MyRequestsView.js";
 
 import { RequestEntity } from "./entities/Request.js";
-import { RequestOrg, requestOrgStore } from "./entities/RequestOrg.js";
-import { PipelineStage, pipelineStageStore } from "./entities/PipelineStage.js";
-import { ServiceType, serviceTypeStore } from "./entities/ServiceType.js";
-import { holidayStore, Holiday } from "./entities/Holiday.js";
+import { requestOrgStore } from "./entities/RequestOrg.js";
+import { pipelineStageStore } from "./entities/PipelineStage.js";
+import { serviceTypeStore } from "./entities/ServiceType.js";
+import { holidayStore } from "./entities/Holiday.js";
 
 import "./common/KnockoutExtensions.js";
 import { sortByTitle } from "./common/EntityUtilities.js";
@@ -16,23 +16,17 @@ import { getUrlParam, setUrlParam } from "./common/Router.js";
 import { assignmentsStore } from "./stores/Assignments.js";
 
 import { User, currentUser } from "./infrastructure/Authorization.js";
-import ApplicationDbContext, {
+import {
   getAppContext,
-  setAppContext,
+  CreateAppContext,
 } from "./infrastructure/ApplicationDbContext.js";
 import { InitSal } from "./infrastructure/SAL.js";
 
 import MyAssignmentsView from "./views/MyAssignmentsView.js";
 import { RegisterComponents } from "./infrastructure/RegisterComponents.js";
-import {
-  addTask,
-  blockingTasks,
-  finishTask,
-  runningTasks,
-  taskDefs,
-} from "./stores/Tasks.js";
+import { blockingTasks, runningTasks } from "./stores/Tasks.js";
 
-export const assetsPath = window.appRoot + "/src";
+import { Tabs } from "./env.js";
 
 window.WorkOrder = window.WorkOrder || {};
 
@@ -40,17 +34,10 @@ async function CreateApp() {
   ko.options.deferUpdates = true;
   await InitSal();
   RegisterComponents();
-  const context = new ApplicationDbContext();
-  setAppContext(context);
-  window.WorkOrder.Report = await App.Create();
-  ko.applyBindings(window.WorkOrder.Report);
+  CreateAppContext();
+  window.WorkOrder.App = await App.Create();
+  ko.applyBindings(window.WorkOrder.App);
 }
-
-export const Tabs = {
-  MyRequests: "my-requests-tab",
-  NewRequest: "new-request-tab",
-  RequestDetail: "request-detail-tab",
-};
 
 class App {
   constructor() {

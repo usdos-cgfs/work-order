@@ -35,7 +35,7 @@ export function businessDaysFromDate(date, businessDays) {
   return tmp;
 }
 
-function businessDays(startDate, endDate) {
+export function calculateBusinessDays(startDate, endDate) {
   var counter = 0;
   var temp = new Date(startDate);
   var stepDir = Math.sign(endDate - startDate);

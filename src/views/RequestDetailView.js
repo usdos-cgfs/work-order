@@ -14,8 +14,6 @@ import { currentUser } from "../infrastructure/Authorization.js";
 
 import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
 
-import { Tabs } from "../app.js";
-
 const DEBUG = true;
 
 export const DisplayModes = {

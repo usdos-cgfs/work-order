@@ -1,6 +1,6 @@
 import { People } from "../entities/People.js";
 import { ensureUserByKeyAsync } from "../infrastructure/SAL.js";
-import { assetsPath } from "../app.js";
+import { assetsPath } from "../env.js";
 import ServiceTypeModule from "../components/ServiceType/ServiceTypeModule.js";
 
 ko.subscribable.fn.subscribeChanged = function (callback) {

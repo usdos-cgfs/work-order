@@ -22,7 +22,10 @@ import { ActivityLogComponent } from "../components/ActivityLogComponent.js";
 import DateField from "../fields/DateField.js";
 
 import { sortByField } from "../common/EntityUtilities.js";
-import { businessDaysFromDate } from "../common/DateUtilities.js";
+import {
+  businessDaysFromDate,
+  calculateBusinessDays,
+} from "../common/DateUtilities.js";
 import * as Router from "../common/Router.js";
 import { registerServiceTypeActionComponent } from "../common/KnockoutExtensions.js";
 
@@ -43,7 +46,7 @@ import TextAreaField from "../fields/TextAreaField.js";
 
 import { DisplayModes } from "../views/RequestDetailView.js";
 
-import { Tabs } from "../app.js";
+import { Tabs } from "../env.js";
 import { addTask, finishTask, taskDefs } from "../stores/Tasks.js";
 
 // export const requestStates = {
@@ -121,6 +124,18 @@ export class RequestEntity {
   State = {
     IsActive: ko.observable(),
     Status: ko.observable(),
+  };
+
+  Reporting = {
+    MeetingStandard: ko.pureComputed(() => this.Reporting.AgingDays() <= 0),
+    AgingDays: ko.pureComputed(
+      () =>
+        this.Reporting.OpenDays() - this.ServiceType.Def().DaysToCloseBusiness
+    ),
+    OpenDays: ko.pureComputed(() => {
+      const endDate = this.Dates.Closed.Value() ?? new Date();
+      return calculateBusinessDays(this.Dates.Submitted.Value(), endDate);
+    }),
   };
 
   Dates = {

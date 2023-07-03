@@ -14,11 +14,11 @@ const DEBUG = false;
 
 let context = null;
 
-export function setAppContext(appContext) {
+export function CreateAppContext() {
   if (context) {
     return;
   }
-  context = appContext;
+  context = new ApplicationDbContext();
 }
 
 export function getAppContext() {

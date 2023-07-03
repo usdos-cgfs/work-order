@@ -1,13 +1,9 @@
-import Task, { taskStates } from "../primitives/Task.js";
+import Task from "../primitives/Task.js";
 
 export const runningTasks = ko.observableArray();
 
 export const blockingTasks = ko.pureComputed(() => {
-  return (
-    runningTasks().filter(
-      (task) => task.blocking && task.Status() != taskStates.completed
-    ) ?? []
-  );
+  return runningTasks().filter((task) => task.IsBlocking()) ?? [];
 });
 
 export const taskDefs = {

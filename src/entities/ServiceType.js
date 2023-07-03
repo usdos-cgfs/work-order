@@ -1,5 +1,5 @@
 import { registerServiceTypeViewComponents } from "../infrastructure/RegisterComponents.js";
-import { assetsPath } from "../app.js";
+import { assetsPath } from "../env.js";
 import ApplicationDbContext from "../infrastructure/ApplicationDbContext.js";
 
 export const getTemplateElementId = (uid) => `tmpl-${uid}`;
@@ -140,6 +140,7 @@ export class ServiceType {
       "AttachmentDescription",
       "DaysToCloseBusiness",
       "UID",
+      "ReportingOrgs",
     ],
   };
 

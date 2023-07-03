@@ -148,3 +148,15 @@ div.form-control.is-valid {
   background-position: right calc(0.375em + 0.1875rem) center;
   background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
 }
+
+.kpi {
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+.kpi-green {
+  background-image: url("../assets/KPIGreen.GIF");
+}
+
+.kpi-red {
+  background-image: url("../assets/KPIRed.GIF");
+}
