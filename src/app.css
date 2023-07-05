@@ -153,8 +153,13 @@ div.form-control.is-valid {
   background-repeat: no-repeat;
   background-position: center center;
 }
+
 .kpi-green {
   background-image: url("../assets/KPIGreen.GIF");
+}
+
+.kpi-yellow {
+  background-image: url("../assets/KPIYellow.GIF");
 }
 
 .kpi-red {

@@ -1,6 +1,6 @@
 <div class="component field">
   <!-- ko if: isRichText -->
-  <label
+  <label class="fw-semibold"
     ><span data-bind="text: displayName"></span
     ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span
     >:</label
@@ -21,7 +21,7 @@
   </div>
   <!-- /ko -->
   <!-- ko ifnot: isRichText -->
-  <label
+  <label class="fw-semibold"
     ><span data-bind="text: displayName"></span
     ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span>:
     <textarea

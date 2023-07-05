@@ -20,14 +20,30 @@
 
 <div
   style="display: none; z-index: 1201"
-  data-bind="visible: $root"
+  data-bind="visible: RunningTasks().length"
   class="position-fixed w-100 vh-100 top-0 start-0 pe-none"
 >
   <div class="toast-container p-3 bottom-0 end-0">
-    <!-- ko foreach: RunningTasks -->
-    <!-- ko component: {name: 'task-toast', params: $data} -->
-    <!-- /ko -->
-    <!-- /ko -->
+    <div
+      class="toast show align-items-center"
+      role="alert"
+      aria-live="assertive"
+      aria-atomic="true"
+    >
+      <div class="d-flex">
+        <div class="toast-body">
+          <!-- ko foreach: RunningTasks -->
+          <div data-bind="text: `${msg}... ${Status()}`"></div>
+          <!-- /ko -->
+        </div>
+        <button
+          type="button"
+          class="btn-close me-1 m-auto"
+          data-bs-dismiss="toast"
+          aria-label="Close"
+        ></button>
+      </div>
+    </div>
   </div>
 </div>
 

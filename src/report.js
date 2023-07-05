@@ -173,7 +173,7 @@ class Report {
   );
 
   thresholds = () => {
-    switch (this.filters.org.Value()) {
+    switch (this.filters.org.Value()?.Title) {
       case "CGFS/EX/IT":
         return {
           green: 85,
