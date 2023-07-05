@@ -56,7 +56,7 @@ export default class Entity extends ConstrainedEntity {
     }),
     PRNumber: new TextField({
       displayName: "PR #",
-      isRequired: true,
+      isRequired: false,
       Visible: currentUser().IsActionOffice,
     }),
   };

@@ -28,8 +28,10 @@ export async function emitCommentNotification(comment, request) {
 
 export function emitRequestNotification(request, action) {
   // Entry point for request based notifications
-  console.log("Sending Notification: ", action);
-  console.log("for request: ", request);
+  if (window.DEBUG) {
+    console.log("Sending Notification: ", action);
+    console.log("for request: ", request);
+  }
   if (requestActionTypeFunctionMap[action.activity]) {
     requestActionTypeFunctionMap[action.activity](request, action);
   }
@@ -37,7 +39,8 @@ export function emitRequestNotification(request, action) {
 
 async function requestCreatedNotification(request) {
   // Notification sent to the user/requestor
-  console.log("Sending Request Created Notification for: ", request);
+  if (window.DEBUG)
+    console.log("Sending Request Created Notification for: ", request);
   const submitterNotification = {
     To: [request.RequestorInfo.Requestor(), currentUser()],
     Title: `Work Order -New- ${request.ServiceType.Def()?.Title} - ${
@@ -98,7 +101,8 @@ async function requestCreatedNotification(request) {
 }
 
 function requestAdvancedNotification(request) {
-  console.log("Sending Request Advanced Notification for: ", request);
+  if (window.DEBUG)
+    console.log("Sending Request Advanced Notification for: ", request);
 }
 
 async function requestAssignedNotification(request, action) {
