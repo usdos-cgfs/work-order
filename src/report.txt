@@ -23,13 +23,18 @@
         ></select
       ></label>
     </div>
-    <div
-      class="col-6 pb-2"
-      data-bind="component: {
-            name: user.components.edit, 
-            params: user
-        }"
-    ></div>
+    <div class="col-6 pb-2">
+      <label data-bind="using: user"
+        >Action Office:
+        <select
+          class="form-select"
+          data-bind="value: Value, 
+          options: Options, 
+          optionsText: 'Title', 
+          optionsCaption: 'Select...'"
+        ></select
+      ></label>
+    </div>
     <div
       class="col pb-2"
       data-bind="component: {
@@ -55,6 +60,20 @@
     </div>
   </div>
   <div>
+    <div class="col-4 my-3">
+      <table class="table">
+        <tbody>
+          <tr>
+            <th>Requests</th>
+            <td>
+              <span data-bind="text: SummaryRow().totalOpen"></span>/<span
+                data-bind="text: allRequests.length"
+              ></span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <table class="table">
       <thead>
         <tr>
@@ -68,8 +87,22 @@
           <th>% Meeting Standard</th>
           <th>Avg Completion Time (days)</th>
         </tr>
+        <tr class="table-group-divider" data-bind="using: SummaryRow">
+          <th></th>
+          <th></th>
+          <th data-bind="text: totalOpen"></th>
+          <th data-bind="text: totalMeetingStandard"></th>
+          <th data-bind="text: totalNotMeetingStandard"></th>
+          <th></th>
+          <th></th>
+          <th data-bind="text: percentMeetingStandard"></th>
+          <th data-bind="text: averageCompletionTime"></th>
+        </tr>
       </thead>
-      <tbody data-bind="foreach: ServiceTypeReports">
+      <tbody
+        class="table-group-divider"
+        data-bind="foreach: ServiceTypeReports"
+      >
         <tr>
           <td data-bind="text: service.Title"></td>
           <td data-bind="text: service.DaysToCloseBusiness"></td>
@@ -80,7 +113,7 @@
           <td>
             <button
               type="button"
-              class="btn btn-link"
+              class="btn btn-link text-nowrap"
               data-bind="text: ViewButtonText,
               click: toggleViewLate,
               visible: NotMeetingStandard().length"
@@ -98,6 +131,7 @@
           <td data-bind="text: AverageCompletionTime"></td>
         </tr>
       </tbody>
+      <tfoot></tfoot>
     </table>
   </div>
 </div>
