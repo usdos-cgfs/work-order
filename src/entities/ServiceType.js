@@ -64,7 +64,8 @@ export class ServiceType {
       uid: this.UID,
       components: this._components,
     });
-    // TODO: Minor - this is hacky, maybe we should pass the filename as well when we register
+    // TODO: Minor - this is hacky since we don't technically have a new/edit form.
+    // Maybe we should pass the filename as well when we register or define in the servicetype entity itself.
     this._components.New = this._components.Edit;
     return this._components;
   };

@@ -44,6 +44,21 @@ export function RegisterComponents() {
     template: "ClosedRequestsTableTemplate",
   });
 
+  // Requests By Service Type
+  registerComponent({
+    name: "requests-by-service-type",
+    folder: "RequestsByServiceType",
+    module: "RequestsByServiceTypeModule",
+    template: "RequestsServiceTypeTemplate",
+  });
+
+  registerComponent({
+    name: "requests-by-service-type-table",
+    folder: "RequestsByServiceType",
+    module: "RequestsByServiceTypeTableModule",
+    template: "RequestsServiceTypeTableTemplate",
+  });
+
   registerComponent({
     name: "my-assignments-table",
     folder: "MyAssignments",

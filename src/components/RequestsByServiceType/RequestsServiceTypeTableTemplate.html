@@ -1,0 +1,32 @@
+<div data-bind="text: service.Title"></div>
+<!-- ko if: HasInitialized -->
+Initialized...
+<div data-bind="text: AllRequests().length"></div>
+<table
+  class="table"
+  data-bind="childrenComplete: tableHasRendered, attr: {'id': getTableElementId()}"
+>
+  <thead>
+    <tr>
+      <th>Request ID</th>
+      <th>Requesting Office</th>
+      <th>Requestor</th>
+      <th>Request Status</th>
+      <!-- ko foreach: SupplementCols -->
+      <th data-bind="text: displayName"></th>
+      <!-- /ko -->
+    </tr>
+  </thead>
+  <tbody data-bind="foreach: AllRequests">
+    <tr>
+      <td data-bind="text: Title"></td>
+      <td data-bind="text: RequestorInfo.Office()?.Title"></td>
+      <td data-bind="text: RequestorInfo.Requestor()?.Title"></td>
+      <td data-bind="text: State.Status"></td>
+      <!-- ko foreach: $parent.SupplementCols -->
+      <td>placeholder</td>
+      <!-- /ko -->
+    </tr>
+  </tbody>
+</table>
+<!-- /ko -->

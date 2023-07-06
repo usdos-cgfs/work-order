@@ -3,11 +3,15 @@ import { requestStates } from "../entities/Request.js";
 import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
 import { requestsByStatusMap } from "../stores/Requests.js";
 
+const byServiceType = "By Service Type";
+
+// These are all registered component names
 const tableComponentMap = {};
 tableComponentMap[requestStates.open] = "open-requests-table";
 tableComponentMap[requestStates.fulfilled] = "closed-requests-table";
 tableComponentMap[requestStates.cancelled] = "closed-requests-table";
 tableComponentMap[requestStates.rejected] = "closed-requests-table";
+tableComponentMap[byServiceType] = "requests-by-service-type";
 
 export class MyRequestsView {
   constructor() {
@@ -30,16 +34,17 @@ export class MyRequestsView {
   );
 
   ActiveTableParams = ko.pureComputed(() => {
-    const activeRequestSet = this.RequestsByStatusMap.get(this.ActiveKey());
-    const filteredRequests = activeRequestSet.List;
-    return {
-      activeRequestSet,
-      filteredRequests,
-      key: "my",
-    };
+    if (this.RequestsByStatusMap.has(this.ActiveKey())) {
+      const activeRequestSet = this.RequestsByStatusMap.get(this.ActiveKey());
+      return {
+        activeRequestSet,
+        filteredRequests: activeRequestSet.List,
+        key: "my",
+      };
+    }
   });
 
   StatusOptions = ko.pureComputed(() => {
-    return [...this.RequestsByStatusMap.keys()];
+    return [...this.RequestsByStatusMap.keys(), byServiceType];
   });
 }
