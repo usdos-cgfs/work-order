@@ -95,6 +95,7 @@ export class User {
   }
 
   isInGroup(group) {
+    if (!group?.ID) return false;
     return this.getGroupIds().includes(group.ID);
   }
 
