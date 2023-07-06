@@ -571,7 +571,12 @@ export class RequestEntity {
     },
     userCanAssign: ko.pureComputed(() => {
       // TODO: Major
+      // If user is a member of the request org assigned to this stage.
       if (!this.State.IsActive()) return false;
+      const assignedOrg = this.Pipeline.Stage()?.RequestOrg;
+      if (!assignedOrg) return false;
+      const user = currentUser();
+      if (user.isInRequestOrg(assignedOrg)) return true;
       return false;
     }),
     addNew: async (assignment = null) => {
@@ -807,7 +812,7 @@ export class RequestEntity {
       );
     }),
     currentUserCanSupplement: ko.pureComputed(() => {
-      // determines whether the current user can add attachments or
+      // determines whether the current user can add attachments or modify
       const user = currentUser();
       if (!user) {
         console.warn("Current user not set!");

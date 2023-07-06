@@ -1498,6 +1498,7 @@ export function SPList(listDef) {
           console.warn("Unable load list folder contents:");
           console.error(sender);
           console.error(args);
+          reject(args);
         }
       );
     });
