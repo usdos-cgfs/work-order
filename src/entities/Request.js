@@ -1018,7 +1018,13 @@ export class RequestEntity {
       "RequestStatus",
       "RequestOrgs",
     ],
-    ByServiceType: ["Title", "RequestingOffice", "Requestor", "RequestStatus"],
+    ByServiceType: [
+      "ID",
+      "Title",
+      "RequestingOffice",
+      "Requestor",
+      "RequestStatus",
+    ],
   };
 
   static ListDef = {

@@ -14,6 +14,8 @@ export default class PeopleField extends BaseField {
     super(params);
   }
 
+  toString = () => this.Value()?.Title;
+
   set = (val) => this.Value(People.Create(val));
 
   components = components;
