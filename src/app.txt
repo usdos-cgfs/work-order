@@ -1,6 +1,3 @@
-<!-- <input id="text-trix" type="hidden" name="content" />
-<trix-editor input="text-trix"></trix-editor> -->
-
 <div
   style="display: none"
   data-bind="visible: BlockingTasks().length"
@@ -213,18 +210,28 @@
     <script type="text/html" id="tmpl-office-requests-view">
       <h2>My Office Requests</h2>
       <div class="d-flex">
-        <div
-          class="list-group me-3"
-          id="section-office-requests-tabs"
-          data-bind="foreach: StatusOptions"
-        >
-          <button
-            class="list-group-item list-group-action"
-            type="button"
-            data-bind="text: $data,
+        <div class="me-3">
+          <div
+            class="list-group mb-3"
+            id="section-office-requests-tabs"
+            data-bind="foreach: StatusOptions"
+          >
+            <button
+              class="list-group-item list-group-action"
+              type="button"
+              data-bind="text: $data,
               css: {'active': $parent.ActiveKey() == $data },
               click: ()=> $parent.ActiveKey($data)"
-          ></button>
+            ></button>
+          </div>
+          <button
+            type="button"
+            class="btn btn-outline-primary w-100"
+            data-bind="css: {'active': ActiveKey() == byServiceTypeKey },
+            click: ()=> ActiveKey(byServiceTypeKey)"
+          >
+            By Service Type
+          </button>
         </div>
         <div class="w-100">
           <div
@@ -237,18 +244,28 @@
     <script type="text/html" id="tmpl-my-requests-view">
       <h2>My Requests</h2>
       <div class="d-flex">
-        <div
-          class="list-group me-3"
-          id="section-my-requests-tabs"
-          data-bind="foreach: StatusOptions"
-        >
-          <button
-            class="list-group-item list-group-action"
-            type="button"
-            data-bind="text: $data,
+        <div class="me-3">
+          <div
+            class="list-group mb-3"
+            id="section-my-requests-tabs"
+            data-bind="foreach: StatusOptions"
+          >
+            <button
+              class="list-group-item list-group-action text-nowrap"
+              type="button"
+              data-bind="text: $data,
               css: {'active': $parent.ActiveKey() == $data },
               click: ()=> $parent.ActiveKey($data)"
-          ></button>
+            ></button>
+          </div>
+          <button
+            type="button"
+            class="btn btn-outline-primary w-100"
+            data-bind="css: {'active': ActiveKey() == 'By Service Type' },
+              click: ()=> ActiveKey('By Service Type')"
+          >
+            By Service Type
+          </button>
         </div>
         <div class="w-100">
           <div

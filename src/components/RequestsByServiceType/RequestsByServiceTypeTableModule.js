@@ -4,9 +4,10 @@ import { RequestEntity } from "../../entities/Request.js";
 import { getAppContext } from "../../infrastructure/ApplicationDbContext.js";
 
 export default class RequestsByServiceTypeTableModule {
-  constructor({ service }) {
+  constructor({ service, key }) {
     if (window.DEBUG) console.log("New Service Type Table", service.Title);
     this.service = service;
+    this.key = key;
     this._context = getAppContext();
     this.init();
   }
@@ -38,7 +39,7 @@ export default class RequestsByServiceTypeTableModule {
     return supplement;
   };
 
-  getTableElementId = () => "tbl-requests-type-" + this.service.UID;
+  getTableElementId = () => `tbl-requests-type-${this.key}-${this.service.UID}`;
 
   async init() {
     const requestMap = this.requestMap;

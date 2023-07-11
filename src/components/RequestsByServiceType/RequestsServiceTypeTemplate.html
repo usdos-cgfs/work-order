@@ -7,6 +7,6 @@ optionsText: 'Title'"
 ></select>
 <!-- ko if: SelectedService -->
 <div
-  data-bind="component: {name: 'requests-by-service-type-table', params: {service: SelectedService()}}"
+  data-bind="component: {name: 'requests-by-service-type-table', params: {key, service: SelectedService()}}"
 ></div>
 <!-- /ko -->
