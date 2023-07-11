@@ -258,6 +258,7 @@ class EntitySet {
     return this.ListRef.upsertFolderPathAsync(folderPath);
   };
 
+  // Permissions
   SetFolderReadOnly = async function (relFolderPath) {
     return this.ListRef.setFolderReadonlyAsync(relFolderPath);
   };
@@ -293,6 +294,10 @@ class EntitySet {
       "Attach a New Document",
       args
     );
+  };
+
+  CopyFolderContents = async function (sourceFolder, targetFolder) {
+    return this.ListRef.copyFilesAsync(sourceFolder, targetFolder);
   };
 
   // Form Methods

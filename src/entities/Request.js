@@ -21,7 +21,10 @@ import { People } from "./People.js";
 import { ActivityLogComponent } from "../components/ActivityLogComponent.js";
 import DateField from "../fields/DateField.js";
 
-import { sortByField } from "../common/EntityUtilities.js";
+import {
+  createNewRequestTitle,
+  sortByField,
+} from "../common/EntityUtilities.js";
 import {
   businessDaysFromDate,
   calculateBusinessDays,
@@ -64,16 +67,20 @@ export const requestStates = {
   rejected: "Rejected",
 };
 
-// TODO: implement as ConstrainedEntity
+// TODO: implement as Entity
 export class RequestEntity {
-  constructor({ ID = null, Title = null, ServiceType = null }) {
+  constructor({ ID = null, Title = null, serviceType = null }) {
     this.ID = ID;
-    this.Title = Title;
+    this.Title = Title ?? createNewRequestTitle();
     this.LookupValue = Title;
     this._context = getAppContext();
 
     if (!ID) {
       this.DisplayMode(DisplayModes.New);
+    }
+
+    if (serviceType) {
+      this.ServiceType.Def(serviceType);
     }
 
     this.ActivityQueue.subscribe(
@@ -152,6 +159,7 @@ export class RequestEntity {
     Def: ko.observable(),
     instantiateEntity: async (newSvcType = this.ServiceType.Def()) => {},
     refreshEntity: async () => {
+      // If this is a new request creates a new service type entity
       if (DEBUG) console.log("ServiceType: Refresh Triggered");
       if (!this.ServiceType.Def()?.HasTemplate) return;
       this.ServiceType.IsLoading(true);
@@ -161,6 +169,8 @@ export class RequestEntity {
         this.ServiceType.IsLoading(false);
         return;
       }
+
+      // Else, attempt to locate the existing service type entity from the db.
       await this.ServiceType.Def()?.initializeEntity();
       const results = await this.ServiceType.Def()
         ?.getListRef()
@@ -254,9 +264,9 @@ export class RequestEntity {
     userCanAttach: ko.pureComputed(() =>
       this.Authorization.currentUserCanSupplement()
     ),
-    addNew: async () => {
+    createFolder: async () => {
       const newAttachmentTask = addTask(taskDefs.newAttachment);
-      const folderPath = this.getRelativeFolderPath();
+      let folderPath = this.getRelativeFolderPath();
       const folderPerms = this.getFolderPermissions();
 
       try {
@@ -265,16 +275,23 @@ export class RequestEntity {
           folderPath,
           folderPerms
         );
-        await this._context.Attachments.UploadNewDocument(folderPath, {
-          RequestId: this.ID,
-          RequestTitle: this.Title,
-        });
         this.Attachments.refresh();
       } catch (e) {
-        console.error("Error creating folder: ");
+        console.error("Error creating folder: ", e);
+        folderPath = null;
       } finally {
         finishTask(newAttachmentTask);
       }
+      return folderPath;
+    },
+    addNew: async () => {
+      const folderPath = await this.Attachments.createFolder();
+      if (!folderPath) alert("Unable to create folder");
+      await this._context.Attachments.UploadNewDocument(folderPath, {
+        RequestId: this.ID,
+        RequestTitle: this.Title,
+      });
+      this.Attachments.refresh();
     },
     refresh: async () => {
       if (!this.Title) return;

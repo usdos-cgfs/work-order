@@ -292,7 +292,7 @@
           <div class="col">
             <div
               class="card text-center pointer"
-              data-bind="click: $root.NewRequest"
+              data-bind="click: $parent.selectServiceTypeHandler"
             >
               <div class="card-body">
                 <i class="fa fa-5x" data-bind="class: Icon"></i>

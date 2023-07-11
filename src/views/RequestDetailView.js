@@ -203,10 +203,10 @@ export class RequestDetailView {
 
   serviceTypeDefinitionWatcher = (newSvcType) => {
     // This should only be needed when creating a new request.
-    this.request.ServiceType.refreshEntity(newSvcType);
+    this.request.ServiceType.refreshEntity();
   };
 
-  constructor({ request, displayMode = DisplayModes.View, serviceType }) {
+  constructor({ request, displayMode = DisplayModes.View }) {
     this.request = request;
     this._context = getAppContext();
 
@@ -214,16 +214,13 @@ export class RequestDetailView {
       this.request.RequestorInfo.Requestor(new People(currentUser()));
       this.request.RequestorInfo.Phone(currentUser().WorkPhone);
       this.request.RequestorInfo.Email(currentUser().EMail);
-      this.request.Title = createNewRequestTitle();
+      //this.request.Title = createNewRequestTitle();
       this.request.State.Status(requestStates.draft);
       this.request.State.IsActive(true);
       this.request.ServiceType.Def.subscribe(this.serviceTypeDefinitionWatcher);
     }
 
-    if (serviceType) {
-      this.request.ServiceType.Def(serviceType);
-      // this.ServiceType.instantiateEntity();
-    }
+    this.request.ServiceType.refreshEntity();
 
     this.request.Assignments.NewAssignmentComponent =
       new NewAssignmentComponent({

@@ -134,14 +134,11 @@ class App {
 
   SelectNewRequestButton = (data, e) => {};
 
-  NewRequest = (data, e) => {
+  NewRequest = ({ request = null }) => {
     const props = {
-      request: new RequestEntity({}),
+      request: request ?? new RequestEntity({}),
       displayMode: DisplayModes.New,
     };
-    if (data && data.ID) {
-      props.serviceType = data;
-    }
     setUrlParam("reqId", "");
     this.RequestDetailView(new RequestDetailView(props));
     this.Tab(Tabs.RequestDetail);

@@ -2059,6 +2059,52 @@ export function SPList(listDef) {
     });
   }
 
+  function copyFiles(sourceFolderPath, destFolderPath, callback, onError) {
+    const sourcePath = getServerRelativeFolderPath(sourceFolderPath);
+    const destPath = getServerRelativeFolderPath(destFolderPath);
+    var context = new SP.ClientContext.get_current();
+    var web = context.get_web();
+    var folderSrc = web.getFolderByServerRelativeUrl(sourcePath);
+    context.load(folderSrc, "Files");
+    context.executeQueryAsync(
+      function () {
+        var files = folderSrc.get_files();
+        var e = files.getEnumerator();
+        var dest = [];
+        while (e.moveNext()) {
+          var file = e.get_current();
+          var destLibUrl = destPath + "/" + file.get_name();
+          dest.push(destLibUrl); //delete this when we're happy we got the file paths right
+          file.copyTo(destLibUrl, true);
+        }
+        console.log(dest); //delete this when we're happy we got the file paths right
+        context.executeQueryAsync(
+          function () {
+            console.log("Files moved successfully!");
+            callback();
+          },
+          function (sender, args) {
+            console.log("error: ") + args.get_message();
+            onError;
+          }
+        );
+      },
+      function (sender, args) {
+        console.error("Unable to copy files: ", args.get_message());
+        console.error(sender);
+        console.error(args);
+        reject(args);
+      }
+    );
+  }
+
+  function copyFilesAsync(sourceFolder, destFolder) {
+    // TODO: this should stay as a static utility instead of list specific
+    return new Promise((resolve, reject) => {
+      copyFiles(sourceFolder, destFolder, resolve, reject);
+    });
+  }
+
   const publicMembers = {
     findByIdAsync,
     findByColumnValueAsync,
@@ -2075,6 +2121,7 @@ export function SPList(listDef) {
     setFolderPermissionsAsync,
     ensureFolderPermissionsAsync,
     uploadNewDocumentAsync,
+    copyFilesAsync,
     showModal,
   };
 
