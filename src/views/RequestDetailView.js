@@ -143,6 +143,8 @@ export class RequestDetailView {
 
     // Progress Request
     this.request.Pipeline.advance();
+
+    this.request.Validation.reset();
     finishTask(saveTask);
   };
 

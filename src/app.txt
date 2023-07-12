@@ -314,6 +314,14 @@
           <span data-bind="text: request.ServiceType.Def()?.Title"></span>
         </h2>
         <div>
+          <!-- ko if: request.Validation.WasValidated -->
+          <!-- ko foreach: request.Validation.Errors.All -->
+          <div
+            class="alert alert-danger mb-2"
+            data-bind="text: description"
+          ></div>
+          <!-- /ko -->
+          <!-- /ko -->
           <div
             class="sticky-top my-3"
             data-bind="template: {name: 'tmpl-quick-actions-bar'}"
@@ -350,11 +358,21 @@
           ></div>
           <div class="row my-3">
             <div class="col-4" data-bind="using: request">
-              <div class="card">
+              <div
+                class="card"
+                data-bind="css: {'border-danger': Validation.WasValidated() && Attachments.Validation.Errors().length}"
+              >
                 <div class="card-body">
                   <div class="card-title">
                     <h3 class="mx-0">Attachments</h3>
                   </div>
+                  <!-- ko foreach: Attachments.Validation.Errors -->
+                  <div
+                    class="alert"
+                    data-bind="text: description, 
+                      class: $parent.Validation.WasValidated() ? 'alert-danger' : 'alert-warning'"
+                  ></div>
+                  <!-- /ko -->
                   <div
                     data-bind="html: ServiceType.Def()?.AttachmentDescription"
                   ></div>
@@ -486,7 +504,7 @@
             <button
               type="button"
               class="btn btn-success"
-              data-bind="click: submitNewRequest, enable: request.Validation.IsValid"
+              data-bind="click: submitNewRequest, enable: !request.Validation.WasValidated() || request.Validation.IsValid()"
             >
               Submit Request
             </button>
@@ -597,7 +615,7 @@
           <button
             type="button"
             class="btn btn-success ms-3"
-            data-bind="click: submitNewRequest, enable: request.Validation.IsValid"
+            data-bind="click: submitNewRequest, enable: !request.Validation.WasValidated() || request.Validation.IsValid()"
           >
             Submit
           </button>

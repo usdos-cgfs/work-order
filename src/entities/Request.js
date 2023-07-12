@@ -51,6 +51,7 @@ import { DisplayModes } from "../views/RequestDetailView.js";
 
 import { Tabs } from "../env.js";
 import { addTask, finishTask, taskDefs } from "../stores/Tasks.js";
+import { ValidationError } from "../primitives/ValidationError.js";
 
 // export const requestStates = {
 //   draft: { ID: 1, Title: "Draft" },
@@ -260,6 +261,25 @@ export class RequestEntity {
       Active: ko.pureComputed(() =>
         this.Attachments.list.All().filter((attachment) => attachment.IsActive)
       ),
+    },
+    Validation: {
+      Errors: ko.pureComputed(() => {
+        let errors = [];
+        let minAttachments =
+          this.ServiceType.Def()?.AttachmentsRequiredCnt ?? 0;
+        if (minAttachments < 0) minAttachments = 1;
+        const attachmentsCount = this.Attachments.list.Active().length;
+        if (attachmentsCount < minAttachments) {
+          errors.push(
+            new ValidationError(
+              "attachment-count-mismatch",
+              "request-header",
+              `This request has ${this.ServiceType.Def().attachmentsRequiredCntString()} required attachment(s)!`
+            )
+          );
+        }
+        return errors;
+      }),
     },
     userCanAttach: ko.pureComputed(() =>
       this.Authorization.currentUserCanSupplement()
@@ -781,19 +801,48 @@ export class RequestEntity {
 
   Validation = {
     validate: () => {
+      this.Validation.WasValidated(true);
       // 1. Validate Header
+      this.Validation.validateHeader();
       // 2. Validate Body
       this.Validation.validateBody();
       return this.Validation.IsValid();
     },
-    validateHeader: () => {},
+    validateHeader: () => {
+      this.FieldMap.RequestDescription.validate();
+    },
     validateBody: () => {
       const serviceTypeEntity = this.ServiceType.Entity();
       if (!serviceTypeEntity) return;
       return serviceTypeEntity.validate();
     },
+    reset: () => this.Validation.WasValidated(false),
     Errors: {
-      Request: ko.observableArray(),
+      Request: ko.pureComputed(() => {
+        let errors = [];
+        // Check if there are required attachments
+
+        errors = errors.concat(this.Attachments.Validation.Errors());
+
+        // Required description
+        errors = errors.concat(this.FieldMap.RequestDescription.Errors());
+
+        // if (
+        //   this.ServiceType.Def()?.DescriptionRequired &&
+        //   !this.FieldMap.RequestDescription.get()
+        // ) {
+        // errors.push(
+        //   new ValidationError(
+        //     "request-description-required",
+        //     "request-header",
+        //     `${
+        //       this.ServiceType.Def()?.DescriptionTitle ?? "Description"
+        //     } is required!`
+        //   )
+        // );
+        // }
+        return errors;
+      }),
       ServiceType: ko.pureComputed(() => {
         return this.ServiceType.Entity()?.Errors() ?? [];
       }),
@@ -804,6 +853,7 @@ export class RequestEntity {
       ]),
     },
     IsValid: ko.pureComputed(() => !this.Validation.Errors.All().length),
+    WasValidated: ko.observable(false),
     CurrentStage: {
       IsValid: () => this.Assignments.CurrentStage.Validation.IsValid(),
       Errors: ko.pureComputed(() =>

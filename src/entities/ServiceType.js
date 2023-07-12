@@ -115,6 +115,12 @@ export class ServiceType {
     return true;
   };
 
+  attachmentsRequiredCntString = () => {
+    if (!this.AttachmentsRequiredCnt) return "no";
+    if (this.AttachmentsRequiredCnt < 0) return "multiple";
+    return this.AttachmentsRequiredCnt;
+  };
+
   static Create = function ({ ID, LookupValue }) {
     const newServiceType = new ServiceType({ ID, Title: LookupValue });
     const serviceType = serviceTypeStore().find((service) => service.ID == ID);
