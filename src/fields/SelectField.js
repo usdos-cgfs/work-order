@@ -25,6 +25,9 @@ export default class SelectField extends BaseField {
   SelectedOptions = ko.observableArray();
   SelectedOption = ko.observable();
 
+  toString = () =>
+    this.multiple ? this.SelectedOptions().join(", ") : this.SelectedOption();
+
   Value = ko.pureComputed({
     read: () =>
       this.multiple ? this.SelectedOptions().join(", ") : this.SelectedOption(),
@@ -41,7 +44,12 @@ export default class SelectField extends BaseField {
   };
   set = (val) => {
     if (val && this.multiple) {
-      this.SelectedOptions(val.results ?? val.split("#;"));
+      if (Array.isArray(val)) {
+        this.SelectedOptions(val);
+      } else {
+        this.SelectedOptions(val.results ?? val.split("#;"));
+      }
+      return;
     }
     this.SelectedOption(val);
   };

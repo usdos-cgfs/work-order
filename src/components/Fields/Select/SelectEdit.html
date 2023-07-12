@@ -1,4 +1,4 @@
-<label  class="fw-semibold"
+<label class="fw-semibold"
   ><span data-bind="text: displayName"></span
   ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span>:
   <!-- ko if: multiple -->
@@ -13,6 +13,7 @@
     class: ValidationClass,
     attr: {'multiple': multiple}"
   ></select>
+  <div class="fst-italic fw-light">Hold ctrl to select multiple.</div>
   <!-- /ko -->
   <!-- ko ifnot: multiple -->
   <select
