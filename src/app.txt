@@ -233,7 +233,7 @@
             By Service Type
           </button>
         </div>
-        <div class="w-100">
+        <div class="flex-grow-1">
           <div
             data-bind="component: {name: ActiveTableComponentName, params: ActiveTableParams}"
           ></div>
@@ -267,7 +267,7 @@
             By Service Type
           </button>
         </div>
-        <div class="w-100">
+        <div class="flex-grow-1">
           <div
             data-bind="component: {name: ActiveTableComponentName, params: ActiveTableParams}"
           ></div>

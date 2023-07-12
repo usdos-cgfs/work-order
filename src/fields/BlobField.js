@@ -15,9 +15,9 @@ export default class BlobField extends BaseField {
     this.NewItem(new this.entity());
   }
 
-  toString = () => this.Value().length + " items";
+  toString = () => `${this.Value()?.length ?? "0"} items`;
 
-  Value = ko.observableArray();
+  Value = ko.observableArray([]);
   get = () => JSON.stringify(this.Value());
   set = (val) => this.Value(JSON.parse(val));
 

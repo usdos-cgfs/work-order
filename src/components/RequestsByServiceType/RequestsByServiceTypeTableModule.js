@@ -78,14 +78,19 @@ export default class RequestsByServiceTypeTableModule {
 
     const supplementsPromise = await this.service
       .getListRef()
-      .ToList([...this.SupplementCols().map((col) => col.key), "Request"])
+      .ToList([
+        ...this.SupplementCols().map((col) => col.key),
+        "Request",
+        "Title",
+      ])
       .then((results) => {
         this.Supplements(results);
         results.map((supplement) => {
-          if (!supplement.Request?.Title) return;
-          requestMap[supplement.Request?.Title]
-            ? (requestMap[supplement.Request.Title].supplement = supplement)
-            : (requestMap[supplement.Request.Title] = {
+          const reqTitle = supplement.Request?.Title ?? supplement.Title;
+          if (!reqTitle) return;
+          requestMap[reqTitle]
+            ? (requestMap[reqTitle].supplement = supplement)
+            : (requestMap[reqTitle] = {
                 supplement: supplement,
               });
         });

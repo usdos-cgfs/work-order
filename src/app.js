@@ -117,7 +117,7 @@ class App {
     routing: {
       var startTab = getUrlParam("tab") || Tabs.MyRequests;
       var reqId = getUrlParam("reqId");
-      if (reqId) {
+      if (reqId && startTab == Tabs.RequestDetail) {
         this.viewRequestByTitle(reqId);
       } else if (startTab == Tabs.RequestDetail) {
         startTab = Tabs.NewRequest;

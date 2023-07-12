@@ -13,7 +13,6 @@ import { currentUser } from "../../infrastructure/Authorization.js";
 import { requestOrgStore } from "../../entities/RequestOrg.js";
 import { serviceTypeStore } from "../../entities/ServiceType.js";
 import { RequestEntity } from "../../entities/Request.js";
-import { createNewRequestTitle } from "../../common/EntityUtilities.js";
 
 export default class Entity extends ConstrainedEntity {
   constructor(params) {
@@ -107,11 +106,6 @@ export default class Entity extends ConstrainedEntity {
       displayName: "Funding Source",
       options: ["Project", "Contract", "Other"],
       isRequired: this.CostThreshold,
-    }),
-    PRNumber: new TextField({
-      displayName: "PR #",
-      isRequired: false,
-      Visible: currentUser().IsActionOffice,
     }),
   };
 
