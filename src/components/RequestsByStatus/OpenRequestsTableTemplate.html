@@ -1,4 +1,4 @@
-<div data-bind="childrenComplete: myPostProcessingLogic">
+<div data-bind="">
   <div class="d-flex justify-content-between">
     <h2 class="mx-0" data-bind="text: filter.Title"></h2>
     <i class="fa fa-sync pointer" data-bind="click: refresh"></i>
@@ -18,15 +18,17 @@
         <th>Est. Completion Date</th>
       </tr>
     </thead>
-    <tbody data-bind="">
-      <!-- ko if: IsLoading -->
+    <!-- ko if: IsLoading -->
+    <tbody>
       <tr class="">
         <td colspan="7" class="p-0">
           <progress class="w-100"></progress>
         </td>
       </tr>
-      <!-- /ko -->
-      <!-- ko ifnot: IsLoading -->
+    </tbody>
+    <!-- /ko -->
+    <!-- ko ifnot: IsLoading -->
+    <tbody data-bind="childrenComplete: tableBodyComplete">
       <!-- ko foreach: FilteredRequests -->
       <tr class="pointer" data-bind="click: $root.ViewRequest">
         <td data-bind="text: Title"></td>
@@ -38,8 +40,8 @@
         <td data-bind="text: Dates.EstClosed.toSortableDateString()"></td>
       </tr>
       <!-- /ko -->
-      <!-- /ko -->
     </tbody>
+    <!-- /ko -->
     <tfoot>
       <tr>
         <th clear-width data-filter="select-filter"></th>

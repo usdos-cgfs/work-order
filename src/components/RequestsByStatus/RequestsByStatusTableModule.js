@@ -10,14 +10,15 @@ export default class RequestsByStatusTableModule {
     this.FilteredRequests = filteredRequests ?? this.ActiveSet.List;
     this.IsLoading = this.ActiveSet.IsLoading;
     this.HasLoaded = this.ActiveSet.HasLoaded;
-    this.listBeforeChangeSubscriber = this.FilteredRequests.subscribe(
-      this.listBeforeChangeWatcher,
-      this,
-      "beforeChange"
-    );
-    this.listChangeSubscriber = this.FilteredRequests.subscribe(
-      this.listWatcher
-    );
+    // this.listBeforeChangeSubscriber = this.FilteredRequests.subscribe(
+    //   this.listBeforeChangeWatcher,
+    //   this,
+    //   "beforeChange"
+    // );
+    // this.listChangeSubscriber = this.FilteredRequests.subscribe(
+    //   this.listWatcher
+    // );
+    this.init();
   }
 
   hasInitialized = false;
@@ -35,32 +36,15 @@ export default class RequestsByStatusTableModule {
 
   getRequestAssignments = assignmentsStore.getByRequest;
 
-  listBeforeChangeWatcher = () => {
-    if (!this.Table) return;
-    this.Table.clear().destroy();
-  };
-
-  listWatcher = () => {
-    if (this.hasInitialized)
-      setTimeout(
-        () => (this.Table = makeDataTable(this.getTableElementId())),
-        20
-      );
-    //this.Table.draw();
-  };
-
-  myPostProcessingLogic = (nodes) => {
-    this.init();
+  tableBodyComplete = (nodes) => {
+    if (this.Table) this.Table.clear().destroy();
+    this.Table = makeDataTable(this.getTableElementId());
   };
 
   init = async () => {
     await this.ActiveSet.init();
-    this.Table = makeDataTable(this.getTableElementId());
     this.hasInitialized = true;
   };
 
-  dispose = () => {
-    this.listBeforeChangeSubscriber.dispose();
-    this.listChangeSubscriber.dispose();
-  };
+  dispose = () => {};
 }
