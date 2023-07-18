@@ -289,9 +289,9 @@
       <h2>Select the type of work order you would like to open:</h2>
       <div class="text-center">
         <div class="row row-cols-4" data-bind="foreach: ActiveServiceTypes">
-          <div class="col">
+          <div class="col pb-2">
             <div
-              class="card text-center pointer"
+              class="card text-center pointer h-100"
               data-bind="click: $parent.selectServiceTypeHandler"
             >
               <div class="card-body">
