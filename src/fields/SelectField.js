@@ -15,43 +15,31 @@ export default class SelectField extends BaseField {
     Visible,
     options,
     multiple = false,
+    optionsText,
   }) {
     super({ Visible, displayName, isRequired });
     this.Options(options);
     this.multiple = multiple;
+    this.Value = multiple ? ko.observableArray() : ko.observable();
+    this.optionsText = optionsText;
   }
 
-  // For use with multiple select
-  SelectedOptions = ko.observableArray();
-  SelectedOption = ko.observable();
-
-  toString = () =>
-    this.multiple ? this.SelectedOptions().join(", ") : this.SelectedOption();
-
-  Value = ko.pureComputed({
-    read: () =>
-      this.multiple ? this.SelectedOptions().join(", ") : this.SelectedOption(),
-    write: (val) =>
-      this.multiple ? this.SelectedOptions(val) : this.SelectedOption(val),
-  });
+  toString = () => (this.multiple ? this.Value().join(", ") : this.Value());
 
   get = () => {
-    if (this.multiple) {
-      return this.SelectedOptions();
-    }
-
-    return this.SelectedOption();
+    this.Value();
   };
+
   set = (val) => {
     if (val && this.multiple) {
       if (Array.isArray(val)) {
-        this.SelectedOptions(val);
+        this.Value(val);
       } else {
-        this.SelectedOptions(val.results ?? val.split("#;"));
+        this.Value(val.results ?? val.split("#;"));
       }
       return;
     }
-    this.SelectedOption(val);
+    this.Value(val);
   };
 
   Options = ko.observableArray();

@@ -33,14 +33,14 @@ export function makeDataTable(tableId) {
           var filterCell = $(column.footer());
 
           var select = $(
-            '<select class="form-select"><option value=""></option></select>'
+            '<search-select class=""><option value=""></option></search-select>'
           );
           switch (filterCell.attr("data-filter")) {
             case "select-filter":
               select.attr("multiple", "true");
             case "single-select-filter":
               select.appendTo(filterCell.empty()).on("change", function () {
-                var vals = $(this).val();
+                var vals = this.selectedOptions.map((opt) => opt.value);
                 if (!vals) {
                   vals = [];
                 } else {
@@ -54,6 +54,7 @@ export function makeDataTable(tableId) {
                 column.search(val, true, false).draw();
               });
               // Populate our select option values based on column cells.
+              let options = "";
               column
                 .data()
                 .unique()
@@ -69,10 +70,11 @@ export function makeDataTable(tableId) {
                   } catch (e) {
                     //Nothing to do here, it's not valid html
                   }
-                  select.append(
-                    `<option value="${optionText}" title="${optionText}">${optionText}</option>`
-                  );
+
+                  options += `<option value="${optionText}" title="${optionText}">${optionText}</option>`;
                 });
+
+              select.append(options);
               break;
             case "search-filter":
               $(
