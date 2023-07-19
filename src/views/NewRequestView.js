@@ -16,19 +16,41 @@ export class NewRequestView {
     )
   );
 
+  formatAttachmentDescription = () => {
+    return (
+      this.SelectedServiceType()?.AttachmentDescription ??
+      "<i>Not applicable.</i>"
+    );
+  };
+
+  getDescriptionModal = () =>
+    document.getElementById("dialog-new-request-detail");
+
   selectServiceTypeHandler = (data, e) => {
     this.SelectedServiceType(data);
+    const descModal = this.getDescriptionModal();
+    descModal.showModal();
 
     // TODO: Show servicetype description
-    this.confirmCreateServiceType();
+    //this.confirmCreateServiceType();
+  };
+
+  cancelCreateServiceType = () => {
+    const descModal = this.getDescriptionModal();
+    descModal.close();
   };
 
   confirmCreateServiceType = () => {
+    const descModal = this.getDescriptionModal();
+    descModal.close();
+
     const newRequest = new RequestEntity({
       serviceType: this.SelectedServiceType(),
     });
     window.WorkOrder.App.NewRequest({ request: newRequest });
   };
 
-  constructor() {}
+  constructor() {
+    console.log("new");
+  }
 }

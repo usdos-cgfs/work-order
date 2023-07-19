@@ -304,6 +304,53 @@
           </div>
         </div>
       </div>
+      <dialog
+        id="dialog-new-request-detail"
+        class="card w-75"
+        style="height: fit-content"
+      >
+        <div class="card-body" data-bind="">
+          <!-- ko if: SelectedServiceType -->
+          <h5
+            class="card-title"
+            data-bind="text: SelectedServiceType().Title"
+          ></h5>
+          <hr />
+          <b>Description:</b>
+          <div
+            data-bind="html: SelectedServiceType().Description"
+            class="mb-2"
+          ></div>
+          <b>Attachments:</b>
+          <div
+            data-bind="html: formatAttachmentDescription()"
+            class="mb-2"
+          ></div>
+          <div class="card-text" class="mb-2">
+            <p>
+              Once submitted, this request will be handled by a member of the
+              CGFS/EX team.
+            </p>
+          </div>
+          <!-- /ko -->
+          <div class="d-flex justify-content-end">
+            <button
+              type="button"
+              class="btn btn-secondary me-2"
+              data-bind="click: cancelCreateServiceType"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="btn btn-success"
+              data-bind="click: confirmCreateServiceType, enable: SelectedServiceType"
+            >
+              Create
+            </button>
+          </div>
+        </div>
+      </dialog>
     </script>
 
     <script type="text/html" id="tmpl-request-detail">
