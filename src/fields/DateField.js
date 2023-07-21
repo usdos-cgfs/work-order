@@ -23,7 +23,7 @@ export default class DateField extends BaseField {
     this.type = params.type ?? dateFieldTypes.date;
   }
 
-  toString = () => {
+  toString = ko.pureComputed(() => {
     // if this is datetime vs date we expect different things
     switch (this.type) {
       case dateFieldTypes.date:
@@ -33,7 +33,7 @@ export default class DateField extends BaseField {
       default:
         return "";
     }
-  };
+  });
 
   toSortableDateString = () => this.Value()?.format("yyyy-MM-dd");
   toLocaleDateString = () => this.Value()?.toLocaleDateString();

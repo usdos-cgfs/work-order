@@ -15,7 +15,7 @@ export default class BlobField extends BaseField {
     this.NewItem(new this.entity());
   }
 
-  toString = () => `${this.Value()?.length ?? "0"} items`;
+  toString = ko.pureComputed(() => `${this.Value()?.length ?? "0"} items`);
 
   Value = ko.observableArray([]);
   get = () => JSON.stringify(this.Value());

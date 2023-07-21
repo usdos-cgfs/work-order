@@ -24,11 +24,11 @@ export default class SelectField extends BaseField {
     this.optionsText = optionsText;
   }
 
-  toString = () => (this.multiple ? this.Value().join(", ") : this.Value());
+  toString = ko.pureComputed(() =>
+    this.multiple ? this.Value().join(", ") : this.Value()
+  );
 
-  get = () => {
-    this.Value();
-  };
+  get = () => this.Value();
 
   set = (val) => {
     if (val && this.multiple) {
