@@ -41,6 +41,18 @@ async function requestCreatedNotification(request) {
   // Notification sent to the user/requestor
   if (window.DEBUG)
     console.log("Sending Request Created Notification for: ", request);
+
+  const actionOffices = [
+    ...new Set(
+      request.Pipeline.Stages()?.map((stage) => stage.RequestOrg.Title)
+    ),
+  ];
+
+  let actionOfficeLiString = "";
+  actionOffices.forEach((office) => {
+    actionOfficeLiString += `<li>${office}</li>`;
+  });
+
   const submitterNotification = {
     To: [request.RequestorInfo.Requestor(), currentUser()],
     Title: `Work Order -New- ${request.ServiceType.Def()?.Title} - ${
@@ -55,9 +67,7 @@ async function requestCreatedNotification(request) {
       request.ServiceType.Def()?.DaysToCloseBusiness +
       "</p>" +
       "<p>This request will be serviced by:</br><ul>" +
-      request.Pipeline.Stages()?.map((stage) => {
-        return `<li>${stage.RequestOrg.Title}</li>`;
-      }) +
+      actionOfficeLiString +
       "</ul></p>" +
       "<p>To view the request, please click the link above, or copy and paste the below URL into your browser:</br>" +
       request.getAppLink(),
@@ -85,9 +95,7 @@ async function requestCreatedNotification(request) {
       request.ServiceType.Def()?.DaysToCloseBusiness +
       "</p>" +
       "<p>This request will be serviced by:</br><ul>" +
-      request.Pipeline.Stages()?.map((stage) => {
-        return `<li>${stage.RequestOrg.Title}</li>`;
-      }) +
+      actionOfficeLiString +
       "</ul></p>" +
       "<p>To view the request, please click the link above, or copy and paste the below URL into your browser:</br>" +
       request.getAppLink(),
