@@ -30,12 +30,10 @@ export class NewRequestView {
     this.SelectedServiceType(data);
     const descModal = this.getDescriptionModal();
     descModal.showModal();
-
-    // TODO: Show servicetype description
-    //this.confirmCreateServiceType();
   };
 
   cancelCreateServiceType = () => {
+    this.SelectedServiceType(null);
     const descModal = this.getDescriptionModal();
     descModal.close();
   };
