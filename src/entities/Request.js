@@ -241,6 +241,8 @@ export class RequestEntity {
 
       await this._context.Requests.UpdateEntity(this, ["PipelineStage"]);
 
+      await this.Assignments.createStageAssignments(nextStage);
+
       this.ActivityQueue.push({
         activity: actionTypes.Advanced,
         data: nextStage,
@@ -637,11 +639,19 @@ export class RequestEntity {
       await this._context.Assignments.AddEntity(assignment, folderPath, this);
       // Have to await this for the next permissions set.
       await this.Assignments.refresh();
+      // update the Request Orgs
+      if (
+        !this.RequestOrgs().find((org) => org.ID == assignment.RequestOrg.ID)
+      ) {
+        this.RequestOrgs.push(assignment.RequestOrg);
+        await this._context.Requests.UpdateEntity(this, ["RequestOrgs"]);
+      }
       //this.request.ActivityLog.assignmentAdded(assignment);
       this.ActivityQueue.push({
         activity: actionTypes.Assigned,
         data: assignment,
       });
+
       if (assignment.Role?.permissions) {
         // assignment.Assignee.Roles = [assignment.Role.permissions];
         this.Authorization.ensureAccess([
@@ -776,13 +786,6 @@ export class RequestEntity {
       switch (action.activity) {
         case actionTypes.Assigned:
         case actionTypes.Unassigned:
-          // update the Request Orgs
-          this.RequestOrgs(
-            this.Assignments.list
-              .All()
-              .map((assignment) => assignment.RequestOrg)
-          );
-          await this._context.Requests.UpdateEntity(this, ["RequestOrgs"]);
           break;
         case actionTypes.Rejected:
           {
@@ -793,7 +796,6 @@ export class RequestEntity {
           }
           break;
         case actionTypes.Advanced:
-          await this.Assignments.createStageAssignments(action.data);
           break;
       }
     });

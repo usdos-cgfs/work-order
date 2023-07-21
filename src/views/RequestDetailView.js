@@ -111,6 +111,7 @@ export class RequestDetailView {
       finishTask(breakingPermissionsTask);
     }
 
+    // 3. Initialize request header
     // Initialize dates
     const effectiveSubmissionDate =
       this.request.calculateEffectiveSubmissionDate();
@@ -120,6 +121,9 @@ export class RequestDetailView {
         effectiveSubmissionDate,
         serviceType.DaysToCloseBusiness
       )
+    );
+    this.request.RequestOrgs(
+      this.request.Pipeline.Stages().map((stage) => stage.RequestOrg)
     );
 
     this.request.State.Status(requestStates.open);
@@ -222,7 +226,7 @@ export class RequestDetailView {
       this.request.ServiceType.Def.subscribe(this.serviceTypeDefinitionWatcher);
     }
 
-    this.request.ServiceType.refreshEntity();
+    // this.request.ServiceType.refreshEntity();
 
     this.request.Assignments.NewAssignmentComponent =
       new NewAssignmentComponent({
