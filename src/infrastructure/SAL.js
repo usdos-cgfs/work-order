@@ -1080,12 +1080,13 @@ export function SPList(listDef) {
 
       function onUpdateListItemFailed(sender, args) {
         console.error("Update Failed - List: " + self.config.def.name);
-        console.error("ValuePairs", valuePairs);
+        console.error("Item Id", oListItem.get_id());
+        console.error(entity);
         console.error(sender, args);
         reject(args);
       }
 
-      const data = { oListItem, resolve, reject };
+      const data = { oListItem, entity, resolve, reject };
 
       currCtx.load(oListItem);
       currCtx.executeQueryAsync(
