@@ -1,6 +1,10 @@
 import { People } from "../entities/People.js";
 import { assignmentStates } from "../entities/Assignment.js";
-import { OrgTypes, requestOrgStore } from "../entities/RequestOrg.js";
+import {
+  RequestOrg,
+  OrgTypes,
+  requestOrgStore,
+} from "../entities/RequestOrg.js";
 
 import { getUserPropsAsync, getDefaultGroups } from "./SAL.js";
 
@@ -17,7 +21,7 @@ export const permissions = {
 };
 
 var staticGroups = {
-  RestrictedReaders: { Title: "Restricted Readers" },
+  RestrictedReaders: new People({ ID: null, Title: "Restricted Readers" }),
 };
 
 export const roles = {
@@ -143,7 +147,7 @@ export function getRequestFolderPermissions(request) {
   const requestorOffice = request.RequestorInfo.Office(); // this should be set during validation
 
   const folderPermissions = [
-    [defaultGroups.owners, permissions.FullControl],
+    [new People(defaultGroups.owners), permissions.FullControl],
     [staticGroups.RestrictedReaders, permissions.RestrictedRead],
   ];
 
@@ -158,9 +162,7 @@ export function getRequestFolderPermissions(request) {
 
   // break pipeline stages at front?
   request.Pipeline.Stages()?.forEach((stage) => {
-    const stageOrg = requestOrgStore().find(
-      (org) => org.ID == stage.RequestOrg.ID
-    );
+    const stageOrg = RequestOrg.FindInStore(stage.RequestOrg);
     if (stageOrg) {
       folderPermissions.push([
         stageOrg.UserGroup,
@@ -195,15 +197,15 @@ export const AssignmentFunctions = {
     return this.RequestorInfo.Requestor();
   },
   getGovManager: function () {
-    return this.ServiceType.Entity()?.GovManager();
+    return this.ServiceType.Entity()?.GovManager.get();
   },
   getAPM: function () {
-    return this.ServiceType.Entity()?.APM();
+    return this.ServiceType.Entity()?.APM.get();
   },
   getGTM: function () {
-    return this.ServiceType.Entity()?.GTM();
+    return this.ServiceType.Entity()?.GTM.get();
   },
   getCOR: function () {
-    return this.ServiceType.Entity()?.COR();
+    return this.ServiceType.Entity()?.COR.get();
   },
 };

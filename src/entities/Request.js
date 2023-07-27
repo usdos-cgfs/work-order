@@ -705,12 +705,9 @@ export class RequestEntity {
 
       // If this stage is already assigned (e.g. from a previous assignment stage), skip it
       if (
-        this.Pipeline.Stages().find((stage) =>
-          this.Assignments.list
-            .All()
-            .map((assignment) => assignment.PipelineStage?.ID)
-            .includes(stage.ID)
-        )
+        this.Assignments.list
+          .All()
+          .find((assignment) => assignment.PipelineStage?.ID == stage.ID)
       )
         return;
 

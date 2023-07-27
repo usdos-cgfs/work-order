@@ -228,7 +228,7 @@ class EntitySet {
   SetItemPermissions = async function (entityId, valuePairs, reset = false) {
     const salValuePairs = valuePairs
       .filter((vp) => vp[0] && vp[1])
-      .map((vp) => [vp[0].LoginName ?? vp[0].Title, vp[1]]);
+      .map((vp) => [vp[0].getKey(), vp[1]]);
     return this.ListRef.setItemPermissionsAsync(entityId, salValuePairs, reset);
   };
 
@@ -266,7 +266,7 @@ class EntitySet {
   SetFolderPermissions = async function (folderPath, valuePairs, reset = true) {
     const salValuePairs = valuePairs
       .filter((vp) => vp[0] && vp[1])
-      .map((vp) => [vp[0].LoginName ?? vp[0].Title, vp[1]]);
+      .map((vp) => [vp[0].getKey(), vp[1]]);
     return this.ListRef.setFolderPermissionsAsync(
       folderPath,
       salValuePairs,

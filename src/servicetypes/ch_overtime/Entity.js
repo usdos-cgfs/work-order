@@ -1,15 +1,20 @@
 import { People } from "../../entities/People.js";
-import DateField from "../../fields/DateField.js";
+import PeopleField from "../../fields/PeopleField.js";
+import TextField from "../../fields/TextField.js";
+import DateField, { dateFieldTypes } from "../../fields/DateField.js";
 import { requestOrgStore } from "../../entities/RequestOrg.js";
 
 import ApplicationDbContext from "../../infrastructure/ApplicationDbContext.js";
 import { permissions } from "../../infrastructure/Authorization.js";
 import ContractorSupplement from "../contractor_supplement/ContractorSupplement.js";
 
+import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+
 import { registerServiceTypeViewComponents } from "../../common/KnockoutExtensions.js";
 
-export default class CH_Overtime {
+export default class CH_Overtime extends ConstrainedEntity {
   constructor(request) {
+    super(request);
     this.Request = request;
     this.supplementSet = ApplicationDbContext.Set(ContractorSupplement);
 
@@ -18,18 +23,30 @@ export default class CH_Overtime {
       components: this.ContractorSupplement.components,
     });
   }
+
+  RequestSubmitted = ko.pureComputed(() => this.Request.Pipeline.Stage());
+
   ID;
 
-  Contractor = ko.observable();
-  GovManager = ko.observable();
-  GTM = ko.observable();
-  APM = ko.observable();
-  COR = ko.observable();
-
-  DateStart = new DateField();
-  DateEnd = new DateField();
-
-  Hours = ko.observable();
+  GovManager = new PeopleField({
+    displayName: "Gov Manager",
+    isRequired: true,
+  });
+  GTM = new PeopleField({
+    displayName: "GTM",
+    isRequired: true,
+    Visible: this.RequestSubmitted,
+  });
+  APM = new PeopleField({
+    displayName: "APM",
+    isRequired: true,
+    Visible: this.RequestSubmitted,
+  });
+  COR = new PeopleField({
+    displayName: "COR",
+    isRequired: true,
+    Visible: this.RequestSubmitted,
+  });
 
   ContractorSupplement = {
     IsLoading: ko.observable(),
@@ -96,40 +113,34 @@ export default class CH_Overtime {
   };
 
   FieldMap = {
-    ID: this.ID,
-    FullName: {
-      obs: this.Contractor,
-      factory: People.Create,
-    },
-    ManagerDept: {
-      obs: this.GovManager,
-      factory: People.Create,
-    },
-    GTM: {
-      obs: this.GTM,
-      factory: People.Create,
-    },
-    APM: {
-      obs: this.APM,
-      factory: People.Create,
-    },
-    COR: {
-      obs: this.COR,
-      factory: People.Create,
-    },
-    DateStart: {
-      set: this.DateStart.set,
-      get: this.DateStart.get,
-    },
-    DateEnd: {
-      set: this.DateEnd.set,
-      get: this.DateEnd.get,
-    },
-    Hours: this.Hours,
-    ContractorSupplement: {
-      get: this.ContractorSupplement.entity,
-      set: this.ContractorSupplement.set,
-    },
+    FullName: new PeopleField({
+      displayName: "Contractor",
+      isRequired: true,
+    }),
+    ManagerDept: this.GovManager,
+    GTM: this.GTM,
+    APM: this.APM,
+    COR: this.COR,
+    DateStart: new DateField({
+      displayName: "Start Date",
+      type: dateFieldTypes.date,
+      isRequired: true,
+    }),
+    DateEnd: new DateField({
+      displayName: "End Date (Within Month Range)",
+      type: dateFieldTypes.date,
+      isRequired: true,
+    }),
+    Hours: new TextField({
+      displayName: "Overtime Hours (Not to Exceed)",
+      isRequired: true,
+      attr: { type: "number" },
+    }),
+    // ContractorSupplement: {
+    //   get: this.ContractorSupplement.entity,
+    //   set: this.ContractorSupplement.set,
+    //   Visible: false,
+    // },
   };
 
   validationErrors = ko.pureComputed(() => {

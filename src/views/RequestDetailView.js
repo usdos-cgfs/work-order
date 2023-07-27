@@ -223,10 +223,12 @@ export class RequestDetailView {
       //this.request.Title = createNewRequestTitle();
       this.request.State.Status(requestStates.draft);
       this.request.State.IsActive(true);
+
+      // Watch for a change in service type
       this.request.ServiceType.Def.subscribe(this.serviceTypeDefinitionWatcher);
     }
 
-    // this.request.ServiceType.refreshEntity();
+    this.request.ServiceType.refreshEntity();
 
     this.request.Assignments.NewAssignmentComponent =
       new NewAssignmentComponent({

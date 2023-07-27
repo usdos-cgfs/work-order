@@ -801,15 +801,14 @@ export function SPList(listDef) {
     if (!val) {
       return val;
     }
-    var out;
+    let out = {};
     switch (val.constructor.getName()) {
-      case "SP.FieldLookupValue":
       case "SP.FieldUserValue":
-        out = {
-          ID: val.get_lookupId(),
-          LookupValue: val.get_lookupValue(),
-          Title: val.get_lookupValue(),
-        };
+        out.LoginName = val.get_email();
+      case "SP.FieldLookupValue":
+        out.ID = val.get_lookupId();
+        out.LookupValue = val.get_lookupValue();
+        out.Title = val.get_lookupValue();
         break;
       default:
         out = val;

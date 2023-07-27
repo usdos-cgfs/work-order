@@ -11,6 +11,11 @@ export default class Entity extends ConstrainedEntity {
     super(params);
   }
 
+  /* A Service Type must define a fieldmap: 
+    Each key corresponds to the SP Column system name
+    Each Value should be a predefined field, or should 
+    expose a get() and set() function that will be used to
+    write and read the value from SharePoint. */
   FieldMap = {
     SamplePeople: new PeopleField({
       displayName: "Supervisor",
@@ -39,6 +44,9 @@ export default class Entity extends ConstrainedEntity {
     }),
   };
 
+  /* Optional views when querying the EntitySet. 
+    By default, all declared columns are used.
+    When a view is passed, only the specified columns are loaded. */
   static Views = {
     All: ["ID", "Title"],
   };

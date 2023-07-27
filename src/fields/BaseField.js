@@ -5,7 +5,7 @@ export default class BaseField {
     displayName,
     isRequired = false,
     width,
-    Visible = () => true,
+    Visible = ko.pureComputed(() => true),
   }) {
     this.displayName = displayName;
     this.isRequired = isRequired;
@@ -20,8 +20,9 @@ export default class BaseField {
 
   toString = ko.pureComputed(() => this.Value());
 
-  validate = () => {
-    this.ShowErrors(true);
+  validate = (showErrors = true) => {
+    this.ShowErrors(showErrors);
+    return this.Errors();
   };
 
   Errors = ko.pureComputed(() => {

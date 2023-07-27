@@ -709,6 +709,7 @@
             <!-- ko if: Custom -->
             <!-- ko using: Custom -->
             <div
+              class="flex-grow-1 me-3"
               data-bind="component: {name: actionComponentName, params: $data }"
             ></div>
             <!-- /ko -->

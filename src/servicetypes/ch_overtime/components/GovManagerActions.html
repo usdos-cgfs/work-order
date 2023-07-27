@@ -1,18 +1,34 @@
-<div data-bind="visible: hasBeenValidated, foreach: Errors">
+<!-- ko if: Editing -->
+<div class="row">
   <div
-    class="alert alert-warning"
-    role="alert"
-    data-bind="text: description"
+    class="col col-12 pb-2"
+    data-bind="component: {name: APM.components.edit, params: APM}"
   ></div>
-</div>
-<div class="pb-2">
-  <label for="ch_overtime-people-apm"><h6>APM:</h6></label>
-  <div id="ch_overtime-people-apm" data-bind="people: APM"></div>
-</div>
-<div class="pb-2">
-  <label for="ch_overtime-people-gtm"><h6>GTM:</h6></label>
-  <div id="ch_overtime-people-gtm" data-bind="people: GTM"></div>
+  <div
+    class="col col-12 pb-2"
+    data-bind="component: {name: GTM.components.edit, params: GTM}"
+  ></div>
 </div>
 <button type="button" class="btn fluid btn-primary" data-bind="click: submit">
   Save
 </button>
+<!-- /ko -->
+<!-- ko ifnot: Editing-->
+<div class="row">
+  <div
+    class="col col-12 pb-2"
+    data-bind="component: {name: APM.components.view, params: APM}"
+  ></div>
+  <div
+    class="col col-12 pb-2"
+    data-bind="component: {name: GTM.components.view, params: GTM}"
+  ></div>
+</div>
+<button
+  type="button"
+  class="btn fluid btn-primary"
+  data-bind="click: () => Editing(true)"
+>
+  Update
+</button>
+<!-- /ko -->
