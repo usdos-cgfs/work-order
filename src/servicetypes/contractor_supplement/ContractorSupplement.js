@@ -1,7 +1,15 @@
-import { People } from "../../entities/People.js";
+import SelectField from "../../fields/SelectField.js";
+import TextField from "../../fields/TextField.js";
+import PeopleField from "../../fields/PeopleField.js";
 
-export default class ContractorSupplement {
-  constructor(params) {}
+import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+
+export default class ContractorSupplement extends ConstrainedEntity {
+  constructor(params) {
+    super(params);
+    if (window.DEBUG) console.log("new contractor supplement", params);
+  }
+
   ObservableID = ko.observable();
   get ID() {
     return this.ObservableID();
@@ -12,32 +20,45 @@ export default class ContractorSupplement {
 
   Title = "";
 
-  TaskOrderNumber = ko.observable();
-  RequisitionNumber = ko.observable();
-  LaborCategory = ko.observable();
-  ContractorType = ko.observable();
-  Contractor = ko.observable();
+  TaskOrderNumber = new TextField({
+    displayName: "Task Order Number",
+    isRequired: true,
+  });
+  RequisitionNumber = new TextField({
+    displayName: "Requisition Number",
+    isRequired: true,
+  });
+  LaborCategory = new TextField({
+    displayName: "Labor Category",
+    isRequired: true,
+  });
+  ContractorType = new SelectField({
+    displayName: "Contractor Type",
+    options: ["SCA", "Non-SCA"],
+    isRequired: true,
+  });
+  Contractor = new PeopleField({
+    displayName: "Contractor",
+    isRequired: true,
+    Visible: ko.observable(false),
+  });
 
   FieldMap = {
-    ID: this.ID,
     TaskOrderNumber: this.TaskOrderNumber,
     RequisitionNumber: this.RequisitionNumber,
     LaborCategory: this.LaborCategory,
     ContractorType: this.ContractorType,
-    Contractor: {
-      obs: this.Contractor,
-      factory: People.Create,
-    },
+    Contractor: this.Contractor,
   };
 
-  IsValid = ko.pureComputed(() => {
-    return (
-      this.ContractorType() &&
-      this.LaborCategory() &&
-      this.RequisitionNumber() &&
-      this.TaskOrderNumber()
-    );
-  });
+  // IsValid = ko.pureComputed(() => {
+  //   return (
+  //     this.ContractorType() &&
+  //     this.LaborCategory() &&
+  //     this.RequisitionNumber() &&
+  //     this.TaskOrderNumber()
+  //   );
+  // });
 
   static Views = {
     All: [

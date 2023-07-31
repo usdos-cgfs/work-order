@@ -18,16 +18,17 @@ export default class ActionGovManager {
     // });
     this.apmWatcher(this.ServiceType.Entity().APM.get());
     this.gtmWatcher(this.ServiceType.Entity().GTM.get());
-    this.initialValidation();
+    const isValid = this.validate(false);
+    this.Editing(isValid.length);
   }
 
   Editing = ko.observable(true);
-  InitiallyValid = ko.observable(false);
 
   APM = new PeopleField({
     displayName: "APM",
     isRequired: true,
   });
+
   GTM = new PeopleField({
     displayName: "GTM",
     isRequired: false,
@@ -35,30 +36,6 @@ export default class ActionGovManager {
 
   hasBeenValidated = ko.observable(false);
   hasBeenSaved = ko.observable(false);
-
-  initialValidation = () => {
-    let isValid = true;
-    const errors = [];
-
-    if (this.APM.validate().length) {
-      this.APM.ShowErrors(false);
-      errors.push(
-        new ValidationError(
-          errorSource,
-          "gov-manager-actions",
-          "Please provide a valid APM."
-        )
-      );
-      isValid = false;
-    }
-    this.Errors(
-      this.Errors()
-        .filter((e) => e.source != errorSource)
-        .concat(errors)
-    );
-    this.InitiallyValid(isValid);
-    this.Editing(!isValid);
-  };
 
   validate = (showErrors = true) => {
     if (!this.ServiceType.Entity()) return [];
@@ -68,7 +45,7 @@ export default class ActionGovManager {
         new ValidationError(
           errorSource,
           "gov-manager-actions",
-          "Please correct APM errors!"
+          "Please provide a valid APM."
         )
       );
     }

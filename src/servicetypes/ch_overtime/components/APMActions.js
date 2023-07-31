@@ -3,6 +3,9 @@ import ApplicationDbContext, {
 } from "../../../infrastructure/ApplicationDbContext.js";
 import ContractorSupplement from "../../contractor_supplement/ContractorSupplement.js";
 
+import { ValidationError } from "../../../primitives/ValidationError.js";
+import CH_Overtime from "../Entity.js";
+
 export default class ActionAPM {
   constructor(params) {
     console.log("Hello from APM Actions module.");
@@ -11,15 +14,32 @@ export default class ActionAPM {
     this.Errors = params.errors;
     // this.ServiceType.Entity().GTM.subscribe(this.gtmWatcher);
     this.Request = params.request;
-    this.Supplement = this.ServiceType.Entity().ContractorSupplement;
-    this.Entity = this.ServiceType.Entity;
 
-    this.contractorSupplementEntity =
-      this.Supplement.entity() ?? new ContractorSupplement();
-    this.validate();
+    if (!this.ServiceType.Entity().ID) {
+      console.error("No service entity provided");
+    }
+
+    this.newEntity = {};
+    // Create a clone of the service type entity
+    Object.assign(this.newEntity, this.ServiceType.Entity());
+    // this.newEntity = new CH_Overtime(params.request);
+    // this.newEntity.ID = this.ServiceType.Entity().ID;
+    // this.ServiceType.Def()?.getListRef()?.LoadEntity(this.newEntity);
+    // this.newEntity.Request = params.request;
+
+    if (window.DEBUG) console.log("setting supplement");
+    if (!this.newEntity.ContractorSupplement.entity())
+      this.newEntity.ContractorSupplement.entity(new ContractorSupplement());
+    const isValid = this.validate(false);
+    this.Editing(isValid.length);
+    this.IsCompleted(!isValid.length);
   }
 
-  contractorSupplementEntity;
+  Editing = ko.observable(true);
+
+  DisplayMode = ko.pureComputed(() => {
+    return this.Editing() ? "edit" : "view";
+  });
 
   init = async () => {
     //   "edit-contractor-supplement",
@@ -31,40 +51,50 @@ export default class ActionAPM {
 
   hasBeenValidated = ko.observable(false);
   hasBeenSaved = ko.observable(false);
+  IsCompleted = ko.observable(false);
 
-  getValidationErrors = () => {
+  validate = (showErrors = true) => {
+    if (!this.newEntity) return [];
     const errors = [];
-    if (!this.Entity().GTM()) {
-      errors.push({
-        source: errorSource,
-        description: "Please provide a GTM.",
-      });
-    }
-    if (!this.Entity().COR()) {
-      errors.push({
-        source: errorSource,
-        description: "Please provide a COR.",
-      });
+
+    if (this.newEntity.GTM.validate(showErrors).length) {
+      errors.push(
+        new ValidationError(
+          errorSource,
+          "required-field",
+          "Please provide a GTM."
+        )
+      );
     }
 
-    if (!this.contractorSupplementEntity.IsValid()) {
-      errors.push({
-        source: errorSource,
-        description: "Please provide the contractor supplemental information.",
-      });
+    if (this.newEntity.COR.validate(showErrors).length) {
+      errors.push(
+        new ValidationError(
+          errorSource,
+          "required-field",
+          "Please provide a COR."
+        )
+      );
     }
 
-    return errors;
-  };
+    if (
+      this.newEntity.ContractorSupplement.entity().validate(showErrors).length
+    ) {
+      errors.push(
+        new ValidationError(
+          errorSource,
+          "required-field",
+          "Please provide the contractor supplemental information."
+        )
+      );
+    }
 
-  validate = () => {
-    const validationErrors = this.getValidationErrors();
     this.Errors(
       this.Errors()
         .filter((e) => e.source != errorSource)
-        .concat(validationErrors)
+        .concat(errors)
     );
-    return validationErrors;
+    return errors;
   };
 
   // gtmWatcher = (user) => {
@@ -76,13 +106,18 @@ export default class ActionAPM {
   submit = async () => {
     this.hasBeenValidated(true);
     if (this.validate().length) return;
-    console.log(this);
 
-    await this.ServiceType.updateEntity(["COR", "GTM"]);
+    await this.newEntity.ContractorSupplement.create(
+      this.newEntity.ContractorSupplement.entity()
+    );
 
-    await this.Supplement.create(this.contractorSupplementEntity);
+    await this.ServiceType.Def()
+      ?.getListRef()
+      ?.UpdateEntity(this.newEntity, CH_Overtime.Views.APMUpdate);
+
     this.ServiceType.refreshEntity();
     this.hasBeenSaved(true);
+    this.IsCompleted(true);
   };
 
   update = async () => {

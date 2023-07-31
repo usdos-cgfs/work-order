@@ -58,6 +58,15 @@
   class: GTM.width"
   ></div>
 </div>
+<div class="row">
+  <div
+    class="col pb-2"
+    data-bind="
+    visible: COR.Visible,
+    component: {name: COR.components.view, params: COR}, 
+    class: COR.width"
+  ></div>
+</div>
 <!-- ko if: ContractorSupplement?.entity -->
 <div
   data-bind="component: {name: ContractorSupplement.components.View, params: {Entity: ContractorSupplement.entity()} }"

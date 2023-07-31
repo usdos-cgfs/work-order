@@ -1,40 +1,55 @@
-<div data-bind="">
-  <!-- <div data-bind="visible: hasBeenValidated, foreach: Errors">
+<div data-bind="using: newEntity">
+  <div data-bind="">
     <div
-      class="alert alert-warning"
-      role="alert"
-      data-bind="text: description"
+      class="col col-12 pb-2"
+      data-bind="component: {name: GTM.components[$parent.DisplayMode()], params: GTM}"
     ></div>
-  </div> -->
-  <div data-bind="using: Entity">
-    <div class="pb-2">
-      <label for="ch_overtime-people-gtm"><h6>GTM:</h6></label>
-      <div id="ch_overtime-apm-people-gtm" data-bind="people: GTM"></div>
-    </div>
-    <div class="pb-2">
-      <label for="ch_overtime-people-cor"><h6>COR:</h6></label>
-      <div id="ch_overtime-apm-people-cor" data-bind="people: COR"></div>
-    </div>
+    <div
+      class="col col-12 pb-2"
+      data-bind="component: {name: COR.components[$parent.DisplayMode()], params: COR}"
+    ></div>
   </div>
-  <!-- ko if: Entity().GTM && Entity().COR -->
+  <!-- ko if: GTM.IsValid() && COR.IsValid() -->
   <div
-    data-bind="component: {name: Supplement.components.Edit, params: {Entity: contractorSupplementEntity }}"
+    data-bind="component: {name: ContractorSupplement.components[$parent.DisplayMode()], params: {Entity: ContractorSupplement.entity() }}"
   ></div>
-  <!-- ko if: contractorSupplementEntity.ObservableID -->
-  <button
-    class="btn btn-primary"
-    data-bind="click: update, enable: contractorSupplementEntity.IsValid"
-  >
-    Update
-  </button>
-  <!-- /ko -->
-  <!-- ko ifnot: contractorSupplementEntity.ObservableID -->
-  <button
-    class="btn btn-primary"
-    data-bind="click: submit, enable: contractorSupplementEntity.IsValid"
-  >
-    Submit
-  </button>
-  <!-- /ko -->
+  <div>
+    <!-- ko if: $parent.Editing -->
+    <!-- ko if: $parent.IsCompleted -->
+    <button
+      class="btn btn-primary"
+      type="button"
+      data-bind="click: $parent.update, enable: ContractorSupplement.entity().IsValid"
+    >
+      Update
+    </button>
+    <button
+      class="btn btn-outline-danger"
+      type="button"
+      data-bind="click: () => $parent.Editing(false)"
+    >
+      Cancel
+    </button>
+    <!-- /ko -->
+    <!-- ko ifnot: $parent.IsCompleted -->
+    <button
+      class="btn btn-primary"
+      type="button"
+      data-bind="click: $parent.submit, enable: ContractorSupplement.entity().IsValid"
+    >
+      Submit
+    </button>
+    <!-- /ko -->
+    <!-- /ko -->
+    <!-- ko ifnot: $parent.Editing -->
+    <button
+      class="btn btn-primary"
+      type="button"
+      data-bind="click: () => $parent.Editing(true)"
+    >
+      Edit
+    </button>
+    <!-- /ko -->
+  </div>
   <!-- /ko -->
 </div>

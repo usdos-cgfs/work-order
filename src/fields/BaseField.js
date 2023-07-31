@@ -26,7 +26,7 @@ export default class BaseField {
   };
 
   Errors = ko.pureComputed(() => {
-    if (!this.ShowErrors() || !this.Visible()) return [];
+    if (!this.Visible()) return [];
     const isRequired =
       typeof this.isRequired == "function"
         ? this.isRequired()
@@ -44,6 +44,8 @@ export default class BaseField {
           ),
         ];
   });
+
+  IsValid = ko.pureComputed(() => !this.Errors().length);
 
   ShowErrors = ko.observable(false);
 

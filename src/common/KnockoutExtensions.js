@@ -81,7 +81,9 @@ ko.bindingHandlers.people = {
         .GetAllUserInfo()
         .find((pickerUser) => pickerUser.DisplayText == userValue.LookupValue)
     ) {
-      pickerControl.AddUserKeys(userValue.LoginName);
+      pickerControl.AddUserKeys(
+        userValue.LoginName ?? userValue.LookupValue ?? userValue.Title
+      );
     }
   },
 };
@@ -168,20 +170,6 @@ const fromPathViewModelLoader = {
 };
 
 ko.components.loaders.unshift(fromPathViewModelLoader);
-
-export function registerServiceTypeViewComponents({ uid, components }) {
-  Object.keys(components).forEach((view) => {
-    const componentName = components[view];
-    if (!ko.components.isRegistered(componentName)) {
-      ko.components.register(componentName, {
-        template: {
-          fromPath: `/servicetypes/${uid}/views/${view}.html`,
-        },
-        viewModel: ServiceTypeModule,
-      });
-    }
-  });
-}
 
 export function registerServiceTypeActionComponent({
   uid,

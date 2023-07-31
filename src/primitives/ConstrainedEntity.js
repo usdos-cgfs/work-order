@@ -18,20 +18,22 @@ export default class ConstrainedEntity extends Entity {
     Object.keys(this.FieldMap).filter((key) => this.FieldMap[key].Visible())
   );
 
-  validate = () => {
+  validate = (showErrors = true) => {
     Object.values(this.FieldMap).map(
-      (field) => field.validate && field.validate()
+      (field) => field.validate && field.validate(showErrors)
     );
-    this.ShowErrors(true);
+    this.ShowErrors(showErrors);
     return this.Errors();
   };
 
   ShowErrors = ko.observable(false);
   Errors = ko.pureComputed(() => {
-    if (!this.ShowErrors()) return [];
+    // if (!this.ShowErrors()) return [];
 
     return Object.values(this.FieldMap)
       .filter((field) => field.Errors && field.Errors())
       .flatMap((field) => field.Errors());
   });
+
+  IsValid = ko.pureComputed(() => !this.Errors().length);
 }

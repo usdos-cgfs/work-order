@@ -66,6 +66,7 @@ export class ServiceType {
     });
     // TODO: Minor - this is hacky since we don't technically have a new/edit form.
     // Maybe we should pass the filename as well when we register or define in the servicetype entity itself.
+    // Components should probably just live on each entity.
     this._components.New = this._components.Edit;
     return this._components;
   };

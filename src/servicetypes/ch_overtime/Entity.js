@@ -10,7 +10,7 @@ import ContractorSupplement from "../contractor_supplement/ContractorSupplement.
 
 import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
 
-import { registerServiceTypeViewComponents } from "../../common/KnockoutExtensions.js";
+import { registerServiceTypeViewComponents } from "../../infrastructure/RegisterComponents.js";
 
 export default class CH_Overtime extends ConstrainedEntity {
   constructor(request) {
@@ -27,7 +27,10 @@ export default class CH_Overtime extends ConstrainedEntity {
   RequestSubmitted = ko.pureComputed(() => this.Request.Pipeline.Stage());
 
   ID;
-
+  Contractor = new PeopleField({
+    displayName: "Contractor",
+    isRequired: true,
+  });
   GovManager = new PeopleField({
     displayName: "Gov Manager",
     isRequired: true,
@@ -48,14 +51,19 @@ export default class CH_Overtime extends ConstrainedEntity {
     Visible: this.RequestSubmitted,
   });
 
+  // TODO: component name keys should be standardized across entities/fields (should probably be lower case)
   ContractorSupplement = {
     IsLoading: ko.observable(),
     entity: ko.observable(),
     components: {
       View: "svc-view-" + this.UID,
+      view: "svc-view-" + this.UID,
       Edit: "svc-edit-" + this.UID,
+      edit: "svc-edit-" + this.UID,
+      New: "svc-edit-" + this.UID,
       New: "svc-edit-" + this.UID,
     },
+    validate: (showErrors = true) => {},
     refresh: async () => {
       if (!this.ContractorSupplement.entity()?.ID) return;
       this.ContractorSupplement.IsLoading(true);
@@ -87,7 +95,7 @@ export default class CH_Overtime extends ConstrainedEntity {
       // Break the Permissions
       await this.supplementSet.SetFolderPermissions(relFolderPath, folderPerms);
 
-      contractorSupplement.Contractor(this.Contractor());
+      contractorSupplement.Contractor.set(this.Contractor.get());
       // Create the item
       await this.supplementSet.AddEntity(
         contractorSupplement,
@@ -104,19 +112,16 @@ export default class CH_Overtime extends ConstrainedEntity {
       )?.UserGroup;
 
       return [
-        [this.APM(), permissions.RestrictedContribute],
-        [this.GTM(), permissions.RestrictedContribute],
-        [this.COR(), permissions.RestrictedContribute],
+        [this.APM.get(), permissions.RestrictedContribute],
+        [this.GTM.get(), permissions.RestrictedContribute],
+        [this.COR.get(), permissions.RestrictedContribute],
         [budgetGroup, permissions.RestrictedContribute],
       ];
     },
   };
 
   FieldMap = {
-    FullName: new PeopleField({
-      displayName: "Contractor",
-      isRequired: true,
-    }),
+    FullName: this.Contractor,
     ManagerDept: this.GovManager,
     GTM: this.GTM,
     APM: this.APM,
@@ -124,23 +129,23 @@ export default class CH_Overtime extends ConstrainedEntity {
     DateStart: new DateField({
       displayName: "Start Date",
       type: dateFieldTypes.date,
-      isRequired: true,
+      isRequired: false,
     }),
     DateEnd: new DateField({
       displayName: "End Date (Within Month Range)",
       type: dateFieldTypes.date,
-      isRequired: true,
+      isRequired: false,
     }),
     Hours: new TextField({
       displayName: "Overtime Hours (Not to Exceed)",
-      isRequired: true,
+      isRequired: false,
       attr: { type: "number" },
     }),
-    // ContractorSupplement: {
-    //   get: this.ContractorSupplement.entity,
-    //   set: this.ContractorSupplement.set,
-    //   Visible: false,
-    // },
+    ContractorSupplement: {
+      get: this.ContractorSupplement.entity,
+      set: this.ContractorSupplement.set,
+      Visible: () => false,
+    },
   };
 
   validationErrors = ko.pureComputed(() => {
@@ -164,6 +169,7 @@ export default class CH_Overtime extends ConstrainedEntity {
       "ContractorSupplement",
       "Request",
     ],
+    APMUpdate: ["COR", "GTM"],
   };
   static ListDef = {
     name: "st_ch_overtime",
