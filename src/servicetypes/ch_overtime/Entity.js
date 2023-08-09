@@ -26,6 +26,10 @@ export default class CH_Overtime extends ConstrainedEntity {
 
   RequestSubmitted = ko.pureComputed(() => this.Request.Pipeline.Stage());
 
+  RequestStage2 = ko.pureComputed(
+    () => this.Request.Pipeline.Stage().Step == 2
+  );
+
   ID;
   Contractor = new PeopleField({
     displayName: "Contractor",
@@ -37,17 +41,17 @@ export default class CH_Overtime extends ConstrainedEntity {
   });
   GTM = new PeopleField({
     displayName: "GTM",
-    isRequired: true,
+    isRequired: this.RequestStage2,
     Visible: this.RequestSubmitted,
   });
   APM = new PeopleField({
     displayName: "APM",
-    isRequired: true,
+    isRequired: this.RequestSubmitted,
     Visible: this.RequestSubmitted,
   });
   COR = new PeopleField({
     displayName: "COR",
-    isRequired: true,
+    isRequired: this.RequestStage2,
     Visible: this.RequestSubmitted,
   });
 

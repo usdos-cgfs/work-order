@@ -20,19 +20,8 @@ export default class ActionAPM {
     }
 
     this.newEntity = {};
-    // Create a clone of the service type entity
-    Object.assign(this.newEntity, this.ServiceType.Entity());
-    // this.newEntity = new CH_Overtime(params.request);
-    // this.newEntity.ID = this.ServiceType.Entity().ID;
-    // this.ServiceType.Def()?.getListRef()?.LoadEntity(this.newEntity);
-    // this.newEntity.Request = params.request;
 
-    if (window.DEBUG) console.log("setting supplement");
-    if (!this.newEntity.ContractorSupplement.entity())
-      this.newEntity.ContractorSupplement.entity(new ContractorSupplement());
-    const isValid = this.validate(false);
-    this.Editing(isValid.length);
-    this.IsCompleted(!isValid.length);
+    this.init();
   }
 
   Editing = ko.observable(true);
@@ -42,11 +31,21 @@ export default class ActionAPM {
   });
 
   init = async () => {
-    //   "edit-contractor-supplement",
-    //   this.ServiceType.Def().UID
-    // );
-    // const entityExists = await this.Supplement.refresh();
-    // console.log("Found supplement", entityExists);
+    // Create a clone of the service type entity
+    Object.assign(this.newEntity, this.ServiceType.Entity());
+    // this.newEntity = new CH_Overtime(params.request);
+    // this.newEntity.ID = this.ServiceType.Entity().ID;
+    // this.ServiceType.Def()?.getListRef()?.LoadEntity(this.newEntity);
+    // this.newEntity.Request = params.request;
+
+    if (window.DEBUG) console.log("setting supplement");
+    await new Promise();
+
+    if (!this.newEntity.ContractorSupplement.entity())
+      this.newEntity.ContractorSupplement.entity(new ContractorSupplement());
+    const isValid = this.validate(false);
+    this.Editing(isValid.length);
+    this.IsCompleted(!isValid.length);
   };
 
   hasBeenValidated = ko.observable(false);
@@ -128,7 +127,9 @@ export default class ActionAPM {
       ?.getListRef()
       ?.UpdateEntity(this.ServiceType.Entity(), ["COR", "GTM"]);
 
-    await this.Supplement.update(ContractorSupplement.Views.APMUpdate);
+    await this.newEntity.ContractorSupplement.update(
+      ContractorSupplement.Views.APMUpdate
+    );
     this.ServiceType.refreshEntity();
     this.hasBeenSaved(true);
   };

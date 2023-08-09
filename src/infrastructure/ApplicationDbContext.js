@@ -199,6 +199,7 @@ class EntitySet {
     const writeableEntity = creationfunc(entity);
 
     if (request) {
+      writeableEntity.Title = request.Title;
       writeableEntity.Request = request;
     }
     if (DEBUG) console.log(writeableEntity);

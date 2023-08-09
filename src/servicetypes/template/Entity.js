@@ -5,10 +5,14 @@ import DateField, { dateFieldTypes } from "../../fields/DateField.js";
 import TextAreaField from "../../fields/TextAreaField.js";
 import CheckboxField from "../../fields/CheckboxField.js";
 import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import LookupField from "../../fields/LookupField.js";
 
-export default class Entity extends ConstrainedEntity {
-  constructor(params) {
-    super(params);
+import { RequestOrg, requestOrgStore } from "../../entities/RequestOrg.js";
+import { ServiceType, serviceTypeStore } from "../../entities/ServiceType.js";
+
+export default class TemplateRequest extends ConstrainedEntity {
+  constructor({ ID, Title, request }) {
+    super(request);
   }
 
   /* A Service Type must define a fieldmap: 
@@ -19,28 +23,44 @@ export default class Entity extends ConstrainedEntity {
   FieldMap = {
     SamplePeople: new PeopleField({
       displayName: "Supervisor",
-      isRequired: true,
+      isRequired: false,
     }),
     SampleSelect: new SelectField({
       displayName: " Type",
       options: ["FTE", "Contractor"],
-      isRequired: true,
+      isRequired: false,
     }),
     SampleText: new TextField({
       displayName: "FullName",
-      isRequired: true,
+      isRequired: false,
     }),
     SampleTextArea: new TextAreaField({
       displayName: "NotificationDates",
-      isRequired: true,
+      isRequired: false,
     }),
     SampleDate: new DateField({
       displayName: "ExpirationDate",
       type: dateFieldTypes.date,
-      isRequired: true,
+      isRequired: false,
     }),
     SampleCheckbox: new CheckboxField({
       displayName: "SpecialOrder",
+    }),
+    SampleLookup: new LookupField({
+      displayName: "Request Org",
+      type: RequestOrg,
+      lookupCol: "Title",
+      Options: requestOrgStore,
+      isRequired: false,
+      multiple: false,
+    }),
+    SampleMultiLookup: new LookupField({
+      displayName: "Request Orgs",
+      type: ServiceType,
+      lookupCol: "Title",
+      Options: serviceTypeStore,
+      isRequired: false,
+      multiple: true,
     }),
   };
 
@@ -52,8 +72,8 @@ export default class Entity extends ConstrainedEntity {
   };
 
   static ListDef = {
-    name: "st_",
-    title: "st_",
-    fields: Entity.Views.All,
+    name: "st_template",
+    title: "st_template",
+    fields: TemplateRequest.Views.All,
   };
 }
