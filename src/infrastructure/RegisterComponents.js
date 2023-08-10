@@ -1,4 +1,4 @@
-import ServiceTypeModule from "../components/ServiceType/ServiceTypeModule.js";
+import ConstrainedEntityModule from "../components/ConstrainedEntity/ConstrainedEntityModule.js";
 
 export function RegisterComponents() {
   // Regular Components
@@ -125,7 +125,7 @@ export function RegisterComponents() {
   //registerFieldComponent("select");
 }
 
-function registerComponent({
+export function registerComponent({
   name,
   folder,
   module: moduleFilename,
@@ -171,9 +171,9 @@ export function registerServiceTypeViewComponents({ uid, components }) {
       ko.components.register(componentName, {
         template: {
           fromPath: `/servicetypes/${uid}/views/${view}.html`,
-          fallback: `/components/ServiceType/Default${view}.html`,
+          fallback: `/components/ConstrainedEntity/Default${view}.html`,
         },
-        viewModel: ServiceTypeModule,
+        viewModel: ConstrainedEntityModule,
       });
     }
   });

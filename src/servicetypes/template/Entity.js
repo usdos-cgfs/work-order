@@ -9,10 +9,20 @@ import LookupField from "../../fields/LookupField.js";
 
 import { RequestOrg, requestOrgStore } from "../../entities/RequestOrg.js";
 import { ServiceType, serviceTypeStore } from "../../entities/ServiceType.js";
+import { registerServiceTypeViewComponents } from "../../infrastructure/RegisterComponents.js";
+import BaseServiceDetail from "../BaseServiceDetail.js";
 
-export default class TemplateRequest extends ConstrainedEntity {
-  constructor({ ID, Title, request }) {
-    super(request);
+const components = {
+  view: "svc-template-view",
+  edit: "svc-template-edit",
+  new: "svc-template-edit",
+};
+
+registerServiceTypeViewComponents({ uid: "template", components });
+
+export default class TemplateRequest extends BaseServiceDetail {
+  constructor({ ID, Title, Request }) {
+    super({ ID, Title, Request });
   }
 
   /* A Service Type must define a fieldmap: 
@@ -21,6 +31,7 @@ export default class TemplateRequest extends ConstrainedEntity {
     expose a get() and set() function that will be used to
     write and read the value from SharePoint. */
   FieldMap = {
+    ...this.FieldMap,
     SamplePeople: new PeopleField({
       displayName: "Supervisor",
       isRequired: false,
@@ -55,7 +66,7 @@ export default class TemplateRequest extends ConstrainedEntity {
       multiple: false,
     }),
     SampleMultiLookup: new LookupField({
-      displayName: "Request Orgs",
+      displayName: "Service Types",
       type: ServiceType,
       lookupCol: "Title",
       Options: serviceTypeStore,
@@ -63,6 +74,8 @@ export default class TemplateRequest extends ConstrainedEntity {
       multiple: true,
     }),
   };
+
+  components = components;
 
   /* Optional views when querying the EntitySet. 
     By default, all declared columns are used.

@@ -1,6 +1,11 @@
 <label class="fw-semibold"
   ><span data-bind="text: displayName"></span
   ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span>:
+  <!-- ko if: isSearch -->
+  <div data-bind="text: toString()"></div>
+  <input class="form-control" data-bind="" />
+  <!-- /ko -->
+  <!-- ko ifnot: isSearch -->
   <!-- ko if: multiple -->
   <select
     class="form-select"
@@ -26,6 +31,7 @@
       optionsText: optionsText,
       class: ValidationClass"
   ></select>
+  <!-- /ko -->
   <!-- /ko -->
 </label>
 <!-- ko if: ShowErrors -->

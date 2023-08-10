@@ -1,4 +1,3 @@
-import { registerServiceTypeViewComponents } from "../infrastructure/RegisterComponents.js";
 import { assetsPath } from "../env.js";
 import ApplicationDbContext from "../infrastructure/ApplicationDbContext.js";
 
@@ -47,28 +46,6 @@ export class ServiceType {
     if (!this._listRef)
       this._listRef = ApplicationDbContext.Set(this._constructor);
     return this._listRef;
-  };
-
-  _components = null;
-  getViewComponents = () => {
-    if (this._components) return this._components;
-    if (!this.UID) {
-      return null;
-    }
-    this._components = {
-      View: "svc-view-" + this.UID,
-      Edit: "svc-edit-" + this.UID,
-    };
-
-    registerServiceTypeViewComponents({
-      uid: this.UID,
-      components: this._components,
-    });
-    // TODO: Minor - this is hacky since we don't technically have a new/edit form.
-    // Maybe we should pass the filename as well when we register or define in the servicetype entity itself.
-    // Components should probably just live on each entity.
-    this._components.New = this._components.Edit;
-    return this._components;
   };
 
   _constructor = null;

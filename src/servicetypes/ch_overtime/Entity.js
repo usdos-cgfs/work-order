@@ -6,11 +6,12 @@ import { requestOrgStore } from "../../entities/RequestOrg.js";
 
 import ApplicationDbContext from "../../infrastructure/ApplicationDbContext.js";
 import { permissions } from "../../infrastructure/Authorization.js";
-import ContractorSupplement from "../contractor_supplement/ContractorSupplement.js";
+import ContractorSupplement from "../contractor_supplement/Entity.js";
 
 import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
 
 import { registerServiceTypeViewComponents } from "../../infrastructure/RegisterComponents.js";
+import LookupField from "../../fields/LookupField.js";
 
 export default class CH_Overtime extends ConstrainedEntity {
   constructor(request) {
@@ -55,10 +56,19 @@ export default class CH_Overtime extends ConstrainedEntity {
     Visible: this.RequestSubmitted,
   });
 
+  ContractorSupplementField = new LookupField({
+    displayName: "Contractor Supplement",
+    Visible: ko.observable(false),
+    type: ContractorSupplement,
+    lookupCol: "Title",
+    isRequired: false,
+    multiple: false,
+  });
+
   // TODO: component name keys should be standardized across entities/fields (should probably be lower case)
   ContractorSupplement = {
     IsLoading: ko.observable(),
-    entity: ko.observable(),
+    entity: this.ContractorSupplementField.Value,
     components: {
       View: "svc-view-" + this.UID,
       view: "svc-view-" + this.UID,
@@ -69,9 +79,8 @@ export default class CH_Overtime extends ConstrainedEntity {
     },
     validate: (showErrors = true) => {},
     refresh: async () => {
-      if (!this.ContractorSupplement.entity()?.ID) return;
       this.ContractorSupplement.IsLoading(true);
-      await this.supplementSet.LoadEntity(this.ContractorSupplement.entity());
+      await this.ContractorSupplementField.refresh();
       this.ContractorSupplement.IsLoading(false);
     },
     set: async (entity) => {
@@ -124,6 +133,19 @@ export default class CH_Overtime extends ConstrainedEntity {
     },
   };
 
+  getContractorSupplementPermissions = () => {
+    const budgetGroup = requestOrgStore().find(
+      (org) => org.Title.toUpperCase() == "CGFS/EX/BUDGET"
+    )?.UserGroup;
+
+    return [
+      [this.APM.get(), permissions.RestrictedContribute],
+      [this.GTM.get(), permissions.RestrictedContribute],
+      [this.COR.get(), permissions.RestrictedContribute],
+      [budgetGroup, permissions.RestrictedContribute],
+    ];
+  };
+
   FieldMap = {
     FullName: this.Contractor,
     ManagerDept: this.GovManager,
@@ -145,11 +167,7 @@ export default class CH_Overtime extends ConstrainedEntity {
       isRequired: false,
       attr: { type: "number" },
     }),
-    ContractorSupplement: {
-      get: this.ContractorSupplement.entity,
-      set: this.ContractorSupplement.set,
-      Visible: () => false,
-    },
+    ContractorSupplement: this.ContractorSupplementField,
   };
 
   validationErrors = ko.pureComputed(() => {

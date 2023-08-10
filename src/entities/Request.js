@@ -158,14 +158,16 @@ export class RequestEntity {
     IsLoading: ko.observable(false),
     Entity: ko.observable(),
     Def: ko.observable(),
-    instantiateEntity: async (newSvcType = this.ServiceType.Def()) => {},
     refreshEntity: async () => {
       // If this is a new request creates a new service type entity
       if (DEBUG) console.log("ServiceType: Refresh Triggered");
       if (!this.ServiceType.Def()?.HasTemplate) return;
       this.ServiceType.IsLoading(true);
       if (!this.ID) {
-        const newEntity = await this.ServiceType.Def().instantiateEntity(this);
+        const newEntity = await this.ServiceType.Def().instantiateEntity({
+          Title: this.Title,
+          Request: this,
+        });
         this.ServiceType.Entity(newEntity);
         this.ServiceType.IsLoading(false);
         return;

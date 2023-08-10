@@ -8,11 +8,12 @@ export default class RequestBodyModule {
 
   ServiceTypeComponentName = ko.pureComputed(() => {
     if (!this.Entity()) return null;
-    const componentsMap = this.Def().getViewComponents();
-    if (!componentsMap) {
-      return null;
-    }
-    return componentsMap[this.DisplayMode()];
+    const componentsMap = this.Entity().components;
+    // const componentsMap = this.Def().getViewComponents();
+    // if (!componentsMap) {
+    //   return null;
+    // }
+    return componentsMap[this.DisplayMode().toLowerCase()];
   });
 
   //   serviceTypeEntityWatcher = (newSvcType, oldSvcType) => {

@@ -1,11 +1,25 @@
 export default class Entity {
-  constructor(params) {}
+  constructor(params) {
+    if (params?.ID) this.ID = params.ID;
+    if (params?.Title) this.Title = params.Title;
+  }
 
-  toJSONBlob = () => {
-    const out = {};
-    Object.keys(this.FieldMap).map(
-      (key) => (out[key] = this.FieldMap[key].toString())
-    );
-    return out;
-  };
+  ObservableID = ko.observable();
+  ObservableTitle = ko.observable();
+
+  get ID() {
+    return this.ObservableID();
+  }
+
+  set ID(val) {
+    this.ObservableID(val);
+  }
+
+  get Title() {
+    return this.ObservableTitle();
+  }
+
+  set Title(val) {
+    this.ObservableTitle(val);
+  }
 }

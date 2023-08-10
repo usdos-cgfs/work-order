@@ -1,7 +1,7 @@
 import ApplicationDbContext, {
   getAppContext,
 } from "../../../infrastructure/ApplicationDbContext.js";
-import ContractorSupplement from "../../contractor_supplement/ContractorSupplement.js";
+import ContractorSupplement from "../../contractor_supplement/Entity.js";
 
 import { ValidationError } from "../../../primitives/ValidationError.js";
 import CH_Overtime from "../Entity.js";
@@ -39,7 +39,7 @@ export default class ActionAPM {
     // this.newEntity.Request = params.request;
 
     if (window.DEBUG) console.log("setting supplement");
-    await new Promise();
+    // await new Promise();
 
     if (!this.newEntity.ContractorSupplement.entity())
       this.newEntity.ContractorSupplement.entity(new ContractorSupplement());

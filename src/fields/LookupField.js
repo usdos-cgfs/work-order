@@ -82,10 +82,10 @@ export default class LookupField extends BaseField {
     }
     if (this.multiple) {
       return this.Value()
-        .map((val) => getEntityFieldString(val, this.lookupCol))
+        .map((val) => getEntityPropertyAsString(val, this.lookupCol))
         .join(", ");
     }
-    return getEntityFieldString(this.Value(), this.lookupCol);
+    return getEntityPropertyAsString(this.Value(), this.lookupCol);
   });
 
   get = () => this.Value();
@@ -115,9 +115,26 @@ export default class LookupField extends BaseField {
   components = components;
 }
 
-function getEntityFieldString(entity, column) {
+function getEntityPropertyAsString(entity, column) {
   if (entity.FieldMap && entity.FieldMap[column]) {
-    return entity.FieldMap[column].toString();
+    const field = entity.FieldMap[column];
+    if (typeof field == "function") {
+      return field();
+    }
+
+    if (field.toString && typeof field.toString == "function") {
+      return field.toString();
+    }
+
+    if (field.get && typeof field.get == "function") {
+      return field.get();
+    }
+
+    if (field.obs) {
+      return field.obs();
+    }
+
+    return field;
   }
   return entity[column] ?? "";
 }
