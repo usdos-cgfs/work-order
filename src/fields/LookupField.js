@@ -37,8 +37,14 @@ export default class LookupField extends BaseField {
   isSearch = false;
 
   Options = ko.observableArray();
-  IsLoading = ko.observable();
-  HasLoaded = ko.observable();
+  IsLoading = ko.observable(false);
+  HasLoaded = ko.observable(false);
+
+  // TODO: Started this, should really go in the entity base class if we're doing active record
+  // create = async () => {
+  //   const newItems = this.multiple ? this.Value() : [this.Value()]
+  //   newItems.map(item => this.entitySet.AddEntity(newItems))
+  // }
 
   refresh = async () => {
     if (!!!this.Value()) {

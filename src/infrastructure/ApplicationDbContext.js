@@ -91,7 +91,7 @@ class EntitySet {
 
   // Queries
   // TODO: Feature - Queries should return options to read e.g. toList, first, toCursor
-  FindById = async (id, fields) => {
+  FindById = async (id, fields = this.AllDeclaredFields) => {
     const result = await this.ListRef.findByIdAsync(id, fields);
     if (!result) return null;
     const newEntity = new this.constructor(result);

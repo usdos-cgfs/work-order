@@ -8,30 +8,35 @@ import ApplicationDbContext from "../../infrastructure/ApplicationDbContext.js";
 import { permissions } from "../../infrastructure/Authorization.js";
 import ContractorSupplement from "../contractor_supplement/Entity.js";
 
-import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import ConstrainedEntity, {
+  defaultComponents,
+} from "../../primitives/ConstrainedEntity.js";
+
+import BaseServiceDetail from "../BaseServiceDetail.js";
 
 import { registerServiceTypeViewComponents } from "../../infrastructure/RegisterComponents.js";
 import LookupField from "../../fields/LookupField.js";
 
-export default class CH_Overtime extends ConstrainedEntity {
-  constructor(request) {
-    super(request);
-    this.Request = request;
-    this.supplementSet = ApplicationDbContext.Set(ContractorSupplement);
+const components = {
+  view: "svc-ch_overtime-view",
+  edit: "svc-ch_overtime-edit",
+  new: "svc-ch_overtime-edit",
+};
 
-    registerServiceTypeViewComponents({
-      uid: "contractor_supplement",
-      components: this.ContractorSupplement.components,
-    });
+registerServiceTypeViewComponents({ uid: "ch_overtime", components });
+
+export default class CH_Overtime extends BaseServiceDetail {
+  constructor(requestContext) {
+    super(requestContext);
+    // if (requestContext.Request) this.Request = requestContext.Request;
   }
 
-  RequestSubmitted = ko.pureComputed(() => this.Request.Pipeline.Stage());
+  RequestSubmitted = ko.pureComputed(() => this.Request?.Pipeline?.Stage());
 
   RequestStage2 = ko.pureComputed(
-    () => this.Request.Pipeline.Stage().Step == 2
+    () => this.Request?.Pipeline?.Stage()?.Step == 2
   );
 
-  ID;
   Contractor = new PeopleField({
     displayName: "Contractor",
     isRequired: true,
@@ -60,63 +65,49 @@ export default class CH_Overtime extends ConstrainedEntity {
     displayName: "Contractor Supplement",
     Visible: ko.observable(false),
     type: ContractorSupplement,
-    lookupCol: "Title",
+    lookupCol: "LaborCategory",
     isRequired: false,
     multiple: false,
   });
 
-  // TODO: component name keys should be standardized across entities/fields (should probably be lower case)
   ContractorSupplement = {
-    IsLoading: ko.observable(),
-    entity: this.ContractorSupplementField.Value,
-    components: {
-      View: "svc-view-" + this.UID,
-      view: "svc-view-" + this.UID,
-      Edit: "svc-edit-" + this.UID,
-      edit: "svc-edit-" + this.UID,
-      New: "svc-edit-" + this.UID,
-      New: "svc-edit-" + this.UID,
-    },
-    validate: (showErrors = true) => {},
-    refresh: async () => {
-      this.ContractorSupplement.IsLoading(true);
-      await this.ContractorSupplementField.refresh();
-      this.ContractorSupplement.IsLoading(false);
-    },
-    set: async (entity) => {
-      if (!entity?.ID) return;
-      this.ContractorSupplement.entity(new ContractorSupplement());
-      this.ContractorSupplement.entity().ID = entity.ID;
-      //await this.supplementSet.LoadEntity(this.ContractorSupplement.entity);
-      await this.ContractorSupplement.refresh();
-    },
+    set: ApplicationDbContext.Set(ContractorSupplement),
     update: async (fields = null) => {
-      await this.supplementSet.UpdateEntity(
-        this.ContractorSupplement.entity(),
+      // TODO: update permissions
+      await this.ContractorSupplement.set.UpdateEntity(
+        this.ContractorSupplementField.Value(),
         fields
       );
     },
-    create: async (contractorSupplement) => {
+    create: async (
+      contractorSupplement = this.ContractorSupplementField.Value()
+    ) => {
       // this.ContractorSupplement.entity.Request = this.Request;
       const relFolderPath = this.Request.getRelativeFolderPath();
       const folderPerms = this.ContractorSupplement.getPermissions();
       //Create the folder
-      const listFolderId = await this.supplementSet.UpsertFolderPath(
+      const listFolderId = await this.ContractorSupplement.set.UpsertFolderPath(
         relFolderPath
       );
 
       // Break the Permissions
-      await this.supplementSet.SetFolderPermissions(relFolderPath, folderPerms);
+      await this.ContractorSupplement.set.SetFolderPermissions(
+        relFolderPath,
+        folderPerms
+      );
 
       contractorSupplement.Contractor.set(this.Contractor.get());
       // Create the item
-      await this.supplementSet.AddEntity(
+      await this.ContractorSupplement.set.AddEntity(
         contractorSupplement,
         relFolderPath,
         this.Request
       );
-      this.ContractorSupplement.entity(contractorSupplement);
-      await this.Request.ServiceType.updateEntity(["ContractorSupplement"]);
+      this.ContractorSupplementField.Value(contractorSupplement);
+      // await this.Request.ServiceType.updateEntity(["ContractorSupplement"]);
+      await ApplicationDbContext.Set(CH_Overtime).UpdateEntity(this, [
+        "ContractorSupplement",
+      ]);
     },
     getPermissions: () => {
       // APM, GTM, Budget, PA, and COR have access
@@ -133,18 +124,7 @@ export default class CH_Overtime extends ConstrainedEntity {
     },
   };
 
-  getContractorSupplementPermissions = () => {
-    const budgetGroup = requestOrgStore().find(
-      (org) => org.Title.toUpperCase() == "CGFS/EX/BUDGET"
-    )?.UserGroup;
-
-    return [
-      [this.APM.get(), permissions.RestrictedContribute],
-      [this.GTM.get(), permissions.RestrictedContribute],
-      [this.COR.get(), permissions.RestrictedContribute],
-      [budgetGroup, permissions.RestrictedContribute],
-    ];
-  };
+  supplementComponents = defaultComponents;
 
   FieldMap = {
     FullName: this.Contractor,
@@ -170,11 +150,7 @@ export default class CH_Overtime extends ConstrainedEntity {
     ContractorSupplement: this.ContractorSupplementField,
   };
 
-  validationErrors = ko.pureComputed(() => {
-    const result = [];
-    // result.push({ description: "no stage set" });
-    return result;
-  });
+  components = components;
 
   static Views = {
     All: [
@@ -193,10 +169,13 @@ export default class CH_Overtime extends ConstrainedEntity {
     ],
     APMUpdate: ["COR", "GTM"],
   };
+
   static ListDef = {
     name: "st_ch_overtime",
     title: "st_ch_overtime",
     isServiceType: true,
     fields: CH_Overtime.Views.All,
   };
+
+  // static Set = ApplicationDbContext.Set(CH_Overtime);
 }

@@ -36,16 +36,16 @@ export default class ConstrainedEntity extends Entity {
   };
 
   FormFields = ko.pureComputed(() => {
-    return Object.values(this.FieldMap).filter((field) => field.Visible());
+    return Object.values(this.FieldMap).filter((field) => field?.Visible());
   });
 
   FormFieldKeys = ko.pureComputed(() =>
-    Object.keys(this.FieldMap).filter((key) => this.FieldMap[key].Visible())
+    Object.keys(this.FieldMap).filter((key) => this.FieldMap[key]?.Visible())
   );
 
   validate = (showErrors = true) => {
     Object.values(this.FieldMap).map(
-      (field) => field.validate && field.validate(showErrors)
+      (field) => field?.validate && field.validate(showErrors)
     );
     this.ShowErrors(showErrors);
     return this.Errors();
@@ -56,7 +56,7 @@ export default class ConstrainedEntity extends Entity {
     // if (!this.ShowErrors()) return [];
 
     return Object.values(this.FieldMap)
-      .filter((field) => field.Errors && field.Errors())
+      .filter((field) => field?.Errors && field.Errors())
       .flatMap((field) => field.Errors());
   });
 

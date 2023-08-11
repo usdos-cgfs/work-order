@@ -17,12 +17,15 @@ export default class ActionAPM {
 
     if (!this.ServiceType.Entity().ID) {
       console.error("No service entity provided");
+      return;
     }
 
-    this.newEntity = {};
-
+    this.newEntity = new CH_Overtime(this.ServiceType.Entity());
     this.init();
   }
+  newEntity = null;
+
+  HasLoaded = ko.observable(false);
 
   Editing = ko.observable(true);
 
@@ -31,8 +34,10 @@ export default class ActionAPM {
   });
 
   init = async () => {
+    await ApplicationDbContext.Set(CH_Overtime).LoadEntity(this.newEntity);
+    this.newEntity.Request = this.Request;
     // Create a clone of the service type entity
-    Object.assign(this.newEntity, this.ServiceType.Entity());
+    // Object.assign(this.newEntity, this.ServiceType.Entity());
     // this.newEntity = new CH_Overtime(params.request);
     // this.newEntity.ID = this.ServiceType.Entity().ID;
     // this.ServiceType.Def()?.getListRef()?.LoadEntity(this.newEntity);
@@ -40,12 +45,19 @@ export default class ActionAPM {
 
     if (window.DEBUG) console.log("setting supplement");
     // await new Promise();
+    await this.newEntity.ContractorSupplementField.ensure();
+    if (!this.newEntity.ContractorSupplementField.Value())
+      this.newEntity.ContractorSupplementField.Value(
+        new ContractorSupplement({
+          Title: this.Request.Title,
+          Request: this.Request,
+        })
+      );
 
-    if (!this.newEntity.ContractorSupplement.entity())
-      this.newEntity.ContractorSupplement.entity(new ContractorSupplement());
     const isValid = this.validate(false);
     this.Editing(isValid.length);
     this.IsCompleted(!isValid.length);
+    this.HasLoaded(true);
   };
 
   hasBeenValidated = ko.observable(false);
@@ -77,7 +89,8 @@ export default class ActionAPM {
     }
 
     if (
-      this.newEntity.ContractorSupplement.entity().validate(showErrors).length
+      this.newEntity.ContractorSupplementField.Value().validate(showErrors)
+        .length
     ) {
       errors.push(
         new ValidationError(
@@ -106,13 +119,16 @@ export default class ActionAPM {
     this.hasBeenValidated(true);
     if (this.validate().length) return;
 
+    this.newEntity.ContractorSupplementField.Value().Request = this.Request;
+
     await this.newEntity.ContractorSupplement.create(
-      this.newEntity.ContractorSupplement.entity()
+      this.newEntity.ContractorSupplementField.Value()
     );
 
-    await this.ServiceType.Def()
-      ?.getListRef()
-      ?.UpdateEntity(this.newEntity, CH_Overtime.Views.APMUpdate);
+    await ApplicationDbContext.Set(CH_Overtime).UpdateEntity(
+      this.newEntity,
+      CH_Overtime.Views.APMUpdate
+    );
 
     this.ServiceType.refreshEntity();
     this.hasBeenSaved(true);
@@ -123,9 +139,10 @@ export default class ActionAPM {
     this.hasBeenValidated(true);
     if (this.validate().length) return;
 
-    await this.ServiceType.Def()
-      ?.getListRef()
-      ?.UpdateEntity(this.ServiceType.Entity(), ["COR", "GTM"]);
+    await await ApplicationDbContext.Set(CH_Overtime).UpdateEntity(
+      this.newEntity,
+      CH_Overtime.Views.APMUpdate
+    );
 
     await this.newEntity.ContractorSupplement.update(
       ContractorSupplement.Views.APMUpdate

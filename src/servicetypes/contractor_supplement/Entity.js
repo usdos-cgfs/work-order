@@ -3,26 +3,19 @@ import TextField from "../../fields/TextField.js";
 import PeopleField from "../../fields/PeopleField.js";
 
 import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import BaseServiceDetail from "../BaseServiceDetail.js";
 
 //const components = {
 //   view: 'svc-view-'
 // }
 
-export default class ContractorSupplement extends ConstrainedEntity {
+export default class ContractorSupplement extends BaseServiceDetail {
   constructor(params) {
     super(params);
     if (window.DEBUG) console.log("new contractor supplement", params);
   }
 
-  ObservableID = ko.observable();
-  get ID() {
-    return this.ObservableID();
-  }
-  set ID(val) {
-    return this.ObservableID(val);
-  }
-
-  Title = "";
+  ContractorTypeOptsArr = ["SCA", "Non-SCA"];
 
   TaskOrderNumber = new TextField({
     displayName: "Task Order Number",
@@ -48,6 +41,7 @@ export default class ContractorSupplement extends ConstrainedEntity {
   });
 
   FieldMap = {
+    ...this.FieldMap,
     TaskOrderNumber: this.TaskOrderNumber,
     RequisitionNumber: this.RequisitionNumber,
     LaborCategory: this.LaborCategory,
@@ -88,6 +82,4 @@ export default class ContractorSupplement extends ConstrainedEntity {
     title: "st_ch_overtime_supplement",
     fields: ContractorSupplement.Views.All,
   };
-
-  ContractorTypeOptsArr = ["SCA", "Non-SCA"];
 }

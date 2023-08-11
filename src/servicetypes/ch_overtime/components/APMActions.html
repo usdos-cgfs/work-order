@@ -1,3 +1,4 @@
+<!-- ko if: HasLoaded -->
 <div data-bind="using: newEntity">
   <div data-bind="">
     <div
@@ -11,7 +12,7 @@
   </div>
   <!-- ko if: GTM.IsValid() && COR.IsValid() -->
   <div
-    data-bind="component: {name: ContractorSupplement.components[$parent.DisplayMode()], params: {Entity: ContractorSupplement.entity() }}"
+    data-bind="component: {name: supplementComponents[$parent.DisplayMode()], params: {Entity: ContractorSupplementField.Value() }}"
   ></div>
   <div>
     <!-- ko if: $parent.Editing -->
@@ -19,7 +20,7 @@
     <button
       class="btn btn-primary"
       type="button"
-      data-bind="click: $parent.update, enable: ContractorSupplement.entity().IsValid"
+      data-bind="click: $parent.update, enable: ContractorSupplementField.Value().IsValid"
     >
       Update
     </button>
@@ -35,7 +36,7 @@
     <button
       class="btn btn-primary"
       type="button"
-      data-bind="click: $parent.submit, enable: ContractorSupplement.entity().IsValid"
+      data-bind="click: $parent.submit, enable: ContractorSupplementField.Value().IsValid"
     >
       Submit
     </button>
@@ -53,3 +54,4 @@
   </div>
   <!-- /ko -->
 </div>
+<!-- /ko -->

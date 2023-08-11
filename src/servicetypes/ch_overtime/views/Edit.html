@@ -1,39 +1,74 @@
-<div data-bind="">
+<div data-bind="using: FieldMap">
   <div class="row">
-    <div class="col-6 pb-2">
-      <label for="ch_overtime-people-contractor"><h6>Contractor:</h6></label>
-      <div
-        id="ch_overtime-people-contractor"
-        data-bind="people: Contractor"
-      ></div>
-    </div>
-    <div class="col-6 pb-2">
-      <label for="ch_overtime-people-gov-manager"><h6>Gov Manager:</h6></label>
-      <div
-        id="ch_overtime-people-gov-manager"
-        data-bind="people: GovManager"
-      ></div>
-    </div>
+    <div
+      class="col pb-2"
+      data-bind="
+        visible: FullName.Visible,
+        component: {name: FullName.components.edit, params: FullName}, 
+        class: FullName.width"
+    ></div>
+    <div
+      class="col pb-2"
+      data-bind="
+        visible: ManagerDept.Visible,
+        component: {name: ManagerDept.components.edit, params: ManagerDept}, 
+        class: ManagerDept.width"
+    ></div>
+  </div>
+  <h6>Overtime Dates (within month estimate):</h6>
+  <div class="row">
+    <div
+      class="col pb-2"
+      data-bind="
+        visible: DateStart.Visible,
+        component: {name: DateStart.components.edit, params: DateStart}, 
+        class: DateStart.width"
+    ></div>
+    <div
+      class="col pb-2"
+      data-bind="
+        visible: DateEnd.Visible,
+        component: {name: DateEnd.components.edit, params: DateEnd}, 
+        class: DateEnd.width"
+    ></div>
   </div>
   <div class="row">
-    <div class="col-6 pb-2">
-      <label for=""><h6>Overtime Dates (within month estimate):</h6></label>
-      <div class="fw-semibold">Start Date:</div>
-      <input
-        class="form-control"
-        type="date"
-        data-bind="value: DateStart.inputBinding"
-      />
-      <div class="fw-semibold">End Date:</div>
-      <input
-        class="form-control"
-        type="date"
-        data-bind="value: DateEnd.inputBinding"
-      />
-    </div>
-    <div class="col-6 pb-2">
-      <label for=""><h6>Overtime Hours (not to exceed):</h6></label>
-      <input class="form-control" type="number" data-bind="value: Hours" />
-    </div>
+    <div
+      class="col pb-2"
+      data-bind="
+        visible: Hours.Visible,
+        component: {name: Hours.components.edit, params: Hours}, 
+        class: Hours.width"
+    ></div>
   </div>
 </div>
+<div class="row">
+  <div
+    class="col pb-2"
+    data-bind="
+    visible: APM.Visible,
+    component: {name: APM.components.edit, params: APM}, 
+    class: APM.width"
+  ></div>
+  <div
+    class="col pb-2"
+    data-bind="
+  visible: GTM.Visible,
+  component: {name: GTM.components.edit, params: GTM}, 
+  class: GTM.width"
+  ></div>
+</div>
+<div class="row">
+  <div
+    class="col pb-2"
+    data-bind="
+    visible: COR.Visible,
+    component: {name: COR.components.edit, params: COR}, 
+    class: COR.width"
+  ></div>
+</div>
+<!-- ko if: ContractorSupplementField.Value -->
+<div
+  data-bind="component: {name: supplementComponents.view, params: {Entity: ContractorSupplementField.Value()} }"
+></div>
+<!-- /ko -->
