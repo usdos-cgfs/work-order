@@ -1,9 +1,9 @@
 import DateField from "../../fields/DateField.js";
 import SelectField from "../../fields/SelectField.js";
 import TextField from "../../fields/TextField.js";
-import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import BaseServiceDetail from "../BaseServiceDetail.js";
 
-export default class Access extends ConstrainedEntity {
+export default class Access extends BaseServiceDetail {
   constructor(params) {
     super(params);
   }
@@ -31,6 +31,7 @@ export default class Access extends ConstrainedEntity {
   Locations = new TextField({ displayName: "Locations", isRequired: true });
 
   FieldMap = {
+    ...this.FieldMap,
     AccessType: this.AccessType,
     EmployeeType: this.EmployeeType,
     FullName: this.FullName,

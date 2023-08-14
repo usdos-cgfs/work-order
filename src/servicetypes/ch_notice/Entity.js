@@ -1,13 +1,15 @@
 import SelectField from "../../fields/SelectField.js";
 import TextAreaField from "../../fields/TextAreaField.js";
 import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import BaseServiceDetail from "../BaseServiceDetail.js";
 
-export default class Entity extends ConstrainedEntity {
+export default class CH_Notice extends BaseServiceDetail {
   constructor(params) {
     super(params);
   }
 
   FieldMap = {
+    ...this.FieldMap,
     DistributionGroup: new SelectField({
       displayName: "Employee Type",
       options: [
@@ -30,6 +32,6 @@ export default class Entity extends ConstrainedEntity {
   static ListDef = {
     name: "st_ch_notice",
     title: "st_ch_notice",
-    fields: Entity.Views.All,
+    fields: CH_Notice.Views.All,
   };
 }
