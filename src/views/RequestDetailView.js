@@ -178,6 +178,14 @@ export class RequestDetailView {
     }
   };
 
+  nextStageHandler = () => {
+    if (!this.request.Assignments.CurrentStage.list.InProgress().length) {
+      this.request.Pipeline.advance();
+      return;
+    }
+    this.promptAdvance();
+  };
+
   promptAdvanceModal;
   promptAdvance = () => {
     if (!this.promptAdvanceModal) {

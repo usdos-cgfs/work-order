@@ -673,7 +673,7 @@
           <button
             type="button"
             class="btn btn-success ms-3"
-            data-bind="click: promptAdvance, enable: request.Assignments.CurrentStage.Validation.IsValid"
+            data-bind="click: nextStageHandler, enable: request.Assignments.CurrentStage.Validation.IsValid"
           >
             Next Stage <span class="fa fa-chevron-right"></span>
           </button>
