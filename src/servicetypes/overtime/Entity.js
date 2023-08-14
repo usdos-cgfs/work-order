@@ -6,13 +6,15 @@ import BlobField from "../../fields/BlobField.js";
 import DateField from "../../fields/DateField.js";
 
 import { currentUser } from "../../infrastructure/Authorization.js";
+import BaseServiceDetail from "../BaseServiceDetail.js";
 
-export default class Entity extends ConstrainedEntity {
+export default class Overtime extends BaseServiceDetail {
   constructor(params) {
     super(params);
   }
 
   FieldMap = {
+    ...this.FieldMap,
     FullName: new PeopleField({
       displayName: "Contractor",
       isRequired: true,
@@ -76,7 +78,7 @@ export default class Entity extends ConstrainedEntity {
   static ListDef = {
     name: "st_overtime",
     title: "st_overtime",
-    fields: Entity.Views.All,
+    fields: Overtime.Views.All,
   };
 }
 

@@ -1,12 +1,14 @@
 import TextField from "../../fields/TextField.js";
 import SelectField from "../../fields/SelectField.js";
 import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import BaseServiceDetail from "../BaseServiceDetail.js";
 
-export default class Entity extends ConstrainedEntity {
+export default class CH_Equip_Repair extends BaseServiceDetail {
   constructor(params) {
     super(params);
   }
   FieldMap = {
+    ...this.FieldMap,
     Location: new TextField({
       displayName: "Location",
       isRequired: true,
@@ -25,6 +27,6 @@ export default class Entity extends ConstrainedEntity {
   static ListDef = {
     name: "st_ch_equip_repair",
     title: "st_ch_equip_repair",
-    fields: Entity.Views.All,
+    fields: CH_Equip_Repair.Views.All,
   };
 }

@@ -1,13 +1,15 @@
 import TextField from "../../fields/TextField.js";
 import DateField, { dateFieldTypes } from "../../fields/DateField.js";
 import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import BaseServiceDetail from "../BaseServiceDetail.js";
 
-export default class Entity extends ConstrainedEntity {
+export default class MotorPool extends BaseServiceDetail {
   constructor(params) {
     super(params);
   }
 
   FieldMap = {
+    ...this.FieldMap,
     DateAndTime: new DateField({
       displayName: "Date and Time",
       type: dateFieldTypes.datetime,
@@ -26,6 +28,6 @@ export default class Entity extends ConstrainedEntity {
   static ListDef = {
     name: "st_motor_pool",
     title: "st_motor_pool",
-    fields: Entity.Views.All,
+    fields: MotorPool.Views.All,
   };
 }

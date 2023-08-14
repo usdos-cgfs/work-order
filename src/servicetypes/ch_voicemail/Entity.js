@@ -1,13 +1,15 @@
 import TextField from "../../fields/TextField.js";
 import PeopleField from "../../fields/PeopleField.js";
 import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import BaseServiceDetail from "../BaseServiceDetail.js";
 
-export default class Entity extends ConstrainedEntity {
+export default class CH_Voicemail extends BaseServiceDetail {
   constructor(params) {
     super(params);
   }
 
   FieldMap = {
+    ...this.FieldMap,
     Employee: new PeopleField({
       displayName: "Employee Name",
       isRequired: true,
@@ -28,6 +30,6 @@ export default class Entity extends ConstrainedEntity {
   static ListDef = {
     name: "st_ch_voicemail",
     title: "st_ch_voicemail",
-    fields: Entity.Views.All,
+    fields: CH_Voicemail.Views.All,
   };
 }

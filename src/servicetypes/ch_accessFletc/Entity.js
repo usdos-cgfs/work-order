@@ -2,13 +2,15 @@ import TextField from "../../fields/TextField.js";
 import PeopleField from "../../fields/PeopleField.js";
 import SelectField from "../../fields/SelectField.js";
 import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import BaseServiceDetail from "../BaseServiceDetail.js";
 
-export default class AccessFletc extends ConstrainedEntity {
+export default class AccessFletc extends BaseServiceDetail {
   constructor(params) {
     super(params);
   }
 
   FieldMap = {
+    ...this.FieldMap,
     Supervisor: new PeopleField({
       displayName: "Supervisor",
     }),

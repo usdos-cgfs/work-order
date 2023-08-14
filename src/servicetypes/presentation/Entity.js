@@ -5,13 +5,15 @@ import DateField, { dateFieldTypes } from "../../fields/DateField.js";
 import TextAreaField from "../../fields/TextAreaField.js";
 import CheckboxField from "../../fields/CheckboxField.js";
 import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import BaseServiceDetail from "../BaseServiceDetail.js";
 
-export default class Entity extends ConstrainedEntity {
+export default class Presentation extends BaseServiceDetail {
   constructor(params) {
     super(params);
   }
 
   FieldMap = {
+    ...this.FieldMap,
     PresentationDate: new DateField({
       displayName: "Presentation Date and Time",
       type: dateFieldTypes.datetime,
@@ -38,6 +40,6 @@ export default class Entity extends ConstrainedEntity {
   static ListDef = {
     name: "st_presentation",
     title: "st_presentation",
-    fields: Entity.Views.All,
+    fields: Presentation.Views.All,
   };
 }

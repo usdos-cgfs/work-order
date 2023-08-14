@@ -13,8 +13,9 @@ import { currentUser } from "../../infrastructure/Authorization.js";
 import { requestOrgStore } from "../../entities/RequestOrg.js";
 import { serviceTypeStore } from "../../entities/ServiceType.js";
 import { RequestEntity } from "../../entities/Request.js";
+import BaseServiceDetail from "../BaseServiceDetail.js";
 
-export default class Entity extends ConstrainedEntity {
+export default class ITSoftware extends BaseServiceDetail {
   constructor(params) {
     super(params);
   }
@@ -71,6 +72,7 @@ export default class Entity extends ConstrainedEntity {
   );
 
   FieldMap = {
+    ...this.FieldMap,
     Name: new TextField({
       displayName: "Software Name",
       isRequired: true,
@@ -116,6 +118,6 @@ export default class Entity extends ConstrainedEntity {
   static ListDef = {
     name: "st_it_software",
     title: "st_it_software",
-    fields: Entity.Views.All,
+    fields: ITSoftware.Views.All,
   };
 }

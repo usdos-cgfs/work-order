@@ -4,8 +4,9 @@ import TextField from "../../fields/TextField.js";
 import PeopleField from "../../fields/PeopleField.js";
 import SelectField from "../../fields/SelectField.js";
 import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import BaseServiceDetail from "../BaseServiceDetail.js";
 
-export default class Entity extends ConstrainedEntity {
+export default class CH_Telework extends BaseServiceDetail {
   constructor(params) {
     super(params);
   }
@@ -15,6 +16,7 @@ export default class Entity extends ConstrainedEntity {
     .map((org) => org.Title);
 
   FieldMap = {
+    ...this.FieldMap,
     FullName: new PeopleField({
       displayName: "Contractor",
       isRequired: true,
@@ -75,6 +77,6 @@ export default class Entity extends ConstrainedEntity {
   static ListDef = {
     name: "st_ch_telework",
     title: "st_ch_telework",
-    fields: Entity.Views.All,
+    fields: CH_Telework.Views.All,
   };
 }

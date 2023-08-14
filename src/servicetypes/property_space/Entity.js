@@ -5,8 +5,9 @@ import DateField, { dateFieldTypes } from "../../fields/DateField.js";
 import TextAreaField from "../../fields/TextAreaField.js";
 import CheckboxField from "../../fields/CheckboxField.js";
 import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import BaseServiceDetail from "../BaseServiceDetail.js";
 
-export default class Entity extends ConstrainedEntity {
+export default class PropertySpace extends BaseServiceDetail {
   constructor(params) {
     super(params);
   }
@@ -50,6 +51,7 @@ export default class Entity extends ConstrainedEntity {
   });
 
   FieldMap = {
+    ...this.FieldMap,
     PropOrSpace: new SelectField({
       displayName: " Type",
       options: Object.values(this.serviceTypes),
@@ -194,6 +196,6 @@ export default class Entity extends ConstrainedEntity {
   static ListDef = {
     name: "st_property_space",
     title: "st_property_space",
-    fields: Entity.Views.All,
+    fields: PropertySpace.Views.All,
   };
 }

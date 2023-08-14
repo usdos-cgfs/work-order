@@ -2,13 +2,15 @@ import TextField from "../../fields/TextField.js";
 import PeopleField from "../../fields/PeopleField.js";
 import SelectField from "../../fields/SelectField.js";
 import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import BaseServiceDetail from "../BaseServiceDetail.js";
 
-export default class Entity extends ConstrainedEntity {
+export default class CH_Mobile extends BaseServiceDetail {
   constructor(params) {
     super(params);
   }
 
   FieldMap = {
+    ...this.FieldMap,
     Supervisor: new PeopleField({
       displayName: "Supervisor",
       isRequired: true,
@@ -50,6 +52,6 @@ export default class Entity extends ConstrainedEntity {
   static ListDef = {
     name: "st_ch_mobile",
     title: "st_ch_mobile",
-    fields: Entity.Views.All,
+    fields: CH_Mobile.Views.All,
   };
 }

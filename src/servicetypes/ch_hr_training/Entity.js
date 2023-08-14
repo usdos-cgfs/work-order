@@ -2,13 +2,15 @@ import TextField from "../../fields/TextField.js";
 import SelectField from "../../fields/SelectField.js";
 import DateField from "../../fields/DateField.js";
 import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import BaseServiceDetail from "../BaseServiceDetail.js";
 
-export default class Entity extends ConstrainedEntity {
+export default class CH_HR_Training extends BaseServiceDetail {
   constructor(params) {
     super(params);
   }
 
   FieldMap = {
+    ...this.FieldMap,
     EmployeeType: new SelectField({
       displayName: "Employee Type",
       options: ["Direct Hire", "Contractor"],
@@ -47,6 +49,6 @@ export default class Entity extends ConstrainedEntity {
   static ListDef = {
     name: "st_ch_hr_training",
     title: "st_ch_hr_training",
-    fields: Entity.Views.All,
+    fields: CH_HR_Training.Views.All,
   };
 }

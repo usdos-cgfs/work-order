@@ -5,13 +5,15 @@ import DateField from "../../fields/DateField.js";
 import TextAreaField from "../../fields/TextAreaField.js";
 import CheckboxField from "../../fields/CheckboxField.js";
 import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import BaseServiceDetail from "../BaseServiceDetail.js";
 
-export default class Entity extends ConstrainedEntity {
+export default class DVCSetup extends BaseServiceDetail {
   constructor(params) {
     super(params);
   }
 
   FieldMap = {
+    ...this.FieldMap,
     DateOfDVC: new DateField({
       displayName: "Date of DVC",
       isRequired: true,
@@ -61,6 +63,6 @@ export default class Entity extends ConstrainedEntity {
   static ListDef = {
     name: "st_dvc_setup",
     title: "st_dvc_setup",
-    fields: Entity.Views.All,
+    fields: DVCSetup.Views.All,
   };
 }

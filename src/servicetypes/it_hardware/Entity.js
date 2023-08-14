@@ -5,13 +5,15 @@ import DateField from "../../fields/DateField.js";
 import TextAreaField from "../../fields/TextAreaField.js";
 import CheckboxField from "../../fields/CheckboxField.js";
 import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import BaseServiceDetail from "../BaseServiceDetail.js";
 
-export default class Entity extends ConstrainedEntity {
+export default class ITHardware extends BaseServiceDetail {
   constructor(params) {
     super(params);
   }
 
   FieldMap = {
+    ...this.FieldMap,
     Name: new TextField({
       displayName: "Hardware Name",
       isRequired: true,
@@ -68,6 +70,6 @@ export default class Entity extends ConstrainedEntity {
   static ListDef = {
     name: "st_IT_hardware",
     title: "st_IT_hardware",
-    fields: Entity.Views.All,
+    fields: ITHardware.Views.All,
   };
 }

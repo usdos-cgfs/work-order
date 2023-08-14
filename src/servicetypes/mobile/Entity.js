@@ -1,13 +1,15 @@
 import PeopleField from "../../fields/PeopleField.js";
 import SelectField from "../../fields/SelectField.js";
 import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import BaseServiceDetail from "../BaseServiceDetail.js";
 
-export default class Entity extends ConstrainedEntity {
+export default class Mobile extends BaseServiceDetail {
   constructor(params) {
     super(params);
   }
 
   FieldMap = {
+    ...this.FieldMap,
     User: new PeopleField({
       displayName: "User Name",
       isRequired: true,
@@ -36,6 +38,6 @@ export default class Entity extends ConstrainedEntity {
   static ListDef = {
     name: "st_mobile_phone",
     title: "st_mobile_phone",
-    fields: Entity.Views.All,
+    fields: Mobile.Views.All,
   };
 }

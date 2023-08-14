@@ -3,8 +3,9 @@ import SelectField from "../../fields/SelectField.js";
 import TextField from "../../fields/TextField.js";
 import BlobField from "../../fields/BlobField.js";
 import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import BaseServiceDetail from "../BaseServiceDetail.js";
 
-export default class Requisition extends ConstrainedEntity {
+export default class Requisition extends BaseServiceDetail {
   constructor(request) {
     super(request);
     this.Request = request;
@@ -30,6 +31,7 @@ export default class Requisition extends ConstrainedEntity {
   Items = ko.observableArray();
 
   FieldMap = {
+    ...this.FieldMap,
     RequisitionType: new SelectField({
       displayName: "Requisition Type",
       isRequired: true,

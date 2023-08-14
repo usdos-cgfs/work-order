@@ -5,13 +5,15 @@ import DateField from "../../fields/DateField.js";
 import TextAreaField from "../../fields/TextAreaField.js";
 import CheckboxField from "../../fields/CheckboxField.js";
 import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import BaseServiceDetail from "../BaseServiceDetail.js";
 
-export default class Entity extends ConstrainedEntity {
+export default class Ironkey extends BaseServiceDetail {
   constructor(params) {
     super(params);
   }
 
   FieldMap = {
+    ...this.FieldMap,
     UserName: new PeopleField({
       displayName: "User Name",
       isRequired: true,
@@ -46,6 +48,6 @@ export default class Entity extends ConstrainedEntity {
   static ListDef = {
     name: "st_ironkey",
     title: "st_ironkey",
-    fields: Entity.Views.All,
+    fields: Ironkey.Views.All,
   };
 }

@@ -5,8 +5,9 @@ import DateField, { dateFieldTypes } from "../../fields/DateField.js";
 import TextAreaField from "../../fields/TextAreaField.js";
 import CheckboxField from "../../fields/CheckboxField.js";
 import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import BaseServiceDetail from "../BaseServiceDetail.js";
 
-export default class Entity extends ConstrainedEntity {
+export default class DipomaticPassportVisa extends BaseServiceDetail {
   constructor(params) {
     super(params);
   }
@@ -34,6 +35,7 @@ export default class Entity extends ConstrainedEntity {
   };
 
   FieldMap = {
+    ...this.FieldMap,
     DocumentType: new SelectField({
       displayName: "Document Type",
       options: Object.values(this.documentTypes),
@@ -149,6 +151,6 @@ export default class Entity extends ConstrainedEntity {
   static ListDef = {
     name: "st_diplomatic_passport",
     title: "st_diplomatic_passport",
-    fields: Entity.Views.All,
+    fields: DipomaticPassportVisa.Views.All,
   };
 }

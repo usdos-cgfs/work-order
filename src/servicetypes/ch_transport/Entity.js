@@ -5,13 +5,15 @@ import DateField from "../../fields/DateField.js";
 import TextAreaField from "../../fields/TextAreaField.js";
 import CheckboxField from "../../fields/CheckboxField.js";
 import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import BaseServiceDetail from "../BaseServiceDetail.js";
 
-export default class Entity extends ConstrainedEntity {
+export default class CH_Transport extends BaseServiceDetail {
   constructor(params) {
     super(params);
   }
 
   FieldMap = {
+    ...this.FieldMap,
     InvoiceNum: new TextField({
       displayName: "Invoice Num",
     }),
@@ -42,6 +44,6 @@ export default class Entity extends ConstrainedEntity {
   static ListDef = {
     name: "st_ch_transport",
     title: "st_ch_transport",
-    fields: Entity.Views.All,
+    fields: CH_Transport.Views.All,
   };
 }
