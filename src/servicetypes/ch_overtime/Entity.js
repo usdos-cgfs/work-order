@@ -17,7 +17,11 @@ import ConstrainedEntity, {
 
 import BaseServiceDetail from "../BaseServiceDetail.js";
 
-import { registerServiceTypeViewComponents } from "../../infrastructure/RegisterComponents.js";
+import {
+  registerServiceTypeViewComponents,
+  registerServiceTypeActionComponent,
+} from "../../infrastructure/RegisterComponents.js";
+
 import LookupField from "../../fields/LookupField.js";
 
 const components = {
@@ -27,6 +31,14 @@ const components = {
 };
 
 registerServiceTypeViewComponents({ uid: "ch_overtime", components });
+registerServiceTypeActionComponent({
+  uid: "ch_overtime",
+  componentName: "APMActions",
+});
+registerServiceTypeActionComponent({
+  uid: "ch_overtime",
+  componentName: "GovManagerActions",
+});
 
 export default class CH_Overtime extends BaseServiceDetail {
   constructor(requestContext) {
@@ -140,16 +152,16 @@ export default class CH_Overtime extends BaseServiceDetail {
     DateStart: new DateField({
       displayName: "Start Date",
       type: dateFieldTypes.date,
-      isRequired: true,
+      isRequired: false,
     }),
     DateEnd: new DateField({
       displayName: "End Date (Within Month Range)",
       type: dateFieldTypes.date,
-      isRequired: true,
+      isRequired: false,
     }),
     Hours: new TextField({
       displayName: "Overtime Hours (Not to Exceed)",
-      isRequired: true,
+      isRequired: false,
       attr: { type: "number" },
     }),
     ContractorSupplement: this.ContractorSupplementField,

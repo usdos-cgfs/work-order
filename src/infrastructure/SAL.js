@@ -2117,6 +2117,7 @@ export function SPList(listDef) {
     getItemPermissionsAsync,
     getFolderContentsAsync,
     upsertFolderPathAsync,
+    getServerRelativeFolderPath,
     setFolderReadonlyAsync,
     setFolderPermissionsAsync,
     ensureFolderPermissionsAsync,

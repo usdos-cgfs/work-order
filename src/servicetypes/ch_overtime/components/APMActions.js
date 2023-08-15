@@ -5,12 +5,15 @@ import ContractorSupplement from "../../contractor_supplement/Entity.js";
 
 import { ValidationError } from "../../../primitives/ValidationError.js";
 import CH_Overtime from "../Entity.js";
+import { assignmentStates } from "../../../entities/Assignment.js";
 
 export default class ActionAPM {
   constructor(params) {
     console.log("Hello from APM Actions module.");
     this._context = getAppContext();
-    this.ServiceType = params.serviceType;
+    this.assignment = params.assignment;
+
+    this.ServiceType = params.request.ServiceType;
     this.Errors = params.errors;
     // this.ServiceType.Entity().GTM.subscribe(this.gtmWatcher);
     this.Request = params.request;
@@ -55,7 +58,8 @@ export default class ActionAPM {
       );
 
     const isValid = this.validate(false);
-    this.Editing(isValid.length);
+    if (this.assignment.Status != assignmentStates.InProgress)
+      this.Editing(false);
     this.IsCompleted(!isValid.length);
     this.HasLoaded(true);
   };
@@ -129,6 +133,12 @@ export default class ActionAPM {
       this.newEntity,
       CH_Overtime.Views.APMUpdate
     );
+
+    if (this.assignment.Status != assignmentStates.Completed)
+      await this.Request.Assignments.complete(
+        this.assignment,
+        assignmentStates.Completed
+      );
 
     this.ServiceType.refreshEntity();
     this.hasBeenSaved(true);

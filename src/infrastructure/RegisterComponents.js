@@ -120,9 +120,6 @@ export function RegisterComponents() {
     module: "TaskToastModule",
     template: "TaskToastTemplate",
   });
-
-  // registerFieldComponent("people");
-  //registerFieldComponent("select");
 }
 
 export function registerComponent({
@@ -176,5 +173,28 @@ export function registerServiceTypeViewComponents({ uid, components }) {
         viewModel: ConstrainedEntityModule,
       });
     }
+  });
+}
+
+export function registerServiceTypeActionComponent({
+  uid,
+  componentName,
+  templateName = null,
+  moduleName = null,
+}) {
+  if (ko.components.isRegistered(componentName)) {
+    return;
+  }
+  ko.components.register(componentName, {
+    template: {
+      fromPath: `/servicetypes/${uid}/components/${
+        templateName ?? componentName
+      }.html`,
+    },
+    viewModel: {
+      viaLoader: `/servicetypes/${uid}/components/${
+        moduleName ?? componentName
+      }.js`,
+    },
   });
 }

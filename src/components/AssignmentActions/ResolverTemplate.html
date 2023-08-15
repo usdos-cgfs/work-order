@@ -4,25 +4,35 @@
     <div>
       <h6>You have been designated as an action office resolver:</h6>
     </div>
-    <div>
-      Assignee: <span data-bind="text: assignment.Assignee?.Title"></span>
+    <div class="d-flex justify-content-between">
+      <div>
+        <div>
+          Assignee: <span data-bind="text: assignment.Assignee?.Title"></span>
+        </div>
+        <div>
+          Request Org:
+          <span data-bind="text: assignment.RequestOrg?.Title"></span>
+        </div>
+      </div>
+      <div>
+        <!-- ko if: assignment.Status != assignmentStates.Completed -->
+        <div>Please confirm you have completed any necessary actions!</div>
+        <div class="d-flex justify-content-start">
+          <button
+            class="ms-3 btn btn-success"
+            data-bind="click: completeHandler"
+          >
+            Confirm
+          </button>
+        </div>
+        <!-- /ko -->
+      </div>
     </div>
-    <div>
-      Request Org: <span data-bind="text: assignment.RequestOrg?.Title"></span>
-    </div>
-    <!-- ko if: assignment.Status != assignmentStates.Completed -->
-    <div>Please confirm you have completed any necessary actions!</div>
-    <div class="d-flex justify-content-start">
-      <button class="ms-3 btn btn-success" data-bind="click: completeHandler">
-        Confirm
-      </button>
-    </div>
-    <!-- /ko -->
   </div>
+  <!-- /ko -->
+  <!-- ko if: assignment.Status == assignmentStates.Completed -->
+  <div class="alert alert-success">
+    <strong>Thank you for confirming!</strong>
+  </div>
+  <!-- /ko -->
 </div>
-<!-- /ko -->
-<!-- ko if: assignment.Status == assignmentStates.Completed -->
-<div class="alert alert-success">
-  <strong>Thank you for confirming!</strong>
-</div>
-<!-- /ko -->

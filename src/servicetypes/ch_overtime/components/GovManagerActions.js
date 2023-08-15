@@ -1,12 +1,18 @@
-import { getAppContext } from "../../../infrastructure/ApplicationDbContext.js";
+import ApplicationDbContext, {
+  getAppContext,
+} from "../../../infrastructure/ApplicationDbContext.js";
 
 import { ValidationError } from "../../../primitives/ValidationError.js";
 import PeopleField from "../../../fields/PeopleField.js";
 
+import { assignmentStates } from "../../../entities/Assignment.js";
+import CH_Overtime from "../Entity.js";
+
 export default class ActionGovManager {
   constructor(params) {
     this._context = getAppContext();
-    this.ServiceType = params.serviceType;
+    this.assignment = params.assignment;
+    this.ServiceType = params.request.ServiceType;
     this.Errors = params.errors;
     // this.ServiceType.Entity().APM.subscribe(this.apmWatcher);
     // this.ServiceType.Entity().GTM.subscribe(this.gtmWatcher);
@@ -19,7 +25,11 @@ export default class ActionGovManager {
     this.apmWatcher(this.ServiceType.Entity().APM.get());
     this.gtmWatcher(this.ServiceType.Entity().GTM.get());
     const isValid = this.validate(false);
-    this.Editing(isValid.length);
+
+    // If the assignment has been completed
+    // or the state is valid
+    if (this.assignment.Status != assignmentStates.InProgress)
+      this.Editing(false);
   }
 
   Editing = ko.observable(true);
@@ -87,9 +97,16 @@ export default class ActionGovManager {
       updatedEntity.GTM = this.GTM.get();
     }
 
-    await this.ServiceType.Def().getListRef()?.UpdateEntity(updatedEntity);
+    await ApplicationDbContext.Set(CH_Overtime).UpdateEntity(updatedEntity);
+
+    if (this.assignment.Status != assignmentStates.Completed)
+      await this.Request.Assignments.complete(
+        this.assignment,
+        assignmentStates.Completed
+      );
 
     this.ServiceType.refreshEntity();
+    this.Editing(false)
     this.hasBeenSaved(true);
   };
 }

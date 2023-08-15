@@ -238,6 +238,9 @@ class EntitySet {
   };
 
   // Folder Methods
+  GetFolderUrl = function (relFolderPath = "") {
+    return this.ListRef.getServerRelativeFolderPath(relFolderPath);
+  };
 
   GetItemsByFolderPath = async function (
     folderPath,

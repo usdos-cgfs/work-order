@@ -1,5 +1,5 @@
 import { People } from "../entities/People.js";
-import { assignmentStates } from "../entities/Assignment.js";
+import { Assignment, assignmentStates } from "../entities/Assignment.js";
 import {
   RequestOrg,
   OrgTypes,
@@ -22,6 +22,11 @@ export const permissions = {
 
 var staticGroups = {
   RestrictedReaders: new People({ ID: null, Title: "Restricted Readers" }),
+};
+
+export const systemRoles = {
+  Admin: "Admin",
+  ActionOffice: "ActionOffice",
 };
 
 export const roles = {
@@ -94,6 +99,8 @@ export class User extends People {
     this.Groups = Groups;
   }
 
+  Groups = [];
+
   isInGroup(group) {
     if (!group?.ID) return false;
     return this.getGroupIds().includes(group.ID);
@@ -127,6 +134,9 @@ export class User extends People {
   });
 
   IsActionOffice = ko.pureComputed(() => this.ActionOffices().length);
+  IsSiteOwner = ko.pureComputed(() =>
+    this.isInGroup(getDefaultGroups().owners)
+  );
 
   static Create = async function () {
     // TODO: Major - Switch to getUserPropertiesAsync since that includes phone # etc
@@ -135,6 +145,18 @@ export class User extends People {
 
     return new User(userProps);
   };
+}
+
+export function userHasSystemRole(user, systemRole) {
+  const userIsOwner = user.IsSiteOwner();
+  switch (systemRole) {
+    case systemRoles.Admin:
+      return userIsOwner;
+      break;
+    case systemRoles.ActionOffice:
+      return userIsOwner || user.ActionOffices().length;
+    default:
+  }
 }
 
 export function getRequestFolderPermissions(request) {
@@ -170,11 +192,19 @@ export function getRequestFolderPermissions(request) {
       stage.AssignmentFunction &&
       AssignmentFunctions[stage.AssignmentFunction]
     ) {
-      const boundAssignmenttFunc =
-        AssignmentFunctions[stage.AssignmentFunction].bind(request);
-      const people = boundAssignmenttFunc();
-      if (people && people.Title) {
-        folderPermissions.push([people, permissions.RestrictedContribute]);
+      try {
+        const assignments = AssignmentFunctions[stage.AssignmentFunction](
+          request,
+          stage
+        );
+        assignments.forEach((assignment) => {
+          const people = assignment.Assignee;
+          if (people && people.Title) {
+            folderPermissions.push([people, permissions.RestrictedContribute]);
+          }
+        });
+      } catch (e) {
+        console.warn("Error creating stage assignments", stage);
       }
     }
   });
@@ -190,18 +220,76 @@ export function getRequestFolderPermissions(request) {
 
 export const AssignmentFunctions = {
   TestFunc: function () {
-    return this.RequestorInfo.Requestor();
+    return request.RequestorInfo.Requestor();
   },
-  getGovManager: function () {
-    return this.ServiceType.Entity()?.GovManager.get();
+  ch_overtimeGovManager: function (request, stage) {
+    const assignee = request.ServiceType.Entity()?.GovManager.get();
+    if (!assignee) {
+      throw new Error("Could not find stage Assignee");
+    }
+
+    const newCustomAssignment = new Assignment({
+      Assignee: assignee,
+      RequestOrg: stage.RequestOrg,
+      PipelineStage: stage,
+      IsActive: true,
+      Role: roles.ActionResolver,
+      CustomComponent: "GovManagerActions",
+    });
+
+    const newApprovalAssignment = new Assignment({
+      Assignee: assignee,
+      RequestOrg: stage.RequestOrg,
+      PipelineStage: stage,
+      IsActive: true,
+      Role: roles.Approver,
+    });
+    return [newCustomAssignment, newApprovalAssignment];
   },
-  getAPM: function () {
-    return this.ServiceType.Entity()?.APM.get();
+  getGovManager: function (request) {
+    return request.ServiceType.Entity()?.GovManager.get();
   },
-  getGTM: function () {
-    return this.ServiceType.Entity()?.GTM.get();
+  ch_overtimeAPM: function (request, stage) {
+    const assignee = request.ServiceType.Entity()?.APM.get();
+    if (!assignee) {
+      throw new Error("Could not find stage Assignee");
+    }
+
+    const newCustomAssignment = new Assignment({
+      Assignee: assignee,
+      RequestOrg: stage.RequestOrg,
+      PipelineStage: stage,
+      IsActive: true,
+      Role: roles.ActionResolver,
+      CustomComponent: "APMActions",
+    });
+
+    const newApprovalAssignment = new Assignment({
+      Assignee: assignee,
+      RequestOrg: stage.RequestOrg,
+      PipelineStage: stage,
+      IsActive: true,
+      Role: roles.Approver,
+    });
+
+    return [newCustomAssignment, newApprovalAssignment];
   },
-  getCOR: function () {
-    return this.ServiceType.Entity()?.COR.get();
+  getGTM: function (request) {
+    const assignee = request.ServiceType.Entity()?.GTM.get();
+    if (!assignee) {
+      throw new Error("Could not find stage Assignee");
+    }
+    return [
+      new Assignment({
+        Assignee: assignee,
+        RequestOrg: stage.RequestOrg,
+        PipelineStage: stage,
+        IsActive: true,
+        Role: roles.Approver,
+      }),
+    ];
+  },
+  getCOR: function (request) {
+    return request.ServiceType.Entity()?.COR.get();
   },
 };

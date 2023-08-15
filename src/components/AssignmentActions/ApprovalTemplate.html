@@ -5,19 +5,24 @@
 >
   <div class="card-body">
     <h6>Your approval has been requested:</h6>
-    <div>
-      Assignee: <span data-bind="text: assignment.Assignee?.Title"></span>
-    </div>
-    <div>
-      Request Org: <span data-bind="text: assignment.RequestOrg?.Title"></span>
-    </div>
-    <div class="d-flex justify-content-start">
-      <button class="btn btn-success" data-bind="click: approveHandler">
-        Approve
-      </button>
-      <button class="ms-3 btn btn-danger" data-bind="click: showReject">
-        Reject
-      </button>
+    <div class="d-flex justify-content-between">
+      <div>
+        <div>
+          Assignee: <span data-bind="text: assignment.Assignee?.Title"></span>
+        </div>
+        <div>
+          Request Org:
+          <span data-bind="text: assignment.RequestOrg?.Title"></span>
+        </div>
+      </div>
+      <div class="d-flex justify-content-start">
+        <button class="btn btn-success" data-bind="click: approveHandler">
+          Approve
+        </button>
+        <button class="ms-3 btn btn-danger" data-bind="click: showReject">
+          Reject
+        </button>
+      </div>
     </div>
   </div>
 </div>

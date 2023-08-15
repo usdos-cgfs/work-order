@@ -1,57 +1,62 @@
-<!-- ko if: HasLoaded -->
-<div data-bind="using: newEntity">
-  <div data-bind="">
-    <div
-      class="col col-12 pb-2"
-      data-bind="component: {name: GTM.components[$parent.DisplayMode()], params: GTM}"
-    ></div>
-    <div
-      class="col col-12 pb-2"
-      data-bind="component: {name: COR.components[$parent.DisplayMode()], params: COR}"
-    ></div>
+<div class="card m-1">
+  <div class="card-body">
+    <h6>Please provide the APM and GTM (opt):</h6>
+    <!-- ko if: HasLoaded -->
+    <div data-bind="using: newEntity">
+      <div class="row">
+        <div
+          class="col pb-2"
+          data-bind="component: {name: GTM.components[$parent.DisplayMode()], params: GTM}"
+        ></div>
+        <div
+          class="col pb-2"
+          data-bind="component: {name: COR.components[$parent.DisplayMode()], params: COR}"
+        ></div>
+      </div>
+      <!-- ko if: GTM.IsValid() && COR.IsValid() -->
+      <div
+        data-bind="component: {name: supplementComponents[$parent.DisplayMode()], params: {Entity: ContractorSupplementField.Value() }}"
+      ></div>
+      <div>
+        <!-- ko if: $parent.Editing -->
+        <!-- ko if: $parent.IsCompleted -->
+        <button
+          class="btn btn-primary"
+          type="button"
+          data-bind="click: $parent.update, enable: ContractorSupplementField.Value().IsValid"
+        >
+          Update
+        </button>
+        <button
+          class="btn btn-outline-danger"
+          type="button"
+          data-bind="click: () => $parent.Editing(false)"
+        >
+          Cancel
+        </button>
+        <!-- /ko -->
+        <!-- ko ifnot: $parent.IsCompleted -->
+        <button
+          class="btn btn-primary"
+          type="button"
+          data-bind="click: $parent.submit, enable: ContractorSupplementField.Value().IsValid"
+        >
+          Submit
+        </button>
+        <!-- /ko -->
+        <!-- /ko -->
+        <!-- ko ifnot: $parent.Editing -->
+        <button
+          class="btn btn-primary"
+          type="button"
+          data-bind="click: () => $parent.Editing(true)"
+        >
+          Edit
+        </button>
+        <!-- /ko -->
+      </div>
+      <!-- /ko -->
+    </div>
+    <!-- /ko -->
   </div>
-  <!-- ko if: GTM.IsValid() && COR.IsValid() -->
-  <div
-    data-bind="component: {name: supplementComponents[$parent.DisplayMode()], params: {Entity: ContractorSupplementField.Value() }}"
-  ></div>
-  <div>
-    <!-- ko if: $parent.Editing -->
-    <!-- ko if: $parent.IsCompleted -->
-    <button
-      class="btn btn-primary"
-      type="button"
-      data-bind="click: $parent.update, enable: ContractorSupplementField.Value().IsValid"
-    >
-      Update
-    </button>
-    <button
-      class="btn btn-outline-danger"
-      type="button"
-      data-bind="click: () => $parent.Editing(false)"
-    >
-      Cancel
-    </button>
-    <!-- /ko -->
-    <!-- ko ifnot: $parent.IsCompleted -->
-    <button
-      class="btn btn-primary"
-      type="button"
-      data-bind="click: $parent.submit, enable: ContractorSupplementField.Value().IsValid"
-    >
-      Submit
-    </button>
-    <!-- /ko -->
-    <!-- /ko -->
-    <!-- ko ifnot: $parent.Editing -->
-    <button
-      class="btn btn-primary"
-      type="button"
-      data-bind="click: () => $parent.Editing(true)"
-    >
-      Edit
-    </button>
-    <!-- /ko -->
-  </div>
-  <!-- /ko -->
 </div>
-<!-- /ko -->

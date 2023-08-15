@@ -651,6 +651,16 @@
                 data-bind="text: request.LoadedAt()?.toLocaleString()"
               ></span>
             </div>
+            <!-- ko if: $root.Authorization.currentUserIsAdmin -->
+            <a
+              class="me-2"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-bind="attr: {href: request.getFolderUrl()}"
+            >
+              <i class="fa fa-folder" data-bind=""></i
+            ></a>
+            <!-- /ko -->
             <i
               class="fa fa-sync pointer"
               title="Refresh this request"
@@ -694,7 +704,7 @@
 
     <script type="text/html" id="tmpl-request-pipeline-actions">
       <!-- ko using: CurrentStage -->
-      <!-- ko if: AssignmentComponents.Any -->
+      <!-- ko if: AssignmentComponents().length -->
       <div class="border border-top-0 rounded-bottom">
         <div class="p-3">
           <div data-bind="foreach: Validation.Errors">
@@ -704,27 +714,13 @@
               data-bind="text: description"
             ></div>
           </div>
-          <!-- ko using: AssignmentComponents -->
-          <div class="d-flex justify-content-between">
-            <!-- ko if: Custom -->
-            <!-- ko using: Custom -->
+          <div class="">
+            <!-- ko foreach: AssignmentComponents -->
             <div
-              class="flex-grow-1 me-3"
               data-bind="component: {name: actionComponentName, params: $data }"
             ></div>
             <!-- /ko -->
-            <!-- /ko -->
-            <!-- ko if: Generic -->
-            <div class="ms-auto">
-              <!-- ko foreach: Generic -->
-              <div
-                data-bind="component: {name: actionComponentName, params: $data }"
-              ></div>
-              <!-- /ko -->
-            </div>
-            <!-- /ko -->
           </div>
-          <!-- /ko -->
         </div>
       </div>
       <!-- /ko -->
@@ -747,11 +743,13 @@
             </h3>
           </div>
           <div id="routing-body" class="accordion-collapse collapse">
-            <div class="d-flex justify-content-between">
-              <i
-                class="fa fa-sync pointer ms-auto"
-                data-bind="click: refresh"
-              ></i>
+            <div class="d-flex justify-content-end align-items-center">
+              <!-- ko if: $root.Authorization.currentUserIsAdmin -->
+              <a target="_blank" data-bind="attr: {href: getFolderUrl() }">
+                <i class="fa fa-folder" data-bind=""></i
+              ></a>
+              <!-- /ko -->
+              <i class="fa fa-sync pointer ms-2" data-bind="click: refresh"></i>
             </div>
             <div class="position-relative">
               <table class="table">

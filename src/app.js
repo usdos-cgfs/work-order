@@ -15,7 +15,12 @@ import { getUrlParam, setUrlParam } from "./common/Router.js";
 
 import { assignmentsStore } from "./stores/Assignments.js";
 
-import { User, currentUser } from "./infrastructure/Authorization.js";
+import {
+  User,
+  currentUser,
+  systemRoles,
+  userHasSystemRole,
+} from "./infrastructure/Authorization.js";
 import {
   getAppContext,
   CreateAppContext,
@@ -83,6 +88,12 @@ class App {
   MyAssignmentsView = new MyAssignmentsView();
   NewRequestView = new NewRequestView();
   RequestDetailView = ko.observable();
+
+  Authorization = {
+    currentUserIsAdmin: ko.pureComputed(() => {
+      return userHasSystemRole(currentUser(), systemRoles.Admin);
+    }),
+  };
 
   Init = async function () {
     configLists: {

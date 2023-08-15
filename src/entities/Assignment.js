@@ -1,5 +1,6 @@
 import { ValidationError } from "../primitives/ValidationError.js";
 import { RequestOrg } from "./RequestOrg.js";
+import Entity from "../primitives/Entity.js";
 // import { currentUser } from "../infrastructure/Authorization.js";
 
 export const assignmentStates = {
@@ -30,12 +31,32 @@ export const activeAssignmentsError = {
   description: "Please complete all assignments",
 };
 
-export class Assignment {
-  constructor() {}
+export class Assignment extends Entity {
+  constructor({
+    ID,
+    Title,
+    Assignee,
+    RequestOrg,
+    PipelineStage,
+    IsActive = true,
+    Role,
+    CustomComponent = null,
+  }) {
+    super({ ID, Title });
 
-  ID;
-  Title;
+    this.Assignee = Assignee;
+    this.RequestOrg = RequestOrg;
+    this.PipelineStage = PipelineStage;
+    this.IsActive = IsActive;
+    this.Role = Role;
+    this.CustomComponent = CustomComponent;
+  }
+
   Role;
+
+  getComponentName = () => {
+    return this.CustomComponent ?? assignmentRoleComponentMap[this.Role];
+  };
 
   userIsDirectlyAssigned = (user) => {
     return this.Assignee?.ID == user.ID || user.isInGroup(this.Assignee);
@@ -74,6 +95,7 @@ export class Assignment {
       "CanDelegate",
       "ActionTaker",
       "PipelineStage",
+      "CustomComponent",
       "Request",
     ],
     Dashboard: ["Role", "Assignee", "Status", "Request"],
