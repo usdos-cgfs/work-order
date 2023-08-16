@@ -30,6 +30,8 @@ export const lookupType = {
   id: "LookupID",
 };
 
+const virtualSets = new Map();
+
 export default class ApplicationDbContext {
   constructor() {}
 
@@ -53,7 +55,15 @@ export default class ApplicationDbContext {
 
   ConfigServiceTypes = new EntitySet(ServiceType);
 
-  static Set = (listDef) => new EntitySet(listDef);
+  static Set = (listDef) => {
+    const key = listDef.name;
+    if (!virtualSets.has(key)) {
+      const newSet = new EntitySet(listDef);
+      virtualSets.set(key, newSet);
+      return newSet;
+    }
+    return virtualSets.get(key);
+  };
 }
 
 class EntitySet {
