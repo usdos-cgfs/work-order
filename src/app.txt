@@ -45,20 +45,45 @@
 </div>
 
 <div class="container" data-bind="hidden: HasLoaded">
-  <!-- <div class="container" data-bind=""> -->
   <div class="d-flex flex-column align-items-center">
-    <progress class="w-75"></progress>
+    <progress class="w-75 mb-3"></progress>
     <div class="w-75 alert alert-warning text-center">
       If you followed an email link, or the url you are viewing begins with
       <span class="fw-semibold text-body-secondary"
         >https://usdos.sharepoint.com<b>.mcas.ms</b></span
       >
-      please navigate to:
-      <a id="ms-mcas-bypass-link" target="_blank" rel="noopener noreferrer"></a
-      >.
+      please copy and paste the following link into your browser:
+      <div id="ms-mcas-bypass" class="input-group w-100">
+        <input id="ms-mcas-bypass-link" class="form-control" disabled />
+        <button
+          id="ms-mcas-bypass-copy"
+          type="button"
+          class="btn btn-secondary"
+        >
+          copy
+        </button>
+      </div>
     </div>
   </div>
 </div>
+
+<script>
+  let link = window.location.href;
+  let cpybtn = document.getElementById("ms-mcas-bypass-copy");
+  cpybtn.addEventListener("click", (e, element) => {
+    debugger;
+    e.target.innerText = "copied";
+    e.target.classList.remove("btn-secondary");
+    e.target.classList.add("btn-success");
+    // navigator.clipboard.writeText(link);
+  });
+
+  let a = document.getElementById("ms-mcas-bypass-link");
+  // a.setAttribute("href", window.location.href);
+  a.value = link;
+  // a.click();
+</script>
+
 <div
   id="app"
   class="container"
@@ -965,13 +990,6 @@
     </script>
   </div>
 </div>
-
-<script>
-  const a = document.getElementById("ms-mcas-bypass-link");
-  a.setAttribute("href", window.location.href);
-  a.innerText = window.location.href;
-  // a.click();
-</script>
 
 <script type="text/javascript" src="../Apps/_layouts/15/sp.runtime.js"></script>
 <script
