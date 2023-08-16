@@ -10,14 +10,6 @@ export default class RequestsByStatusTableModule {
     this.FilteredRequests = filteredRequests ?? this.ActiveSet.List;
     this.IsLoading = this.ActiveSet.IsLoading;
     this.HasLoaded = this.ActiveSet.HasLoaded;
-    // this.listBeforeChangeSubscriber = this.FilteredRequests.subscribe(
-    //   this.listBeforeChangeWatcher,
-    //   this,
-    //   "beforeChange"
-    // );
-    // this.listChangeSubscriber = this.FilteredRequests.subscribe(
-    //   this.listWatcher
-    // );
     this.init();
   }
 
@@ -34,7 +26,7 @@ export default class RequestsByStatusTableModule {
     await this.ActiveSet.load();
   };
 
-  getRequestAssignments = assignmentsStore.getByRequest;
+  // getRequestAssignments = assignmentsStore.getByRequest;
 
   tableBodyComplete = (nodes) => {
     if (this.Table) this.Table.clear().destroy();

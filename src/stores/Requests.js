@@ -6,7 +6,7 @@ export const requestsByStatusMap = new Map();
 
 requestsByStatusMap.set(
   requestStates.open,
-  new RequestsByStatusSet(requestStates.open)
+  new RequestsByStatusSet(requestStates.open, true)
 );
 requestsByStatusMap.set(
   requestStates.fulfilled,

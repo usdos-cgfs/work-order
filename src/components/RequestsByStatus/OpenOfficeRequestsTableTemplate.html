@@ -53,7 +53,7 @@
         ></td>
         <td>
           <table class="table table-sm m-0">
-            <tbody data-bind="foreach: $parent.getRequestAssignments($data)">
+            <tbody data-bind="foreach: Assignments.list.All">
               <tr>
                 <td data-bind="text: Assignee?.Title"></td>
                 <td data-bind="text: Role"></td>

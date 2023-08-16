@@ -9,6 +9,11 @@ class AssignmentsSet {
   IsLoading = ko.observable();
   HasLoaded = ko.observable(false);
 
+  // AllOpenRequests = requestsByStatusMap.get(requestStates.open).List;
+
+  // List = ko.pureComputed(() =>
+  //   this.AllOpenRequests().flatMap(request.Assignments.list.All())
+  // );
   List = ko.observableArray();
 
   getByRequest = (request) => {

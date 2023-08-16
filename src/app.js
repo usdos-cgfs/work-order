@@ -3,7 +3,7 @@ import { NewRequestView } from "./views/NewRequestView.js";
 import { OfficeRequestsView } from "./views/OfficeRequestsView.js";
 import { MyRequestsView } from "./views/MyRequestsView.js";
 
-import { RequestEntity } from "./entities/Request.js";
+import { RequestEntity, requestStates } from "./entities/Request.js";
 import { requestOrgStore } from "./entities/RequestOrg.js";
 import { pipelineStageStore } from "./entities/PipelineStage.js";
 import { serviceTypeStore } from "./entities/ServiceType.js";
@@ -32,6 +32,7 @@ import { RegisterComponents } from "./infrastructure/RegisterComponents.js";
 import { blockingTasks, runningTasks } from "./stores/Tasks.js";
 
 import { Tabs } from "./env.js";
+import { requestsByStatusMap } from "./stores/Requests.js";
 
 window.WorkOrder = window.WorkOrder || {};
 
@@ -42,6 +43,7 @@ async function CreateApp() {
   CreateAppContext();
   window.WorkOrder.App = await App.Create();
   ko.applyBindings(window.WorkOrder.App);
+  await window.WorkOrder.App.InitData();
 }
 
 class App {
@@ -66,8 +68,6 @@ class App {
   Tab = ko.observable();
   TabClicked = (data, e) => this.Tab(e.target.getAttribute("id"));
 
-  RequestDetail = ko.observable();
-  OpenRequests = ko.observableArray();
   MyOpenAssignments = assignmentsStore.getOpenByRequest;
   //   MyOpenAssignments = ko.pureComputed(() =>
   //   this.CurrentUser()
@@ -93,6 +93,14 @@ class App {
     currentUserIsAdmin: ko.pureComputed(() => {
       return userHasSystemRole(currentUser(), systemRoles.Admin);
     }),
+  };
+
+  InitData = async () => {
+    // This is the non-blocking minimum data that should be loaded
+
+    const openRequestsSet = requestsByStatusMap.get(requestStates.open);
+
+    openRequestsSet.init();
   };
 
   Init = async function () {
@@ -135,12 +143,9 @@ class App {
       }
       this.Tab(startTab);
     }
-  };
 
-  static Create = async function () {
-    const report = new App();
-    await report.Init();
-    return report;
+    // Kick off the initial data load
+    // this.InitData();
   };
 
   SelectNewRequestButton = (data, e) => {};
@@ -184,6 +189,12 @@ class App {
       })
     );
     this.Tab(Tabs.RequestDetail);
+  };
+
+  static Create = async function () {
+    const report = new App();
+    await report.Init();
+    return report;
   };
 }
 

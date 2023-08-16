@@ -434,6 +434,10 @@ export class RequestEntity {
         return this.Assignments.list.All();
       }),
       CurrentUserAssignments: ko.pureComputed(() => {
+        if (window.DEBUG) console.log("User Assignments Updated");
+        if (!this.Assignments.list.All().length) {
+          return [];
+        }
         // We need find assignments where the current user is directly assigned:
         // or They're in a group that's been assigned:
         const userGroupIds = currentUser().getGroupIds();
@@ -549,6 +553,7 @@ export class RequestEntity {
       //   assignmentObjs?.map(Assignment.CreateFromObject) ?? [];
 
       this.Assignments.list.All(assignments);
+      if (window.DEBUG) console.log("Request Assignments Updated");
       this.Assignments.HaveLoaded(true);
       this.Assignments.AreLoading(false);
     },

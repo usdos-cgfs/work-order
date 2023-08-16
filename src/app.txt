@@ -68,20 +68,23 @@
 </div>
 
 <script>
-  let link = window.location.href;
-  let cpybtn = document.getElementById("ms-mcas-bypass-copy");
-  cpybtn.addEventListener("click", (e, element) => {
-    debugger;
-    e.target.innerText = "copied";
-    e.target.classList.remove("btn-secondary");
-    e.target.classList.add("btn-success");
-    // navigator.clipboard.writeText(link);
-  });
+  {
+    let link = window.location.href;
+    let cpybtn = document.getElementById("ms-mcas-bypass-copy");
+    cpybtn.addEventListener("click", (e, element) => {
+      debugger;
+      e.target.innerText = "copied";
+      e.target.classList.remove("btn-secondary");
+      e.target.classList.add("btn-success");
+      // navigator.clipboard.writeText(link);
+    });
 
-  let a = document.getElementById("ms-mcas-bypass-link");
-  // a.setAttribute("href", window.location.href);
-  a.value = link;
-  // a.click();
+    let a = document.getElementById("ms-mcas-bypass-link");
+    // a.setAttribute("href", window.location.href);
+    a.value = link;
+
+    // a.click();
+  }
 </script>
 
 <div
