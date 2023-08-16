@@ -232,11 +232,11 @@ export class RequestDetailView {
       this.request.State.Status(requestStates.draft);
       this.request.State.IsActive(true);
 
+      this.request.ServiceType.refreshEntity();
+
       // Watch for a change in service type
       this.request.ServiceType.Def.subscribe(this.serviceTypeDefinitionWatcher);
     }
-
-    this.request.ServiceType.refreshEntity();
 
     this.request.Assignments.NewAssignmentComponent =
       new NewAssignmentComponent({
@@ -247,7 +247,7 @@ export class RequestDetailView {
     // this.DisplayMode.subscribe(this.displayModeWatcher);
     this.DisplayMode(displayMode);
 
-    this.request.LoadedAt(new Date());
+    // this.request.LoadedAt(new Date());
     if (displayMode != DisplayModes.New) {
       this.refreshAll();
     }

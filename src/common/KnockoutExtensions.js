@@ -146,10 +146,10 @@ ko.components.loaders.unshift(fromPathTemplateLoader);
 const fromPathViewModelLoader = {
   loadViewModel: function (name, viewModelConfig, callback) {
     if (viewModelConfig.viaLoader) {
-      console.log("loading module", name);
+      // console.log("loading module", name);
       const module = import(assetsPath + viewModelConfig.viaLoader).then(
         (module) => {
-          console.log("imported module", name);
+          // console.log("imported module", name);
           const viewModelConstructor = module.default;
           // We need a createViewModel function, not a plain constructor.
           // We can use the default loader to convert to the
@@ -169,26 +169,3 @@ const fromPathViewModelLoader = {
 };
 
 ko.components.loaders.unshift(fromPathViewModelLoader);
-
-export function registerServiceTypeActionComponent({
-  uid,
-  componentName,
-  templateName = null,
-  moduleName = null,
-}) {
-  if (ko.components.isRegistered(componentName)) {
-    return;
-  }
-  ko.components.register(componentName, {
-    template: {
-      fromPath: `/servicetypes/${uid}/components/${
-        templateName ?? componentName
-      }.html`,
-    },
-    viewModel: {
-      viaLoader: `/servicetypes/${uid}/components/${
-        moduleName ?? componentName
-      }.js`,
-    },
-  });
-}

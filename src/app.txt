@@ -45,8 +45,18 @@
 </div>
 
 <div class="container" data-bind="hidden: HasLoaded">
-  <div class="d-flex justify-content-center">
+  <!-- <div class="container" data-bind=""> -->
+  <div class="d-flex flex-column align-items-center">
     <progress class="w-75"></progress>
+    <div class="w-75 alert alert-warning text-center">
+      If you followed an email link, or the url you are viewing begins with
+      <span class="fw-semibold text-body-secondary"
+        >https://usdos.sharepoint.com<b>.mcas.ms</b></span
+      >
+      please navigate to:
+      <a id="ms-mcas-bypass-link" target="_blank" rel="noopener noreferrer"></a
+      >.
+    </div>
   </div>
 </div>
 <div
@@ -356,6 +366,10 @@
 
     <script type="text/html" id="tmpl-request-detail">
       <!-- Report.RequestDetailView -->
+      <!-- ko if: request.IsLoading -->
+      <progress class="w-100"></progress>
+      <!-- /ko -->
+      <!-- ko ifnot: request.IsLoading -->
       <div class="">
         <h2>
           Service Request Detail:
@@ -566,6 +580,7 @@
           </div>
         </div>
       </div>
+      <!-- /ko -->
       <div
         class="modal fade"
         id="modal-advance-request"
@@ -950,6 +965,13 @@
     </script>
   </div>
 </div>
+
+<script>
+  const a = document.getElementById("ms-mcas-bypass-link");
+  a.setAttribute("href", window.location.href);
+  a.innerText = window.location.href;
+  // a.click();
+</script>
 
 <script type="text/javascript" src="../Apps/_layouts/15/sp.runtime.js"></script>
 <script
