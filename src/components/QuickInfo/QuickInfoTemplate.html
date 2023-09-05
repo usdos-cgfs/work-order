@@ -1,5 +1,5 @@
 <div class="d-flex justify-content-between mb-3">
-  <div>
+  <div class="d-flex flex-column justify-content-end">
     <!-- ko if: ShowActionOfficeToggle -->
     <div class="form-check form-switch">
       <label class="form-check-label"
@@ -12,6 +12,13 @@
       /></label>
     </div>
     <!-- /ko -->
+    <button
+      class="btn btn-primary mb-3"
+      data-bind="click: $root.SelectNewRequest"
+      type="button"
+    >
+      New Order <i class="fa-solid fa-plus"></i>
+    </button>
   </div>
   <div class="ms-auto" style="min-width: 20rem">
     <div class="accordion">

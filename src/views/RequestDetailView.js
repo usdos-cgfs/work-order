@@ -57,6 +57,8 @@ export class RequestDetailView {
   ShowActionsArea = ko.pureComputed(
     () =>
       this.request.State.IsActive() &&
+      !this.request.IsLoading() &&
+      !this.request.Assignments.AreLoading() &&
       this.request.Assignments.CurrentStage.list.UserActionAssignments().length
   );
 
@@ -149,6 +151,9 @@ export class RequestDetailView {
     this.request.Pipeline.advance();
 
     this.request.Validation.reset();
+
+    this.request.LoadedAt(new Date());
+
     finishTask(saveTask);
   };
 
@@ -236,6 +241,7 @@ export class RequestDetailView {
 
       // Watch for a change in service type
       this.request.ServiceType.Def.subscribe(this.serviceTypeDefinitionWatcher);
+      this.request.LoadedAt(new Date());
     }
 
     this.request.Assignments.NewAssignmentComponent =

@@ -99,14 +99,15 @@ export default class ActionGovManager {
 
     await ApplicationDbContext.Set(CH_Overtime).UpdateEntity(updatedEntity);
 
+    this.ServiceType.refreshEntity();
+
     if (this.assignment.Status != assignmentStates.Completed)
       await this.Request.Assignments.complete(
         this.assignment,
         assignmentStates.Completed
       );
 
-    this.ServiceType.refreshEntity();
-    this.Editing(false)
+    this.Editing(false);
     this.hasBeenSaved(true);
   };
 }

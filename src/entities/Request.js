@@ -434,7 +434,8 @@ export class RequestEntity {
         return this.Assignments.list.All();
       }),
       CurrentUserAssignments: ko.pureComputed(() => {
-        if (window.DEBUG) console.log("User Assignments Updated");
+        if (window.DEBUG)
+          console.log(`Request ${this.ID}: User Assignments Updated`);
         if (!this.Assignments.list.All().length) {
           return [];
         }
@@ -553,7 +554,7 @@ export class RequestEntity {
       //   assignmentObjs?.map(Assignment.CreateFromObject) ?? [];
 
       this.Assignments.list.All(assignments);
-      if (window.DEBUG) console.log("Request Assignments Updated");
+      if (window.DEBUG) console.log(`Request ${this.ID} Assignments Updated`);
       this.Assignments.HaveLoaded(true);
       this.Assignments.AreLoading(false);
     },
@@ -632,7 +633,7 @@ export class RequestEntity {
         data: assignment,
       });
     },
-    complete: async (assignment, action) => {
+    complete: async (assignment, action, refresh = true) => {
       const updateEntity = {
         ID: assignment.ID,
         Status: assignmentStates[action],
@@ -647,7 +648,7 @@ export class RequestEntity {
         data: updateEntity,
       });
 
-      this.Assignments.refresh();
+      if (refresh) this.Assignments.refresh();
     },
     createStageAssignments: async (stage = this.Pipeline.Stage()) => {
       if (!stage?.ActionType) return;
@@ -913,13 +914,18 @@ export class RequestEntity {
     const refreshId = addTask(taskDefs.refresh);
     this.IsLoading(true);
     await this.refreshRequest();
-    // These can be started when we have the ID
-    this.Attachments.refresh();
-    this.Actions.refresh();
-    this.Comments.refresh();
     await this.ServiceType.refreshEntity();
+    // These can be started when we have the ID
+    const relatedRecordPromises = [
+      this.Attachments.refresh(),
+      this.Actions.refresh(),
+      this.Comments.refresh(),
+      this.Assignments.refresh(),
+    ];
+
     // Assignments are dependent on the serviceType being loaded
-    this.Assignments.refresh();
+
+    await Promise.all(relatedRecordPromises);
     this.LoadedAt(new Date());
     this.IsLoading(false);
     finishTask(refreshId);

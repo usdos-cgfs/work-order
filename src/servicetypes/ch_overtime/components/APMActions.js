@@ -134,13 +134,14 @@ export default class ActionAPM {
       CH_Overtime.Views.APMUpdate
     );
 
+    this.ServiceType.refreshEntity();
+
     if (this.assignment.Status != assignmentStates.Completed)
       await this.Request.Assignments.complete(
         this.assignment,
         assignmentStates.Completed
       );
 
-    this.ServiceType.refreshEntity();
     this.hasBeenSaved(true);
     this.IsCompleted(true);
   };
@@ -149,7 +150,7 @@ export default class ActionAPM {
     this.hasBeenValidated(true);
     if (this.validate().length) return;
 
-    await await ApplicationDbContext.Set(CH_Overtime).UpdateEntity(
+    await ApplicationDbContext.Set(CH_Overtime).UpdateEntity(
       this.newEntity,
       CH_Overtime.Views.APMUpdate
     );

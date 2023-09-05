@@ -148,7 +148,9 @@ class App {
     // this.InitData();
   };
 
-  SelectNewRequestButton = (data, e) => {};
+  SelectNewRequest = (data, e) => {
+    this.Tab(Tabs.NewRequest);
+  };
 
   NewRequest = ({ request = null }) => {
     const props = {
