@@ -68,7 +68,7 @@ class App {
   Tab = ko.observable();
   TabClicked = (data, e) => this.Tab(e.target.getAttribute("id"));
 
-  MyOpenAssignments = assignmentsStore.getOpenByRequest;
+  MyActiveAssignments = assignmentsStore.MyActiveAssignments;
   //   MyOpenAssignments = ko.pureComputed(() =>
   //   this.CurrentUser()
   //     ? assignmentsStore.getOpenByUser(this.CurrentUser())()

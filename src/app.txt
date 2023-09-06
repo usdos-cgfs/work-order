@@ -151,7 +151,7 @@
         My Assignments
         <span
           class="badge text-bg-danger"
-          data-bind="visible: MyOpenAssignments().length, text: MyOpenAssignments().length"
+          data-bind="visible: MyActiveAssignments().length, text: MyActiveAssignments().length"
         ></span>
       </button>
     </li>

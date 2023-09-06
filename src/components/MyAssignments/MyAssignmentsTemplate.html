@@ -6,7 +6,7 @@
       <th>Requesting Office</th>
       <th>Requestor</th>
       <th>Est Closed</th>
-      <th>Role</th>
+      <th>Role(s)</th>
     </tr>
   </thead>
   <!-- ko if: IsLoading -->
@@ -20,7 +20,7 @@
   <!-- /ko -->
   <!-- ko ifnot: IsLoading -->
   <tbody
-    data-bind="childrenComplete: myPostProcessingLogic, foreach: MyAssignments"
+    data-bind="childrenComplete: myPostProcessingLogic, foreach: MyAssignedRequests"
   >
     <tr class="pointer" data-bind="click: () => $root.ViewRequest($data)">
       <td data-bind="text: Title"></td>
@@ -30,10 +30,22 @@
       <td data-bind="text: Dates.EstClosed.toSortableDateString()"></td>
       <td>
         <!-- ko foreach: Assignments.list.CurrentUserAssignments -->
-        <div data-bind="text: Role"></div>
+        <div
+          class="position-relative my-1 py-1 alert"
+          data-bind="class: $parents[1].assignmentStatusClass($data)"
+        >
+          <span data-bind="text: Role"> </span>
+        </div>
         <!-- /ko -->
       </td>
     </tr>
   </tbody>
   <!-- /ko -->
 </table>
+
+<!-- <div>
+  <p>Legend:</p>
+  <div class="badge rounded-pill text-bg-warning">In Progress</div>
+  <div class="badge rounded-pill text-bg-success">Completed</div>
+  <div class="badge rounded-pill text-bg-secondary">No Action</div>
+</div> -->

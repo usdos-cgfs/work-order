@@ -650,6 +650,7 @@ export class RequestEntity {
 
       if (refresh) this.Assignments.refresh();
     },
+
     createStageAssignments: async (stage = this.Pipeline.Stage()) => {
       if (!stage?.ActionType) return;
 
@@ -958,6 +959,11 @@ export class RequestEntity {
   closeAndFinalize = async (status) => {
     const closeId = addTask(taskDefs.closing);
     //1. set all assignments to inactive
+    this.Assignments.list.InProgress().map((assignment) => {
+      this.Assignments.complete(assignment, assignmentStates.Cancelled, false);
+      // assignment.Status = assignmentStates.Cancelled;
+      // this._context.Assignments.UpdateEntity(assignment);
+    });
 
     //2. Set request properties
     this.State.Status(status);

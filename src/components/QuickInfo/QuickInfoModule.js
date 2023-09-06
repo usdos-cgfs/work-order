@@ -15,7 +15,7 @@ export default class QuickInfoModule {
     return currentUser()?.IsActionOffice() && false;
   });
 
-  MyOpenAssignments = assignmentsStore.getOpenByRequest;
+  MyOpenAssignments = assignmentsStore.MyActiveAssignments;
 
   LateRequests = ko.pureComputed(() => {
     return (

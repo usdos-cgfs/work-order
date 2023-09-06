@@ -6,6 +6,7 @@ import { assignmentsStore } from "../../stores/Assignments.js";
 import { currentUser } from "../../infrastructure/Authorization.js";
 
 import { makeDataTable } from "../../common/DataTableExtensions.js";
+import { assignmentStates } from "../../entities/Assignment.js";
 
 export default class MyAssignmentsModule {
   constructor(Assignments) {
@@ -23,15 +24,38 @@ export default class MyAssignmentsModule {
   IsLoading = requestsByStatusMap.get(requestStates.open).IsLoading;
   AllOpenRequests = requestsByStatusMap.get(requestStates.open).List;
 
-  MyAssignments = ko.pureComputed(() => {
-    if (window.DEBUG)
-      console.log("All open requests: ", this.AllOpenRequests());
-    const myAssignedRequests = this.AllOpenRequests().filter(
-      (request) => request.Assignments.list.CurrentUserAssignments().length
-    );
-    if (window.DEBUG) console.log("My assigned Requests: ", myAssignedRequests);
-    return myAssignedRequests;
-  });
+  MyAssignedRequests = assignmentsStore.MyAssignedRequests;
+
+  assignmentStatusClass = (assignment) => {
+    switch (assignment.Status) {
+      case assignmentStates.InProgress:
+        return "alert-warning";
+      default:
+        return "alert-secondary";
+    }
+  };
+
+  assignmentBadgeText = (assignment) => {
+    switch (assignment.Status) {
+      case assignmentStates.InProgress:
+        return "In Progress";
+      case assignmentStates.Completed:
+        return "Completed";
+      default:
+        return null;
+    }
+  };
+
+  assignmentBadgeClass = (assignment) => {
+    switch (assignment.Status) {
+      case assignmentStates.InProgress:
+        return "bg-warning";
+      case assignmentStates.Completed:
+        return "bg-success";
+      default:
+        break;
+    }
+  };
 
   listBeforeChangeWatcher = () => {
     if (window.DEBUG) console.log("destroying table");
