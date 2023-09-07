@@ -94,6 +94,7 @@ export default class CH_Overtime extends BaseServiceDetail {
         fields
       );
     },
+    VisibleOnForm: ko.pureComputed(() => {}),
     create: async (
       contractorSupplement = this.ContractorSupplementField.Value()
     ) => {

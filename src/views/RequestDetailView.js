@@ -181,7 +181,7 @@ export class RequestDetailView {
     if (
       isValid &&
       this.request.Authorization.currentUserCanAdvance() &&
-      !this.request.Assignments.list.InProgress().length
+      !this.request.Assignments.CurrentStage.list.InProgress().length
     ) {
       this.promptAdvance();
     }
