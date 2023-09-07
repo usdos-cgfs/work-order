@@ -246,9 +246,6 @@ export const AssignmentFunctions = {
     });
     return [newCustomAssignment, newApprovalAssignment];
   },
-  getGovManager: function (request) {
-    return request.ServiceType.Entity()?.GovManager.get();
-  },
   ch_overtimeAPM: function (request, stage) {
     const assignee = request.ServiceType.Entity()?.APM.get();
     if (!assignee) {
@@ -290,6 +287,18 @@ export const AssignmentFunctions = {
     ];
   },
   getCOR: function (request) {
-    return request.ServiceType.Entity()?.COR.get();
+    const assignee = request.ServiceType.Entity()?.COR.get();
+    if (!assignee) {
+      throw new Error("Could not find stage Assignee");
+    }
+    return [
+      new Assignment({
+        Assignee: assignee,
+        RequestOrg: stage.RequestOrg,
+        PipelineStage: stage,
+        IsActive: true,
+        Role: roles.Approver,
+      }),
+    ];
   },
 };

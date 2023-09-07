@@ -178,7 +178,11 @@ export class RequestDetailView {
   };
 
   validationWatcher = (isValid) => {
-    if (isValid && this.request.Authorization.currentUserCanAdvance()) {
+    if (
+      isValid &&
+      this.request.Authorization.currentUserCanAdvance() &&
+      !this.request.Assignments.list.InProgress().length
+    ) {
       this.promptAdvance();
     }
   };
