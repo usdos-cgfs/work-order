@@ -237,14 +237,14 @@ export const AssignmentFunctions = {
       CustomComponent: "GovManagerActions",
     });
 
-    const newApprovalAssignment = new Assignment({
-      Assignee: assignee,
-      RequestOrg: stage.RequestOrg,
-      PipelineStage: stage,
-      IsActive: true,
-      Role: roles.Approver,
-    });
-    return [newCustomAssignment, newApprovalAssignment];
+    // const newApprovalAssignment = new Assignment({
+    //   Assignee: assignee,
+    //   RequestOrg: stage.RequestOrg,
+    //   PipelineStage: stage,
+    //   IsActive: true,
+    //   Role: roles.Approver,
+    // });
+    return [newCustomAssignment];
   },
   ch_overtimeAPM: function (request, stage) {
     const assignee = request.ServiceType.Entity()?.APM.get();
@@ -261,15 +261,15 @@ export const AssignmentFunctions = {
       CustomComponent: "APMActions",
     });
 
-    const newApprovalAssignment = new Assignment({
-      Assignee: assignee,
-      RequestOrg: stage.RequestOrg,
-      PipelineStage: stage,
-      IsActive: true,
-      Role: roles.Approver,
-    });
+    // const newApprovalAssignment = new Assignment({
+    //   Assignee: assignee,
+    //   RequestOrg: stage.RequestOrg,
+    //   PipelineStage: stage,
+    //   IsActive: true,
+    //   Role: roles.Approver,
+    // });
 
-    return [newCustomAssignment, newApprovalAssignment];
+    return [newCustomAssignment];
   },
   getGTM: function (request) {
     const assignee = request.ServiceType.Entity()?.GTM.get();

@@ -7,15 +7,15 @@ import PeopleField from "../../../fields/PeopleField.js";
 
 import { assignmentStates } from "../../../entities/Assignment.js";
 import CH_Overtime from "../Entity.js";
+import ApprovalActions from "../../../components/AssignmentActions/ApprovalModule.js";
 
-export default class ActionGovManager {
+export default class ActionGovManager extends ApprovalActions {
   constructor(params) {
+    super(params);
     this._context = getAppContext();
-    this.assignment = params.assignment;
+
     this.ServiceType = params.request.ServiceType;
     this.Errors = params.errors;
-    // this.ServiceType.Entity().APM.subscribe(this.apmWatcher);
-    // this.ServiceType.Entity().GTM.subscribe(this.gtmWatcher);
     this.Request = params.request;
 
     // this.Errors.push({
@@ -101,11 +101,8 @@ export default class ActionGovManager {
 
     this.ServiceType.refreshEntity();
 
-    if (this.assignment.Status != assignmentStates.Completed)
-      await this.Request.Assignments.complete(
-        this.assignment,
-        assignmentStates.Completed
-      );
+    if (this.assignment.Status != assignmentStates.Approved)
+      await this.completeAssignment(this.assignment, assignmentStates.Approved);
 
     this.Editing(false);
     this.hasBeenSaved(true);

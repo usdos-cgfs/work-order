@@ -6,12 +6,13 @@ import ContractorSupplement from "../../contractor_supplement/Entity.js";
 import { ValidationError } from "../../../primitives/ValidationError.js";
 import CH_Overtime from "../Entity.js";
 import { assignmentStates } from "../../../entities/Assignment.js";
+import ApprovalActions from "../../../components/AssignmentActions/ApprovalModule.js";
 
-export default class ActionAPM {
+export default class ActionAPM extends ApprovalActions {
   constructor(params) {
-    console.log("Hello from APM Actions module.");
+    super(params);
+    if (window.DEBUG) console.log("Hello from APM Actions module.");
     this._context = getAppContext();
-    this.assignment = params.assignment;
 
     this.ServiceType = params.request.ServiceType;
     this.Errors = params.errors;
@@ -119,6 +120,10 @@ export default class ActionAPM {
   //   }
   // };
 
+  ShowSupplementComponent = ko.pureComputed(
+    () => this.newEntity.GTM.IsValid() && this.newEntity.COR.IsValid()
+  );
+
   submit = async () => {
     this.hasBeenValidated(true);
     if (this.validate().length) return;
@@ -136,11 +141,8 @@ export default class ActionAPM {
 
     this.ServiceType.refreshEntity();
 
-    if (this.assignment.Status != assignmentStates.Completed)
-      await this.Request.Assignments.complete(
-        this.assignment,
-        assignmentStates.Completed
-      );
+    if (this.assignment.Status != assignmentStates.Approved)
+      await this.completeAssignment(this.assignment, assignmentStates.Approved);
 
     this.hasBeenSaved(true);
     this.IsCompleted(true);

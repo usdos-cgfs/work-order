@@ -650,7 +650,6 @@ export class RequestEntity {
 
       if (refresh) this.Assignments.refresh();
     },
-
     createStageAssignments: async (stage = this.Pipeline.Stage()) => {
       if (!stage?.ActionType) return;
 
@@ -678,6 +677,7 @@ export class RequestEntity {
           );
         } catch (e) {
           console.warn("Error creating stage assignments", stage);
+          return;
         }
         return;
       }

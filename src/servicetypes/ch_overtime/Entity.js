@@ -153,16 +153,16 @@ export default class CH_Overtime extends BaseServiceDetail {
     DateStart: new DateField({
       displayName: "Start Date",
       type: dateFieldTypes.date,
-      isRequired: true,
+      isRequired: false,
     }),
     DateEnd: new DateField({
       displayName: "End Date (Within Month Range)",
       type: dateFieldTypes.date,
-      isRequired: true,
+      isRequired: false,
     }),
     Hours: new TextField({
       displayName: "Overtime Hours (Not to Exceed)",
-      isRequired: true,
+      isRequired: false,
       attr: { type: "number" },
     }),
     ContractorSupplement: this.ContractorSupplementField,

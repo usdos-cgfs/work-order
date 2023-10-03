@@ -797,6 +797,14 @@
               <a target="_blank" data-bind="attr: {href: getFolderUrl() }">
                 <i class="fa fa-folder" data-bind=""></i
               ></a>
+              <button
+                type="button"
+                style="min-width: 0;"
+                class="btn btn-link ms-2 px-0"
+                data-bind="click: () => createStageAssignments()"
+              >
+                <i class="fa-solid fa-arrow-down-up-lock"></i>
+              </button>
               <!-- /ko -->
               <i class="fa fa-sync pointer ms-2" data-bind="click: refresh"></i>
             </div>
