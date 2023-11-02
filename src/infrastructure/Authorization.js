@@ -138,6 +138,8 @@ export class User extends People {
     this.isInGroup(getDefaultGroups().owners)
   );
 
+  hasSystemRole = (role) => userHasSystemRole(this, role);
+
   static Create = async function () {
     // TODO: Major - Switch to getUserPropertiesAsync since that includes phone # etc
     const userProps = await getUserPropsAsync();

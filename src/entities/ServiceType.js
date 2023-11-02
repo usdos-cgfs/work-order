@@ -1,5 +1,6 @@
 import { assetsPath } from "../env.js";
 import ApplicationDbContext from "../infrastructure/ApplicationDbContext.js";
+import { systemRoles } from "../infrastructure/Authorization.js";
 
 export const getTemplateElementId = (uid) => `tmpl-${uid}`;
 
@@ -90,6 +91,7 @@ export class ServiceType {
   // TODO: Minor - this should be in a servicetype manager service
   userCanInitiate = (user) => {
     if (!this.Active) return false;
+    if (user.hasSystemRole(systemRoles.Admin)) return true;
     if (this.RequestingOrgs.length > 0) {
       return (
         this.RequestingOrgs.find((ro) => user.isInRequestOrg(ro)) !== undefined
