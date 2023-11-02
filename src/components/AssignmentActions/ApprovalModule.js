@@ -11,6 +11,8 @@ export default class ApprovalActions {
     this.completeAssignment = params.completeAssignment;
   }
 
+  assignmentStates = assignmentStates;
+
   approve = async () => {
     this.completeAssignment(this.assignment, assignmentStates.Approved);
   };
@@ -19,7 +21,7 @@ export default class ApprovalActions {
     console.log("approved");
     // Check if we have been directly assigned or as an action office
     if (this.assignment.userIsDirectlyAssigned(currentUser())) {
-      approve();
+      this.approve();
       return;
     }
 
@@ -29,7 +31,7 @@ export default class ApprovalActions {
           `This approval is assigned to ${this.assignment.Assignee.Title}. Do you want to approve on their behalf? `
         )
       ) {
-        approve();
+        this.approve();
       }
       return;
     }

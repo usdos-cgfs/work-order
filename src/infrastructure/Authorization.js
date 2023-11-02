@@ -271,7 +271,7 @@ export const AssignmentFunctions = {
 
     return [newCustomAssignment];
   },
-  getGTM: function (request) {
+  getGTM: function (request, stage) {
     const assignee = request.ServiceType.Entity()?.GTM.get();
     if (!assignee) {
       throw new Error("Could not find stage Assignee");
@@ -286,7 +286,7 @@ export const AssignmentFunctions = {
       }),
     ];
   },
-  getCOR: function (request) {
+  getCOR: function (request, stage) {
     const assignee = request.ServiceType.Entity()?.COR.get();
     if (!assignee) {
       throw new Error("Could not find stage Assignee");
