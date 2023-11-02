@@ -90,6 +90,11 @@ export class ServiceType {
   // TODO: Minor - this should be in a servicetype manager service
   userCanInitiate = (user) => {
     if (!this.Active) return false;
+    if (this.RequestingOrgs.length > 0) {
+      return (
+        this.RequestingOrgs.find((ro) => user.isInRequestOrg(ro)) !== undefined
+      );
+    }
     return true;
   };
 
@@ -126,6 +131,7 @@ export class ServiceType {
       "DaysToCloseBusiness",
       "UID",
       "ReportingOrgs",
+      "RequestingOrgs",
     ],
   };
 
