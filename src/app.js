@@ -19,7 +19,6 @@ import {
   User,
   currentUser,
   systemRoles,
-  userHasSystemRole,
 } from "./infrastructure/Authorization.js";
 import {
   getAppContext,
@@ -91,7 +90,7 @@ class App {
 
   Authorization = {
     currentUserIsAdmin: ko.pureComputed(() => {
-      return userHasSystemRole(currentUser(), systemRoles.Admin);
+      return currentUser()?.hasSystemRole(systemRoles.Admin);
     }),
   };
 
