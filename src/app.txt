@@ -483,6 +483,7 @@
                       <thead>
                         <tr>
                           <th>Title</th>
+                          <th>FileName</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
@@ -497,9 +498,12 @@
                         <!-- ko foreach: Attachments.list.Active -->
                         <tr>
                           <td>
+                            <div data-bind="text: Title"></div>
+                          </td>
+                          <td>
                             <a
                               target="_blank"
-                              data-bind="attr: { href: FileRef }, text: Title"
+                              data-bind="attr: { href: FileRef }, text: FileLeafRef"
                             ></a>
                           </td>
                           <td>

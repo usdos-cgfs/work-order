@@ -3,7 +3,7 @@ export class Attachment {
 
   static Views = {
     // All: ["Title", "IsActive"],
-    All: ["ID", "Title", "IsActive", "Request", "FileRef", "Author", "Created"],
+    All: ["ID", "Title", "IsActive", "Request", "FileLeafRef", "FileRef", "Author", "Created"],
   };
 
   static ListDef = {
