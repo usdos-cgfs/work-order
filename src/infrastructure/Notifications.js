@@ -203,7 +203,16 @@ async function createNotification(notification, relFolderPath) {
 function entityPeopleMapper(entityArr) {
   return entityArr
     ?.filter((entity) => !entity.PreferredEmail)
-    ?.map((entity) => entity.UserGroup ?? entity);
+    ?.map((entity) => {
+      if (entity.UserGroup) return entity.UserGroup;
+
+      if (entity.OrgType) {
+        console.warn("Trying to email RequestOrg!");
+        return;
+      }
+
+      return entity;
+    });
 }
 
 /**

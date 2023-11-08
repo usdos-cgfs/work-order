@@ -406,7 +406,7 @@ export class RequestEntity {
       finishTask(refreshCommentsTask);
     },
     sendNotification: async (comment) => {
-      const notifyCommentTask = addTask(taskDefs.no);
+      const notifyCommentTask = addTask(taskDefs.newComment);
       await emitCommentNotification(comment, this);
       comment.NotificationSent = true;
       await this._context.Comments.UpdateEntity(comment, ["NotificationSent"]);
@@ -550,6 +550,12 @@ export class RequestEntity {
       );
       // const assignments =
       //   assignmentObjs?.map(Assignment.CreateFromObject) ?? [];
+      // Load request orgs
+      assignments.map(
+        (asg) =>
+          (asg.RequestOrg =
+            RequestOrg.FindInStore(asg.RequestOrg) ?? asg.RequestOrg)
+      );
 
       this.Assignments.list.All(assignments);
       if (window.DEBUG) console.log(`Request ${this.ID} Assignments Updated`);
