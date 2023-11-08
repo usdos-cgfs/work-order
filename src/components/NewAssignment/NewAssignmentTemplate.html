@@ -1,6 +1,9 @@
 <div class="input-group">
   <span class="input-group-text">New Assignment</span>
-  <div id="people-new-assignee" data-bind="people: Assignee"></div>
+  <div
+    class="people-new-assignee"
+    data-bind="attr: {id: getAsigneeElementID()}, people: Assignee"
+  ></div>
   <select
     name=""
     id=""

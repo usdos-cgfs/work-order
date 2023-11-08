@@ -83,11 +83,11 @@ div.sp-peoplepicker-topLevel {
   border-radius: var(--bs-border-radius);
 }
 
-#people-new-assignee > div {
+.people-new-assignee > div {
   height: 100%;
 }
 
-#people-new-assignee div.sp-peoplepicker-topLevel {
+.people-new-assignee div.sp-peoplepicker-topLevel {
   height: 100%;
   display: flex;
   flex-direction: row;
@@ -95,7 +95,7 @@ div.sp-peoplepicker-topLevel {
   border-radius: 0;
 }
 
-#people-new-assignee .sp-peoplepicker-initialHelpText {
+.people-new-assignee .sp-peoplepicker-initialHelpText {
   position: inherit;
   white-space: nowrap;
   top: 0;
@@ -103,13 +103,13 @@ div.sp-peoplepicker-topLevel {
   align-items: center;
 }
 
-#people-new-assignee
+.people-new-assignee
   .sp-peoplepicker-topLevelFocus
   .sp-peoplepicker-initialHelpText {
   display: none !important;
 }
 
-#people-new-assignee .sp-peoplepicker-resolveList {
+.people-new-assignee .sp-peoplepicker-resolveList {
   display: inline-flex;
   flex-direction: column;
   justify-content: center;

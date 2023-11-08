@@ -11,12 +11,14 @@ export default class AssignModule {
   }
   assignmentStates = assignmentStates;
 
+  // TODO: How can we show who was assigned by this request,
   NewAssignments = ko.pureComputed(() => {
     return this.allAssignments().filter(
-      (assignment) => assignment.PipelineStage.ID == this.NextStage.ID
+      (assignment) => assignment.PipelineStage.ID == this.NextStage?.ID
     );
   });
 
+  // TODO: how should stage be determined?
   newAssignmentParams = ko.pureComputed(() => {
     return {
       addAssignment: async (newAssignment) => {

@@ -9,10 +9,13 @@ export default class NewAssignmentComponent {
     this.stage = stage;
     this.addAssignment = addAssignment;
 
+    this.uniqueInt = Math.floor(Math.random() * 100);
     if (this.stage) {
       this.Role(stageActionRoleMap[this.stage.ActionType]);
     }
   }
+
+  getAsigneeElementID = () => `people-new-assignee-${this.uniqueInt}`;
 
   Assignee = ko.observable();
   Role = ko.observable();
