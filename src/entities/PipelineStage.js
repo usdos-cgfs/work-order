@@ -6,6 +6,7 @@ export const stageActionTypes = {
   PendingAction: "Pending Action",
   PendingResolution: "Pending Resolution",
   Notification: "Notification",
+  Closed: "Closed",
 };
 
 export class PipelineStage {
@@ -22,6 +23,12 @@ export class PipelineStage {
   static FindInStore = function (props) {
     if (!props || !props.ID) return null;
     return pipelineStageStore().find((stage) => stage.ID == props.ID);
+  };
+
+  static GetCompletedStage = function () {
+    return pipelineStageStore().find(
+      (stage) => stage.ActionType == stageActionTypes.Closed
+    );
   };
 
   static Views = {

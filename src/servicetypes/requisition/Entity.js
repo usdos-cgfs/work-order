@@ -1,4 +1,3 @@
-import { registerServiceTypeActionComponent } from "../../common/KnockoutExtensions.js";
 import SelectField from "../../fields/SelectField.js";
 import TextField from "../../fields/TextField.js";
 import BlobField from "../../fields/BlobField.js";

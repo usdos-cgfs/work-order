@@ -1,3 +1,4 @@
+import { actionTypes } from "../../entities/Action.js";
 import { requestStates } from "../../entities/Request.js";
 
 export default class PipelineModule {
@@ -44,6 +45,12 @@ export default class PipelineModule {
           break;
       }
     }
+  };
+
+  stageDisplayStep = (stage) => {
+    return stage.ActionType == actionTypes.Closed
+      ? this.Pipeline.Stages().length
+      : stage.Step;
   };
 
   completedStatus = () => {

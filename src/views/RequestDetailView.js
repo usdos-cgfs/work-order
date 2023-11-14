@@ -124,7 +124,9 @@ export class RequestDetailView {
       )
     );
     this.request.RequestOrgs(
-      this.request.Pipeline.Stages().map((stage) => stage.RequestOrg)
+      this.request.Pipeline.Stages()
+        .filter((stage) => null != stage.RequestOrg)
+        .map((stage) => stage.RequestOrg)
     );
 
     this.request.State.Status(requestStates.open);

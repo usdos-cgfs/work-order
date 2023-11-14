@@ -15,7 +15,7 @@
         data-bind="class: $parent.listItemTextClass($data)"
       >
         <h4
-          data-bind="text: Step, class: $parent.listItemTextClass($data)"
+          data-bind="text: $parent.stageDisplayStep($data), class: $parent.listItemTextClass($data)"
         ></h4>
         <div class="mx-2"></div>
         <div>
@@ -25,19 +25,6 @@
       </div>
     </li>
     <!-- /ko -->
-    <!-- <li
-      class="list-group-item d-flex flex-column justify-content-center"
-      data-bind=""
-    >
-      <div class="d-flex align-items-center" data-bind="">
-        <h4 data-bind="text: Pipeline.Stages().length + 2"></h4>
-        <div class="mx-2"></div>
-        <div>
-          <div class="fw-bold" data-bind="">Completed</div>
-          <p data-bind="text: ActionType"></p>
-        </div>
-      </div>
-    </li> -->
   </ol>
   <!-- ko if: ShowActionsArea -->
   <div class="flex-grow-1 border-bottom"></div>

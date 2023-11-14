@@ -44,7 +44,7 @@ async function requestCreatedNotification(request) {
 
   const actionOffices = [
     ...new Set(
-      request.Pipeline.Stages()?.map((stage) => stage.RequestOrg.Title)
+      request.Pipeline.RequestOrgs()?.map((requestOrg) => requestOrg.Title)
     ),
   ];
 
@@ -81,8 +81,8 @@ async function requestCreatedNotification(request) {
 
   // Notification Sent to Action Offices to let them know an item's been submitted
   const requestOrgNotification = {
-    To: request.Pipeline.Stages()?.map((stage) =>
-      RequestOrg.FindInStore(stage.RequestOrg)
+    To: request.Pipeline.RequestOrgs()?.map((requestOrg) =>
+      RequestOrg.FindInStore(requestOrg)
     ),
     Title: `Work Order -New- ${request.ServiceType.Def()?.Title} - ${
       request.Title

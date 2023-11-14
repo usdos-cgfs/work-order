@@ -224,12 +224,22 @@ export class RequestEntity {
 
   Pipeline = {
     Stage: ko.observable(),
+    PreviousStage: ko.observable(),
     Icon: ko.pureComputed(() => this.ServiceType.Def()?.Icon),
     Stages: ko.pureComputed(() => {
       if (!this.ServiceType.Def()) return [];
       return pipelineStageStore()
-        .filter((stage) => stage.ServiceType.ID == this.ServiceType.Def()?.ID)
+        .filter(
+          (stage) =>
+            null == stage.ServiceType ||
+            stage.ServiceType.ID == this.ServiceType.Def()?.ID
+        )
         .sort(sortByField("Step"));
+    }),
+    RequestOrgs: ko.pureComputed(() => {
+      return this.Pipeline.Stages()
+        .filter((stage) => stage.RequestOrg)
+        .map((stage) => stage.RequestOrg);
     }),
     getNextStage: ko.pureComputed(() => {
       const thisStepNum = this.Pipeline.Stage()?.Step ?? 0;
@@ -240,30 +250,40 @@ export class RequestEntity {
       const pipelineAdvanceTask = addTask(taskDefs.pipeline);
       if (this.promptAdvanceModal) this.promptAdvanceModal.hide();
 
-      const thisStage = this.Pipeline.Stage();
       const nextStage = this.Pipeline.getNextStage();
 
-      if (!nextStage) {
+      if (nextStage.ActionType == stageActionTypes.Closed) {
         // End of the Pipeline; time to close
         console.log("Closing Request");
         this.closeAndFinalize(requestStates.fulfilled);
         finishTask(pipelineAdvanceTask);
         return null;
       }
+
+      const thisStage = this.Pipeline.Stage();
+      this.Pipeline.PreviousStage(thisStage);
+
       this.Pipeline.Stage(nextStage);
 
-      await this._context.Requests.UpdateEntity(this, ["PipelineStage"]);
-
-      await this.Assignments.createStageAssignments(nextStage);
+      await this._context.Requests.UpdateEntity(this, [
+        "PipelineStage",
+        "PipelineStagePrev",
+      ]);
 
       this.ActivityQueue.push({
         activity: actionTypes.Advanced,
         data: nextStage,
       });
 
+      await this.Assignments.createStageAssignments(nextStage);
+
       // If this is a notification stage, advance. The activity logger will emit our notification.
       if (nextStage.ActionType == stageActionTypes.Notification) {
         this.Pipeline.advance();
+      }
+
+      if (nextStage.ActionType == stageActionTypes.Closed) {
+        this.closeAndFinalize(requestStates.fulfilled);
       }
       finishTask(pipelineAdvanceTask);
     },
@@ -675,6 +695,8 @@ export class RequestEntity {
     createStageAssignments: async (stage = this.Pipeline.Stage()) => {
       if (!stage?.ActionType) return;
 
+      if (stage.ActionType == actionTypes.Closed) return;
+
       // If this stage is already assigned (e.g. from a previous assignment stage), skip it
       if (
         this.Assignments.list
@@ -988,10 +1010,18 @@ export class RequestEntity {
     });
 
     //2. Set request properties
+    const closedStage = PipelineStage.GetCompletedStage();
+
+    const thisStage = this.Pipeline.Stage();
+    this.Pipeline.PreviousStage(thisStage);
+    this.Pipeline.Stage(closedStage);
+
     this.State.Status(status);
     this.State.IsActive(false);
     this.Dates.Closed.set(new Date());
     await this._context.Requests.UpdateEntity(this, [
+      "PipelineStage",
+      "PipelineStagePrev",
       "RequestStatus",
       "IsActive",
       "ClosedDate",
@@ -1029,6 +1059,10 @@ export class RequestEntity {
       factory: PipelineStage.FindInStore,
       obs: this.Pipeline.Stage,
     },
+    PipelineStagePrev: {
+      factory: PipelineStage.FindInStore,
+      obs: this.Pipeline.PreviousStage,
+    },
     RequestStatus: this.State.Status,
     RequestSubmitted: this.Dates.Submitted,
     EstClosedDate: this.Dates.EstClosed,
@@ -1057,6 +1091,7 @@ export class RequestEntity {
       "RequestingOffice",
       "IsActive",
       "PipelineStage",
+      "PipelineStagePrev",
       "RequestStatus",
       "RequestSubmitted",
       "EstClosedDate",
