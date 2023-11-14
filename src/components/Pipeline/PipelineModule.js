@@ -45,4 +45,16 @@ export default class PipelineModule {
       }
     }
   };
+
+  completedStatus = () => {
+    const status = this.request.State.Status();
+    switch (status) {
+      case requestStates.cancelled:
+      case requestStates.fulfilled:
+      case requestStates.rejected:
+        return status;
+      default:
+        return "";
+    }
+  };
 }
