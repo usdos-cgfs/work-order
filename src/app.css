@@ -122,8 +122,13 @@ div.sp-peoplepicker-topLevel {
 }
 
 .state-open,
-.state-fulfilled {
+.state-completed {
   color: green;
+  font-weight: bold;
+}
+
+.state-draft {
+  color: blue;
   font-weight: bold;
 }
 

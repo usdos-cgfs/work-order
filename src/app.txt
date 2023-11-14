@@ -558,6 +558,7 @@
               <table class="table">
                 <thead>
                   <tr>
+                    <th>Created</th>
                     <th>Author</th>
                     <th>Comment</th>
                     <th>Notification Sent</th>
@@ -572,8 +573,9 @@
                     </td>
                   </tr>
                   <!-- /ko -->
-                  <!-- ko foreach: Comments.list.All -->
+                  <!-- ko foreach: Comments.list.Active -->
                   <tr>
+                    <td data-bind="text: Created.toLocaleString()"></td>
                     <td data-bind="text: Author.Title"></td>
                     <td data-bind="text: Comment"></td>
                     <td data-bind="text: NotificationSent"></td>
@@ -582,6 +584,11 @@
                         class="fa fa-envelope pointer"
                         data-bind="click: $parent.Comments.sendNotification,
                         attr: {title: NotificationSent ? 'Re-Send Email Notification' : 'Send Email Notification'}"
+                      ></i>
+                      <i
+                        class="fa fa-trash pointer"
+                        title="remove"
+                        data-bind="click: $parent.Comments.remove"
                       ></i>
                     </td>
                   </tr>
@@ -698,9 +705,15 @@
         class="card d-flex flex-row justify-content-between align-items-center px-2"
       >
         <div class="m-2">
-          <h6 class="mb-1">
-            Request: <span data-bind="text: request.ObservableTitle"></span>
-          </h6>
+          <div class="d-flex flex-row mb-1">
+            <h6 class="mx-0">
+              Request: <span data-bind="text: request.ObservableTitle"></span>
+            </h6>
+            <h6
+              class="badge"
+              data-bind="text: request.State.Status, class: request.State.StatusClass"
+            ></h6>
+          </div>
           <div class="d-flex align-items-center">
             <div class="me-2">
               Loaded:

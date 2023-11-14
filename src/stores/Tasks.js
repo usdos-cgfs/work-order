@@ -19,6 +19,7 @@ export const taskDefs = {
   newComment: { msg: "Submitting Comment", blocking: false },
   refreshComments: { msg: "Refreshing Comments", blocking: false },
   notifyComment: { msg: "Sending Comment Email", blocking: false },
+  removeComment: { msg: "Removing Comment", blocking: false },
   newAction: { msg: "Submitting Action", blocking: false },
   refreshActions: { msg: "Refreshing Actions", blocking: false },
   newAttachment: { msg: "Submitting Attachment", blocking: false },

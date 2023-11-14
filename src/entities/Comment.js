@@ -2,7 +2,15 @@ export class Comment {
   constructor() {}
 
   static Views = {
-    All: ["ID", "Title", "Comment", "NotificationSent", "Author", "Created"],
+    All: [
+      "ID",
+      "Title",
+      "Comment",
+      "NotificationSent",
+      "Author",
+      "IsActive",
+      "Created",
+    ],
   };
 
   static ListDef = {

@@ -68,6 +68,14 @@ export const requestStates = {
   rejected: "Rejected",
 };
 
+const requestStateClasses = {
+  Draft: "text-bg-info",
+  Open: "text-bg-primary",
+  Completed: "text-bg-success",
+  Cancelled: "text-bg-warning",
+  Rejected: "text-bg-danger",
+};
+
 // TODO: implement as Entity
 export class RequestEntity {
   constructor({ ID = null, Title = null, serviceType = null }) {
@@ -132,6 +140,9 @@ export class RequestEntity {
   State = {
     IsActive: ko.observable(),
     Status: ko.observable(),
+    StatusClass: ko.pureComputed(() => {
+      return requestStateClasses[this.State.Status()];
+    }),
   };
 
   Reporting = {
@@ -412,6 +423,13 @@ export class RequestEntity {
       await this._context.Comments.UpdateEntity(comment, ["NotificationSent"]);
       this.Comments.refresh();
       finishTask(notifyCommentTask);
+    },
+    remove: async (comment) => {
+      const removeCommentTask = addTask(taskDefs.removeComment);
+      comment.IsActive = false;
+      await this._context.Comments.UpdateEntity(comment, ["IsActive"]);
+      this.Comments.refresh();
+      finishTask(removeCommentTask);
     },
   };
 
