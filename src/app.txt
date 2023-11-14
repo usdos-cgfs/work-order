@@ -373,8 +373,8 @@
           ></div>
           <div class="card-text" class="mb-2">
             <p>
-              Once submitted, this request will be handled by a member of the
-              CGFS/EX team.
+              Once submitted, this request will be routed to the appropriate
+              action office.
             </p>
           </div>
           <!-- /ko -->
@@ -433,7 +433,7 @@
             ></div>
             <!-- /ko -->
           </div>
-          <!-- ko if: request.State.Status()?.Title != 'Draft' -->
+          <!-- ko if: DisplayMode() != DisplayModes.New -->
           <div
             class="my-3"
             data-bind="template: {name: 'tmpl-assignments-component', data: request.Assignments}"
@@ -534,11 +534,14 @@
                 </div>
               </div>
             </div>
+            <!-- ko if: DisplayMode() != DisplayModes.New -->
             <div
               class="col-8"
               data-bind="template: {name: 'tmpl-activity-log-component', data: request.Actions}"
             ></div>
+            <!-- /ko -->
           </div>
+          <!-- ko if: DisplayMode() != DisplayModes.New -->
           <div class="card my-3 w-100" data-bind="using: request">
             <div class="card-body">
               <h3 class="card-title">Comments</h3>
@@ -599,6 +602,7 @@
               <!-- /ko -->
             </div>
           </div>
+          <!-- /ko -->
           <div>
             <!-- ko if: DisplayMode() == DisplayModes.New -->
             <button

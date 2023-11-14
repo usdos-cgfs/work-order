@@ -17,10 +17,11 @@ export class NewRequestView {
   );
 
   formatAttachmentDescription = () => {
-    return (
-      this.SelectedServiceType()?.AttachmentDescription ??
-      "<i>Not applicable.</i>"
-    );
+    const desc = this.SelectedServiceType()?.AttachmentDescription;
+    if (desc && Boolean(desc.trim())) {
+      return desc;
+    }
+    return "<i>Not applicable.</i>";
   };
 
   getDescriptionModal = () =>
