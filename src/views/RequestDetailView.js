@@ -2,7 +2,6 @@ import { requestStates } from "../entities/Request.js";
 import { actionTypes } from "../entities/Action.js";
 
 import { People } from "../entities/People.js";
-import { NewAssignmentComponent } from "../components/NewAssignmentComponent.js";
 
 import { createNewRequestTitle } from "../common/EntityUtilities.js";
 import { businessDaysFromDate } from "../common/DateUtilities.js";
@@ -247,11 +246,6 @@ export class RequestDetailView {
       this.request.ServiceType.Def.subscribe(this.serviceTypeDefinitionWatcher);
       this.request.LoadedAt(new Date());
     }
-
-    this.request.Assignments.NewAssignmentComponent =
-      new NewAssignmentComponent({
-        addAssignment: this.request.Assignments.addNew,
-      });
 
     this.request.Validation.IsValid.subscribe(this.validationWatcher);
     // this.DisplayMode.subscribe(this.displayModeWatcher);

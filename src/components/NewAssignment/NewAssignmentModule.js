@@ -4,7 +4,7 @@ import {
   stageActionRoleMap,
 } from "../../infrastructure/Authorization.js";
 
-export default class NewAssignmentComponent {
+export default class NewAssignmentModule {
   constructor({ addAssignment, stage = null }) {
     this.stage = stage;
     this.addAssignment = addAssignment;
