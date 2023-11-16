@@ -5,6 +5,12 @@
     ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span
     >:</label
   >
+  <!-- ko if: instructions -->
+  <div
+    class="fw-lighter fst-italic text-secondary"
+    data-bind="html: instructions"
+  ></div>
+  <!-- /ko -->
   <div class="richtext-field" data-bind="childrenComplete: childrenHaveLoaded">
     <!-- Create the editor container -->
     <div
@@ -20,6 +26,12 @@
   <label class="fw-semibold"
     ><span data-bind="text: displayName"></span
     ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span>:
+    <!-- ko if: instructions -->
+    <div
+      class="fw-lighter fst-italic text-secondary"
+      data-bind="html: instructions"
+    ></div>
+    <!-- /ko -->
     <textarea
       name=""
       id=""

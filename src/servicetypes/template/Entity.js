@@ -12,6 +12,10 @@ import { ServiceType, serviceTypeStore } from "../../entities/ServiceType.js";
 import { registerServiceTypeViewComponents } from "../../infrastructure/RegisterComponents.js";
 import BaseServiceDetail from "../BaseServiceDetail.js";
 
+/* 
+Components and registration are only necessary if we have custom views in our ./views folder
+Remove if using the default views (don't forget to remove the reference in our entity request!)
+*/
 const components = {
   view: "svc-template-view",
   edit: "svc-template-edit",

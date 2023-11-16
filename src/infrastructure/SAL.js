@@ -2105,6 +2105,13 @@ export function SPList(listDef) {
     });
   }
 
+  // Ensure List/Library exists on the site
+  async function ensureList() {
+      // Query List Title
+      const listInfo = await fetchData(`/web/lists/GetByTitle('${self.config.def.title}')`)
+
+  }
+
   const publicMembers = {
     findByIdAsync,
     findByColumnValueAsync,

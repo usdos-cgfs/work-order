@@ -320,6 +320,8 @@ class EntitySet {
       this.ListRef.showModal(name, title, args, resolve)
     );
   };
+
+  EnsureList = async function () {};
 }
 
 function mapObjectToEntity(inputObject, targetEntity) {
@@ -444,3 +446,5 @@ function mapViewFieldToValue(fieldMap) {
   // console.error("Error setting fieldMap", fieldMap);
   // throw "Error getting fieldmap";
 }
+
+// export const _context = new ApplicationDbContext();

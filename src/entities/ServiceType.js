@@ -125,6 +125,7 @@ export class ServiceType {
       "Active",
       "HasTemplate",
       "DescriptionTitle",
+      "DescriptionFieldInstructions",
       "Description",
       "Icon",
       "AttachmentsRequiredCnt",

@@ -3,11 +3,13 @@ import { ValidationError } from "../primitives/ValidationError.js";
 export default class BaseField {
   constructor({
     displayName,
+    instructions = null,
     isRequired = false,
     width,
     Visible = ko.pureComputed(() => true),
   }) {
     this.displayName = displayName;
+    this.instructions = instructions;
     this.isRequired = isRequired;
     this.Visible = Visible;
     this.width = width ? "col-md-" + width : "col-md-6";
