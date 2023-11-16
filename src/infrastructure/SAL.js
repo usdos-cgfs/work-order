@@ -202,7 +202,7 @@ export async function getUserPropsAsync(userId = _spPageContextInfo.userId) {
     Title: userInfo.Title,
     LoginName: userInfo.LoginName,
     WorkPhone: findPropValue(userProps, "WorkPhone"),
-    EMail: findPropValue(userProps, "Email"), // TODO: Do we still need this spelling?
+    EMail: findPropValue(userProps, "WorkEmail"), // TODO: Do we still need this spelling?
     IsEnsured: true,
     IsGroup: false,
     Groups: userInfo.Groups?.results?.map((group) => {
@@ -2107,9 +2107,10 @@ export function SPList(listDef) {
 
   // Ensure List/Library exists on the site
   async function ensureList() {
-      // Query List Title
-      const listInfo = await fetchData(`/web/lists/GetByTitle('${self.config.def.title}')`)
-
+    // Query List Title
+    const listInfo = await fetchData(
+      `/web/lists/GetByTitle('${self.config.def.title}')`
+    );
   }
 
   const publicMembers = {

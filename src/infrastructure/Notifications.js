@@ -3,6 +3,8 @@ import { getAppContext } from "./ApplicationDbContext.js";
 import { RequestOrg } from "../entities/RequestOrg.js";
 import { assignmentRoles } from "../entities/Assignment.js";
 
+import { siteTitle } from "../env.js";
+
 const requestActionTypeFunctionMap = {
   Created: requestCreatedNotification,
   Advanced: requestAdvancedNotification,
@@ -15,7 +17,7 @@ export async function emitCommentNotification(comment, request) {
     To: [request.RequestorInfo.Requestor(), currentUser()],
     CC: request.Assignments.list.All().map((asg) => asg.RequestOrg),
     Request: request,
-    Title: `Work Order -New Comment- ${request.Title} - ${request.ID}`,
+    Title: formatNotificationTitle(request, "New Comment"),
     Body:
       `${
         currentUser().Title
@@ -55,9 +57,10 @@ async function requestCreatedNotification(request) {
 
   const submitterNotification = {
     To: [request.RequestorInfo.Requestor(), currentUser()],
-    Title: `Work Order -New- ${request.ServiceType.Def()?.Title} - ${
-      request.Title
-    }`,
+    Title: formatNotificationTitle(
+      request,
+      `New - ${request.ServiceType.Def()?.Title}`
+    ),
     Body:
       `<p>Your ${
         request.ServiceType.Def()?.Title
@@ -84,9 +87,10 @@ async function requestCreatedNotification(request) {
     To: request.Pipeline.RequestOrgs()?.map((requestOrg) =>
       RequestOrg.FindInStore(requestOrg)
     ),
-    Title: `Work Order -New- ${request.ServiceType.Def()?.Title} - ${
-      request.Title
-    }`,
+    Title: formatNotificationTitle(
+      request,
+      `New - ${request.ServiceType.Def()?.Title}`
+    ),
     Body:
       "<p>Greetings Colleagues,<br><br> A new service request has been opened requiring your attention:<br>" +
       request.getAppLinkElement() +
@@ -133,16 +137,14 @@ async function requestAssignedNotification(request, action) {
     Body:
       `<p>Greetings Colleagues,<br><br>You have been assigned the role of\
        <strong>${role}</strong> on the following\
-       workorder request:<br>` +
+       request:<br>` +
       request.getAppLinkElement() +
       "</p>" +
       roleBasedMessage +
       "<p>To view the request, please click the link above,\
        or copy and paste the below URL into your browser: <br> " +
       request.getAppLink() +
-      "</p>" +
-      "<strong>Note:</strong> if you are a <strong>Subscriber</strong> or\
-       <strong>Viewer</strong> you have no action to take.",
+      "</p>",
     Request: request,
   };
 
@@ -229,7 +231,7 @@ function emailStringMapper(entityArr) {
 }
 
 function formatNotificationTitle(request, content) {
-  return `Work Order -${content}- ${request.ServiceType.Def()?.Title} - ${
+  return `${siteTitle} -${content}- ${request.ServiceType.Def()?.Title} - ${
     request.Title
   }`;
 }

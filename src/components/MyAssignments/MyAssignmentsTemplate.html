@@ -6,7 +6,7 @@
       <th>Requesting Office</th>
       <th>Requestor</th>
       <th>Est Closed</th>
-      <th>Role(s)</th>
+      <!-- <th>Role(s)</th> -->
     </tr>
   </thead>
   <!-- ko if: IsLoading -->
@@ -28,6 +28,7 @@
       <td data-bind="text: RequestorInfo.Office()?.Title"></td>
       <td data-bind="text: RequestorInfo.Requestor()?.Title"></td>
       <td data-bind="text: Dates.EstClosed.toSortableDateString()"></td>
+      <!-- ko if: false -->
       <td>
         <!-- ko foreach: Assignments.list.CurrentUserAssignments -->
         <div
@@ -38,6 +39,7 @@
         </div>
         <!-- /ko -->
       </td>
+      <!-- /ko -->
     </tr>
   </tbody>
   <!-- /ko -->

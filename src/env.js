@@ -5,3 +5,5 @@ export const Tabs = {
 };
 
 export const assetsPath = window.appRoot + "/src";
+
+export const siteTitle = _spPageContextInfo.webTitle;

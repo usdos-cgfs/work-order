@@ -252,7 +252,7 @@
 
   <div id="tmpl-views">
     <script type="text/html" id="tmpl-office-requests-view">
-      <h2>My Office Requests</h2>
+      <h2>Team Requests</h2>
       <div class="d-flex">
         <div class="me-3">
           <div
