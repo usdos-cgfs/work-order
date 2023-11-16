@@ -4,6 +4,8 @@ import { serviceTypeStore } from "./entities/ServiceType.js";
 import { holidayStore } from "./entities/Holiday.js";
 import { requestStates } from "./entities/Request.js";
 
+import "./common/KnockoutExtensions.js";
+
 import PeopleField from "./fields/PeopleField.js";
 import DateField, { dateFieldTypes } from "./fields/DateField.js";
 
@@ -79,11 +81,17 @@ class Report {
     // Initialize our filters
     const startDate = new Date();
     startDate.setDate(1);
+    startDate.setUTCHours(0);
+    startDate.setUTCMinutes(0);
+    startDate.setUTCSeconds(0);
     this.filters.startDate.set(startDate);
 
     const endDate = new Date();
     endDate.setMonth(endDate.getMonth() + 1);
     endDate.setDate(0);
+    endDate.setUTCHours(0);
+    endDate.setUTCMinutes(0);
+    endDate.setUTCSeconds(0);
     this.filters.endDate.set(endDate);
   }
 
