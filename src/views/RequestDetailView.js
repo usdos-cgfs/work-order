@@ -12,6 +12,7 @@ import { addTask, finishTask, taskDefs } from "../stores/Tasks.js";
 import { currentUser } from "../infrastructure/Authorization.js";
 
 import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
+import TextAreaField from "../fields/TextAreaField.js";
 
 const DEBUG = true;
 
@@ -61,15 +62,18 @@ export class RequestDetailView {
       this.request.Assignments.CurrentStage.list.UserActionAssignments().length
   );
 
-  // TODO: Minor - this should probably be it's own component w/ template
-  NewCommentComponent = {
-    CommentText: ko.observable(),
+  newComment = {
+    input: new TextAreaField({
+      displayName: "Please provide additional comments/instructions here",
+      instructions: null,
+      isRichText: true,
+    }),
     submit: async () => {
       const comment = {
-        Comment: this.NewCommentComponent.CommentText(),
+        Comment: this.newComment.input.Value(),
       };
       await this.request.Comments.addNew(comment);
-      this.NewCommentComponent.CommentText("");
+      this.newComment.input.Value("");
     },
   };
 

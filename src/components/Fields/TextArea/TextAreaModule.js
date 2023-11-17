@@ -40,6 +40,12 @@ export default class TextAreaModule extends BaseFieldModule {
 
     const Value = this.Value;
 
+    Value.subscribe((val) => {
+      if (val == "") {
+        editor.setText("");
+      }
+    });
+
     editor.on("text-change", function (delta, oldDelta, source) {
       Value(editor.root.textContent ? editor.root.innerHTML : "");
     });

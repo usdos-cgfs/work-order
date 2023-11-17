@@ -133,18 +133,6 @@ export class RequestEntity {
     width: "12",
   });
 
-  // RequestDescription = new TextAreaField({
-  //   displayName: ko.pureComputed(
-  //     () => this.ServiceType.Def()?.DescriptionTitle ?? "Description"
-  //   ),
-  //   instructions: DescriptionFieldInstructions,
-  //   isRichText: true,
-  //   isRequired: ko.pureComputed(
-  //     () => this.ServiceType.Def()?.DescriptionRequired ?? false
-  //   ),
-  //   width: "12",
-  // });
-
   RequestorInfo = {
     Requestor: ko.observable(),
     Phone: ko.observable(),

@@ -560,7 +560,6 @@
                   <tr>
                     <th>Created</th>
                     <th>Author</th>
-                    <th>Comment</th>
                     <th>Notification Sent</th>
                     <th>Actions</th>
                   </tr>
@@ -574,12 +573,12 @@
                   </tr>
                   <!-- /ko -->
                   <!-- ko foreach: Comments.list.Active -->
-                  <tr>
+                  <tr class="table-group-divider">
                     <td data-bind="text: Created.toLocaleString()"></td>
                     <td data-bind="text: Author.Title"></td>
-                    <td data-bind="text: Comment"></td>
                     <td data-bind="text: NotificationSent"></td>
                     <td>
+                      <!-- ko if: $parent.Comments.userCanComment -->
                       <i
                         class="fa fa-envelope pointer"
                         data-bind="click: $parent.Comments.sendNotification,
@@ -590,18 +589,21 @@
                         title="Remove Comment"
                         data-bind="click: $parent.Comments.remove"
                       ></i>
+                      <!-- /ko -->
                     </td>
+                  </tr>
+                  <tr class="">
+                    <td colspan="4" data-bind="html: Comment" class="pb-4"></td>
                   </tr>
                   <!-- /ko -->
                 </tbody>
               </table>
               <!-- ko if: Comments.userCanComment -->
-              <div>Provide additional comments/instructions here:</div>
-              <div data-bind="using: $parent.NewCommentComponent">
-                <textarea
-                  class="form-control mb-2"
-                  data-bind="value: CommentText"
-                ></textarea>
+              <div data-bind="using: $parent.newComment">
+                <div
+                  class="mb-2"
+                  data-bind="component: {name: input.components.edit, params: input}"
+                ></div>
                 <button class="btn btn-primary" data-bind="click: submit">
                   Submit Comment
                 </button>

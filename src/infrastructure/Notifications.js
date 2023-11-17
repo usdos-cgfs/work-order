@@ -18,11 +18,9 @@ export async function emitCommentNotification(comment, request) {
     CC: request.Assignments.list.All().map((asg) => asg.RequestOrg),
     Request: request,
     Title: formatNotificationTitle(request, "New Comment"),
-    Body:
-      `${
-        currentUser().Title
-      } has left a new comment on ${request.getAppLinkElement()}:<br/><br/>` +
-      comment.Comment,
+    Body: `${
+      currentUser().Title
+    } has left a new comment on ${request.getAppLinkElement()}:<br/><br/>`,
   };
 
   await createNotification(notification, request.getRelativeFolderPath());
