@@ -136,6 +136,7 @@
         My Requests
       </button>
     </li>
+    <!-- ko if: false -->
     <li class="nav-item" role="presentation">
       <button
         class="nav-link position-relative"
@@ -155,6 +156,7 @@
         ></span>
       </button>
     </li>
+    <!-- /ko -->
     <li class="nav-item" role="presentation">
       <button
         class="nav-link"
@@ -209,6 +211,7 @@
         data-bind="template: {name: 'tmpl-my-requests-view', data: MyRequestsView}"
       ></div>
     </div>
+    <!-- ko if: false -->
     <div
       class="tab-pane"
       role="tabpanel"
@@ -219,6 +222,7 @@
         data-bind="template: {name: 'tmpl-my-assignments-view', data: MyAssignmentsView}"
       ></div>
     </div>
+    <!-- /ko -->
     <div
       class="tab-pane"
       role="tabpanel"
