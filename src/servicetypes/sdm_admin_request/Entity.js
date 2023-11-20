@@ -25,8 +25,8 @@ Remove if using the default views (don't forget to remove the reference in our e
 // registerServiceTypeViewComponents({ uid: "template", components });
 
 export default class SDMAdminRequest extends BaseServiceDetail {
-  constructor({ ID, Title, Request }) {
-    super({ ID, Title, Request });
+  constructor(params) {
+    super(params);
   }
 
   /* A Service Type must define a fieldmap: 

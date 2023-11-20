@@ -13,8 +13,8 @@ import { registerServiceTypeViewComponents } from "../../infrastructure/Register
 import BaseServiceDetail from "../BaseServiceDetail.js";
 
 export default class TierIRequest extends BaseServiceDetail {
-  constructor({ ID, Title, Request }) {
-    super({ ID, Title, Request });
+  constructor(params) {
+    super(params);
   }
 
   /* A Service Type must define a fieldmap: 

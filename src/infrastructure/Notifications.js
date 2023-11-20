@@ -55,10 +55,7 @@ async function requestCreatedNotification(request) {
 
   const submitterNotification = {
     To: [request.RequestorInfo.Requestor(), currentUser()],
-    Title: formatNotificationTitle(
-      request,
-      `New - ${request.ServiceType.Def()?.Title}`
-    ),
+    Title: formatNotificationTitle(request, `New`),
     Body:
       `<p>Your ${
         request.ServiceType.Def()?.Title
@@ -85,10 +82,7 @@ async function requestCreatedNotification(request) {
     To: request.Pipeline.RequestOrgs()?.map((requestOrg) =>
       RequestOrg.FindInStore(requestOrg)
     ),
-    Title: formatNotificationTitle(
-      request,
-      `New - ${request.ServiceType.Def()?.Title}`
-    ),
+    Title: formatNotificationTitle(request, `New`),
     Body:
       "<p>Greetings Colleagues,<br><br> A new service request has been opened requiring your attention:<br>" +
       request.getAppLinkElement() +
