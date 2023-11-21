@@ -25,8 +25,8 @@ const components = {
 registerServiceTypeViewComponents({ uid: "template", components });
 
 export default class TemplateRequest extends BaseServiceDetail {
-  constructor({ ID, Title, Request }) {
-    super({ ID, Title, Request });
+  constructor(entityParams) {
+    super(entityParams);
   }
 
   /* A Service Type must define a fieldmap: 

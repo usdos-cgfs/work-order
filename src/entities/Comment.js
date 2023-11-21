@@ -14,8 +14,8 @@ export class Comment {
   };
 
   static ListDef = {
-    name: "Comment",
-    title: "Comment",
+    name: "Comments",
+    title: "Comments",
     fields: this.Views.All,
   };
 }

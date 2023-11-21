@@ -92,7 +92,6 @@ export class Assignment extends Entity {
       "IsActive",
       "Comment",
       "CompletionDate",
-      "CanDelegate",
       "ActionTaker",
       "PipelineStage",
       "CustomComponent",
@@ -102,8 +101,8 @@ export class Assignment extends Entity {
   };
 
   static ListDef = {
-    name: "Assignment",
-    title: "Assignment",
+    name: "Assignments",
+    title: "Assignments",
     fields: Assignment.Views.All,
   };
 }

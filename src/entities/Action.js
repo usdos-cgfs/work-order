@@ -44,8 +44,8 @@ export class Action {
   };
 
   static ListDef = {
-    name: "Action",
-    title: "Action",
+    name: "Actions",
+    title: "Actions",
     fields: this.Views.All,
   };
 }

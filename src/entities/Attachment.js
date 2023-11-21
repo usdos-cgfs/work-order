@@ -3,12 +3,21 @@ export class Attachment {
 
   static Views = {
     // All: ["Title", "IsActive"],
-    All: ["ID", "Title", "IsActive", "Request", "FileLeafRef", "FileRef", "Author", "Created"],
+    All: [
+      "ID",
+      "Title",
+      "IsActive",
+      "Request",
+      "FileLeafRef",
+      "FileRef",
+      "Author",
+      "Created",
+    ],
   };
 
   static ListDef = {
-    name: "WorkOrderDocuments",
-    title: "Work Order Documents",
+    name: "Attachments",
+    title: "Attachments",
     fields: this.Views.All,
     isLib: true,
   };

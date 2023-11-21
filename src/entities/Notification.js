@@ -19,8 +19,8 @@ export class Notification {
   };
 
   static ListDef = {
-    name: "WorkOrderEmails",
-    title: "WorkOrderEmails",
+    name: "Notifications",
+    title: "Notifications",
     fields: this.Views.All,
   };
 }

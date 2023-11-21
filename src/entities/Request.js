@@ -1126,8 +1126,8 @@ export class RequestEntity {
   };
 
   static ListDef = {
-    name: "WorkOrder",
-    title: "Work Order",
+    name: "Requests",
+    title: "Requests",
     fields: RequestEntity.Views.All,
   };
 }

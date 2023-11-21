@@ -72,7 +72,7 @@ export default class RequestsByServiceTypeTableModule {
     Object.keys(sampleEntity.FieldMap).map((key) =>
       this.SupplementCols.push({
         key,
-        displayName: sampleEntity.FieldMap[key].displayName,
+        displayName: sampleEntity.FieldMap[key]?.displayName ?? key,
       })
     );
 
