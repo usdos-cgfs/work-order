@@ -18,44 +18,47 @@ export default class BlobField extends BaseField {
     this.entityType = params.entityType;
     this.multiple = params.multiple;
     this.entityType.subscribe(this.updateEntityTypeHandler);
+    // this.Value.subscribe(this.updateEntityTypeHandler);
     this.updateEntityTypeHandler(this.entityType());
   }
 
   toString = ko.pureComputed(() => `${this.Value()?.length ?? "0"} items`);
 
-  ViewItems = ko.pureComputed(() => {
-    if (!this.entityType()) return [];
+  toJSON = ko.pureComputed(() => {
+    if (!this.multiple) return this.TypedValue()?.toJSON();
+    return this.TypedValues().map((value) => value.toJSON());
+  });
 
-    return this.Value().map((item) => {
+  fromJSON = (input) => {
+    if (!input) return;
+    if (!this.multiple) {
+      this.TypedValue()?.fromJSON(input);
+      return;
+    }
+    input.map((obj) => {
       const newEntity = new this.entityConstructor();
-      mapObjectToEntity(item, newEntity);
-      return newEntity;
+      newEntity.fromJSON(obj);
+      this.TypedValues.push(newEntity);
     });
-  });
-
-  ViewItem = ko.pureComputed(() => {
-    if (!this.entityType()) return;
-    // const newEntity = new this.entityConstructor();
-    mapObjectToEntity(this.Value(), this.TypedValue());
-    return this.TypedValue();
-  });
-  //Value = ko.observableArray([]);
+  };
 
   TypedValues = ko.observableArray();
   TypedValue = ko.observable();
 
-  RawValue = ko.observable();
-
   get = () => {
-    if (this.TypedValue())
-      return JSON.stringify(mapEntityToObject(this.TypedValue()));
-
-    return JSON.stringify(this.Value());
+    return JSON.stringify(this.toJSON());
+    // if (!this.multiple) {
+    //   if (this.TypedValue()) return JSON.stringify(this.toJSON());
+    // }
+    // return this.TypedValues().map((value) => JSON.stringify(value.toJSON()));
   };
 
   set = (val) => {
+    if (window.DEBUG) console.log(val);
     this.Value(JSON.parse(val));
-    this.RawValue(JSON.parse(val));
+    // this.Value(JSON.parse(val));
+    // this.applyValueToTypedValues();
+    this.fromJSON(this.Value());
     // if (this.multiple) {
     //   const newEntities = JSON.parse(val).map((item) =>
     //     mapObjectToEntity(item, new this.entityConstructor())
@@ -70,6 +73,7 @@ export default class BlobField extends BaseField {
   get entityConstructor() {
     return ko.utils.unwrapObservable(this.entityType);
   }
+
   // use purecomputed for memoization, fields shouldn't change
   Cols = ko.pureComputed(() => {
     if (!this.entityType()) return [];
@@ -79,40 +83,52 @@ export default class BlobField extends BaseField {
     return newEntity.FormFields();
   });
 
-  ColKeys = ko.pureComputed(() =>
-    new this.entityConstructor()?.FormFieldKeys()
-  );
+  // ColKeys = ko.pureComputed(() =>
+  //   new this.entityConstructor()?.FormFieldKeys()
+  // );
 
   NewItem = ko.observable();
 
   submit = () => {
-    const errors = this.NewItem()?.validate();
+    const errors = this.TypedValue()?.validate();
     if (errors.length) return;
 
-    const newItemBlob = this.NewItem().toJSONBlob();
-    newItemBlob.identifier = new Date().getTime();
+    this.TypedValues.push(this.TypedValue());
 
-    this.Value().push(newItemBlob);
-    this.NewItem(new this.entityConstructor());
+    this.TypedValue(new this.entityConstructor());
+
+    // const newItemBlob = this.NewItem().toJSONBlob();
+    // newItemBlob.identifier = new Date().getTime();
+
+    // this.Value().push(newItemBlob);
+    // this.NewItem(new this.entityConstructor());
   };
 
-  remove = (item) => this.Value.remove(item);
+  remove = (item) => this.TypedValues.remove(item);
 
   updateEntityTypeHandler = (newType) => {
     if (!newType) return;
-    if (this.multiple) {
-      const typedItems = this.RawValue()?.map((item) => {
-        const newEntity = new this.entityConstructor();
-        mapObjectToEntity(item, newEntity);
-        return newEntity;
-      });
-      this.TypedValues(typedItems);
-      this.NewItem(new this.entityConstructor());
-      return;
-    }
+
     this.TypedValue(new this.entityConstructor());
-    mapObjectToEntity(this.Value(), this.TypedValue());
+    this.fromJSON(this.Value());
+
+    // this.applyValueToTypedValues();
   };
 
+  applyValueToTypedValues = () => {
+    if (!this.Value() || !this.TypedValue()) return;
+
+    if (!this.multiple) {
+      mapObjectToEntity(this.Value(), this.TypedValue());
+      return;
+    }
+
+    const typedItems = this.Value()?.map((item) => {
+      const newEntity = new this.entityConstructor();
+      mapObjectToEntity(item, newEntity);
+      return newEntity;
+    });
+    this.TypedValues(typedItems);
+  };
   components = components;
 }

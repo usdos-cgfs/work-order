@@ -22,6 +22,9 @@ export default class BaseField {
 
   toString = ko.pureComputed(() => this.Value());
 
+  toJSON = () => this.toString();
+  fromJSON = (val) => this.Value(val);
+
   validate = (showErrors = true) => {
     this.ShowErrors(showErrors);
     return this.Errors();

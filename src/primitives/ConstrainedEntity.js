@@ -26,13 +26,21 @@ export default class ConstrainedEntity extends Entity {
     super(params);
   }
 
-  toJSONBlob = () => {
+  toJSON = () => {
     const out = {};
     Object.keys(this.FieldMap).map(
-      (key) => (out[key] = this.FieldMap[key]?.toString())
+      (key) => (out[key] = this.FieldMap[key]?.toJSON())
     );
     return out;
   };
+
+  fromJSON(inputObj) {
+    if (window.DEBUG)
+      console.log("Setting constrained entity from JSON", inputObj);
+    Object.keys(inputObj).map((key) =>
+      this.FieldMap[key]?.fromJSON(inputObj[key])
+    );
+  }
 
   FormFields = ko.pureComputed(() => {
     return Object.values(this.FieldMap).filter((field) => field?.Visible());

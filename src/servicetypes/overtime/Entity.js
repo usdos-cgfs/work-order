@@ -55,6 +55,7 @@ export default class Overtime extends BaseServiceDetail {
       displayName: "Overtime Dates",
       isRequired: true,
       width: 12,
+      multiple: true,
       entityType: ko.observable(DatesBlob),
     }),
   };

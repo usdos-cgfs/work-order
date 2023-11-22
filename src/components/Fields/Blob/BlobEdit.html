@@ -22,10 +22,10 @@
     </tr>
   </thead>
   <tbody data-bind="">
-    <!-- ko foreach: {data: Value, as: 'row'} -->
+    <!-- ko foreach: {data: TypedValues, as: 'row'} -->
     <tr data-bind="">
-      <!-- ko foreach: {data: $parent.ColKeys, as: 'col'} -->
-      <td data-bind="text: row[col]"></td>
+      <!-- ko foreach: {data: row.FormFields, as: 'col'} -->
+      <td data-bind="text: col.toString"></td>
       <!-- /ko -->
       <td>
         <i
@@ -37,7 +37,7 @@
     </tr>
     <!-- /ko -->
     <tr>
-      <!-- ko foreach: NewItem()?.FormFields -->
+      <!-- ko foreach: TypedValue()?.FormFields -->
       <td>
         <div
           data-bind="component: {name: components.edit, params: $data}"

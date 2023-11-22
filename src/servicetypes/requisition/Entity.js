@@ -33,17 +33,18 @@ export default class Requisition extends BaseServiceDetail {
     ...this.FieldMap,
     RequisitionType: new SelectField({
       displayName: "Requisition Type",
-      isRequired: true,
+      isRequired: false,
       options: ["Requisition", "De-Obligation", "Re-Alignment"],
     }),
     Quantity: new TextField({
       displayName: "Quantity of requisitions",
-      isRequired: true,
+      isRequired: false,
     }),
     ItemsBlob: new BlobField({
       displayName: "Procurement Items",
       isRequired: false,
       width: 12,
+      multiple: true,
       entityType: ko.observable(RequisitionItem),
     }),
   };
@@ -66,21 +67,21 @@ class RequisitionItem extends ConstrainedEntity {
 
   FieldMap = {
     title: new TextField({ displayName: "Title", isRequired: true }),
-    vendor: new TextField({ displayName: "Vendor", isRequired: true }),
-    description: new TextField({
-      displayName: "Description",
-      isRequired: true,
-    }),
-    quantity: new TextField({
-      displayName: "Quantity",
-      isRequired: true,
-      attr: { type: "number" },
-    }),
-    unit: new TextField({
-      displayName: "Unit",
-      isRequired: true,
-    }),
-    price: new TextField({ displayName: "Price", isRequired: true }),
-    Amount: new TextField({ displayName: "Amount", isRequired: true }),
+    // vendor: new TextField({ displayName: "Vendor", isRequired: true }),
+    // description: new TextField({
+    //   displayName: "Description",
+    //   isRequired: true,
+    // }),
+    // quantity: new TextField({
+    //   displayName: "Quantity",
+    //   isRequired: true,
+    //   attr: { type: "number" },
+    // }),
+    // unit: new TextField({
+    //   displayName: "Unit",
+    //   isRequired: true,
+    // }),
+    // price: new TextField({ displayName: "Price", isRequired: true }),
+    // Amount: new TextField({ displayName: "Amount", isRequired: true }),
   };
 }
