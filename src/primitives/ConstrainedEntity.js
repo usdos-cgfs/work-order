@@ -3,8 +3,7 @@ import { registerComponent } from "../infrastructure/RegisterComponents.js";
 
 /**
  * Constrained Entity's are validated based on their declared fields.
- * We are expecting user input, so need to validate that each input field
- * is valid.
+ * We are expecting user input, so need to validate each input field.
  */
 
 export const defaultComponents = {
@@ -30,7 +29,7 @@ export default class ConstrainedEntity extends Entity {
   toJSONBlob = () => {
     const out = {};
     Object.keys(this.FieldMap).map(
-      (key) => (out[key] = this.FieldMap[key].toString())
+      (key) => (out[key] = this.FieldMap[key]?.toString())
     );
     return out;
   };

@@ -2,6 +2,16 @@
   <span data-bind="text: displayName"></span
   ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span>:
 </h5>
+<!-- ko ifnot: entityType -->
+<div class="alert alert-danger">Missing entity type</div>
+<!-- /ko -->
+<!-- ko if: entityType -->
+<!-- ko ifnot: multiple -->
+<div
+  data-bind="component: {name: TypedValue().components.edit, params: {Entity: TypedValue()}}"
+></div>
+<!-- /ko -->
+<!-- ko if: multiple -->
 <table class="table">
   <thead>
     <tr data-bind="">
@@ -47,3 +57,5 @@
     </tr>
   </tbody>
 </table>
+<!-- /ko -->
+<!-- /ko -->

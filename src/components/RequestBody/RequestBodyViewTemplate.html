@@ -8,6 +8,12 @@
     <div
       data-bind="component: {name: ServiceTypeComponentName, params: {Entity: Entity()}}"
     ></div>
+    <div
+      data-bind="component: {
+        name: RequestBodyBlobField.components.view, 
+        params: RequestBodyBlobField}, 
+        class: RequestBodyBlobField.width"
+    ></div>
     <!-- /ko -->
     <div
       class="col-12 pb-6"

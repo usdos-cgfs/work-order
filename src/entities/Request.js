@@ -46,6 +46,7 @@ import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
 
 import TextField from "../fields/TextField.js";
 import TextAreaField from "../fields/TextAreaField.js";
+import BlobField from "../fields/BlobField.js";
 
 import { DisplayModes } from "../views/RequestDetailView.js";
 
@@ -182,6 +183,7 @@ export class RequestEntity {
           Title: this.Title,
           Request: this,
         });
+        this.RequestBodyBlob.entityType(this.ServiceType.Def()._constructor);
         this.ServiceType.Entity(newEntity);
         this.ServiceType.IsLoading(false);
         return;
@@ -189,6 +191,7 @@ export class RequestEntity {
 
       // Else, attempt to locate the existing service type entity from the db.
       await this.ServiceType.Def()?.initializeEntity();
+      this.RequestBodyBlob.entityType(this.ServiceType.Def()._constructor);
       const results = await this.ServiceType.Def()
         ?.getListRef()
         ?.GetItemsByFolderPath(this.getRelativeFolderPath());
@@ -225,19 +228,26 @@ export class RequestEntity {
     },
   };
 
+  RequestBodyBlob = new BlobField({
+    displayName: "Service Type Details",
+    isRequired: false,
+    width: 12,
+    entityType: ko.observable(),
+  });
+
   Pipeline = {
     Stage: ko.observable(),
     PreviousStage: ko.observable(),
     Icon: ko.pureComputed(() => this.ServiceType.Def()?.Icon),
     Stages: ko.pureComputed(() => {
       if (!this.ServiceType.Def()) return [];
-      return pipelineStageStore()
-        .filter(
-          (stage) =>
-            null == stage.ServiceType ||
-            stage.ServiceType.ID == this.ServiceType.Def()?.ID
-        )
+      const typeStages = pipelineStageStore()
+        .filter((stage) => stage.ServiceType?.ID == this.ServiceType.Def()?.ID)
         .sort(sortByField("Step"));
+      const completedStage = PipelineStage.GetCompletedStage();
+      completedStage.Step = typeStages.length + 1;
+      typeStages.push(completedStage);
+      return typeStages;
     }),
     RequestOrgs: ko.pureComputed(() => {
       return this.Pipeline.Stages()
@@ -1078,9 +1088,10 @@ export class RequestEntity {
       get: this.RequestOrgs,
     },
     ServiceType: {
-      set: (val) => this.ServiceType.Def(ServiceType.Create(val)),
+      set: (val) => this.ServiceType.Def(ServiceType.FindInStore(val)),
       get: this.ServiceType.Def,
     }, // {id, title},
+    RequestBodyBlob: this.RequestBodyBlob,
   };
 
   static Views = {
@@ -1101,6 +1112,7 @@ export class RequestEntity {
       "ClosedDate",
       "RequestOrgs",
       "ServiceType",
+      "RequestBodyBlob",
     ],
     ByStatus: [
       "ID",

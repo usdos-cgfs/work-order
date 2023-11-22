@@ -44,7 +44,7 @@ export default class Requisition extends BaseServiceDetail {
       displayName: "Procurement Items",
       isRequired: false,
       width: 12,
-      entity: RequisitionItem,
+      entityType: ko.observable(RequisitionItem),
     }),
   };
 

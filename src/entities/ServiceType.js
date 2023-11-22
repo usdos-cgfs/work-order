@@ -75,17 +75,20 @@ export class ServiceType {
       return;
     }
     // this.ServiceType.IsLoading(true);
+    let serviceModule = null;
     try {
-      const serviceModule = await import(getModuleFilePath(this.UID));
+      serviceModule = await import(getModuleFilePath(this.UID));
       if (!serviceModule) {
         console.error("Could not find service module");
         return null;
       }
-      this._initialized = true;
-      this._constructor = serviceModule.default;
     } catch (e) {
       console.error("Cannot import service type module", e);
+      return;
     }
+
+    this._initialized = true;
+    this._constructor = serviceModule.default;
   };
 
   // TODO: Minor - this should be in a servicetype manager service
@@ -104,12 +107,6 @@ export class ServiceType {
     if (!this.AttachmentsRequiredCnt) return "no";
     if (this.AttachmentsRequiredCnt < 0) return "multiple";
     return this.AttachmentsRequiredCnt;
-  };
-
-  static Create = function ({ ID, LookupValue }) {
-    const newServiceType = new ServiceType({ ID, Title: LookupValue });
-    const serviceType = serviceTypeStore().find((service) => service.ID == ID);
-    return Object.assign(newServiceType, serviceType);
   };
 
   static FindInStore = function (serviceType) {

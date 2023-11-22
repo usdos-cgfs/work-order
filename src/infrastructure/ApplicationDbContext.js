@@ -324,7 +324,8 @@ class EntitySet {
   EnsureList = async function () {};
 }
 
-function mapObjectToEntity(inputObject, targetEntity) {
+export function mapObjectToEntity(inputObject, targetEntity) {
+  if (!inputObject || !targetEntity) return;
   // Takes an object and attempts to map it to the target entity
   Object.keys(inputObject).forEach((key) => {
     mapValueToEntityProperty(key, inputObject[key], targetEntity);
@@ -393,11 +394,11 @@ function generateObject(inVal, fieldMap) {
   return fieldMap.factory ? fieldMap.factory(inVal) : inVal;
 }
 
-function mapEntityToObject(input, selectedFields = null) {
+export function mapEntityToObject(input, selectedFields = null) {
   const entity = {};
   // We either predefine the fields in the ListDef, or provide a complete fieldmap
   const allWriteableFieldsSet = new Set([]);
-  if (this.ListDef.fields) {
+  if (this?.ListDef?.fields) {
     this.ListDef.fields.forEach((field) => allWriteableFieldsSet.add(field));
   }
   if (input.FieldMap) {
