@@ -4,6 +4,7 @@ import BaseField from "./BaseField.js";
 const components = {
   view: "select-view",
   edit: "select-edit",
+  new: "select-edit",
 };
 
 registerFieldComponent("select", components);

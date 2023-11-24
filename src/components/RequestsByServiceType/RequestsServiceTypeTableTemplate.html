@@ -15,23 +15,18 @@
         <!-- /ko -->
       </tr>
     </thead>
-    <tbody data-bind="foreach: {data: Object.values(requestMap), as: 'rmap'}">
-      <!-- ko if: rmap.request -->
-      <tr
-        class="pointer"
-        data-bind="click: () => $root.ViewRequest(rmap.request)"
-      >
-        <td data-bind="text: rmap.request.Title"></td>
-        <td data-bind="text: rmap.request.RequestorInfo.Office()?.Title"></td>
-        <td
-          data-bind="text: rmap.request.RequestorInfo.Requestor()?.Title"
-        ></td>
-        <td data-bind="text: rmap.request.State.Status"></td>
+    <tbody data-bind="foreach: {data: AllRequests, as: 'rmap'}">
+      <tr class="pointer" data-bind="click: $root.ViewRequest">
+        <td data-bind="text: Title"></td>
+        <td data-bind="text: RequestorInfo.Office()?.Title"></td>
+        <td data-bind="text: RequestorInfo.Requestor()?.Title"></td>
+        <td data-bind="text: State.Status"></td>
         <!-- ko foreach: $parent.SupplementCols -->
-        <td data-bind="text: rmap.supplement?.FieldMap[key]?.toString()"></td>
+        <td
+          data-bind="text: rmap.RequestBodyBlob?.TypedValue().FieldMap[key]?.toString()"
+        ></td>
         <!-- /ko -->
       </tr>
-      <!-- /ko -->
     </tbody>
   </table>
 </div>

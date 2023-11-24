@@ -8,6 +8,7 @@ import {
 const components = {
   view: "blob-view",
   edit: "blob-edit",
+  new: "blob-edit",
 };
 
 registerFieldComponent("blob", components);

@@ -90,8 +90,6 @@ export class RequestEntity {
     }
 
     if (RequestType) {
-      this.ServiceType.Def(RequestType);
-
       this.RequestType = ServiceType.FindInStore(RequestType);
       this.RequestBodyBlob = new BlobField({
         displayName: "Service Type Details",
@@ -140,14 +138,14 @@ export class RequestEntity {
   RequestSubject = ko.observable();
   RequestDescription = new TextAreaField({
     displayName: ko.pureComputed(
-      () => this.ServiceType.Def()?.DescriptionTitle ?? "Description"
+      () => this.RequestType?.DescriptionTitle ?? "Description"
     ),
     instructions: ko.pureComputed(
-      () => this.ServiceType?.Def()?.DescriptionFieldInstructions
+      () => this.RequestType?.DescriptionFieldInstructions
     ),
     isRichText: true,
     isRequired: ko.pureComputed(
-      () => this.ServiceType.Def()?.DescriptionRequired ?? false
+      () => this.RequestType?.DescriptionRequired ?? false
     ),
     width: "12",
   });
@@ -170,8 +168,7 @@ export class RequestEntity {
   Reporting = {
     MeetingStandard: ko.pureComputed(() => this.Reporting.AgingDays() <= 0),
     AgingDays: ko.pureComputed(
-      () =>
-        this.Reporting.OpenDays() - this.ServiceType.Def().DaysToCloseBusiness
+      () => this.Reporting.OpenDays() - this.RequestType.DaysToCloseBusiness
     ),
     OpenDays: ko.pureComputed(() => {
       const endDate = this.Dates.Closed.Value() ?? new Date();
@@ -187,64 +184,14 @@ export class RequestEntity {
 
   RequestOrgs = ko.observable();
 
-  ServiceType = {
-    IsLoading: ko.observable(false),
-    Entity: ko.observable(),
-    Def: ko.observable(),
-    refreshEntity: async () => {
-      // If this is a new request creates a new service type entity
-      if (DEBUG) console.log("ServiceType: Refresh Triggered");
-      if (!this.ServiceType.Def()?.HasTemplate) return;
-      this.ServiceType.IsLoading(true);
-      if (!this.ID) {
-        const newEntity = await this.ServiceType.Def().instantiateEntity({
-          Title: this.Title,
-          Request: this,
-        });
-        //this.RequestBodyBlob.entityType(this.ServiceType.Def()._constructor);
-        this.ServiceType.Entity(newEntity);
-        this.ServiceType.IsLoading(false);
-        return;
-      }
-
-      // Else, attempt to locate the existing service type entity from the db.
-      await this.ServiceType.Def()?.initializeEntity();
-      //this.RequestBodyBlob.entityType(this.ServiceType.Def()._constructor);
-      const results = await this.ServiceType.Def()
-        ?.getListRef()
-        ?.GetItemsByFolderPath(this.getRelativeFolderPath());
-
-      if (!results.length) {
-        console.error("cannot find servicetype entity");
-        this.ServiceType.IsLoading(false);
-        return;
-      }
-
-      // This should never happen if we index our Request Lookup Column
-      if (results.length > 1)
-        alert("Multiple service type entities found for this request!");
-
-      const entity = results[0];
-      entity.Request = this;
-      this.ServiceType.Entity(entity);
-      this.ServiceType.IsLoading(false);
-    },
-    createEntity: async (newEntity = this.ServiceType.Entity()) => {
-      if (!newEntity) return;
-      newEntity.Title = this.Title;
-      const folderPath = this.getRelativeFolderPath();
-      await this.ServiceType.Def()
-        .getListRef()
-        .AddEntity(newEntity, folderPath, this);
-      // newEntity.ID = newSvcTypeItemId;
-    },
-    updateEntity: async (fields) => {
-      if (!this.ServiceType.Entity()) return;
-      await this.ServiceType.Def()
-        ?.getListRef()
-        ?.UpdateEntity(this.ServiceType.Entity(), fields);
-    },
-  };
+  // ServiceType = {
+  //   IsLoading: ko.observable(false),
+  //   Entity: ko.observable(),
+  //   // Def: ko.observable(),
+  //   refreshEntity: async () => {
+  //     return;
+  //   },
+  // };
 
   RequestType;
 
@@ -259,11 +206,11 @@ export class RequestEntity {
   Pipeline = {
     Stage: ko.observable(),
     PreviousStage: ko.observable(),
-    Icon: ko.pureComputed(() => this.ServiceType.Def()?.Icon),
+    Icon: ko.pureComputed(() => this.RequestType?.Icon),
     Stages: ko.pureComputed(() => {
-      if (!this.ServiceType.Def()) return [];
+      if (!this.RequestType) return [];
       const typeStages = pipelineStageStore()
-        .filter((stage) => stage.ServiceType?.ID == this.ServiceType.Def()?.ID)
+        .filter((stage) => stage.ServiceType?.ID == this.RequestType?.ID)
         .sort(sortByField("Step"));
       const completedStage = PipelineStage.GetCompletedStage();
       completedStage.Step = typeStages.length + 1;
@@ -334,8 +281,7 @@ export class RequestEntity {
     Validation: {
       Errors: ko.pureComputed(() => {
         let errors = [];
-        let minAttachments =
-          this.ServiceType.Def()?.AttachmentsRequiredCnt ?? 0;
+        let minAttachments = this.RequestType?.AttachmentsRequiredCnt ?? 0;
         if (minAttachments < 0) minAttachments = 1;
         const attachmentsCount = this.Attachments.list.Active().length;
         if (attachmentsCount < minAttachments) {
@@ -343,7 +289,7 @@ export class RequestEntity {
             new ValidationError(
               "attachment-count-mismatch",
               "request-header",
-              `This request has ${this.ServiceType.Def().attachmentsRequiredCntString()} required attachment(s)!`
+              `This request has ${this.RequestType.attachmentsRequiredCntString()} required attachment(s)!`
             )
           );
         }
@@ -847,7 +793,7 @@ export class RequestEntity {
       this.FieldMap.RequestDescription.validate();
     },
     validateBody: () => {
-      const serviceTypeEntity = this.ServiceType.Entity();
+      const serviceTypeEntity = this.RequestBodyBlob;
       if (!serviceTypeEntity) return;
       return serviceTypeEntity.validate();
     },
@@ -862,24 +808,10 @@ export class RequestEntity {
         // Required description
         errors = errors.concat(this.FieldMap.RequestDescription.Errors());
 
-        // if (
-        //   this.ServiceType.Def()?.DescriptionRequired &&
-        //   !this.FieldMap.RequestDescription.get()
-        // ) {
-        // errors.push(
-        //   new ValidationError(
-        //     "request-description-required",
-        //     "request-header",
-        //     `${
-        //       this.ServiceType.Def()?.DescriptionTitle ?? "Description"
-        //     } is required!`
-        //   )
-        // );
-        // }
         return errors;
       }),
       ServiceType: ko.pureComputed(() => {
-        return this.ServiceType.Entity()?.Errors() ?? [];
+        return this.RequestBodyBlob?.TypedValue()?.Errors() ?? [];
       }),
       All: ko.pureComputed(() => [
         ...this.Validation.Errors.Request(),
@@ -993,7 +925,6 @@ export class RequestEntity {
     const refreshId = addTask(taskDefs.refresh);
     this.IsLoading(true);
     await this.refreshRequest();
-    await this.ServiceType.refreshEntity();
     // These can be started when we have the ID
     const relatedRecordPromises = [
       this.Attachments.refresh(),
@@ -1028,8 +959,8 @@ export class RequestEntity {
       this._context.Assignments,
       this._context.Notifications,
     ];
-    if (this.ServiceType.Def()?.getListRef()) {
-      listRefs.push(this.ServiceType.Def().getListRef());
+    if (this.RequestType?.getListRef()) {
+      listRefs.push(this.RequestType.getListRef());
     }
     return listRefs;
   }
@@ -1111,10 +1042,9 @@ export class RequestEntity {
     ServiceType: {
       set: (val) => {
         const type = ServiceType.FindInStore(val);
-        this.ServiceType.Def(type);
         this.RequestType = type;
       },
-      get: this.ServiceType.Def,
+      get: () => this.RequestType,
     }, // {id, title},
     RequestBodyBlob: {
       get: () => this.RequestBodyBlob.get(),
@@ -1159,9 +1089,11 @@ export class RequestEntity {
     ByServiceType: [
       "ID",
       "Title",
+      "ServiceType",
       "RequestingOffice",
       "Requestor",
       "RequestStatus",
+      "RequestBodyBlob",
     ],
   };
 

@@ -4,6 +4,7 @@ import BaseField from "./BaseField.js";
 const components = {
   view: "checkbox-view",
   edit: "checkbox-edit",
+  new: "checkbox-edit",
 };
 
 registerFieldComponent("checkbox", components);

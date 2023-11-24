@@ -9,6 +9,7 @@ export const dateFieldTypes = {
 const components = {
   view: "date-view",
   edit: "date-edit",
+  new: "date-edit",
 };
 
 registerFieldComponent("date", components);

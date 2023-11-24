@@ -4,6 +4,7 @@ import BaseField from "./BaseField.js";
 const components = {
   view: "text-area-view",
   edit: "text-area-edit",
+  new: "text-area-edit",
 };
 
 registerFieldComponent("textarea", components);

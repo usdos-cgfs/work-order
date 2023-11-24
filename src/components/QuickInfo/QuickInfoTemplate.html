@@ -88,7 +88,7 @@
             <tbody data-bind="foreach: LateRequests">
               <tr class="pointer" data-bind="click: $root.ViewRequest">
                 <td data-bind="text: Title"></td>
-                <td data-bind="text: ServiceType.Def()?.Title"></td>
+                <td data-bind="text: RequestType.Title"></td>
                 <td data-bind="text: Dates.EstClosed.toLocaleDateString()"></td>
               </tr>
             </tbody>

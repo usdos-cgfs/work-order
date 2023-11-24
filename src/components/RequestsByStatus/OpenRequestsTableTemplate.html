@@ -32,7 +32,7 @@
       <!-- ko foreach: FilteredRequests -->
       <tr class="pointer" data-bind="click: $root.ViewRequest">
         <td data-bind="text: Title"></td>
-        <td data-bind="text: ServiceType.Def()?.Title"></td>
+        <td data-bind="text: RequestType.Title"></td>
         <td data-bind="text: Pipeline.Stage()?.Title"></td>
         <td data-bind="text: RequestorInfo.Office()?.Title"></td>
         <td data-bind="text: RequestorInfo.Requestor()?.Title"></td>

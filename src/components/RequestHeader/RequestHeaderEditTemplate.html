@@ -59,13 +59,7 @@
     </div>
     <div class="col-12 pb-2">
       <h6>Service Type:</h6>
-      <select
-        class="form-control"
-        class="fluid"
-        data-bind="value: ServiceType.Def,
-            options: AvailableServiceTypes,
-            optionsText: (st) => st.Title"
-      ></select>
+      <p data-bind="text: RequestType.Title"></p>
     </div>
   </div>
 </div>

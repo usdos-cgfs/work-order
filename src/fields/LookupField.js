@@ -5,6 +5,7 @@ import BaseField from "./BaseField.js";
 const components = {
   view: "lookup-view",
   edit: "lookup-edit",
+  new: "lookup-edit",
 };
 
 registerFieldComponent("lookup", components);

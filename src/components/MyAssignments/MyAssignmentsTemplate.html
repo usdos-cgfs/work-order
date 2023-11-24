@@ -24,7 +24,7 @@
   >
     <tr class="pointer" data-bind="click: () => $root.ViewRequest($data)">
       <td data-bind="text: Title"></td>
-      <td data-bind="text: ServiceType.Def()?.Title"></td>
+      <td data-bind="text: RequestType.Title"></td>
       <td data-bind="text: RequestorInfo.Office()?.Title"></td>
       <td data-bind="text: RequestorInfo.Requestor()?.Title"></td>
       <td data-bind="text: Dates.EstClosed.toSortableDateString()"></td>

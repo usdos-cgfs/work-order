@@ -14,15 +14,10 @@ export default class ActionAPM extends ApprovalActions {
     if (window.DEBUG) console.log("Hello from APM Actions module.");
     this._context = getAppContext();
 
-    this.ServiceType = params.request.ServiceType;
+    this.ServiceType = params.request.RequestBodyBlob?.TypedValue();
     this.Errors = params.errors;
     // this.ServiceType.Entity().GTM.subscribe(this.gtmWatcher);
     this.Request = params.request;
-
-    if (!this.ServiceType.Entity().ID) {
-      console.error("No service entity provided");
-      return;
-    }
 
     this.newEntity = new CH_Overtime(this.ServiceType.Entity());
     this.init();
@@ -44,7 +39,6 @@ export default class ActionAPM extends ApprovalActions {
     // Object.assign(this.newEntity, this.ServiceType.Entity());
     // this.newEntity = new CH_Overtime(params.request);
     // this.newEntity.ID = this.ServiceType.Entity().ID;
-    // this.ServiceType.Def()?.getListRef()?.LoadEntity(this.newEntity);
     // this.newEntity.Request = params.request;
 
     if (window.DEBUG) console.log("setting supplement");

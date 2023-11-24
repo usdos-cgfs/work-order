@@ -86,13 +86,14 @@ export class RequestDetailView {
     // 1. Validate Request
     if (!this.request.Validation.validate()) return;
 
-    const serviceType = this.request.ServiceType.Def();
+    const serviceType = this.request.RequestType;
     if (!serviceType) {
       // We should have caught this in validation.
       throw "no service type provided";
     }
     const saveTask = addTask(taskDefs.save);
     this.DisplayMode(DisplayModes.View);
+    this.request.DisplayMode(DisplayModes.View);
 
     // 2. Create Folder Structure
     const folderPath = this.request.getRelativeFolderPath();
@@ -143,8 +144,6 @@ export class RequestDetailView {
 
     createItems: {
       await this._context.Requests.AddEntity(this.request, folderPath);
-
-      await this.request.ServiceType.createEntity();
     }
 
     Router.setUrlParam("reqId", this.request.Title);
@@ -236,7 +235,6 @@ export class RequestDetailView {
 
   serviceTypeDefinitionWatcher = (newSvcType) => {
     // This should only be needed when creating a new request.
-    this.request.ServiceType.refreshEntity();
   };
 
   createNewRequest = async ({ request }) => {
@@ -247,10 +245,7 @@ export class RequestDetailView {
     request.State.Status(requestStates.draft);
     request.State.IsActive(true);
 
-    //request.ServiceType.refreshEntity();
-
     // Watch for a change in service type
-    request.ServiceType.Def.subscribe(this.serviceTypeDefinitionWatcher);
     request.LoadedAt(new Date());
 
     request.Validation.IsValid.subscribe(this.validationWatcher);
@@ -288,7 +283,6 @@ export class RequestDetailView {
       this.request.ServiceType.refreshEntity();
 
       // Watch for a change in service type
-      this.request.ServiceType.Def.subscribe(this.serviceTypeDefinitionWatcher);
       this.request.LoadedAt(new Date());
     }
 

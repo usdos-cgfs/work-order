@@ -225,7 +225,8 @@ export const AssignmentFunctions = {
     return request.RequestorInfo.Requestor();
   },
   ch_overtimeGovManager: function (request, stage) {
-    const assignee = request.ServiceType.Entity()?.GovManager.get();
+    const assignee =
+      request.RequestBodyBlob?.TypedValue()?.FieldMap.GovManager.get();
     if (!assignee) {
       throw new Error("Could not find stage Assignee");
     }
@@ -249,7 +250,7 @@ export const AssignmentFunctions = {
     return [newCustomAssignment];
   },
   ch_overtimeAPM: function (request, stage) {
-    const assignee = request.ServiceType.Entity()?.APM.get();
+    const assignee = request.RequestBodyBlob?.TypedValue()?.FieldMap.APM.get();
     if (!assignee) {
       throw new Error("Could not find stage Assignee");
     }
@@ -274,7 +275,7 @@ export const AssignmentFunctions = {
     return [newCustomAssignment];
   },
   getGTM: function (request, stage) {
-    const assignee = request.ServiceType.Entity()?.GTM.get();
+    const assignee = request.RequestBodyBlob?.TypedValue()?.FieldMap.GTM.get();
     if (!assignee) {
       throw new Error("Could not find stage Assignee");
     }
@@ -289,7 +290,7 @@ export const AssignmentFunctions = {
     ];
   },
   getCOR: function (request, stage) {
-    const assignee = request.ServiceType.Entity()?.COR.get();
+    const assignee = request.RequestBodyBlob?.TypedValue()?.FieldMap.COR.get();
     if (!assignee) {
       throw new Error("Could not find stage Assignee");
     }

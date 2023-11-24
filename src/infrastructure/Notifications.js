@@ -57,12 +57,10 @@ async function requestCreatedNotification(request) {
     To: [request.RequestorInfo.Requestor(), currentUser()],
     Title: formatNotificationTitle(request, `New`),
     Body:
-      `<p>Your ${
-        request.ServiceType.Def()?.Title
-      } request has been successfully submitted.</p>` +
+      `<p>Your ${request.RequestType.Title} request has been successfully submitted.</p>` +
       `<p>${request.getAppLinkElement()}</p>` +
       "<p>Estimated days to close this request type: " +
-      request.ServiceType.Def()?.DaysToCloseBusiness +
+      request.RequestType.DaysToCloseBusiness +
       "</p>" +
       "<p>This request will be serviced by:</br><ul>" +
       actionOfficeLiString +
@@ -88,7 +86,7 @@ async function requestCreatedNotification(request) {
       request.getAppLinkElement() +
       "</p>" +
       "<p>Estimated days to close this request type: " +
-      request.ServiceType.Def()?.DaysToCloseBusiness +
+      request.RequestType.DaysToCloseBusiness +
       "</p>" +
       "<p>This request will be serviced by:</br><ul>" +
       actionOfficeLiString +
@@ -223,7 +221,5 @@ function emailStringMapper(entityArr) {
 }
 
 function formatNotificationTitle(request, content) {
-  return `${siteTitle} -${content}- ${request.ServiceType.Def()?.Title} - ${
-    request.Title
-  }`;
+  return `${siteTitle} -${content}- ${request.RequestType.Title} - ${request.Title}`;
 }

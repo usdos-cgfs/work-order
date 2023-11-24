@@ -255,7 +255,7 @@ class Report {
     this.OrgServiceTypes().map((service) => {
       // Find all Requests of Service Type
       const requests = this.FilteredRequests().filter(
-        (request) => service.ID == request.ServiceType.Def()?.ID
+        (request) => service.ID == request.RequestType.ID
       );
 
       const requestIds = requests.map((request) => request.ID);

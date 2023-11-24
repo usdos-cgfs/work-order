@@ -120,7 +120,6 @@ export default class CH_Overtime extends BaseServiceDetail {
         this.Request
       );
       this.ContractorSupplementField.Value(contractorSupplement);
-      // await this.Request.ServiceType.updateEntity(["ContractorSupplement"]);
       await ApplicationDbContext.Set(CH_Overtime).UpdateEntity(this, [
         "ContractorSupplement",
       ]);

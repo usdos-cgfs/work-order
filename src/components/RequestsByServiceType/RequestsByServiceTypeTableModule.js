@@ -6,7 +6,7 @@ import { getAppContext } from "../../infrastructure/ApplicationDbContext.js";
 export default class RequestsByServiceTypeTableModule {
   constructor({ service, key }) {
     if (window.DEBUG) console.log("New Service Type Table", service.Title);
-    this.service = service;
+    this.ServiceType = service;
     this.key = key;
     this._context = getAppContext();
     this.init();
@@ -39,7 +39,8 @@ export default class RequestsByServiceTypeTableModule {
     return supplement;
   };
 
-  getTableElementId = () => `tbl-requests-type-${this.key}-${this.service.UID}`;
+  getTableElementId = () =>
+    `tbl-requests-type-${this.key}-${this.ServiceType.UID}`;
 
   async init() {
     const requestMap = this.requestMap;
@@ -48,7 +49,7 @@ export default class RequestsByServiceTypeTableModule {
     // rows
     // 1. Load requests by service type
     const requestsPromise = await this._context.Requests.FindByColumnValue(
-      [{ column: "ServiceType", value: this.service.ID }],
+      [{ column: "ServiceType", value: this.ServiceType.ID }],
       { orderByColumn: "Title", sortAsc: false },
       {},
       RequestEntity.Views.ByServiceType
@@ -62,41 +63,20 @@ export default class RequestsByServiceTypeTableModule {
     });
 
     // 2. Early exit, service type doesn't have additional fields.
-    if (!this.service.HasTemplate) {
+    if (!this.ServiceType._constructor) {
       await requestsPromise;
       this.HasInitialized(true);
       return;
     }
 
-    const sampleEntity = await this.service.instantiateEntity();
+    const sampleEntity = await this.ServiceType.instantiateEntity();
+
     Object.keys(sampleEntity.FieldMap).map((key) =>
       this.SupplementCols.push({
         key,
         displayName: sampleEntity.FieldMap[key]?.displayName ?? key,
       })
     );
-
-    const supplementsPromise = await this.service
-      .getListRef()
-      .ToList([
-        ...this.SupplementCols().map((col) => col.key),
-        "Request",
-        "Title",
-      ])
-      .then((results) => {
-        this.Supplements(results);
-        results.map((supplement) => {
-          const reqTitle = supplement.Request?.Title ?? supplement.Title;
-          if (!reqTitle) return;
-          requestMap[reqTitle]
-            ? (requestMap[reqTitle].supplement = supplement)
-            : (requestMap[reqTitle] = {
-                supplement: supplement,
-              });
-        });
-      });
-
-    await Promise.all([requestsPromise, supplementsPromise]);
 
     this.HasInitialized(true);
   }

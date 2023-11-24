@@ -5,6 +5,7 @@ import BaseField from "./BaseField.js";
 const components = {
   view: "people-view",
   edit: "people-edit",
+  new: "people-edit",
 };
 
 registerFieldComponent("people", components);

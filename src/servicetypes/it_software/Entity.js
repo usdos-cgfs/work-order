@@ -41,10 +41,8 @@ export default class ITSoftware extends BaseServiceDetail {
     );
 
     const newRequest = new RequestEntity({
-      serviceType: procurementServiceTypeDef,
+      ServiceType: procurementServiceTypeDef,
     });
-
-    await newRequest.ServiceType.refreshEntity();
 
     // 3. Populate fields
     newRequest.FieldMap.RequestDescription.set(procurementDescription);

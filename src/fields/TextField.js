@@ -5,6 +5,7 @@ import BaseField from "./BaseField.js";
 const components = {
   view: "text-view",
   edit: "text-edit",
+  new: "text-edit",
 };
 
 registerFieldComponent("text", components);
