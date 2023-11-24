@@ -86,7 +86,8 @@ class App {
   MyRequestsView = new MyRequestsView();
   MyAssignmentsView = new MyAssignmentsView();
   NewRequestView = new NewRequestView();
-  RequestDetailView = ko.observable();
+  RequestDetailView = new RequestDetailView();
+  // RequestDetailView = ko.observable();
 
   Authorization = {
     currentUserIsAdmin: ko.pureComputed(() => {
@@ -113,7 +114,12 @@ class App {
       );
 
       var serviceTypePromise = this.context.ConfigServiceTypes.ToList().then(
-        (arr) => this.Config.serviceTypeStore(arr.sort(sortByTitle))
+        async (arr) => {
+          await Promise.all(
+            arr.map(async (service) => service.initializeEntity())
+          );
+          this.Config.serviceTypeStore(arr.sort(sortByTitle));
+        }
       );
 
       const holidaysPromise = this.context.ConfigHolidays.ToList().then(
@@ -151,13 +157,13 @@ class App {
     this.Tab(Tabs.NewRequest);
   };
 
-  NewRequest = ({ request = null }) => {
+  NewRequest = ({ request = null, serviceType = null }) => {
     const props = {
       request: request ?? new RequestEntity({}),
       displayMode: DisplayModes.New,
     };
     setUrlParam("reqId", "");
-    this.RequestDetailView(new RequestDetailView(props));
+    this.RequestDetailView.createNewRequest(props);
     this.Tab(Tabs.RequestDetail);
   };
 
@@ -183,12 +189,9 @@ class App {
     //   Title: "230330-6165",
     // };
     setUrlParam("reqId", request.Title);
-    this.RequestDetailView(
-      new RequestDetailView({
-        request,
-        context: this.context,
-      })
-    );
+    this.RequestDetailView.viewRequest({
+      request,
+    });
     this.Tab(Tabs.RequestDetail);
   };
 

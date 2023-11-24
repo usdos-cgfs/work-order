@@ -39,15 +39,17 @@ export class NewRequestView {
     descModal.close();
   };
 
-  confirmCreateServiceType = () => {
+  confirmCreateServiceType = async () => {
     const serviceType = this.SelectedServiceType();
     this.SelectedServiceType(null);
 
     const descModal = this.getDescriptionModal();
     descModal.close();
 
+    await serviceType.initializeEntity();
+
     const newRequest = new RequestEntity({
-      serviceType,
+      ServiceType: serviceType,
     });
 
     window.WorkOrder.App.NewRequest({ request: newRequest });

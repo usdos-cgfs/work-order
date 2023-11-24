@@ -4,11 +4,11 @@
       <h3 class="mx-0" data-bind="text: Def()?.Title"></h3>
       <i class="fa fa-sync pointer" data-bind="click: refreshEntity"></i>
     </div>
-    <!-- ko if: ServiceTypeComponentName -->
-    <div
+    <!-- ko if: RequestBodyBlobField -->
+    <!-- <div
       id="request-body-service-type"
       data-bind="component: {name: ServiceTypeComponentName, params: {Entity: Entity()}}"
-    ></div>
+    ></div> -->
     <div
       data-bind="component: {
         name: RequestBodyBlobField.components.edit, 

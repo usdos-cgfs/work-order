@@ -79,7 +79,7 @@ const requestStateClasses = {
 
 // TODO: implement as Entity
 export class RequestEntity {
-  constructor({ ID = null, Title = null, serviceType = null }) {
+  constructor({ ID = null, Title = null, ServiceType: RequestType = null }) {
     this.ID = ID;
     this.Title = Title ?? createNewRequestTitle();
     this.LookupValue = Title;
@@ -89,8 +89,16 @@ export class RequestEntity {
       this.DisplayMode(DisplayModes.New);
     }
 
-    if (serviceType) {
-      this.ServiceType.Def(serviceType);
+    if (RequestType) {
+      this.ServiceType.Def(RequestType);
+
+      this.RequestType = ServiceType.FindInStore(RequestType);
+      this.RequestBodyBlob = new BlobField({
+        displayName: "Service Type Details",
+        isRequired: false,
+        width: 12,
+        entityType: ko.observable(this.RequestType._constructor),
+      });
     }
 
     this.ActivityQueue.subscribe(
@@ -99,6 +107,16 @@ export class RequestEntity {
       "arrayChange"
     );
   }
+
+  // static async Create({
+  //   ID = null,
+  //   Title = null,
+  //   ServiceType: RequestType = null,
+  // }) {
+  //   const serviceType = ServiceType.FindInStore(RequestType);
+  //   await serviceType.initializeEntity();
+  //   return new RequestEntity({ ID, Title, ServiceType: serviceType });
+  // }
 
   DisplayMode = ko.observable(DisplayModes.View);
   Displaymodes = DisplayModes;
@@ -183,7 +201,7 @@ export class RequestEntity {
           Title: this.Title,
           Request: this,
         });
-        this.RequestBodyBlob.entityType(this.ServiceType.Def()._constructor);
+        //this.RequestBodyBlob.entityType(this.ServiceType.Def()._constructor);
         this.ServiceType.Entity(newEntity);
         this.ServiceType.IsLoading(false);
         return;
@@ -191,7 +209,7 @@ export class RequestEntity {
 
       // Else, attempt to locate the existing service type entity from the db.
       await this.ServiceType.Def()?.initializeEntity();
-      this.RequestBodyBlob.entityType(this.ServiceType.Def()._constructor);
+      //this.RequestBodyBlob.entityType(this.ServiceType.Def()._constructor);
       const results = await this.ServiceType.Def()
         ?.getListRef()
         ?.GetItemsByFolderPath(this.getRelativeFolderPath());
@@ -228,12 +246,15 @@ export class RequestEntity {
     },
   };
 
-  RequestBodyBlob = new BlobField({
-    displayName: "Service Type Details",
-    isRequired: false,
-    width: 12,
-    entityType: ko.observable(),
-  });
+  RequestType;
+
+  RequestBodyBlob;
+  // = new BlobField({
+  //   displayName: "Service Type Details",
+  //   isRequired: false,
+  //   width: 12,
+  //   entityType: ko.observable(),
+  // });
 
   Pipeline = {
     Stage: ko.observable(),
@@ -1088,10 +1109,17 @@ export class RequestEntity {
       get: this.RequestOrgs,
     },
     ServiceType: {
-      set: (val) => this.ServiceType.Def(ServiceType.FindInStore(val)),
+      set: (val) => {
+        const type = ServiceType.FindInStore(val);
+        this.ServiceType.Def(type);
+        this.RequestType = type;
+      },
       get: this.ServiceType.Def,
     }, // {id, title},
-    RequestBodyBlob: this.RequestBodyBlob,
+    RequestBodyBlob: {
+      get: () => this.RequestBodyBlob.get(),
+      set: (val) => this.RequestBodyBlob.set(val),
+    },
   };
 
   static Views = {

@@ -43,6 +43,11 @@ export class RequestDetailView {
     await this.request.refreshAll();
   };
 
+  Request = ko.observable();
+  get request() {
+    return this.Request();
+  }
+
   DisplayModes = DisplayModes;
   DisplayMode = ko.observable();
 
@@ -234,7 +239,41 @@ export class RequestDetailView {
     this.request.ServiceType.refreshEntity();
   };
 
-  constructor({ request, displayMode = DisplayModes.View }) {
+  createNewRequest = async ({ request }) => {
+    request.RequestorInfo.Requestor(new People(currentUser()));
+    request.RequestorInfo.Phone(currentUser().WorkPhone);
+    request.RequestorInfo.Email(currentUser().EMail);
+    //this.request.Title = createNewRequestTitle();
+    request.State.Status(requestStates.draft);
+    request.State.IsActive(true);
+
+    //request.ServiceType.refreshEntity();
+
+    // Watch for a change in service type
+    request.ServiceType.Def.subscribe(this.serviceTypeDefinitionWatcher);
+    request.LoadedAt(new Date());
+
+    request.Validation.IsValid.subscribe(this.validationWatcher);
+
+    this.Request(request);
+    this.DisplayMode(DisplayModes.New);
+  };
+
+  viewRequest = ({ request }) => {
+    request.Validation.IsValid.subscribe(this.validationWatcher);
+
+    this.Request(request);
+
+    this.DisplayMode(DisplayModes.View);
+
+    this.refreshAll();
+  };
+
+  constructor() {
+    this._context = getAppContext();
+  }
+
+  oldconstructor() {
     this.request = request;
     this._context = getAppContext();
 

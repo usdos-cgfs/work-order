@@ -4,7 +4,7 @@ export default class RequestBodyModule {
     this.DisplayMode = DisplayMode;
     this.RequestDescription = request.RequestDescription;
 
-    this.RequestBodyBlobField = request.FieldMap.RequestBodyBlob;
+    this.RequestBodyBlobField = request.RequestBodyBlob;
     // this.Entity.subscribe(this.serviceTypeEntityWatcher);
   }
 

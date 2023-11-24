@@ -238,14 +238,15 @@
       class="tab-pane"
       role="tabpanel"
       aria-labelledby="request-detail-tab"
+      data-bind=""
     >
-      <!-- ko ifnot: RequestDetailView -->
+      <!-- ko ifnot: RequestDetailView.Request -->
       <div class="">
         <h2>Service Request Detail</h2>
         <div>Please create a new request, or open an existing request.</div>
       </div>
       <!-- /ko -->
-      <!-- ko if: RequestDetailView -->
+      <!-- ko if: RequestDetailView.Request -->
       <div
         data-bind="template: {name: 'tmpl-request-detail', data: RequestDetailView}"
       ></div>
@@ -427,9 +428,10 @@
             data-bind="template: {name: 'tmpl-quick-actions-bar'}"
           ></div>
           <div class="my-3">
-            <pipeline-component
-              params="request: request, ShowActionsArea: ShowActionsArea"
-            ></pipeline-component>
+            <div
+              data-bind="component: {name: 'pipeline-component',
+              params: {request: request, ShowActionsArea: ShowActionsArea}}"
+            ></div>
             <!-- ko if: ShowActionsArea -->
             <div
               id="request-pipeline"

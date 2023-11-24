@@ -67,36 +67,39 @@ export default class ApplicationDbContext {
 }
 
 class EntitySet {
-  constructor(constructor) {
-    if (!constructor.ListDef) {
-      console.error("Missing constructor listdef for", constructor);
+  constructor(entityType) {
+    if (!entityType.ListDef) {
+      console.error("Missing entityType listdef for", entityType);
       return;
     }
 
     // Check if the object we passed in defines a ListDef
-    this.constructor = constructor;
+    this.entityType = entityType;
 
     try {
       const allFieldsSet = new Set();
-      constructor.Views?.All?.map((field) => allFieldsSet.add(field));
-      const newEntity = new this.constructor({ ID: null, Title: null });
+      entityType.Views?.All?.map((field) => allFieldsSet.add(field));
+      const newEntity = new this.entityType({ ID: null, Title: null });
       if (newEntity.FieldMap) {
         Object.keys(newEntity.FieldMap).map((field) => allFieldsSet.add(field));
       }
       // const fieldMapKeysSet = new Set(...);
-      // constructor.Views.All.map((field) => fieldMapKeysSet.add(field));
+      // entityType.Views.All.map((field) => fieldMapKeysSet.add(field));
       this.AllDeclaredFields = [...allFieldsSet];
     } catch (e) {
-      console.warn("Could not instantiate", constructor), console.warn(e);
-      this.AllDeclaredFields = constructor.Views?.All ?? [];
+      console.warn("Could not instantiate", entityType), console.warn(e);
+      this.AllDeclaredFields = entityType.Views?.All ?? [];
     }
 
-    this.ListDef = constructor.ListDef;
-    this.Views = constructor.Views;
-    this.Title = constructor.ListDef.title;
-    this.Name = constructor.ListDef.name;
+    this.ListDef = entityType.ListDef;
+    this.Views = entityType.Views;
+    this.Title = entityType.ListDef.title;
+    this.Name = entityType.ListDef.name;
 
-    this.ListRef = new SPList(constructor.ListDef);
+    this.ListRef = new SPList(entityType.ListDef);
+
+    this.entityConstructor =
+      this.entityType.FindInStore || this.entityType.Create || this.entityType;
   }
 
   // Queries
@@ -104,7 +107,7 @@ class EntitySet {
   FindById = async (id, fields = this.AllDeclaredFields) => {
     const result = await this.ListRef.findByIdAsync(id, fields);
     if (!result) return null;
-    const newEntity = new this.constructor(result);
+    const newEntity = new this.entityType(result);
     mapObjectToEntity(result, newEntity);
     return newEntity;
   };
@@ -141,7 +144,7 @@ class EntitySet {
     let cursor = {
       _next: results._next,
       results: results.results.map((item) => {
-        const newEntity = new this.constructor(item);
+        const newEntity = new this.entityConstructor(item);
         mapObjectToEntity(item, newEntity);
         return newEntity;
       }),
@@ -168,7 +171,7 @@ class EntitySet {
     return {
       _next: results._next,
       results: results.results.map((item) => {
-        const newEntity = new this.constructor(item);
+        const newEntity = new this.entityType(item);
         mapObjectToEntity(item, newEntity);
         return newEntity;
       }),
@@ -180,7 +183,7 @@ class EntitySet {
   ToList = async (fields = this.Views.All) => {
     const results = await this.ListRef.getListItemsAsync({ fields });
     return results.map((item) => {
-      const newEntity = new this.constructor(item);
+      const newEntity = new this.entityType(item);
       mapObjectToEntity(item, newEntity);
       return newEntity;
     });
@@ -262,7 +265,7 @@ class EntitySet {
       fields
     );
     return results.map((result) => {
-      const newEntity = new this.constructor(result);
+      const newEntity = new this.entityType(result);
       mapObjectToEntity(result, newEntity);
       return newEntity;
     });
