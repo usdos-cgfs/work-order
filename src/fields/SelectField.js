@@ -35,7 +35,7 @@ export default class SelectField extends BaseField {
       if (Array.isArray(val)) {
         this.Value(val);
       } else {
-        this.Value(val.results ?? val.split("#;"));
+        this.Value(val.results ?? val.split(";#"));
       }
       return;
     }

@@ -6,6 +6,8 @@ export default class PeopleModule extends BaseFieldModule {
   }
 
   getUniqueId = () => {
-    return "people-component-" + this.displayName;
+    return `people-component-${this.displayName}-${Math.floor(
+      Math.random() * 100
+    )}`;
   };
 }

@@ -847,7 +847,7 @@ export function SPList(listDef) {
             : mapListItemToObject(colVal);
         });
         //listObj.fileUrl = oListItem.get_item("FileRef");
-        listObj.oListItem = oListItem;
+        // listObj.oListItem = oListItem;
         foundObjects.push(listObj);
       }
       //this.setState({ focusedItems })

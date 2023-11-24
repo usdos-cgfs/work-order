@@ -94,7 +94,24 @@ export default class LookupField extends BaseField {
     return getEntityPropertyAsString(this.Value(), this.lookupCol);
   });
 
-  get = () => this.Value();
+  get = () => {
+    if (!this.Value()) return;
+    if (this.multiple) {
+      return this.Value().map((entity) => {
+        return {
+          ID: entity.ID,
+          LookupValue: entity.LookupValue,
+          Title: entity.Title,
+        };
+      });
+    }
+    const entity = this.Value();
+    return {
+      ID: entity.ID,
+      LookupValue: entity.LookupValue,
+      Title: entity.Title,
+    };
+  };
   set = (val) => {
     if (!val) {
       this.Value(val);
@@ -102,25 +119,38 @@ export default class LookupField extends BaseField {
     }
     if (this.multiple) {
       const valArr = Array.isArray(val) ? val : val.results ?? val.split("#;");
-      //   if (Array.isArray(val)) {
-      //     valArr.concat(val)
-      //     this.Value(val);
-      //   } else {
-      //     this.Value(val.results ?? val.split("#;"));
-      //   }
-      this.Value(valArr.map((value) => new this.entityType(value)));
+
+      this.Value(valArr.map((value) => this.findOrCreateNewEntity(value)));
       return;
     }
 
-    this.Value(new this.entityType(val));
+    this.Value(this.findOrCreateNewEntity(val));
     if (val && !this.toString()) {
       this.ensure();
     }
   };
 
+  findOrCreateNewEntity = (val) => {
+    if (this.entityType.FindInStore) {
+      const foundEntity = this.entityType.FindInStore(val);
+      if (foundEntity) return foundEntity;
+      console.warn(
+        `Could not find entity in store: ${this.entityType.name}`,
+        val
+      );
+    }
+
+    if (this.entityType.Create) {
+      return this.entityType.Create(val);
+    }
+
+    return new this.entityType(val);
+  };
+
   components = components;
 }
 
+// Should fully constrain all entities, this is ridiculous
 function getEntityPropertyAsString(entity, column) {
   if (entity.FieldMap && entity.FieldMap[column]) {
     const field = entity.FieldMap[column];

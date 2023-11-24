@@ -29,7 +29,7 @@ export default class ConstrainedEntity extends Entity {
   toJSON = () => {
     const out = {};
     Object.keys(this.FieldMap).map(
-      (key) => (out[key] = this.FieldMap[key]?.toJSON())
+      (key) => (out[key] = this.FieldMap[key]?.get())
     );
     return out;
   };
@@ -37,9 +37,7 @@ export default class ConstrainedEntity extends Entity {
   fromJSON(inputObj) {
     if (window.DEBUG)
       console.log("Setting constrained entity from JSON", inputObj);
-    Object.keys(inputObj).map((key) =>
-      this.FieldMap[key]?.fromJSON(inputObj[key])
-    );
+    Object.keys(inputObj).map((key) => this.FieldMap[key]?.set(inputObj[key]));
   }
 
   FormFields = ko.pureComputed(() => {
