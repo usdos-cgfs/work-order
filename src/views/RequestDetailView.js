@@ -14,6 +14,8 @@ import { currentUser } from "../infrastructure/Authorization.js";
 import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
 import TextAreaField from "../fields/TextAreaField.js";
 
+import { requestsByStatusMap } from "../stores/Requests.js";
+
 const DEBUG = true;
 
 export const DisplayModes = {
@@ -162,6 +164,10 @@ export class RequestDetailView {
     this.request.Validation.reset();
 
     this.request.LoadedAt(new Date());
+
+    // push the newrequest to the open requests store
+    const openrequests = requestsByStatusMap.get(requestStates.open);
+    openrequests.List.push(this.request);
 
     finishTask(saveTask);
   };
