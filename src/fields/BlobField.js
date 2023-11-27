@@ -48,27 +48,12 @@ export default class BlobField extends BaseField {
 
   get = () => {
     return JSON.stringify(this.toJSON());
-    // if (!this.multiple) {
-    //   if (this.TypedValue()) return JSON.stringify(this.toJSON());
-    // }
-    // return this.TypedValues().map((value) => JSON.stringify(value.toJSON()));
   };
 
   set = (val) => {
     if (window.DEBUG) console.log(val);
     this.Value(JSON.parse(val));
-    // this.Value(JSON.parse(val));
-    // this.applyValueToTypedValues();
     this.fromJSON(this.Value());
-    // if (this.multiple) {
-    //   const newEntities = JSON.parse(val).map((item) =>
-    //     mapObjectToEntity(item, new this.entityConstructor())
-    //   );
-    //   this.Value(newEntities);
-    //   return;
-    // }
-
-    //mapObjectToEntity(JSON.parse(val), this.TypedValue());
   };
 
   get entityConstructor() {
@@ -97,12 +82,6 @@ export default class BlobField extends BaseField {
     this.TypedValues.push(this.TypedValue());
 
     this.TypedValue(new this.entityConstructor());
-
-    // const newItemBlob = this.NewItem().toJSONBlob();
-    // newItemBlob.identifier = new Date().getTime();
-
-    // this.Value().push(newItemBlob);
-    // this.NewItem(new this.entityConstructor());
   };
 
   remove = (item) => this.TypedValues.remove(item);

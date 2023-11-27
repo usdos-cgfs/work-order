@@ -70,7 +70,7 @@ ko.bindingHandlers.people = {
 
     if (!userValue) {
       // Clear the form
-      pickerControl.DeleteProcessedUser();
+      pickerControl?.DeleteProcessedUser();
       return;
     }
 

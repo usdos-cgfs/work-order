@@ -793,9 +793,7 @@ export class RequestEntity {
       this.FieldMap.RequestDescription.validate();
     },
     validateBody: () => {
-      const serviceTypeEntity = this.RequestBodyBlob;
-      if (!serviceTypeEntity) return;
-      return serviceTypeEntity.validate();
+      return this.RequestBodyBlob?.TypedValue()?.validate();
     },
     reset: () => this.Validation.WasValidated(false),
     Errors: {
@@ -959,9 +957,9 @@ export class RequestEntity {
       this._context.Assignments,
       this._context.Notifications,
     ];
-    if (this.RequestType?.getListRef()) {
-      listRefs.push(this.RequestType.getListRef());
-    }
+    // if (this.RequestType?.getListRef()) {
+    //   listRefs.push(this.RequestType.getListRef());
+    // }
     return listRefs;
   }
 
