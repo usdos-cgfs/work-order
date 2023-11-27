@@ -103,154 +103,156 @@
     data-bind="component: {name: 'quick-info', 
     params: { ShowActionOfficeFeatures, ToggleActionOfficeFeatures }}"
   ></div>
-  <ul class="nav nav-tabs" id="section-tabs" role="tablist">
-    <!-- ko if: ShowActionOfficeFeatures -->
-    <li class="nav-item" role="presentation">
-      <button
-        class="nav-link"
-        id="office-requests-tab"
-        data-bs-toggle="tab"
-        data-bs-target="#office-requests"
-        data-bind="click: TabClicked"
-        type="button"
-        role="tab"
-        aria-controls="office-requests"
-        aria-selected="true"
-      >
-        Team Requests
-      </button>
-    </li>
-    <!-- /ko -->
-    <li class="nav-item" role="presentation">
-      <button
-        class="nav-link"
-        id="my-requests-tab"
-        data-bs-toggle="tab"
-        data-bs-target="#my-requests"
-        data-bind="click: TabClicked"
-        type="button"
-        role="tab"
-        aria-controls="my-requests"
-        aria-selected="true"
-      >
-        My Requests
-      </button>
-    </li>
-    <!-- ko if: false -->
-    <li class="nav-item" role="presentation">
-      <button
-        class="nav-link position-relative"
-        id="my-assignments-tab"
-        data-bs-toggle="tab"
-        data-bs-target="#my-assignments"
-        data-bind="click: TabClicked"
-        type="button"
-        role="tab"
-        aria-controls="my-assignments"
-        aria-selected="true"
-      >
-        My Assignments
-        <span
-          class="badge text-bg-danger"
-          data-bind="visible: MyActiveAssignments().length, text: MyActiveAssignments().length"
-        ></span>
-      </button>
-    </li>
-    <!-- /ko -->
-    <li class="nav-item" role="presentation">
-      <button
-        class="nav-link"
-        id="new-request-tab"
-        data-bs-toggle="tab"
-        data-bs-target="#new-request"
-        data-bind="click: TabClicked"
-        type="button"
-        role="tab"
-        aria-controls="new-request"
-        aria-selected="true"
-      >
-        New Request
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button
-        class="nav-link"
-        id="request-detail-tab"
-        data-bs-toggle="tab"
-        data-bs-target="#request-detail"
-        data-bind="click: TabClicked"
-        type="button"
-        role="tab"
-        aria-controls="request-detail"
-        aria-selected="false"
-      >
-        Detail View
-      </button>
-    </li>
-  </ul>
-  <div class="tab-content">
-    <!-- ko if: ShowActionOfficeFeatures -->
-    <div
-      class="tab-pane"
-      role="tabpanel"
-      aria-labelledby="office-requests-tab"
-      id="office-requests"
-    >
+  <div class="d-flex justify-content-between">
+    <ul class="nav flex-column me-4" id="section-tabs" role="tablist">
+      <!-- ko if: ShowActionOfficeFeatures -->
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link"
+          id="office-requests-tab"
+          data-bs-toggle="tab"
+          data-bs-target="#office-requests"
+          data-bind="click: TabClicked"
+          type="button"
+          role="tab"
+          aria-controls="office-requests"
+          aria-selected="true"
+        >
+          Team Requests
+        </button>
+      </li>
+      <!-- /ko -->
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link"
+          id="my-requests-tab"
+          data-bs-toggle="tab"
+          data-bs-target="#my-requests"
+          data-bind="click: TabClicked"
+          type="button"
+          role="tab"
+          aria-controls="my-requests"
+          aria-selected="true"
+        >
+          My Requests
+        </button>
+      </li>
+      <!-- ko if: false -->
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link position-relative"
+          id="my-assignments-tab"
+          data-bs-toggle="tab"
+          data-bs-target="#my-assignments"
+          data-bind="click: TabClicked"
+          type="button"
+          role="tab"
+          aria-controls="my-assignments"
+          aria-selected="true"
+        >
+          My Assignments
+          <span
+            class="badge text-bg-danger"
+            data-bind="visible: MyActiveAssignments().length, text: MyActiveAssignments().length"
+          ></span>
+        </button>
+      </li>
+      <!-- /ko -->
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link"
+          id="new-request-tab"
+          data-bs-toggle="tab"
+          data-bs-target="#new-request"
+          data-bind="click: TabClicked"
+          type="button"
+          role="tab"
+          aria-controls="new-request"
+          aria-selected="true"
+        >
+          New Request
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link"
+          id="request-detail-tab"
+          data-bs-toggle="tab"
+          data-bs-target="#request-detail"
+          data-bind="click: TabClicked"
+          type="button"
+          role="tab"
+          aria-controls="request-detail"
+          aria-selected="false"
+        >
+          Detail View
+        </button>
+      </li>
+    </ul>
+    <div class="tab-content flex-grow-1">
+      <!-- ko if: ShowActionOfficeFeatures -->
       <div
-        data-bind="template: {name: 'tmpl-office-requests-view', data: OfficeRequestsView}"
-      ></div>
-    </div>
-    <!-- /ko -->
-    <div
-      class="tab-pane"
-      role="tabpanel"
-      aria-labelledby="my-requests-tab"
-      id="my-requests"
-    >
-      <div
-        data-bind="template: {name: 'tmpl-my-requests-view', data: MyRequestsView}"
-      ></div>
-    </div>
-    <!-- ko if: false -->
-    <div
-      class="tab-pane"
-      role="tabpanel"
-      aria-labelledby="my-assignments-tab"
-      id="my-assignments"
-    >
-      <div
-        data-bind="template: {name: 'tmpl-my-assignments-view', data: MyAssignmentsView}"
-      ></div>
-    </div>
-    <!-- /ko -->
-    <div
-      class="tab-pane"
-      role="tabpanel"
-      aria-labelledby="new-request"
-      id="new-request"
-    >
-      <div
-        data-bind="template: {name: 'tmpl-new-request-view', data: NewRequestView}"
-      ></div>
-    </div>
-    <div
-      id="request-detail"
-      class="tab-pane"
-      role="tabpanel"
-      aria-labelledby="request-detail-tab"
-      data-bind=""
-    >
-      <!-- ko ifnot: RequestDetailView.Request -->
-      <div class="">
-        <h2>Service Request Detail</h2>
-        <div>Please create a new request, or open an existing request.</div>
+        class="tab-pane"
+        role="tabpanel"
+        aria-labelledby="office-requests-tab"
+        id="office-requests"
+      >
+        <div
+          data-bind="template: {name: 'tmpl-office-requests-view', data: OfficeRequestsView}"
+        ></div>
       </div>
       <!-- /ko -->
-      <!-- ko if: RequestDetailView.Request -->
       <div
-        data-bind="template: {name: 'tmpl-request-detail', data: RequestDetailView}"
-      ></div>
+        class="tab-pane"
+        role="tabpanel"
+        aria-labelledby="my-requests-tab"
+        id="my-requests"
+      >
+        <div
+          data-bind="template: {name: 'tmpl-my-requests-view', data: MyRequestsView}"
+        ></div>
+      </div>
+      <!-- ko if: false -->
+      <div
+        class="tab-pane"
+        role="tabpanel"
+        aria-labelledby="my-assignments-tab"
+        id="my-assignments"
+      >
+        <div
+          data-bind="template: {name: 'tmpl-my-assignments-view', data: MyAssignmentsView}"
+        ></div>
+      </div>
       <!-- /ko -->
+      <div
+        class="tab-pane"
+        role="tabpanel"
+        aria-labelledby="new-request"
+        id="new-request"
+      >
+        <div
+          data-bind="template: {name: 'tmpl-new-request-view', data: NewRequestView}"
+        ></div>
+      </div>
+      <div
+        id="request-detail"
+        class="tab-pane"
+        role="tabpanel"
+        aria-labelledby="request-detail-tab"
+        data-bind=""
+      >
+        <!-- ko ifnot: RequestDetailView.Request -->
+        <div class="">
+          <h2>Service Request Detail</h2>
+          <div>Please create a new request, or open an existing request.</div>
+        </div>
+        <!-- /ko -->
+        <!-- ko if: RequestDetailView.Request -->
+        <div
+          data-bind="template: {name: 'tmpl-request-detail', data: RequestDetailView}"
+        ></div>
+        <!-- /ko -->
+      </div>
     </div>
   </div>
   <div id="service-type-templates"></div>
@@ -258,68 +260,72 @@
   <div id="tmpl-views">
     <script type="text/html" id="tmpl-office-requests-view">
       <h2>Team Requests</h2>
-      <div class="d-flex">
-        <div class="me-3">
-          <div
-            class="list-group mb-3"
-            id="section-office-requests-tabs"
-            data-bind="foreach: StatusOptions"
-          >
-            <button
-              class="list-group-item list-group-action"
-              type="button"
-              data-bind="text: $data,
+      <div class="card bg-white">
+        <div class="card-body">
+          <div class="mb-3 d-flex">
+            <div
+              class="request-status-options me-3"
+              id="section-office-requests-tabs"
+              data-bind="foreach: StatusOptions"
+            >
+              <button
+                class="text-nowrap"
+                type="button"
+                data-bind="text: $data,
               css: {'active': $parent.ActiveKey() == $data },
               click: ()=> $parent.ActiveKey($data)"
-            ></button>
-          </div>
-          <button
-            type="button"
-            class="btn btn-outline-primary w-100"
-            data-bind="css: {'active': ActiveKey() == byServiceTypeKey },
+              ></button>
+            </div>
+            <button
+              type="button"
+              class="btn btn-outline-primary"
+              data-bind="css: {'active': ActiveKey() == byServiceTypeKey },
             click: ()=> ActiveKey(byServiceTypeKey)"
-          >
-            By Service Type
-          </button>
-        </div>
-        <div class="flex-grow-1">
-          <div
-            data-bind="component: {name: ActiveTableComponentName, params: ActiveTableParams}"
-          ></div>
+            >
+              By Service Type
+            </button>
+          </div>
+          <div class="flex-grow-1">
+            <div
+              data-bind="component: {name: ActiveTableComponentName, params: ActiveTableParams}"
+            ></div>
+          </div>
         </div>
       </div>
     </script>
 
     <script type="text/html" id="tmpl-my-requests-view">
       <h2>My Requests</h2>
-      <div class="d-flex">
-        <div class="me-3">
-          <div
-            class="list-group mb-3"
-            id="section-my-requests-tabs"
-            data-bind="foreach: StatusOptions"
-          >
-            <button
-              class="list-group-item list-group-action text-nowrap"
-              type="button"
-              data-bind="text: $data,
+      <div class="card bg-white">
+        <div class="card-body">
+          <div class="mb-3 d-flex">
+            <div
+              class="request-status-options me-3"
+              id="section-my-requests-tabs"
+              data-bind="foreach: StatusOptions"
+            >
+              <button
+                class="text-nowrap"
+                type="button"
+                data-bind="text: $data,
               css: {'active': $parent.ActiveKey() == $data },
               click: ()=> $parent.ActiveKey($data)"
-            ></button>
-          </div>
-          <button
-            type="button"
-            class="btn btn-outline-primary w-100"
-            data-bind="css: {'active': ActiveKey() == 'By Service Type' },
+              ></button>
+            </div>
+            <button
+              type="button"
+              class="btn btn-outline-primary"
+              data-bind="css: {'active': ActiveKey() == 'By Service Type' },
               click: ()=> ActiveKey('By Service Type')"
-          >
-            By Service Type
-          </button>
-        </div>
-        <div class="flex-grow-1">
-          <div
-            data-bind="component: {name: ActiveTableComponentName, params: ActiveTableParams}"
-          ></div>
+            >
+              By Service Type
+            </button>
+          </div>
+          <div class="flex-grow-1">
+            <div
+              data-bind="component: {name: ActiveTableComponentName, params: ActiveTableParams}"
+            ></div>
+          </div>
         </div>
       </div>
     </script>

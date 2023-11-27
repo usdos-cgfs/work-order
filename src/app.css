@@ -1,13 +1,93 @@
+#s4-workspace {
+  background-color: #f8f9fb;
+}
+#app {
+  --bs-primary-rgb: #344767;
+  color: #344767;
+}
+
+#app h2 {
+  color: #344767;
+}
+
+/* Utility Classes */
+
 .pointer {
   cursor: pointer;
 }
 
+.text-primary {
+  color: #344767;
+}
+/*
+text: #344767
+text-secondary: #8497b8
+hover: #eef2f5
+app-background: #f8f9fb
+
+*/
+
+/* Top Level Components */
+
+#section-tabs button {
+  min-width: 200px;
+  text-align: start;
+  color: #8497b8;
+  font-weight: bold;
+}
+
+#section-tabs button:hover {
+  background-color: #eef2f5;
+}
+
+#section-tabs button.active {
+  color: #344767;
+  background-color: #eef2f5;
+}
+
+table.dataTable th {
+  color: #344767;
+}
+
+table.dataTable > tbody td {
+  /* font-weight: 500; */
+  color: #344767;
+}
+
+.request-status-options {
+  display: flex;
+  flex-direction: row;
+  background-color: #f8f9fb;
+  border-radius: 6px;
+  padding: 5px;
+}
+
+.request-status-options button {
+  color: #344767;
+  background-color: transparent;
+  border: none;
+  padding: 7px 36px;
+}
+
+.request-status-options button.active {
+  background-color: white;
+  box-shadow: 0px 0px 3px #dfdfdf;
+  /* border: 1px solid ;  */
+  border-radius: 6px;
+  border: 1px solid #dfdfdf;
+}
+
+/* Request Detail Components */
 #request-body-service-type label {
   width: 100%;
 }
 #request-pipeline .fix-service-icon-border {
   border-bottom-left-radius: 0;
   border-top-left-radius: 0.25rem;
+}
+
+#request-pipeline {
+  background-color: rgb(207 226 255 / 24%);
 }
 
 .accordion-title .indicator {
