@@ -51,30 +51,31 @@ export default class PipelineModule {
   };
 
   SelectedStage = ko.observable();
+
+  SelectedStageDetail = ko.pureComputed(
+    () =>
+      new PipelineStageDetail({
+        request: this.request,
+        stage: this.SelectedStage(),
+      })
+  );
 }
 
-class PipelineComponentStage {
+class PipelineStageDetail {
   constructor({ request, stage }) {
     this.request = request;
     this.stage = stage;
   }
 
-  active;
-  classList = ko.pureComputed(() => {
-    if (stage.Step < this.Pipeline.Stage()?.Step)
-      return "bg-secondary text-white";
-    if (this.Pipeline.Stage()?.ID == stage.ID) {
-      switch (this.request.State.Status()) {
-        case requestStates.open:
-          return "bg-primary text-white";
-        case requestStates.cancelled:
-        case requestStates.rejected:
-          return "bg-danger text-white";
-        case requestStates.fulfilled:
-          return "bg-success text-white";
-        default:
-          break;
-      }
-    }
+  IsCurrentStage = ko.pureComputed(
+    () => this.request.Pipeline.Stage()?.ID == this.stage.ID
+  );
+
+  AllStageAssignments = ko.pureComputed(() => {
+    return this.request.Assignments.list
+      .All()
+      .filter((assignment) => assignment.PipelineStage.ID == this.stage.ID);
   });
+
+  userCanAssign = ko.pureComputed(() => this.IsCurrentStage());
 }

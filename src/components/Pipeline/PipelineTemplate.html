@@ -26,10 +26,47 @@
       </div>
     </div>
     <!-- ko if: ShowActionsArea -->
-    <!-- ko using: request.Assignments.CurrentStage -->
-    <!-- ko if: AssignmentComponents().length -->
     <div class="">
       <div class="p-3">
+        <div data-bind="using: SelectedStageDetail">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Stage</th>
+                <th>Assignee</th>
+                <th>Request Org</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- ko foreach: AllStageAssignments -->
+              <tr>
+                <td data-bind="text: PipelineStage?.Title"></td>
+                <td data-bind="text: Assignee?.Title"></td>
+                <td data-bind="text: RequestOrg?.Title"></td>
+                <td data-bind="text: Role"></td>
+                <td data-bind="text: Status"></td>
+                <td>
+                  <!-- ko if: $parent.userCanAssign -->
+                  <i
+                    class="fas fa-search pointer"
+                    data-bind="click: $parent.view"
+                  ></i>
+                  <i
+                    class="fa fa-trash pointer"
+                    data-bind="click: $parent.remove"
+                  ></i>
+                  <!-- /ko -->
+                </td>
+              </tr>
+              <!-- /ko -->
+            </tbody>
+          </table>
+        </div>
+        <!-- ko using: request.Assignments.CurrentStage -->
+        <!-- ko if: AssignmentComponents().length -->
         <div data-bind="foreach: Validation.Errors">
           <div
             class="alert alert-warning"
@@ -44,10 +81,10 @@
           ></div>
           <!-- /ko -->
         </div>
+        <!-- /ko -->
+        <!-- /ko -->
       </div>
     </div>
-    <!-- /ko -->
-    <!-- /ko -->
     <!-- /ko -->
   </div>
 </div>
