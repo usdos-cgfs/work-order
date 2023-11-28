@@ -225,8 +225,7 @@ export const AssignmentFunctions = {
     return request.RequestorInfo.Requestor();
   },
   ch_overtimeGovManager: function (request, stage) {
-    const assignee =
-      request.RequestBodyBlob?.TypedValue()?.FieldMap.GovManager.get();
+    const assignee = request.RequestBodyBlob?.TypedValue()?.GovManager.get();
     if (!assignee) {
       throw new Error("Could not find stage Assignee");
     }

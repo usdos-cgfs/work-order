@@ -93,12 +93,7 @@
   }
 </script>
 
-<div
-  id="app"
-  class="container"
-  style="display: none"
-  data-bind="visible: $root"
->
+<div id="app" class="" style="display: none" data-bind="visible: $root">
   <div
     data-bind="component: {name: 'quick-info', 
     params: { ShowActionOfficeFeatures, ToggleActionOfficeFeatures }}"
@@ -830,7 +825,7 @@
     </script>
 
     <script type="text/html" id="tmpl-assignments-component">
-      <div class="accordion accordion-flush">
+      <div class="card">
         <div class="card-body accordion-item">
           <div
             class="card-title d-flex justify-content-between align-items-center accordion-header"
@@ -918,7 +913,7 @@
     </script>
 
     <script type="text/html" id="tmpl-activity-log-component">
-      <div class="accordion accordion-flush">
+      <div class="card">
         <div class="card-body accordion-item">
           <div
             class="card-title d-flex justify-content-between align-items-center accordion-header"

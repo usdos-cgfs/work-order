@@ -19,7 +19,8 @@ export default class ActionAPM extends ApprovalActions {
     // this.ServiceType.Entity().GTM.subscribe(this.gtmWatcher);
     this.Request = params.request;
 
-    this.newEntity = new CH_Overtime(this.ServiceType.Entity());
+    this.newEntity = new CH_Overtime();
+    this.newEntity.fromJSON(this.ServiceType.toJSON());
     this.init();
   }
   newEntity = null;
@@ -33,8 +34,8 @@ export default class ActionAPM extends ApprovalActions {
   });
 
   init = async () => {
-    await ApplicationDbContext.Set(CH_Overtime).LoadEntity(this.newEntity);
-    this.newEntity.Request = this.Request;
+    // await ApplicationDbContext.Set(CH_Overtime).LoadEntity(this.newEntity);
+    // this.newEntity.Request = this.Request;
     // Create a clone of the service type entity
     // Object.assign(this.newEntity, this.ServiceType.Entity());
     // this.newEntity = new CH_Overtime(params.request);
@@ -42,8 +43,9 @@ export default class ActionAPM extends ApprovalActions {
     // this.newEntity.Request = params.request;
 
     if (window.DEBUG) console.log("setting supplement");
+    await this.newEntity.setRequestContext(this.Request);
     // await new Promise();
-    await this.newEntity.ContractorSupplementField.ensure();
+    // await this.newEntity.ContractorSupplementField.ensure();
     if (!this.newEntity.ContractorSupplementField.Value())
       this.newEntity.ContractorSupplementField.Value(
         new ContractorSupplement({
@@ -128,15 +130,21 @@ export default class ActionAPM extends ApprovalActions {
       this.newEntity.ContractorSupplementField.Value()
     );
 
-    await ApplicationDbContext.Set(CH_Overtime).UpdateEntity(
-      this.newEntity,
-      CH_Overtime.Views.APMUpdate
-    );
+    // await ApplicationDbContext.Set(CH_Overtime).UpdateEntity(
+    //   this.newEntity,
+    //   CH_Overtime.Views.APMUpdate
+    // );
 
-    this.ServiceType.refreshEntity();
+    // this.ServiceType.refreshEntity();
 
-    if (this.assignment.Status != assignmentStates.Approved)
-      await this.completeAssignment(this.assignment, assignmentStates.Approved);
+    this.Request.RequestBodyBlob.TypedValue(this.newEntity);
+
+    await this._context.Requests.UpdateEntity(this.Request, [
+      "RequestBodyBlob",
+    ]);
+
+    if (this.assignment.Status != assignmentStates.Approved);
+    await this.completeAssignment(this.assignment, assignmentStates.Approved);
 
     this.hasBeenSaved(true);
     this.IsCompleted(true);
@@ -146,16 +154,18 @@ export default class ActionAPM extends ApprovalActions {
     this.hasBeenValidated(true);
     if (this.validate().length) return;
 
-    await ApplicationDbContext.Set(CH_Overtime).UpdateEntity(
-      this.newEntity,
-      CH_Overtime.Views.APMUpdate
-    );
+    this.Request.RequestBodyBlob.TypedValue(this.newEntity);
+
+    await this._context.Requests.UpdateEntity(this.Request, [
+      "RequestBodyBlob",
+    ]);
 
     await this.newEntity.ContractorSupplement.update(
       ContractorSupplement.Views.APMUpdate
     );
-    this.ServiceType.refreshEntity();
+    // this.ServiceType.refreshEntity();
     this.hasBeenSaved(true);
+    this.Editing(false);
   };
 }
 

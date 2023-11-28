@@ -1046,7 +1046,12 @@ export class RequestEntity {
     }, // {id, title},
     RequestBodyBlob: {
       get: () => this.RequestBodyBlob.get(),
-      set: (val) => this.RequestBodyBlob.set(val),
+      set: (val) => {
+        this.RequestBodyBlob.set(val);
+        const requestBodyEntity = this.RequestBodyBlob.TypedValue();
+        if (requestBodyEntity?.setRequestContext)
+          requestBodyEntity.setRequestContext(this);
+      },
     },
   };
 

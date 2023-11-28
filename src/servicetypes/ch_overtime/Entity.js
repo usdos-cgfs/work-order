@@ -40,11 +40,16 @@ registerServiceTypeActionComponent({
   componentName: "GovManagerActions",
 });
 
-export default class CH_Overtime extends BaseServiceDetail {
+export default class CH_Overtime extends ConstrainedEntity {
   constructor(requestContext) {
     super(requestContext);
     // if (requestContext.Request) this.Request = requestContext.Request;
   }
+
+  setRequestContext = async (request) => {
+    this.Request = request;
+    await this.ContractorSupplement.findByRequest(this.Request);
+  };
 
   RequestSubmitted = ko.pureComputed(() => this.Request?.Pipeline?.Stage());
 
@@ -87,6 +92,23 @@ export default class CH_Overtime extends BaseServiceDetail {
 
   ContractorSupplement = {
     set: ApplicationDbContext.Set(ContractorSupplement),
+    findByRequest: async (request) => {
+      const contractorSupplementResult =
+        await this.ContractorSupplement.set.FindByColumnValue(
+          [{ column: "Title", op: "eq", value: request.Title }],
+          {},
+          {},
+          ContractorSupplement.Views.All,
+          false
+        );
+
+      const supplement = contractorSupplementResult?.results?.pop();
+      if (!supplement) {
+        return;
+      }
+
+      this.ContractorSupplementField.Value(supplement);
+    },
     update: async (fields = null) => {
       // TODO: update permissions
       await this.ContractorSupplement.set.UpdateEntity(
@@ -120,9 +142,9 @@ export default class CH_Overtime extends BaseServiceDetail {
         this.Request
       );
       this.ContractorSupplementField.Value(contractorSupplement);
-      await ApplicationDbContext.Set(CH_Overtime).UpdateEntity(this, [
-        "ContractorSupplement",
-      ]);
+      // await ApplicationDbContext.Set(CH_Overtime).UpdateEntity(this, [
+      //   "ContractorSupplement",
+      // ]);
     },
     getPermissions: () => {
       // APM, GTM, Budget, PA, and COR have access
@@ -164,7 +186,7 @@ export default class CH_Overtime extends BaseServiceDetail {
       isRequired: false,
       attr: { type: "number" },
     }),
-    ContractorSupplement: this.ContractorSupplementField,
+    // ContractorSupplement: this.ContractorSupplementField,
   };
 
   components = components;

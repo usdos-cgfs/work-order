@@ -14,7 +14,7 @@ export default class ActionGovManager extends ApprovalActions {
     super(params);
     this._context = getAppContext();
 
-    this.ServiceType = params.request.ServiceType;
+    this.ServiceType = params.request.RequestBodyBlob?.TypedValue();
     this.Errors = params.errors;
     this.Request = params.request;
 
@@ -22,9 +22,12 @@ export default class ActionGovManager extends ApprovalActions {
     //   source: errorSource,
     //   description: "Has not been validated",
     // });
-    this.apmWatcher(this.ServiceType.Entity().APM.get());
-    this.gtmWatcher(this.ServiceType.Entity().GTM.get());
+    this.apmWatcher(this.ServiceType?.APM.get());
+    this.gtmWatcher(this.ServiceType?.GTM.get());
     const isValid = this.validate(false);
+
+    // this.newEntity = new CH_Overtime();
+    // this.newEntity.fromJSON(this.ServiceType.toJSON());
 
     // If the assignment has been completed
     // or the state is valid
@@ -48,7 +51,7 @@ export default class ActionGovManager extends ApprovalActions {
   hasBeenSaved = ko.observable(false);
 
   validate = (showErrors = true) => {
-    if (!this.ServiceType.Entity()) return [];
+    if (!this.ServiceType) return [];
     const errors = [];
     if (this.APM.validate(showErrors).length) {
       errors.push(
@@ -88,18 +91,18 @@ export default class ActionGovManager extends ApprovalActions {
 
     // this.ServiceType.Entity().APM(this.APM());
     // this.ServiceType.Entity().GTM(this.GTM());
-    const updatedEntity = {
-      ID: this.ServiceType.Entity().ID,
-      APM: this.APM.get(),
-    };
+    this.ServiceType.APM.set(this.APM.get());
 
     if (this.GTM.get()) {
       updatedEntity.GTM = this.GTM.get();
+      this.ServiceType.GTM.set(this.GTM.get());
     }
 
-    await ApplicationDbContext.Set(CH_Overtime).UpdateEntity(updatedEntity);
-
-    this.ServiceType.refreshEntity();
+    // await ApplicationDbContext.Set(CH_Overtime).UpdateEntity(updatedEntity);
+    await this._context.Requests.UpdateEntity(this.Request, [
+      "RequestBodyBlob",
+    ]);
+    // this.ServiceType.refreshEntity();
 
     if (this.assignment.Status != assignmentStates.Approved)
       await this.completeAssignment(this.assignment, assignmentStates.Approved);
