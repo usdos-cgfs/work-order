@@ -17,7 +17,7 @@ export class OfficeRequestsView {
   constructor() {
     this.RequestsByStatusMap = requestsByStatusMap;
     this.ShowAssignments.subscribe(this.showAssignmentsWatcher);
-    this.init();
+    // this.init();
     this.ActiveKey(requestStates.open);
   }
 

@@ -48,7 +48,6 @@ async function CreateApp() {
 class App {
   constructor() {
     this.Tab.subscribe(tabWatcher);
-    this.HasLoaded(true);
   }
 
   RunningTasks = runningTasks;
@@ -100,7 +99,7 @@ class App {
 
     const openRequestsSet = requestsByStatusMap.get(requestStates.open);
 
-    openRequestsSet.init();
+    await openRequestsSet.init();
   };
 
   Init = async function () {
@@ -149,6 +148,7 @@ class App {
       this.Tab(startTab);
     }
 
+    this.HasLoaded(true);
     // Kick off the initial data load
     // this.InitData();
   };

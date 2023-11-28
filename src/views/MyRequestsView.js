@@ -16,7 +16,7 @@ tableComponentMap[byServiceTypeKey] = "requests-by-service-type";
 export class MyRequestsView {
   constructor() {
     this.RequestsByStatusMap = requestsByStatusMap;
-    this.init();
+    // this.init();
     this.ActiveKey(requestStates.open);
   }
 
