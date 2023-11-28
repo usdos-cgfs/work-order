@@ -11,7 +11,7 @@
 }
 
 #app {
-  --bs-primary-rgb: #344767;
+  /* --bs-primary-rgb: #344767; */
   color: #344767;
 }
 
@@ -27,6 +27,10 @@
 
 .text-primary {
   color: #344767;
+}
+
+.bg-light-gray {
+  background-color: #ececec;
 }
 /*
 text: #344767
@@ -90,6 +94,7 @@ table.dataTable > tbody td {
 #request-body-service-type label {
   width: 100%;
 }
+
 #request-pipeline .fix-service-icon-border {
   border-bottom-left-radius: 0;
   border-top-left-radius: 0.25rem;

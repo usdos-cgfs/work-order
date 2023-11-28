@@ -431,14 +431,8 @@
           <div class="my-3">
             <div
               data-bind="component: {name: 'pipeline-component',
-              params: {request: request, ShowActionsArea: ShowActionsArea}}"
+              params: {request: request}}"
             ></div>
-            <!-- ko if: ShowActionsArea -->
-            <div
-              id="request-pipeline"
-              data-bind="template: {name: 'tmpl-request-pipeline-actions', data: request.Assignments}"
-            ></div>
-            <!-- /ko -->
           </div>
           <!-- ko if: DisplayMode() != DisplayModes.New -->
           <div
@@ -860,7 +854,6 @@
               <table class="table">
                 <thead>
                   <tr>
-                    <th>ID</th>
                     <th>Stage</th>
                     <th>Assignee</th>
                     <th>Request Org</th>
@@ -879,7 +872,6 @@
                   <!-- /ko -->
                   <!-- ko foreach: list.All -->
                   <tr>
-                    <td data-bind="text: ID"></td>
                     <td data-bind="text: PipelineStage?.Title"></td>
                     <td data-bind="text: Assignee?.Title"></td>
                     <td data-bind="text: RequestOrg?.Title"></td>
