@@ -29,59 +29,101 @@
     <div class="">
       <div class="p-3">
         <div data-bind="using: SelectedStageDetail">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Stage</th>
-                <th>Assignee</th>
-                <th>Request Org</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- ko foreach: AllStageAssignments -->
-              <tr>
-                <td data-bind="text: PipelineStage?.Title"></td>
-                <td data-bind="text: Assignee?.Title"></td>
-                <td data-bind="text: RequestOrg?.Title"></td>
-                <td data-bind="text: Role"></td>
-                <td data-bind="text: Status"></td>
-                <td>
-                  <!-- ko if: $parent.userCanAssign -->
-                  <i
-                    class="fas fa-search pointer"
-                    data-bind="click: $parent.view"
-                  ></i>
-                  <i
-                    class="fa fa-trash pointer"
-                    data-bind="click: $parent.remove"
-                  ></i>
+          <!-- ko if: IsCurrentStage -->
+          <div>
+            <h4>My Assignments</h4>
+            <!-- ko foreach: CurrentUserActionableAssignments -->
+            <div data-bind="foreach: Errors">
+              <div
+                class="alert alert-warning"
+                role="alert"
+                data-bind="text: description"
+              ></div>
+            </div>
+            <!-- ko using: getComponent({request: $parent.request}) -->
+            <div
+              data-bind="component: { name: actionComponentName, params: $data }"
+            ></div>
+            <!-- /ko -->
+            <!-- /ko -->
+          </div>
+          <!-- /ko -->
+          <div>
+            <h4>All Assignments</h4>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Assigned To</th>
+                  <th>Request Org</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Completed On</th>
+                  <!-- ko if: IsCurrentStage -->
+                  <th>Action</th>
                   <!-- /ko -->
-                </td>
-              </tr>
-              <!-- /ko -->
-            </tbody>
-          </table>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- ko foreach: AllStageAssignments -->
+                <tr
+                  data-bind="
+                  css: {'pointer': isUserActionable()},
+                  click: toggleExpanded
+                  "
+                >
+                  <td data-bind="text: Assignee?.Title"></td>
+                  <td data-bind="text: RequestOrg?.Title"></td>
+                  <td data-bind="text: Role"></td>
+                  <td data-bind="text: Status"></td>
+                  <td
+                    data-bind="text: CompletionDate?.toLocaleString() ?? 'N/A'"
+                  ></td>
+                  <!-- ko if: $parent.IsCurrentStage -->
+                  <td>
+                    <!-- ko if: $parent.userCanAssign -->
+                    <i
+                      class="fas fa-search pointer"
+                      data-bind="click: $parent.view"
+                    ></i>
+                    <i
+                      class="fa fa-trash pointer"
+                      data-bind="click: $parent.remove"
+                    ></i>
+                    <!-- /ko -->
+                  </td>
+                  <!-- /ko -->
+                </tr>
+                <!-- ko if: false && $parent.IsCurrentStage() && isUserActionable() && isExpanded() -->
+                <tr>
+                  <td colspan="7" data-bind=""></td>
+                </tr>
+                <!-- /ko -->
+                <!-- /ko -->
+              </tbody>
+            </table>
+          </div>
         </div>
-        <!-- ko using: request.Assignments.CurrentStage -->
-        <!-- ko if: AssignmentComponents().length -->
-        <div data-bind="foreach: Validation.Errors">
-          <div
-            class="alert alert-warning"
-            role="alert"
-            data-bind="text: description"
-          ></div>
-        </div>
-        <div class="">
-          <!-- ko foreach: AssignmentComponents -->
-          <div
-            data-bind="component: {name: actionComponentName, params: $data }"
-          ></div>
+        <!-- ko if: false -->
+        <div>
+          <!-- ko using: request.Assignments.CurrentStage -->
+          <!-- ko if: AssignmentComponents().length -->
+          <div data-bind="foreach: Validation.Errors">
+            <div
+              class="alert alert-warning"
+              role="alert"
+              data-bind="text: description"
+            ></div>
+          </div>
+          <div class="">
+            <!-- ko foreach: AssignmentComponents -->
+            <div
+              data-bind="component: {name: actionComponentName, params: $data }"
+            ></div>
+            <!-- /ko -->
+          </div>
+          <!-- /ko -->
           <!-- /ko -->
         </div>
-        <!-- /ko -->
         <!-- /ko -->
       </div>
     </div>

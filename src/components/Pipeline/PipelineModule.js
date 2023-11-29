@@ -1,5 +1,7 @@
 import { actionTypes } from "../../entities/Action.js";
+import { stageActionTypes } from "../../entities/PipelineStage.js";
 import { requestStates } from "../../entities/Request.js";
+import { currentUser } from "../../infrastructure/Authorization.js";
 
 export default class PipelineModule {
   constructor({ request }) {
@@ -10,11 +12,7 @@ export default class PipelineModule {
   }
 
   ShowActionsArea = ko.pureComputed(
-    () =>
-      this.request.State.IsActive() &&
-      !this.request.IsLoading() &&
-      !this.request.Assignments.AreLoading() &&
-      this.request.Assignments.CurrentStage.list.UserActionAssignments().length
+    () => this.SelectedStage()?.ActionType != stageActionTypes.Closed
   );
 
   // TODO: Minor - Show the completion date of each stage
@@ -24,7 +22,7 @@ export default class PipelineModule {
 
   listItemTypeClass = (stage) => {
     if (this.SelectedStage()?.ID == stage.ID) {
-      return "bg-primary text-white pointer";
+      return "bg-primary text-white pointer active";
     }
 
     if (stage.Step < this.Pipeline.Stage()?.Step)
@@ -76,6 +74,16 @@ class PipelineStageDetail {
       .All()
       .filter((assignment) => assignment.PipelineStage.ID == this.stage.ID);
   });
+
+  CurrentUserActionableAssignments = ko.pureComputed(() =>
+    this.AllStageAssignments().filter((assignment) =>
+      assignment.isUserActionable()
+    )
+  );
+
+  view = (assignment) => this.request.Assignments.view(assignment);
+
+  remove = (assignment) => this.request.Assignments.remove(assignment);
 
   userCanAssign = ko.pureComputed(() => this.IsCurrentStage());
 }

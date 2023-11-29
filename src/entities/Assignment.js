@@ -1,7 +1,6 @@
 import { ValidationError } from "../primitives/ValidationError.js";
 import { RequestOrg } from "./RequestOrg.js";
 import Entity from "../primitives/Entity.js";
-// import { currentUser } from "../infrastructure/Authorization.js";
 
 export const assignmentStates = {
   InProgress: "In Progress",
@@ -54,8 +53,21 @@ export class Assignment extends Entity {
 
   Role;
 
+  Errors = ko.observableArray();
+
   getComponentName = () => {
     return this.CustomComponent ?? assignmentRoleComponentMap[this.Role];
+  };
+
+  getComponent = ({ request }) => {
+    return {
+      request: request,
+      assignment: this,
+      addAssignment: request.Assignments.addNew,
+      completeAssignment: request.Assignments.complete,
+      errors: this.Errors,
+      actionComponentName: this.getComponentName(),
+    };
   };
 
   userIsDirectlyAssigned = (user) => {
@@ -73,6 +85,17 @@ export class Assignment extends Entity {
       assignmentRoles.Assigner,
     ].includes(this.Role);
   };
+
+  isUserActionable = (user) => {
+    if (!user) user = window.WorkOrder.App.CurrentUser();
+    if (!this.isActionable()) return false;
+    return this.userIsDirectlyAssigned(user) || this.userIsInRequestOrg(user);
+  };
+
+  // Should we really be storing observables here?
+  isExpanded = ko.observable(true);
+
+  toggleExpanded = () => this.isExpanded(!this.isExpanded());
 
   static CreateFromObject = function (assignment) {
     assignment.RequestOrg = RequestOrg.FindInStore(assignment.RequestOrg);

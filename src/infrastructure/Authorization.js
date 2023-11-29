@@ -2,10 +2,9 @@ import { People } from "../entities/People.js";
 import { Assignment, assignmentStates } from "../entities/Assignment.js";
 import {
   RequestOrg,
-  OrgTypes,
   requestOrgStore,
+  OrgTypes,
 } from "../entities/RequestOrg.js";
-
 import { getUserPropsAsync, getDefaultGroups } from "./SAL.js";
 
 export const permissions = {
@@ -138,27 +137,24 @@ export class User extends People {
     this.isInGroup(getDefaultGroups().owners)
   );
 
-  hasSystemRole = (role) => userHasSystemRole(this, role);
+  hasSystemRole = (systemRole) => {
+    const userIsOwner = this.IsSiteOwner();
+    switch (systemRole) {
+      case systemRoles.Admin:
+        return userIsOwner;
+        break;
+      case systemRoles.ActionOffice:
+        return userIsOwner || this.ActionOffices().length;
+      default:
+    }
+  };
 
   static Create = async function () {
     // TODO: Major - Switch to getUserPropertiesAsync since that includes phone # etc
     const userProps = await getUserPropsAsync();
     // const userProps2 = await UserManager.getUserPropertiesAsync();
-
     return new User(userProps);
   };
-}
-
-export function userHasSystemRole(user, systemRole) {
-  const userIsOwner = user.IsSiteOwner();
-  switch (systemRole) {
-    case systemRoles.Admin:
-      return userIsOwner;
-      break;
-    case systemRoles.ActionOffice:
-      return userIsOwner || user.ActionOffices().length;
-    default:
-  }
 }
 
 export function getRequestFolderPermissions(request) {
