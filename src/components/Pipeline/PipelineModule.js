@@ -7,13 +7,17 @@ export default class PipelineModule {
   constructor({ request }) {
     this.request = request;
     this.Pipeline = request.Pipeline;
+
+    // We only want to show the open stages
+    this.allPipelineDetails = this.request.Pipeline.Stages()
+      .filter((stage) => stage.ActionType != stageActionTypes.Closed)
+      .map((stage) => new PipelineStageDetail({ request, stage }));
+
     this.Pipeline.Stage.subscribe(this.SelectedStage);
     this.SelectedStage(this.Pipeline.Stage());
   }
 
-  ShowActionsArea = ko.pureComputed(
-    () => this.SelectedStage()?.ActionType != stageActionTypes.Closed
-  );
+  ShowActionsArea = ko.pureComputed(() => this.SelectedStageDetail());
 
   // TODO: Minor - Show the completion date of each stage
   listItemShowBorderlessBottom = (stage) => {
@@ -21,7 +25,10 @@ export default class PipelineModule {
   };
 
   listItemTypeClass = (stage) => {
-    if (this.SelectedStage()?.ID == stage.ID) {
+    if (
+      this.SelectedStage()?.ID == stage.ID &&
+      stage.ActionType != stageActionTypes.Closed
+    ) {
       return "bg-primary text-white pointer active";
     }
 
@@ -52,11 +59,16 @@ export default class PipelineModule {
 
   SelectedStageDetail = ko.pureComputed(
     () =>
-      new PipelineStageDetail({
-        request: this.request,
-        stage: this.SelectedStage(),
-      })
+      this.allPipelineDetails.find(
+        (detail) => detail.stage.ID == this.SelectedStage()?.ID
+      )
+    // new PipelineStageDetail({
+    //   request: this.request,
+    //   stage: this.SelectedStage(),
+    // })
   );
+
+  StageDetail;
 }
 
 class PipelineStageDetail {
@@ -84,6 +96,10 @@ class PipelineStageDetail {
   view = (assignment) => this.request.Assignments.view(assignment);
 
   remove = (assignment) => this.request.Assignments.remove(assignment);
+  addNew = (assignment) => this.request.Assignments.addNew(assignment);
 
-  userCanAssign = ko.pureComputed(() => this.IsCurrentStage());
+  userCanAssign = ko.pureComputed(() => {
+    const user = currentUser();
+    return this.IsCurrentStage() && user.isInRequestOrg(this.stage.RequestOrg);
+  });
 }

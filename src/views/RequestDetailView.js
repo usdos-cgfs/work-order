@@ -274,31 +274,4 @@ export class RequestDetailView {
     this._context = getAppContext();
   }
 
-  oldconstructor() {
-    this.request = request;
-    this._context = getAppContext();
-
-    if (displayMode == DisplayModes.New) {
-      this.request.RequestorInfo.Requestor(new People(currentUser()));
-      this.request.RequestorInfo.Phone(currentUser().WorkPhone);
-      this.request.RequestorInfo.Email(currentUser().EMail);
-      //this.request.Title = createNewRequestTitle();
-      this.request.State.Status(requestStates.draft);
-      this.request.State.IsActive(true);
-
-      this.request.ServiceType.refreshEntity();
-
-      // Watch for a change in service type
-      this.request.LoadedAt(new Date());
-    }
-
-    this.request.Validation.IsValid.subscribe(this.validationWatcher);
-    // this.DisplayMode.subscribe(this.displayModeWatcher);
-    this.DisplayMode(displayMode);
-
-    // this.request.LoadedAt(new Date());
-    if (displayMode != DisplayModes.New) {
-      this.refreshAll();
-    }
-  }
 }

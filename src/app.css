@@ -103,6 +103,23 @@ table.dataTable > tbody td {
 #request-pipeline {
   background-color: rgb(207 226 255 / 24%);
 }
+.pipeline-module li.stage-item {
+  position: relative;
+}
+.pipeline-module li.stage-item.active::after {
+  color: #0d6efd;
+  border-right: solid 30px transparent;
+  border-left: solid 30px transparent;
+  border-top: solid 20px #0d6efd;
+  transform: translateX(-50%);
+  position: absolute;
+  z-index: 1;
+  content: "";
+  top: 100%;
+  left: 50%;
+  height: 0;
+  width: 0;
+}
 
 .accordion-title .indicator {
   flex-shrink: 0;

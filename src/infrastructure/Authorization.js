@@ -31,14 +31,14 @@ export const systemRoles = {
 export const roles = {
   ActionResolver: {
     LookupValue: "Action Resolver",
-    description: "Completes an action before moving request forward",
+    description: "Confirms completion of an action.",
     isAssignable: true,
     permissions: permissions.RestrictedContribute,
     initialStatus: assignmentStates.InProgress,
   },
   Assigner: {
     LookupValue: "Assigner",
-    description: "Assigns the next stage in the pipeline.",
+    description: "Can create additional assignments.",
     isAssignable: true,
     permissions: permissions.RestrictedContribute,
     initialStatus: assignmentStates.InProgress,

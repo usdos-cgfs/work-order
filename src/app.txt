@@ -434,7 +434,8 @@
               params: {request: request}}"
             ></div>
           </div>
-          <!-- ko if: DisplayMode() != DisplayModes.New -->
+          <!-- ko if: DisplayMode() != DisplayModes.New && $root.Authorization.currentUserIsAdmin()-->
+
           <div
             class="my-3"
             data-bind="template: {name: 'tmpl-assignments-component', data: request.Assignments}"
