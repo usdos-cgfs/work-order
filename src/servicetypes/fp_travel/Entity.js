@@ -2,7 +2,7 @@ import SelectField from "../../fields/SelectField.js";
 
 import BaseServiceDetail from "../BaseServiceDetail.js";
 
-export default class CashMgmtRequest extends BaseServiceDetail {
+export default class FPTravelRequest extends BaseServiceDetail {
   constructor(params) {
     super(params);
   }
@@ -17,13 +17,11 @@ export default class CashMgmtRequest extends BaseServiceDetail {
     Subcategory: new SelectField({
       displayName: "Subcategory",
       options: [
-        "Accommodation Exchange",
-        "Annual Cash Waivers",
-        "Debt Collection",
-        "Fiscal Irregularities",
-        "One-Time Cash Waivers",
-        "Proceeds of Sale",
-        "Suspense Deposits Abroad",
+        "Advances",
+        "Claims",
+        "Gifts of Travel",
+        "Mileage Rates (general topic)",
+        "Travel Card Program",
       ],
       isRequired: true,
     }),
@@ -37,8 +35,8 @@ export default class CashMgmtRequest extends BaseServiceDetail {
   };
 
   static ListDef = {
-    name: "st_fp_cash_mgmt",
-    title: "st_fp_cash_mgmt",
-    fields: CashMgmtRequest.Views.All,
+    name: "st_fp_travel",
+    title: "st_fp_travel",
+    fields: FPTravelRequest.Views.All,
   };
 }
