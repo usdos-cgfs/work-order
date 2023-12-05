@@ -95,6 +95,46 @@ table.dataTable > tbody td {
   width: 100%;
 }
 
+.quick-actions-container {
+  position: relative;
+  top: 40px;
+  display: inline;
+}
+
+.quick-actions-bar {
+  height: 4rem;
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  justify-content: start;
+  align-items: center;
+  padding-right: 0.25rem;
+  color: white;
+  /* background-color: #a7b3cd; */
+  background: linear-gradient(145deg, #aab9d0, #8594ab);
+  border-width: 0px;
+}
+
+.quick-actions-bar .status-container {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem;
+  background-color: #8b9aaf;
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+
+.quick-actions-bar .badge {
+}
+
+.quick-actions-bar button {
+  flex-grow: 1;
+  height: 95%;
+  min-width: 150px;
+}
+
 #request-pipeline .fix-service-icon-border {
   border-bottom-left-radius: 0;
   border-top-left-radius: 0.25rem;

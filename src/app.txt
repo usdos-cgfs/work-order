@@ -424,10 +424,12 @@
           ></div>
           <!-- /ko -->
           <!-- /ko -->
-          <div
-            class="sticky-top my-3"
-            data-bind="template: {name: 'tmpl-quick-actions-bar'}"
-          ></div>
+          <div class="quick-actions-container">
+            <div
+              class="sticky-top d-flex justify-content-end"
+              data-bind="template: {name: 'tmpl-quick-actions-bar'}"
+            ></div>
+          </div>
           <div class="my-3">
             <div
               data-bind="component: {name: 'pipeline-component',
@@ -723,74 +725,67 @@
     </script>
 
     <script type="text/html" id="tmpl-quick-actions-bar">
-      <div
-        class="card d-flex flex-row justify-content-between align-items-center px-2"
-      >
-        <div class="m-2">
-          <div class="d-flex flex-row">
-            <h6 class="mx-0">
-              Request: <span data-bind="text: request.ObservableTitle"></span>
-            </h6>
-            <h6
-              class="badge"
-              data-bind="text: request.State.Status, class: request.State.StatusClass"
-            ></h6>
-          </div>
-          <div class="d-flex align-items-center">
-            <div class="me-2">
-              Loaded:
-              <span
-                data-bind="text: request.LoadedAt()?.toLocaleString()"
-              ></span>
-            </div>
-            <!-- ko if: $root.Authorization.currentUserIsAdmin -->
-            <a
-              class="me-2"
-              target="_blank"
-              rel="noopener noreferrer"
-              data-bind="attr: {href: request.getFolderUrl()}"
-            >
-              <i class="fa fa-folder" data-bind=""></i
-            ></a>
-            <!-- /ko -->
-            <i
-              class="fa fa-sync pointer"
-              title="Refresh this request"
-              data-bind="click: refreshAll"
-            ></i>
-          </div>
+      <div class="quick-actions-bar card">
+        <div class="status-container">
+          <div
+            class="badge"
+            data-bind="text: request.State.Status, class: request.State.StatusClass"
+          ></div>
         </div>
-        <div class="d-flex justify-content-between">
-          <!-- ko if: DisplayMode() == DisplayModes.New -->
-          <button
-            type="button"
-            class="btn btn-success ms-3"
-            data-bind="click: submitNewRequest, enable: !request.Validation.WasValidated() || request.Validation.IsValid()"
-          >
-            Submit
-          </button>
-          <!-- /ko -->
-          <!-- ko if: request.Authorization.currentUserCanAdvance -->
-          <!-- ko if: request.Pipeline.getNextStage -->
-          <button
-            type="button"
-            class="btn btn-success ms-3"
-            data-bind="click: nextStageHandler, enable: request.Assignments.CurrentStage.Validation.IsValid"
-          >
-            Next Stage <span class="fa fa-chevron-right"></span>
-          </button>
-          <!-- /ko -->
-          <!-- ko ifnot: request.Pipeline.getNextStage -->
-          <button
-            type="button"
-            class="btn btn-success ms-3"
-            data-bind="click: promptClose, enable: request.Assignments.CurrentStage.Validation.IsValid"
-          >
-            Close and Finalize
-          </button>
-          <!-- /ko -->
-          <!-- /ko -->
-        </div>
+        <h6 class="">
+          Request ID <br />
+          <span data-bind="text: request.ObservableTitle"></span>
+        </h6>
+
+        <h6 class="">
+          Loaded Date and Time <br />
+          <span data-bind="text: request.LoadedAt()?.toLocaleString()"></span>
+        </h6>
+        <!-- ko if: $root.Authorization.currentUserIsAdmin -->
+        <a
+          class=""
+          target="_blank"
+          rel="noopener noreferrer"
+          data-bind="attr: {href: request.getFolderUrl()}"
+        >
+          <i class="fa fa-folder" data-bind=""></i
+        ></a>
+        <!-- /ko -->
+        <i
+          class="fa fa-sync pointer me-3"
+          title="Refresh this request"
+          data-bind="click: refreshAll"
+        ></i>
+
+        <!-- ko if: DisplayMode() == DisplayModes.New -->
+        <button
+          type="button"
+          class="btn btn-success ms-3"
+          data-bind="click: submitNewRequest, enable: !request.Validation.WasValidated() || request.Validation.IsValid()"
+        >
+          Submit <span class="fa fa-chevron-right"></span>
+        </button>
+        <!-- /ko -->
+        <!-- ko if: request.Authorization.currentUserCanAdvance -->
+        <!-- ko if: request.Pipeline.getNextStage -->
+        <button
+          type="button"
+          class="btn btn-success ms-3"
+          data-bind="click: nextStageHandler, enable: request.Assignments.CurrentStage.Validation.IsValid"
+        >
+          Next Stage <span class="fa fa-chevron-right"></span>
+        </button>
+        <!-- /ko -->
+        <!-- ko ifnot: request.Pipeline.getNextStage -->
+        <button
+          type="button"
+          class="btn btn-success ms-3"
+          data-bind="click: promptClose, enable: request.Assignments.CurrentStage.Validation.IsValid"
+        >
+          Close and Finalize
+        </button>
+        <!-- /ko -->
+        <!-- /ko -->
       </div>
     </script>
 
