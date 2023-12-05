@@ -426,230 +426,236 @@
           <!-- /ko -->
           <div class="quick-actions-container">
             <div
-              class="sticky-top d-flex justify-content-end"
+              class=""
               data-bind="template: {name: 'tmpl-quick-actions-bar'}"
             ></div>
           </div>
-          <div class="my-3">
-            <div
-              data-bind="component: {name: 'pipeline-component',
+          <div class="request-detail-components">
+            <div class="">
+              <div
+                data-bind="component: {name: 'pipeline-component',
               params: {request: request}}"
-            ></div>
-          </div>
-          <!-- ko if: DisplayMode() != DisplayModes.New && $root.Authorization.currentUserIsAdmin()-->
+              ></div>
+            </div>
+            <!-- ko if: DisplayMode() != DisplayModes.New && $root.Authorization.currentUserIsAdmin()-->
 
-          <div
-            class="my-3"
-            data-bind="template: {name: 'tmpl-assignments-component', data: request.Assignments}"
-          ></div>
-          <!-- /ko -->
-          <div class="my-3">
-            <div class="card mb-3 w-100" data-bind="">
-              <div class="card-body">
-                <h3 class="card-title">Requestor Information</h3>
-                <div
-                  data-bind="component: {name: HeaderComponentName, params: request }"
-                ></div>
-              </div>
-            </div>
-          </div>
-          <div class="card mb-3 w-100" data-bind="using: Request">
-            <div class="card-body">
-              <div class="card-title d-flex justify-content-between">
-                <h3 class="mx-0" data-bind="text: RequestType.Title"></h3>
-                <!-- <i class="fa fa-sync pointer" data-bind="click: refreshEntity"></i> -->
-              </div>
-              <!-- ko if: RequestBodyBlob -->
-              <div
-                data-bind="component: {
-                  name: RequestBodyBlob.components[DisplayMode().toLowerCase()], 
-                  params: RequestBodyBlob}, 
-                  class: RequestBodyBlob.width"
-              ></div>
-              <!-- /ko -->
-              <div
-                class="col-12 pb-6"
-                data-bind="component: {name: RequestDescription.components[DisplayMode().toLowerCase()], 
-                  params: RequestDescription}"
-              ></div>
-            </div>
-          </div>
-          <div class="row my-3">
-            <div class="col-4" data-bind="using: request">
-              <div
-                class="card"
-                data-bind="css: {'border-danger': Validation.WasValidated() && Attachments.Validation.Errors().length}"
-              >
+            <div
+              class="my-3"
+              data-bind="template: {name: 'tmpl-assignments-component', data: request.Assignments}"
+            ></div>
+            <!-- /ko -->
+            <div class="">
+              <div class="card w-100" data-bind="">
                 <div class="card-body">
-                  <div class="card-title">
-                    <h3 class="mx-0">Attachments</h3>
-                  </div>
-                  <!-- ko foreach: Attachments.Validation.Errors -->
+                  <h3 class="card-title">Requestor Information</h3>
                   <div
-                    class="alert"
-                    data-bind="text: description, 
-                      class: $parent.Validation.WasValidated() ? 'alert-danger' : 'alert-warning'"
+                    data-bind="component: {name: HeaderComponentName, params: request }"
                   ></div>
-                  <!-- /ko -->
-                  <div
-                    data-bind="html: RequestType.AttachmentDescription"
-                  ></div>
-                  <div>
-                    <div class="d-flex justify-content-end">
-                      <i
-                        class="fa fa-sync pointer"
-                        data-bind="click: Attachments.refresh"
-                      ></i>
-                    </div>
-                    <table class="table">
-                      <thead>
-                        <tr>
-                          <th>Title</th>
-                          <th>FileName</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody data-bind="">
-                        <!-- ko if: Attachments.AreLoading -->
-                        <tr class="">
-                          <td colspan="4" class="p-0">
-                            <progress class="w-100"></progress>
-                          </td>
-                        </tr>
-                        <!-- /ko -->
-                        <!-- ko foreach: Attachments.list.Active -->
-                        <tr>
-                          <td>
-                            <div data-bind="text: Title"></div>
-                          </td>
-                          <td>
-                            <a
-                              target="_blank"
-                              data-bind="attr: { href: FileRef }, text: FileLeafRef"
-                            ></a>
-                          </td>
-                          <td>
-                            <i
-                              class="fas fa-search pointer"
-                              data-bind="click: $parent.Attachments.view"
-                            ></i>
-                            <!-- ko if: $parent.Attachments.userCanRemove($data) -->
-                            <i
-                              class="fas fa-trash pointer"
-                              data-bind="click: $parent.Attachments.remove"
-                            ></i>
-                            <!-- /ko -->
-                          </td>
-                        </tr>
-                        <!-- /ko -->
-                      </tbody>
-                    </table>
-                    <!-- ko if: Attachments.userCanAttach -->
-                    <button
-                      class="btn btn-primary"
-                      data-bind="click: Attachments.addNew"
-                    >
-                      Upload
-                    </button>
-                    <!-- /ko -->
-                  </div>
                 </div>
               </div>
             </div>
-            <!-- ko if: DisplayMode() != DisplayModes.New -->
-            <div
-              class="col-8"
-              data-bind="template: {name: 'tmpl-activity-log-component', data: request.Actions}"
-            ></div>
-            <!-- /ko -->
-          </div>
-          <!-- ko if: DisplayMode() != DisplayModes.New -->
-          <div class="card my-3 w-100" data-bind="using: request">
-            <div class="card-body">
-              <h3 class="card-title">Comments</h3>
-              <div class="alert alert-warning">
-                <strong>Note:</strong> Anyone with access to this record is able
-                to view all comments.
-              </div>
-              <div class="d-flex justify-content-end">
-                <i
-                  class="fa fa-sync pointer"
-                  data-bind="click: Comments.refresh"
-                ></i>
-              </div>
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Created</th>
-                    <th>Author</th>
-                    <th>Notification Sent</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody data-bind="">
-                  <!-- ko if: Comments.AreLoading -->
-                  <tr class="">
-                    <td colspan="4" class="p-0">
-                      <progress class="w-100"></progress>
-                    </td>
-                  </tr>
-                  <!-- /ko -->
-                  <!-- ko foreach: Comments.list.Active -->
-                  <tr class="table-group-divider">
-                    <td data-bind="text: Created.toLocaleString()"></td>
-                    <td data-bind="text: Author.Title"></td>
-                    <td data-bind="text: NotificationSent"></td>
-                    <td>
-                      <!-- ko if: $parent.Comments.userCanComment -->
-                      <i
-                        class="fa fa-envelope pointer"
-                        data-bind="click: $parent.Comments.sendNotification,
-                        attr: {title: NotificationSent ? 'Re-Send Email Notification' : 'Send Email Notification'}"
-                      ></i>
-                      <i
-                        class="fa fa-trash pointer ms-1"
-                        title="Remove Comment"
-                        data-bind="click: $parent.Comments.remove"
-                      ></i>
-                      <!-- /ko -->
-                    </td>
-                  </tr>
-                  <tr class="">
-                    <td colspan="4" data-bind="html: Comment" class="pb-4"></td>
-                  </tr>
-                  <!-- /ko -->
-                </tbody>
-              </table>
-              <!-- ko if: Comments.userCanComment -->
-              <div data-bind="using: $parent.newComment">
+            <div class="card w-100" data-bind="using: Request">
+              <div class="card-body">
+                <div class="card-title d-flex justify-content-between">
+                  <h3 class="mx-0" data-bind="text: RequestType.Title"></h3>
+                  <!-- <i class="fa fa-sync pointer" data-bind="click: refreshEntity"></i> -->
+                </div>
+                <!-- ko if: RequestBodyBlob -->
                 <div
-                  class="mb-2"
-                  data-bind="component: {name: input.components.edit, params: input}"
+                  data-bind="component: {
+                  name: RequestBodyBlob.components[DisplayMode().toLowerCase()], 
+                  params: RequestBodyBlob}, 
+                  class: RequestBodyBlob.width"
                 ></div>
-                <button class="btn btn-primary" data-bind="click: submit">
-                  Submit Comment
-                </button>
+                <!-- /ko -->
+                <div
+                  class="col-12 pb-6"
+                  data-bind="component: {name: RequestDescription.components[DisplayMode().toLowerCase()], 
+                  params: RequestDescription}"
+                ></div>
               </div>
+            </div>
+            <div class="row">
+              <div class="col-4" data-bind="using: request">
+                <div
+                  class="card"
+                  data-bind="css: {'border-danger': Validation.WasValidated() && Attachments.Validation.Errors().length}"
+                >
+                  <div class="card-body">
+                    <div class="card-title">
+                      <h3 class="mx-0">Attachments</h3>
+                    </div>
+                    <!-- ko foreach: Attachments.Validation.Errors -->
+                    <div
+                      class="alert"
+                      data-bind="text: description, 
+                      class: $parent.Validation.WasValidated() ? 'alert-danger' : 'alert-warning'"
+                    ></div>
+                    <!-- /ko -->
+                    <div
+                      data-bind="html: RequestType.AttachmentDescription"
+                    ></div>
+                    <div>
+                      <div class="d-flex justify-content-end">
+                        <i
+                          class="fa fa-sync pointer"
+                          data-bind="click: Attachments.refresh"
+                        ></i>
+                      </div>
+                      <table class="table">
+                        <thead>
+                          <tr>
+                            <th>Title</th>
+                            <th>FileName</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody data-bind="">
+                          <!-- ko if: Attachments.AreLoading -->
+                          <tr class="">
+                            <td colspan="4" class="p-0">
+                              <progress class="w-100"></progress>
+                            </td>
+                          </tr>
+                          <!-- /ko -->
+                          <!-- ko foreach: Attachments.list.Active -->
+                          <tr>
+                            <td>
+                              <div data-bind="text: Title"></div>
+                            </td>
+                            <td>
+                              <a
+                                target="_blank"
+                                data-bind="attr: { href: FileRef }, text: FileLeafRef"
+                              ></a>
+                            </td>
+                            <td>
+                              <i
+                                class="fas fa-search pointer"
+                                data-bind="click: $parent.Attachments.view"
+                              ></i>
+                              <!-- ko if: $parent.Attachments.userCanRemove($data) -->
+                              <i
+                                class="fas fa-trash pointer"
+                                data-bind="click: $parent.Attachments.remove"
+                              ></i>
+                              <!-- /ko -->
+                            </td>
+                          </tr>
+                          <!-- /ko -->
+                        </tbody>
+                      </table>
+                      <!-- ko if: Attachments.userCanAttach -->
+                      <button
+                        class="btn btn-primary"
+                        data-bind="click: Attachments.addNew"
+                      >
+                        Upload
+                      </button>
+                      <!-- /ko -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- ko if: DisplayMode() != DisplayModes.New -->
+              <div
+                class="col-8"
+                data-bind="template: {name: 'tmpl-activity-log-component', data: request.Actions}"
+              ></div>
               <!-- /ko -->
             </div>
-          </div>
-          <!-- /ko -->
-          <div>
-            <!-- ko if: DisplayMode() == DisplayModes.New -->
-            <button
-              type="button"
-              class="btn btn-success"
-              data-bind="click: submitNewRequest, enable: !request.Validation.WasValidated() || request.Validation.IsValid()"
-            >
-              Submit Request
-            </button>
+            <!-- ko if: DisplayMode() != DisplayModes.New -->
+            <div class="card w-100" data-bind="using: request">
+              <div class="card-body">
+                <h3 class="card-title">Comments</h3>
+                <div class="alert alert-warning">
+                  <strong>Note:</strong> Anyone with access to this record is
+                  able to view all comments.
+                </div>
+                <div class="d-flex justify-content-end">
+                  <i
+                    class="fa fa-sync pointer"
+                    data-bind="click: Comments.refresh"
+                  ></i>
+                </div>
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Created</th>
+                      <th>Author</th>
+                      <th>Notification Sent</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody data-bind="">
+                    <!-- ko if: Comments.AreLoading -->
+                    <tr class="">
+                      <td colspan="4" class="p-0">
+                        <progress class="w-100"></progress>
+                      </td>
+                    </tr>
+                    <!-- /ko -->
+                    <!-- ko foreach: Comments.list.Active -->
+                    <tr class="table-group-divider">
+                      <td data-bind="text: Created.toLocaleString()"></td>
+                      <td data-bind="text: Author.Title"></td>
+                      <td data-bind="text: NotificationSent"></td>
+                      <td>
+                        <!-- ko if: $parent.Comments.userCanComment -->
+                        <i
+                          class="fa fa-envelope pointer"
+                          data-bind="click: $parent.Comments.sendNotification,
+                        attr: {title: NotificationSent ? 'Re-Send Email Notification' : 'Send Email Notification'}"
+                        ></i>
+                        <i
+                          class="fa fa-trash pointer ms-1"
+                          title="Remove Comment"
+                          data-bind="click: $parent.Comments.remove"
+                        ></i>
+                        <!-- /ko -->
+                      </td>
+                    </tr>
+                    <tr class="">
+                      <td
+                        colspan="4"
+                        data-bind="html: Comment"
+                        class="pb-4"
+                      ></td>
+                    </tr>
+                    <!-- /ko -->
+                  </tbody>
+                </table>
+                <!-- ko if: Comments.userCanComment -->
+                <div data-bind="using: $parent.newComment">
+                  <div
+                    class="mb-2"
+                    data-bind="component: {name: input.components.edit, params: input}"
+                  ></div>
+                  <button class="btn btn-primary" data-bind="click: submit">
+                    Submit Comment
+                  </button>
+                </div>
+                <!-- /ko -->
+              </div>
+            </div>
             <!-- /ko -->
-            <!-- <button
+            <div>
+              <!-- ko if: DisplayMode() == DisplayModes.New -->
+              <button
+                type="button"
+                class="btn btn-success"
+                data-bind="click: submitNewRequest, enable: !request.Validation.WasValidated() || request.Validation.IsValid()"
+              >
+                Submit Request
+              </button>
+              <!-- /ko -->
+              <!-- <button
               class="btn btn-danger"
               data-bind="click: () => closeAndFinalize('Rejected')"
             >
               Danger Button
             </button> -->
+            </div>
           </div>
         </div>
       </div>

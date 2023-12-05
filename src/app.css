@@ -96,9 +96,18 @@ table.dataTable > tbody td {
 }
 
 .quick-actions-container {
-  position: relative;
-  top: 40px;
-  display: inline;
+  position: sticky;
+  top: 0px;
+  z-index: 100;
+}
+
+.quick-actions-container > div {
+  position: absolute;
+  display: flex;
+  justify-content: end;
+  left: -20px;
+  width: 100%;
+  z-index: 200;
 }
 
 .quick-actions-bar {
@@ -126,13 +135,17 @@ table.dataTable > tbody td {
   border-bottom-left-radius: 6px;
 }
 
-.quick-actions-bar .badge {
-}
-
 .quick-actions-bar button {
   flex-grow: 1;
   height: 95%;
   min-width: 150px;
+}
+
+.request-detail-components {
+  padding-top: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 #request-pipeline .fix-service-icon-border {
