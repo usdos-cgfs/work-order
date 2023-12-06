@@ -90,6 +90,37 @@ table.dataTable > tbody td {
   border: 1px solid #dfdfdf;
 }
 
+/* New Request View */
+.new-request-opts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.new-request-opt {
+  min-width: 300px;
+  flex: 1 1 0px;
+  cursor: pointer;
+  background-color: #abadb9;
+}
+
+.new-request-opt .card-body {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  color: white;
+}
+
+.new-request-opt .card-body h5 {
+  margin: 0;
+}
+.new-request-opt .card-body i {
+  color: #4a507b;
+  border-radius: 6px;
+  padding: 0.5rem;
+  background-color: white;
+}
+
 /* Request Detail Components */
 #request-body-service-type label {
   width: 100%;
@@ -138,7 +169,7 @@ table.dataTable > tbody td {
 .quick-actions-bar button {
   flex-grow: 1;
   height: 95%;
-  min-width: 150px;
+  min-width: 170px;
 }
 
 .request-detail-components {
