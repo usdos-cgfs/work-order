@@ -337,69 +337,78 @@
 
     <script type="text/html" id="tmpl-new-request-view">
       <h2>Select the type of request you would like to open:</h2>
-      <div id="" class="card">
-        <div class="card-body">
-          <div class="new-request-opts" data-bind="foreach: ActiveServiceTypes">
+      <div id="new-request-container">
+        <div
+          class="card new-request-ops-container"
+          data-bind="css: {'service-selected': SelectedServiceType}"
+        >
+          <div class="card-body">
             <div
-              class="card new-request-opt"
-              data-bind="click: $parent.selectServiceTypeHandler"
+              class="new-request-opts"
+              data-bind="foreach: ActiveServiceTypes"
             >
-              <div class="card-body">
-                <i class="fa fa-3x" data-bind="class: Icon"></i>
-                <h5 class="card-title" data-bind="text: Title"></h5>
+              <div
+                class="card new-request-opt"
+                data-bind="click: $parent.selectServiceTypeHandler, 
+                css: {'active': $parent.SelectedServiceType()?.ID == ID}"
+              >
+                <div class="card-body">
+                  <i class="fa fa-3x" data-bind="class: Icon"></i>
+                  <h5 class="card-title" data-bind="text: Title"></h5>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      <dialog
-        id="dialog-new-request-detail"
-        class="card w-75"
-        style="height: fit-content"
-        data-bind="visible: SelectedServiceType"
-      >
-        <div class="card-body" data-bind="">
-          <!-- ko if: SelectedServiceType -->
-          <h5
-            class="card-title"
-            data-bind="text: SelectedServiceType().Title"
-          ></h5>
-          <hr />
-          <b>Description:</b>
-          <div
-            data-bind="html: SelectedServiceType().Description"
-            class="mb-2"
-          ></div>
-          <b>Attachments:</b>
-          <div
-            data-bind="html: formatAttachmentDescription()"
-            class="mb-2"
-          ></div>
-          <div class="card-text" class="mb-2">
-            <p>
-              Once submitted, this request will be routed to the appropriate
-              action office.
-            </p>
-          </div>
-          <!-- /ko -->
-          <div class="d-flex justify-content-end">
-            <button
-              type="button"
-              class="btn btn-secondary me-2"
-              data-bind="click: cancelCreateServiceType"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              class="btn btn-success"
-              data-bind="click: confirmCreateServiceType, enable: SelectedServiceType"
-            >
-              Create
-            </button>
+        <div
+          id="new-request-detail"
+          class="card"
+          style="height: fit-content"
+          data-bind="visible: SelectedServiceType"
+        >
+          <div class="card-body" data-bind="">
+            <!-- ko if: SelectedServiceType -->
+            <h5
+              class="card-title"
+              data-bind="text: SelectedServiceType().Title"
+            ></h5>
+            <hr />
+            <b>Description:</b>
+            <div
+              data-bind="html: SelectedServiceType().Description"
+              class="mb-2"
+            ></div>
+            <b>Attachments:</b>
+            <div
+              data-bind="html: formatAttachmentDescription()"
+              class="mb-2"
+            ></div>
+            <div class="card-text" class="mb-2">
+              <p>
+                Once submitted, this request will be routed to the appropriate
+                action office.
+              </p>
+            </div>
+            <!-- /ko -->
+            <div class="d-flex justify-content-end">
+              <button
+                type="button"
+                class="btn btn-secondary me-2"
+                data-bind="click: cancelCreateServiceType"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                class="btn btn-success"
+                data-bind="click: confirmCreateServiceType, enable: SelectedServiceType"
+              >
+                Create
+              </button>
+            </div>
           </div>
         </div>
-      </dialog>
+      </div>
     </script>
 
     <script type="text/html" id="tmpl-request-detail">

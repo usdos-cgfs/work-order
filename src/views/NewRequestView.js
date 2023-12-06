@@ -29,22 +29,22 @@ export class NewRequestView {
 
   selectServiceTypeHandler = (data, e) => {
     this.SelectedServiceType(data);
-    const descModal = this.getDescriptionModal();
-    descModal.showModal();
+    // const descModal = this.getDescriptionModal();
+    // descModal.showModal();
   };
 
   cancelCreateServiceType = () => {
     this.SelectedServiceType(null);
-    const descModal = this.getDescriptionModal();
-    descModal.close();
+    // const descModal = this.getDescriptionModal();
+    // descModal.close();
   };
 
   confirmCreateServiceType = async () => {
     const serviceType = this.SelectedServiceType();
     this.SelectedServiceType(null);
 
-    const descModal = this.getDescriptionModal();
-    descModal.close();
+    // const descModal = this.getDescriptionModal();
+    // descModal.close();
 
     await serviceType.initializeEntity();
 
