@@ -1,4 +1,4 @@
-<div class="d-flex justify-content-between mb-3">
+<div id="quick-info" class="d-flex justify-content-between mb-3">
   <div class="d-flex flex-column justify-content-end">
     <!-- ko if: ShowActionOfficeToggle -->
     <div class="form-check form-switch">
@@ -20,23 +20,20 @@
       New Request <i class="fa-solid fa-plus"></i>
     </button>
   </div>
-  <div class="ms-auto" style="min-width: 20rem">
-    <div class="accordion">
+  <div class="ms-auto status-cards" style="min-width: 20rem">
+    <div class="status-info open-assignments">
+      <div class="card info-header" data-bind="click: toggleInfoContainer">
+        <div class="card-body">
+          <img src="../Style Library/Apps/wo/assets/Direct Assignments.svg" />
+          <h5 data-bind="text: MyOpenAssignments().length"></h5>
+          Open Assignments
+        </div>
+      </div>
       <div
-        class="accordion-item pe-5 py-1 alert"
+        class="info-table-container alert"
         data-bind="class: MyOpenAssignments().length > 0 ? 'alert-warning' : 'alert-success'"
       >
-        <div class="accordion-header">
-          <div
-            class="accordion-title btn btn-link py-0"
-            data-bs-toggle="collapse"
-            data-bs-target="#quick-open-assignments"
-          >
-            <span data-bind="text: MyOpenAssignments().length"></span> open
-            assignments
-          </div>
-        </div>
-        <div id="quick-open-assignments" class="accordion-collapse collapse">
+        <div class="card-body">
           <!-- ko if: MyOpenAssignments().length -->
           <table class="table table-warning table-sm table-hover m-0">
             <thead>
@@ -62,21 +59,19 @@
       </div>
     </div>
     <!-- ko if: ShowActionOfficeFeatures -->
-    <div class="accordion">
+    <div class="status-info late-requests">
+      <div class="card info-header" data-bind="click: toggleInfoContainer">
+        <div class="card-body">
+          <img src="../Style Library/Apps/wo/assets/Late Requests.svg" />
+          <h5 data-bind="text: LateRequests().length"></h5>
+          Late Requests
+        </div>
+      </div>
       <div
-        class="accordion-item pe-5 py-1 alert"
+        class="info-table-container alert"
         data-bind="class: LateRequests().length > 0 ? 'alert-danger' : 'alert-success'"
       >
-        <div class="accordion-header">
-          <div
-            class="accordion-title btn btn-link py-0"
-            data-bs-toggle="collapse"
-            data-bs-target="#quick-late-requests"
-          >
-            <span data-bind="text: LateRequests().length"></span> late requests
-          </div>
-        </div>
-        <div id="quick-late-requests" class="accordion-collapse collapse">
+        <div class="card-body">
           <table class="table table-danger table-sm table-hover m-0">
             <thead>
               <tr>
@@ -99,3 +94,77 @@
     <!-- /ko -->
   </div>
 </div>
+
+<style>
+  #quick-info .status-cards {
+    display: flex;
+    gap: 1rem;
+  }
+
+  #quick-info img {
+    width: 2.5rem;
+    height: 2.5rem;
+    background-color: white;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    padding: 0.25rem;
+  }
+
+  .status-info {
+    display: flex;
+    flex-direction: row;
+    justify-content: end;
+  }
+
+  .status-info .info-header {
+    height: 138px;
+    width: 230px;
+    color: white;
+    cursor: pointer;
+    z-index: 5;
+  }
+
+  .status-info.open-assignments .info-header {
+    background: linear-gradient(145deg, #4d547e, #303346);
+  }
+
+  .status-info.late-requests .info-header {
+    background: linear-gradient(145deg, #fc6f7f, #ec1719);
+  }
+
+  .status-info .info-table-container {
+    /* display: none; */
+    border-radius: 6px;
+    position: relative;
+    left: -34px;
+    z-index: 4;
+    overflow: hidden;
+    max-height: 0px;
+    transition: max-height 0.35s ease-out;
+    max-width: 0px;
+    transition: max-width 0.35s ease-out;
+  }
+
+  .status-info.active .info-table-container {
+    padding: 1rem 1rem 1rem 50px;
+    max-height: 450px;
+    transition: max-height 0.35s ease-in;
+    max-width: 500px;
+    transition: max-width 0.35s ease-in;
+  }
+
+  .status-info .info-table-container .card-body {
+    max-height: 198px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .status-info .info-table-container table thead {
+    position: sticky;
+    top: 0;
+    text-wrap: nowrap;
+  }
+  /* #quick-info .status-info {
+    display: block;
+  } */
+</style>

@@ -27,4 +27,8 @@ export default class QuickInfoModule {
         }) ?? []
     );
   });
+
+  toggleInfoContainer = (data, event) => {
+    event.target.closest(".status-info").classList.toggle("active");
+  };
 }

@@ -97,14 +97,25 @@ table.dataTable > tbody td {
   gap: 1rem;
 }
 
+.new-request-ops-container {
+  width: 100%;
+  transition: width 0.45s ease-in;
+}
+
 .new-request-ops-container.service-selected {
   width: 400px;
+  transition: width 0.45s ease-out;
+}
+
+.new-request-ops-container.service-selected .new-request-opts {
+  flex-direction: column;
 }
 
 .new-request-opts {
   display: flex;
   flex-wrap: wrap;
   gap: 1.5rem;
+  justify-content: start;
 }
 
 .new-request-opt {
@@ -151,6 +162,8 @@ table.dataTable > tbody td {
 }
 
 #new-request-detail {
+  position: sticky;
+  top: 1rem;
   flex: 1;
 }
 
