@@ -96,7 +96,7 @@ export async function InitSal() {
   var oRoleDefinitions = currCtx.get_web().get_roleDefinitions();
   currCtx.load(oRoleDefinitions);
 
-  await new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     currCtx.executeQueryAsync(
       function () {
         sal.globalConfig.currentUser = user;
@@ -114,7 +114,7 @@ export async function InitSal() {
         sal.utilities = new sal.NewUtilities();
         resolve();
       },
-      function () {
+      function (sender, args) {
         alert("Error initializing SAL");
         reject();
       }
