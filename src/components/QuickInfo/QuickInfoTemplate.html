@@ -24,7 +24,9 @@
     <div class="status-info open-assignments">
       <div class="card info-header" data-bind="click: toggleInfoContainer">
         <div class="card-body">
-          <img src="../Style Library/Apps/wo/assets/Direct Assignments.svg" />
+          <img
+            src="/sites/CGFS/Style Library/Apps/wo/assets/Direct Assignments.svg"
+          />
           <h5 data-bind="text: MyOpenAssignments().length"></h5>
           Open Assignments
         </div>
@@ -34,6 +36,9 @@
         data-bind="class: MyOpenAssignments().length > 0 ? 'alert-warning' : 'alert-success'"
       >
         <div class="card-body">
+          <!-- ko ifnot: MyOpenAssignments().length -->
+          <p>Nothing to Show!</p>
+          <!-- /ko -->
           <!-- ko if: MyOpenAssignments().length -->
           <table class="table table-warning table-sm table-hover m-0">
             <thead>
@@ -62,7 +67,9 @@
     <div class="status-info late-requests">
       <div class="card info-header" data-bind="click: toggleInfoContainer">
         <div class="card-body">
-          <img src="../Style Library/Apps/wo/assets/Late Requests.svg" />
+          <img
+            src="/sites/CGFS/Style Library/Apps/wo/assets/Late Requests.svg"
+          />
           <h5 data-bind="text: LateRequests().length"></h5>
           Late Requests
         </div>
@@ -72,6 +79,10 @@
         data-bind="class: LateRequests().length > 0 ? 'alert-danger' : 'alert-success'"
       >
         <div class="card-body">
+          <!-- ko ifnot: LateRequests().length -->
+          <p>Nothing to Show!</p>
+          <!-- /ko -->
+          <!-- ko if: LateRequests().length -->
           <table class="table table-danger table-sm table-hover m-0">
             <thead>
               <tr>
@@ -88,6 +99,7 @@
               </tr>
             </tbody>
           </table>
+          <!-- /ko -->
         </div>
       </div>
     </div>
