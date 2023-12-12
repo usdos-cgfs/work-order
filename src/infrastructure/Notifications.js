@@ -13,9 +13,19 @@ const requestActionTypeFunctionMap = {
 };
 
 export async function emitCommentNotification(comment, request) {
+  const toArray = [request.RequestorInfo.Requestor(), currentUser()];
+  const ccArray = [];
+  request.Assignments.list
+    .All()
+    .filter((asg) => asg.PipelineStage?.ID == request.Pipeline.Stage()?.ID)
+    .map((asg) => {
+      if (asg.Assignee?.LoginName) toArray.push(asg.Assignee);
+      ccArray.push(asg.RequestOrg);
+    });
+
   const notification = {
-    To: [request.RequestorInfo.Requestor(), currentUser()],
-    CC: request.Assignments.list.All().map((asg) => asg.RequestOrg),
+    To: toArray,
+    CC: ccArray,
     Request: request,
     Title: formatNotificationTitle(request, "New Comment"),
     Body: `${
