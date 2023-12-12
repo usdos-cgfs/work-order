@@ -350,7 +350,8 @@
               <div
                 class="card new-request-opt"
                 data-bind="click: $parent.selectServiceTypeHandler, 
-                css: {'active': $parent.SelectedServiceType()?.ID == ID}"
+                css: {'active': $parent.SelectedServiceType()?.ID == ID}, 
+                attr: {title: 'New ' + Title + ' Request'}"
               >
                 <div class="card-body">
                   <i class="fa fa-3x" data-bind="class: Icon"></i>
@@ -461,28 +462,113 @@
                 </div>
               </div>
             </div>
-            <div class="card w-100" data-bind="using: Request">
+            <div class="card w-100 request-body" data-bind="using: Request">
               <div class="card-body">
                 <div class="card-title d-flex justify-content-between">
                   <h3 class="mx-0" data-bind="text: RequestType.Title"></h3>
                   <!-- <i class="fa fa-sync pointer" data-bind="click: refreshEntity"></i> -->
                 </div>
-                <!-- ko if: RequestBodyBlob -->
                 <div
-                  data-bind="component: {
-                  name: RequestBodyBlob.components[DisplayMode().toLowerCase()], 
-                  params: RequestBodyBlob}, 
-                  class: RequestBodyBlob.width"
-                ></div>
-                <!-- /ko -->
-                <div
-                  class="col-12 pb-6"
-                  data-bind="component: {name: RequestDescription.components[DisplayMode().toLowerCase()], 
-                  params: RequestDescription}"
-                ></div>
+                  class="d-flex justify-content-between align-items-start flex-wrap"
+                >
+                  <div class="flex-grow-1">
+                    <!-- ko if: RequestBodyBlob -->
+                    <div
+                      data-bind="component: {
+                        name: RequestBodyBlob.components[DisplayMode().toLowerCase()], 
+                        params: RequestBodyBlob}, 
+                        class: RequestBodyBlob.width"
+                    ></div>
+                    <!-- /ko -->
+                    <div
+                      class="col-12 pb-6"
+                      data-bind="component: {name: RequestDescription.components[DisplayMode().toLowerCase()], 
+                        params: RequestDescription}"
+                    ></div>
+                  </div>
+                  <div class="card">
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between">
+                        <div>
+                          <h5 class="">Attachments</h5>
+                        </div>
+                        <i
+                          class="fa fa-sync pointer"
+                          data-bind="click: Attachments.refresh"
+                        ></i>
+                      </div>
+                      <!-- ko foreach: Attachments.Validation.Errors -->
+                      <div
+                        class="alert"
+                        data-bind="text: description, 
+                        class: $parent.Validation.WasValidated() ? 'alert-danger' : 'alert-warning'"
+                      ></div>
+                      <!-- /ko -->
+                      <div
+                        data-bind="html: RequestType.AttachmentDescription"
+                      ></div>
+                      <div>
+                        <!-- ko if: Attachments.list.Active().length -->
+                        <table class="table">
+                          <thead>
+                            <tr>
+                              <th>Title</th>
+                              <th>FileName</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody data-bind="">
+                            <!-- ko if: Attachments.AreLoading -->
+                            <tr class="">
+                              <td colspan="4" class="p-0">
+                                <progress class="w-100"></progress>
+                              </td>
+                            </tr>
+                            <!-- /ko -->
+                            <!-- ko foreach: Attachments.list.Active -->
+                            <tr>
+                              <td>
+                                <div data-bind="text: Title"></div>
+                              </td>
+                              <td>
+                                <a
+                                  target="_blank"
+                                  data-bind="attr: { href: FileRef }, text: FileLeafRef"
+                                ></a>
+                              </td>
+                              <td>
+                                <i
+                                  class="fas fa-search pointer"
+                                  data-bind="click: $parent.Attachments.view"
+                                ></i>
+                                <!-- ko if: $parent.Attachments.userCanRemove($data) -->
+                                <i
+                                  class="fas fa-trash pointer"
+                                  data-bind="click: $parent.Attachments.remove"
+                                ></i>
+                                <!-- /ko -->
+                              </td>
+                            </tr>
+                            <!-- /ko -->
+                          </tbody>
+                        </table>
+                        <!-- /ko -->
+                        <!-- ko if: Attachments.userCanAttach -->
+                        <button
+                          class="btn btn-primary"
+                          data-bind="click: Attachments.addNew"
+                        >
+                          Upload
+                        </button>
+                        <!-- /ko -->
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="row">
+              <!-- ko if: false -->
               <div class="col-4" data-bind="using: request">
                 <div
                   class="card"
@@ -564,87 +650,90 @@
                   </div>
                 </div>
               </div>
+              <!-- /ko -->
               <!-- ko if: DisplayMode() != DisplayModes.New -->
-              <div
-                class="col-8"
-                data-bind="template: {name: 'tmpl-activity-log-component', data: request.Actions}"
-              ></div>
+              <div class="">
+                <div class="card w-100" data-bind="using: request">
+                  <div class="card-body">
+                    <h3 class="card-title">Comments</h3>
+                    <div class="alert alert-warning">
+                      <strong>Note:</strong> Anyone with access to this record
+                      is able to view all comments.
+                    </div>
+                    <div class="d-flex justify-content-end">
+                      <i
+                        class="fa fa-sync pointer"
+                        data-bind="click: Comments.refresh"
+                      ></i>
+                    </div>
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th>Created</th>
+                          <th>Author</th>
+                          <th>Notification Sent</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody data-bind="">
+                        <!-- ko if: Comments.AreLoading -->
+                        <tr class="">
+                          <td colspan="4" class="p-0">
+                            <progress class="w-100"></progress>
+                          </td>
+                        </tr>
+                        <!-- /ko -->
+                        <!-- ko foreach: Comments.list.Active -->
+                        <tr class="table-group-divider">
+                          <td data-bind="text: Created.toLocaleString()"></td>
+                          <td data-bind="text: Author.Title"></td>
+                          <td data-bind="text: NotificationSent"></td>
+                          <td>
+                            <!-- ko if: $parent.Comments.userCanComment -->
+                            <i
+                              class="fa fa-envelope pointer"
+                              data-bind="click: $parent.Comments.sendNotification,
+                          attr: {title: NotificationSent ? 'Re-Send Email Notification' : 'Send Email Notification'}"
+                            ></i>
+                            <i
+                              class="fa fa-trash pointer ms-1"
+                              title="Remove Comment"
+                              data-bind="click: $parent.Comments.remove"
+                            ></i>
+                            <!-- /ko -->
+                          </td>
+                        </tr>
+                        <tr class="">
+                          <td
+                            colspan="4"
+                            data-bind="html: Comment"
+                            class="pb-4"
+                          ></td>
+                        </tr>
+                        <!-- /ko -->
+                      </tbody>
+                    </table>
+                    <!-- ko if: Comments.userCanComment -->
+                    <div data-bind="using: $parent.newComment">
+                      <div
+                        class="mb-2"
+                        data-bind="component: {name: input.components.edit, params: input}"
+                      ></div>
+                      <button class="btn btn-primary" data-bind="click: submit">
+                        Submit Comment
+                      </button>
+                    </div>
+                    <!-- /ko -->
+                  </div>
+                </div>
+              </div>
               <!-- /ko -->
             </div>
             <!-- ko if: DisplayMode() != DisplayModes.New -->
-            <div class="card w-100" data-bind="using: request">
-              <div class="card-body">
-                <h3 class="card-title">Comments</h3>
-                <div class="alert alert-warning">
-                  <strong>Note:</strong> Anyone with access to this record is
-                  able to view all comments.
-                </div>
-                <div class="d-flex justify-content-end">
-                  <i
-                    class="fa fa-sync pointer"
-                    data-bind="click: Comments.refresh"
-                  ></i>
-                </div>
-                <table class="table">
-                  <thead>
-                    <tr>
-                      <th>Created</th>
-                      <th>Author</th>
-                      <th>Notification Sent</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody data-bind="">
-                    <!-- ko if: Comments.AreLoading -->
-                    <tr class="">
-                      <td colspan="4" class="p-0">
-                        <progress class="w-100"></progress>
-                      </td>
-                    </tr>
-                    <!-- /ko -->
-                    <!-- ko foreach: Comments.list.Active -->
-                    <tr class="table-group-divider">
-                      <td data-bind="text: Created.toLocaleString()"></td>
-                      <td data-bind="text: Author.Title"></td>
-                      <td data-bind="text: NotificationSent"></td>
-                      <td>
-                        <!-- ko if: $parent.Comments.userCanComment -->
-                        <i
-                          class="fa fa-envelope pointer"
-                          data-bind="click: $parent.Comments.sendNotification,
-                        attr: {title: NotificationSent ? 'Re-Send Email Notification' : 'Send Email Notification'}"
-                        ></i>
-                        <i
-                          class="fa fa-trash pointer ms-1"
-                          title="Remove Comment"
-                          data-bind="click: $parent.Comments.remove"
-                        ></i>
-                        <!-- /ko -->
-                      </td>
-                    </tr>
-                    <tr class="">
-                      <td
-                        colspan="4"
-                        data-bind="html: Comment"
-                        class="pb-4"
-                      ></td>
-                    </tr>
-                    <!-- /ko -->
-                  </tbody>
-                </table>
-                <!-- ko if: Comments.userCanComment -->
-                <div data-bind="using: $parent.newComment">
-                  <div
-                    class="mb-2"
-                    data-bind="component: {name: input.components.edit, params: input}"
-                  ></div>
-                  <button class="btn btn-primary" data-bind="click: submit">
-                    Submit Comment
-                  </button>
-                </div>
-                <!-- /ko -->
-              </div>
-            </div>
+            <div
+              class=""
+              data-bind="template: {name: 'tmpl-activity-log-component', data: request.Actions}"
+            ></div>
             <!-- /ko -->
             <div>
               <!-- ko if: DisplayMode() == DisplayModes.New -->
@@ -914,24 +1003,32 @@
     </script>
 
     <script type="text/html" id="tmpl-activity-log-component">
-      <div class="card">
-        <div class="card-body accordion-item">
+      <div>
+        <button
+          type="button"
+          class="btn btn-link"
+          data-bind="click: showDialog"
+        >
+          Approvals and Actions Log
+        </button>
+      </div>
+      <dialog id="dialog-action-log" class="card">
+        <div class="card-body ">
           <div
-            class="card-title d-flex justify-content-between align-items-center accordion-header"
+            class="card-title d-flex justify-content-between align-items-center"
           >
-            <h3
-              class="mx-0 px-2 flex-grow-1 pointer accordion-title collapsed d-flex align-items-center justify-content-between"
-              data-bs-toggle="collapse"
-              data-bs-target="#actions-body"
-            >
-              Approvals and Actions Log
-              <i class="indicator fa fa-caret-down"></i>
-            </h3>
-          </div>
-          <div id="actions-body" class="accordion-collapse collapse">
-            <div class="d-flex justify-content-end">
-              <i class="fa fa-sync pointer" data-bind="click: refresh"></i>
+            <div>
+              <h3>Approvals and Actions Log</h3>
             </div>
+            <div class="d-flex justify-content-end">
+              <i class="fa fa-sync pointer me-2" data-bind="click: refresh"></i>
+              <i
+                class="fa-solid fa-xmark pointer"
+                data-bind="click: closeDialog"
+              ></i>
+            </div>
+          </div>
+          <div id="actions-body" class="">
             <div>
               <table class="table">
                 <thead>
@@ -970,13 +1067,22 @@
               </table>
             </div>
           </div>
+          <div class="d-flex justify-content-end">
+            <button
+              type="button"
+              class="btn btn-danger"
+              data-bind="click: closeDialog"
+            >
+              Close
+            </button>
+          </div>
         </div>
-      </div>
+      </dialog>
     </script>
   </div>
 
   <div id="tmpl-other">
-    <script type="text/html" id="tmpl-activity-toast">
+    <!-- <script type="text/html" id="tmpl-activity-toast">
       <div
         class="toast show"
         role="alert"
@@ -997,7 +1103,7 @@
           See? Just like this.
         </div>
       </div>
-    </script>
+    </script> -->
   </div>
 </div>
 

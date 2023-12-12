@@ -251,6 +251,17 @@ table.dataTable > tbody td {
   width: 0;
 }
 
+#dialog-action-log {
+  height: fit-content;
+}
+
+dialog.card {
+  display: none !important;
+}
+dialog[open].card {
+  display: flex !important;
+}
+
 .accordion-title .indicator {
   flex-shrink: 0;
   width: 1.25rem;

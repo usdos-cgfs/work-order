@@ -746,6 +746,14 @@ export class RequestEntity {
       this.Actions.refresh();
       finishTask(newActionTask);
     },
+    showDialog: () => {
+      const dialog = document.getElementById("dialog-action-log");
+      dialog.showModal();
+    },
+    closeDialog: () => {
+      const dialog = document.getElementById("dialog-action-log");
+      dialog.close();
+    },
   };
 
   ActivityQueue = ko.observableArray();
