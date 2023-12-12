@@ -468,10 +468,8 @@
                   <h3 class="mx-0" data-bind="text: RequestType.Title"></h3>
                   <!-- <i class="fa fa-sync pointer" data-bind="click: refreshEntity"></i> -->
                 </div>
-                <div
-                  class="d-flex justify-content-between align-items-start flex-wrap"
-                >
-                  <div class="flex-grow-1">
+                <div class="detail-container">
+                  <div class="detail">
                     <!-- ko if: RequestBodyBlob -->
                     <div
                       data-bind="component: {
@@ -486,7 +484,7 @@
                         params: RequestDescription}"
                     ></div>
                   </div>
-                  <div class="card">
+                  <div class="card attachments">
                     <div class="card-body">
                       <div class="d-flex justify-content-between">
                         <div>
@@ -504,9 +502,16 @@
                         class: $parent.Validation.WasValidated() ? 'alert-danger' : 'alert-warning'"
                       ></div>
                       <!-- /ko -->
+                      <!-- ko if: RequestType.AttachmentDescription -->
                       <div
                         data-bind="html: RequestType.AttachmentDescription"
                       ></div>
+                      <!-- /ko -->
+                      <!-- ko ifnot: RequestType.AttachmentDescription -->
+                      <p class="fst-italic">
+                        No attachment instructions provided.
+                      </p>
+                      <!-- /ko -->
                       <div>
                         <!-- ko if: Attachments.list.Active().length -->
                         <table class="table">

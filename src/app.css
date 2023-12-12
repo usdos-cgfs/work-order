@@ -168,6 +168,22 @@ table.dataTable > tbody td {
 }
 
 /* Request Detail Components */
+.request-body .detail-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.request-body .card.attachments {
+  min-width: 340px;
+}
+
+.request-body .detail {
+  flex: 1 0 50%;
+}
+
 #request-body-service-type label {
   width: 100%;
 }
