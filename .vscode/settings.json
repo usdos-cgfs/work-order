@@ -16,9 +16,9 @@
       {
         "type": "local",
         "name": "WO Style Library",
-        "description": "Style Library of http://cgfs16index1dev:25000/sites/workorder",
+        "description": "Style Library of http://cgfs16index1dev:25000/sites/CGFS",
 
-        "dir": "Y:/Style Library/apps/wo"
+        "dir": "P:/Style Library/apps/wo"
       }
     ]
   }

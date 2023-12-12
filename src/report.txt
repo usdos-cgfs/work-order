@@ -164,8 +164,7 @@
 <!-- <script src="../Style Library/wo/lib/knockout/knockout-3.5.1.js"></script> -->
 
 <script>
-  window.appRoot =
-    _spPageContextInfo.siteAbsoluteUrl + "/Style Library/Apps/wo";
+  window.appRoot = "/sites/CGFS/Style Library/Apps/wo";
 </script>
 <script defer type="module">
   import(window.appRoot + "/src/report.js");

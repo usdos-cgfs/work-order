@@ -1139,10 +1139,15 @@
 
 <!-- <script src="../Style Library/wo/lib/knockout/knockout-3.5.1.js"></script> -->
 
+<script
+  defer
+  type="module"
+  src="/sites/CGFS/Style Library/apps/wo/src/app.js"
+></script>
 <script>
   window.appRoot =
     _spPageContextInfo.siteAbsoluteUrl + "/Style Library/Apps/wo";
 </script>
 <script defer type="module">
-  import(window.appRoot + "/src/app.js");
+  //import(window.appRoot + "/src/app.js");
 </script>

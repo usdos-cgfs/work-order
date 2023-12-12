@@ -4,6 +4,6 @@ export const Tabs = {
   RequestDetail: "request-detail-tab",
 };
 
-export const assetsPath = window.appRoot + "/src";
+export const assetsPath = "/sites/CGFS/Style Library/apps/wo/src";
 
 export const siteTitle = _spPageContextInfo.webTitle;
