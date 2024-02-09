@@ -3,6 +3,7 @@ import SelectField from "../../fields/SelectField.js";
 import DateField from "../../fields/DateField.js";
 import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
 import BaseServiceDetail from "../BaseServiceDetail.js";
+import PeopleField from "../../fields/PeopleField.js";
 
 export default class CH_HR_Training extends BaseServiceDetail {
   constructor(params) {
@@ -31,6 +32,10 @@ export default class CH_HR_Training extends BaseServiceDetail {
     Cost: new TextField({
       displayName: "Training Cost",
     }),
+    HiringManager: new PeopleField({
+      displayName: "Hiring Manager",
+      isRequired: true,
+    }),
   };
 
   static Views = {
@@ -43,6 +48,7 @@ export default class CH_HR_Training extends BaseServiceDetail {
       "Vendor",
       "Date1",
       "Cost",
+      "HiringManager",
     ],
   };
 

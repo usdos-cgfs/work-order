@@ -701,6 +701,27 @@ export class RequestEntity {
           );
         } catch (e) {
           console.warn("Error creating stage assignments", stage);
+          alert(e.message);
+          return;
+        }
+        return;
+      }
+
+      if (stage.WildCardAssignee) {
+        try {
+          const newAssignments = AssignmentFunctions.getWildcard(
+            this,
+            stage,
+            stage.WildCardAssignee
+          );
+          await Promise.all(
+            newAssignments.map((newAssignment) =>
+              this.Assignments.addNew(newAssignment)
+            )
+          );
+        } catch (e) {
+          console.warn("Error creating stage assignments", stage);
+          alert(e.message);
           return;
         }
         return;

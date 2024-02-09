@@ -13,6 +13,7 @@ export default class AccessFletc extends BaseServiceDetail {
     ...this.FieldMap,
     Supervisor: new PeopleField({
       displayName: "Supervisor",
+      isRequired: true,
     }),
     EmployeeType: new SelectField({
       displayName: "Employee Type",

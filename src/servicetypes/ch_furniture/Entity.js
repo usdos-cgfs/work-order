@@ -2,6 +2,7 @@ import TextField from "../../fields/TextField.js";
 import SelectField from "../../fields/SelectField.js";
 import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
 import BaseServiceDetail from "../BaseServiceDetail.js";
+import PeopleField from "../../fields/PeopleField.js";
 
 export default class CH_Furniture extends BaseServiceDetail {
   constructor(params) {
@@ -23,10 +24,14 @@ export default class CH_Furniture extends BaseServiceDetail {
         "Other",
       ],
     }),
+    Supervisor: new PeopleField({
+      displayName: "Supervisor",
+      isRequired: true,
+    }),
   };
 
   static Views = {
-    All: ["ID", "Title", "Location", "FurnitureType"],
+    All: ["ID", "Title", "Location", "FurnitureType", "Supervisor"],
   };
 
   static ListDef = {

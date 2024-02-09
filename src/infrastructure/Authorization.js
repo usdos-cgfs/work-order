@@ -214,6 +214,9 @@ export function getRequestFolderPermissions(request) {
  * Assignment functions are function that can be called by pipeline stages
  * Each function is bound to the current request (i.e. "this" refers to the Active Request)
  * Functions should return a user/group entity.
+ *
+ * NOTE: Some service types register their own assignment functions in their respective Entity.js
+ * files.
  */
 
 export const AssignmentFunctions = {
@@ -299,4 +302,38 @@ export const AssignmentFunctions = {
       }),
     ];
   },
+  getSupervisor: function (request, stage) {
+    return [
+      new Assignment({
+        Assignee: getPersonFromRequestBody(request, "Supervisor"),
+        RequestOrg: stage.RequestOrg,
+        PipelineStage: stage,
+        IsActive: true,
+        Role: roles.Approver,
+      }),
+    ];
+  },
+  getWildcard: function (request, stage, wildcard) {
+    return [
+      new Assignment({
+        Assignee: getPersonFromRequestBody(request, wildcard),
+        RequestOrg: stage.RequestOrg,
+        PipelineStage: stage,
+        IsActive: true,
+        Role: roles.Approver,
+        CustomComponent: stage.ActionComponentName,
+      }),
+    ];
+  },
 };
+
+function getPersonFromRequestBody(request, fieldName) {
+  const assignee =
+    request.RequestBodyBlob?.TypedValue()?.FieldMap[fieldName]?.get();
+  if (!assignee) {
+    throw new Error(
+      `Could not find assignee field on current request: ${fieldName}`
+    );
+  }
+  return assignee;
+}

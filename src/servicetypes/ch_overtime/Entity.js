@@ -167,7 +167,7 @@ export default class CH_Overtime extends ConstrainedEntity {
 
   FieldMap = {
     FullName: this.Contractor,
-    ManagerDept: this.GovManager,
+    GovManager: this.GovManager,
     GTM: this.GTM,
     APM: this.APM,
     COR: this.COR,
@@ -196,7 +196,7 @@ export default class CH_Overtime extends ConstrainedEntity {
       "ID",
       "Title",
       "FullName",
-      "ManagerDept",
+      "GovManager",
       "GTM",
       "APM",
       "COR",

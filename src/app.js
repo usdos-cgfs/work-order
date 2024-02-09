@@ -217,11 +217,9 @@ if (document.readyState === "ready" || document.readyState === "complete") {
 } else {
   document.onreadystatechange = () => {
     if (document.readyState === "complete" || document.readyState === "ready") {
-      SP.SOD.executeFunc(
-        "sp.js",
-        "SP.ClientContext",
-        ExecuteOrDelayUntilScriptLoaded(CreateApp, "sp.js")
-      );
+      ExecuteOrDelayUntilScriptLoaded(function () {
+        SP.SOD.executeFunc("sp.js", "SP.ClientContext", CreateApp());
+      }, "sp.js");
     }
   };
 }
