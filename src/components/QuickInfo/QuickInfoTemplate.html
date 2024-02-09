@@ -22,7 +22,11 @@
   </div>
   <div class="ms-auto status-cards" style="min-width: 20rem">
     <div class="status-info open-assignments">
-      <div class="card info-header" data-bind="click: toggleInfoContainer">
+      <div
+        class="card info-header"
+        title="Toggle Open Assignments"
+        data-bind="click: toggleInfoContainer"
+      >
         <div class="card-body">
           <img
             src="/sites/CGFS/Style Library/apps/wo/assets/Direct Assignments.svg"
@@ -65,7 +69,11 @@
     </div>
     <!-- ko if: ShowActionOfficeFeatures -->
     <div class="status-info late-requests">
-      <div class="card info-header" data-bind="click: toggleInfoContainer">
+      <div
+        class="card info-header"
+        title="Toggle Team Late Requests"
+        data-bind="click: toggleInfoContainer"
+      >
         <div class="card-body">
           <img
             src="/sites/CGFS/Style Library/apps/wo/assets/Late Requests.svg"
@@ -136,6 +144,10 @@
     color: white;
     cursor: pointer;
     z-index: 5;
+  }
+
+  .status-info .info-header:hover {
+    filter: brightness(0.9);
   }
 
   .status-info.open-assignments .info-header {

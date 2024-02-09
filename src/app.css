@@ -41,6 +41,10 @@ app-background: #f8f9fb
 */
 
 /* Top Level Components */
+#section-tabs {
+  position: sticky;
+  top: 0;
+}
 
 #section-tabs button {
   min-width: 200px;
@@ -123,6 +127,10 @@ table.dataTable > tbody td {
   flex: 1 1 0px;
   cursor: pointer;
   background-color: #abadb9;
+}
+
+.new-request-opt:hover {
+  filter: brightness(0.9);
 }
 
 .new-request-opt.active {
@@ -310,11 +318,11 @@ dialog[open].card {
   z-index: 1200;
 }
 
-/* .sticky {
-  position: sticky !important;
-  top: 0 !important;
-  z-index: 1 !important;
-} */
+.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
 
 .is-invalid div.sp-peoplepicker-topLevel {
   padding-right: 4.125rem;

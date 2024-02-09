@@ -55,5 +55,4 @@ The following lists need to have their respective Titles mapped to Request Looku
 | + Assignee \[Person or Group\]          |
 | + AssignmentFunction                    |
 | + ActionComponentName                   |
-| \- WildCardAssignee                     |
 | \- ActionOffice                         |

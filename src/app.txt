@@ -99,91 +99,93 @@
     params: { ShowActionOfficeFeatures, ToggleActionOfficeFeatures }}"
   ></div>
   <div class="d-flex justify-content-between">
-    <ul class="nav flex-column me-4" id="section-tabs" role="tablist">
-      <!-- ko if: ShowActionOfficeFeatures -->
-      <li class="nav-item" role="presentation">
-        <button
-          class="nav-link"
-          id="office-requests-tab"
-          data-bs-toggle="tab"
-          data-bs-target="#office-requests"
-          data-bind="click: TabClicked"
-          type="button"
-          role="tab"
-          aria-controls="office-requests"
-          aria-selected="true"
-        >
-          Team Requests
-        </button>
-      </li>
-      <!-- /ko -->
-      <li class="nav-item" role="presentation">
-        <button
-          class="nav-link"
-          id="my-requests-tab"
-          data-bs-toggle="tab"
-          data-bs-target="#my-requests"
-          data-bind="click: TabClicked"
-          type="button"
-          role="tab"
-          aria-controls="my-requests"
-          aria-selected="true"
-        >
-          My Requests
-        </button>
-      </li>
-      <!-- ko if: false -->
-      <li class="nav-item" role="presentation">
-        <button
-          class="nav-link position-relative"
-          id="my-assignments-tab"
-          data-bs-toggle="tab"
-          data-bs-target="#my-assignments"
-          data-bind="click: TabClicked"
-          type="button"
-          role="tab"
-          aria-controls="my-assignments"
-          aria-selected="true"
-        >
-          My Assignments
-          <span
-            class="badge text-bg-danger"
-            data-bind="visible: MyActiveAssignments().length, text: MyActiveAssignments().length"
-          ></span>
-        </button>
-      </li>
-      <!-- /ko -->
-      <li class="nav-item" role="presentation">
-        <button
-          class="nav-link"
-          id="new-request-tab"
-          data-bs-toggle="tab"
-          data-bs-target="#new-request"
-          data-bind="click: TabClicked"
-          type="button"
-          role="tab"
-          aria-controls="new-request"
-          aria-selected="true"
-        >
-          New Request
-        </button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button
-          class="nav-link"
-          id="request-detail-tab"
-          data-bs-toggle="tab"
-          data-bs-target="#request-detail"
-          data-bind="click: TabClicked"
-          type="button"
-          role="tab"
-          aria-controls="request-detail"
-          aria-selected="false"
-        >
-          Detail View
-        </button>
-      </li>
-    </ul>
+    <div>
+      <ul class="nav flex-column me-4" id="section-tabs" role="tablist">
+        <!-- ko if: ShowActionOfficeFeatures -->
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="office-requests-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#office-requests"
+            data-bind="click: TabClicked"
+            type="button"
+            role="tab"
+            aria-controls="office-requests"
+            aria-selected="true"
+          >
+            Team Requests
+          </button>
+        </li>
+        <!-- /ko -->
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="my-requests-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#my-requests"
+            data-bind="click: TabClicked"
+            type="button"
+            role="tab"
+            aria-controls="my-requests"
+            aria-selected="true"
+          >
+            My Requests
+          </button>
+        </li>
+        <!-- ko if: false -->
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link position-relative"
+            id="my-assignments-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#my-assignments"
+            data-bind="click: TabClicked"
+            type="button"
+            role="tab"
+            aria-controls="my-assignments"
+            aria-selected="true"
+          >
+            My Assignments
+            <span
+              class="badge text-bg-danger"
+              data-bind="visible: MyActiveAssignments().length, text: MyActiveAssignments().length"
+            ></span>
+          </button>
+        </li>
+        <!-- /ko -->
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="new-request-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#new-request"
+            data-bind="click: TabClicked"
+            type="button"
+            role="tab"
+            aria-controls="new-request"
+            aria-selected="true"
+          >
+            New Request
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="request-detail-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#request-detail"
+            data-bind="click: TabClicked"
+            type="button"
+            role="tab"
+            aria-controls="request-detail"
+            aria-selected="false"
+          >
+            Detail View
+          </button>
+        </li>
+      </ul>
+    </div>
     <div class="tab-content flex-grow-1">
       <!-- ko if: ShowActionOfficeFeatures -->
       <div
