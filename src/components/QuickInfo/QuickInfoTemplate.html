@@ -54,6 +54,7 @@
             </thead>
             <tbody data-bind="foreach: MyOpenAssignments">
               <tr
+                title="Go to Request"
                 class="pointer"
                 data-bind="click: () => $root.viewRequestByTitle($data.Request.Title)"
               >
@@ -100,7 +101,11 @@
               </tr>
             </thead>
             <tbody data-bind="foreach: LateRequests">
-              <tr class="pointer" data-bind="click: $root.ViewRequest">
+              <tr
+                class="pointer"
+                title="Go to Request"
+                data-bind="click: $root.ViewRequest"
+              >
                 <td data-bind="text: Title"></td>
                 <td data-bind="text: RequestType.Title"></td>
                 <td data-bind="text: Dates.EstClosed.toLocaleDateString()"></td>

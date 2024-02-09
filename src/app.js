@@ -48,6 +48,7 @@ async function CreateApp() {
 class App {
   constructor() {
     this.Tab.subscribe(tabWatcher);
+    window.addEventListener("popstate", this.popStateHandler);
   }
 
   RunningTasks = runningTasks;
@@ -65,6 +66,12 @@ class App {
 
   Tab = ko.observable();
   TabClicked = (data, e) => this.Tab(e.target.getAttribute("id"));
+
+  popStateHandler = (event) => {
+    if (event.state) {
+      if (event.state.tab) this.Tab(event.state.tab);
+    }
+  };
 
   MyActiveAssignments = assignmentsStore.MyActiveAssignments;
   //   MyOpenAssignments = ko.pureComputed(() =>
