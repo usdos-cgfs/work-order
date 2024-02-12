@@ -11,7 +11,7 @@ export default class CH_Notice extends BaseServiceDetail {
   FieldMap = {
     ...this.FieldMap,
     DistributionGroup: new SelectField({
-      displayName: "Employee Type",
+      displayName: "Distribution Group",
       options: [
         "CGFS Offices",
         "DOS Offices in Charleston",

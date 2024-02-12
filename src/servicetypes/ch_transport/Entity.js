@@ -1,10 +1,5 @@
 import TextField from "../../fields/TextField.js";
-import PeopleField from "../../fields/PeopleField.js";
-import SelectField from "../../fields/SelectField.js";
 import DateField from "../../fields/DateField.js";
-import TextAreaField from "../../fields/TextAreaField.js";
-import CheckboxField from "../../fields/CheckboxField.js";
-import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
 import BaseServiceDetail from "../BaseServiceDetail.js";
 
 export default class CH_Transport extends BaseServiceDetail {
@@ -16,16 +11,23 @@ export default class CH_Transport extends BaseServiceDetail {
     ...this.FieldMap,
     InvoiceNum: new TextField({
       displayName: "Invoice Num",
+      isRequired: true,
     }),
     InvoiceAmount: new TextField({
       displayName: "Invoice Amount",
+      isRequired: true,
     }),
-    InvoiceDate: new DateField({ displayName: "Invoice Date" }),
+    InvoiceDate: new DateField({
+      displayName: "Invoice Date",
+      isRequired: true,
+    }),
     InvoiceReceivedDate: new DateField({
       displayName: "Invoice Received Date",
+      isRequired: true,
     }),
     Vendor: new TextField({
       displayName: "Vendor",
+      isRequired: true,
     }),
   };
 

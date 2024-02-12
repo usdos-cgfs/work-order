@@ -18,9 +18,11 @@ export default class AccessFletc extends BaseServiceDetail {
     EmployeeType: new SelectField({
       displayName: "Employee Type",
       options: ["Direct Hire", "Contractor", "Visitor"],
+      isRequired: true,
     }),
     FullName: new TextField({
       displayName: "Full Name",
+      isRequired: true,
     }),
   };
 
