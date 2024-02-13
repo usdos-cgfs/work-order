@@ -7,6 +7,26 @@ import CheckboxField from "../../fields/CheckboxField.js";
 import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
 import BaseServiceDetail from "../BaseServiceDetail.js";
 
+import { registerServiceTypeViewComponents } from "../../infrastructure/RegisterComponents.js";
+
+const documentTypes = {
+  Passport: "Passport",
+  Visa: "Visa",
+};
+
+const requestTypes = {
+  New: "New",
+  Renewal: "Renewal",
+};
+
+const components = {
+  view: "svc-diplomatic_passport-view",
+  edit: "svc-diplomatic_passport-edit",
+  new: "svc-diplomatic_passport-edit",
+};
+
+registerServiceTypeViewComponents({ uid: "diplomatic_passport", components });
+
 export default class DipomaticPassportVisa extends BaseServiceDetail {
   constructor(params) {
     super(params);
@@ -14,36 +34,32 @@ export default class DipomaticPassportVisa extends BaseServiceDetail {
 
   TypesSelected = ko.pureComputed(
     () =>
-      this.FieldMap.DocumentType.Value() && this.FieldMap.RequestType.Value()
+      this.FieldMap.RequestType.Value() && this.FieldMap.DocumentType.Value()
   );
 
   ShowPassportInfo = ko.pureComputed(() => {
-    if (!this.TypesSelected()) return false;
-    if (this.FieldMap.RequestType.Value() == this.requestTypes.New)
+    const requestType = this.FieldMap.RequestType.Value();
+    const documentType = this.FieldMap.DocumentType.Value();
+
+    if (!requestType || !documentType) return false;
+    if (
+      documentType == documentTypes.Passport &&
+      requestType == requestTypes.New
+    )
       return false;
     return true;
   });
-
-  documentTypes = {
-    Passport: "Passport",
-    Visa: "Visa",
-  };
-
-  requestTypes = {
-    New: "New",
-    Renewal: "Renewal",
-  };
 
   FieldMap = {
     ...this.FieldMap,
     DocumentType: new SelectField({
       displayName: "Document Type",
-      options: Object.values(this.documentTypes),
+      options: Object.values(documentTypes),
       isRequired: true,
     }),
     RequestType: new SelectField({
       displayName: "Request Type",
-      options: Object.values(this.requestTypes),
+      options: Object.values(requestTypes),
       isRequired: true,
     }),
     Grade: new TextField({
@@ -143,6 +159,8 @@ export default class DipomaticPassportVisa extends BaseServiceDetail {
     this.FieldMap.FullName,
     this.FieldMap.PassportNum,
   ]);
+
+  components = components;
 
   static Views = {
     All: ["ID", "Title"],

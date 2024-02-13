@@ -19,14 +19,10 @@ export default class CH_Equip_Repair extends BaseServiceDetail {
       displayName: "Type",
       options: ["Copier", "Fax Machine", "Appliance", "Furniture", "Other"],
     }),
-    Supervisor: new PeopleField({
-      displayName: "Supervisor",
-      isRequired: true,
-    }),
   };
 
   static Views = {
-    All: ["ID", "Title", "Location", "RepairType", "Supervisor"],
+    All: ["ID", "Title", "Location", "RepairType"],
   };
 
   static ListDef = {

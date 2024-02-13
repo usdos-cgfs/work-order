@@ -28,7 +28,7 @@ export default class CH_HR_Training extends BaseServiceDetail {
       displayName: "Training Provider/Vendor",
       isRequired: true,
     }),
-    Date1: new DateField({ displayName: "Course Date" }),
+    Date1: new DateField({ displayName: "Course Date", isRequired: true }),
     Cost: new TextField({
       displayName: "Training Cost",
     }),
