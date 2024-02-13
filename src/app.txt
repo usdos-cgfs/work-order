@@ -752,12 +752,14 @@
                 Submit Request
               </button>
               <!-- /ko -->
-              <!-- <button
-              class="btn btn-danger"
-              data-bind="click: () => closeAndFinalize('Rejected')"
-            >
-              Danger Button
-            </button> -->
+              <!-- ko if: ShowCloseArea  -->
+              <button class="btn btn-danger" data-bind="click: promptCancel">
+                Close as Cancelled
+              </button>
+              <button class="btn btn-primary" data-bind="click: promptFulfill">
+                Close as Fulfilled
+              </button>
+              <!-- /ko -->
             </div>
           </div>
         </div>

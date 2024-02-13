@@ -16,6 +16,8 @@ import TextAreaField from "../fields/TextAreaField.js";
 
 import { requestsByStatusMap } from "../stores/Requests.js";
 
+import { stageActionTypes } from "../entities/PipelineStage.js";
+
 const DEBUG = true;
 
 export const DisplayModes = {
@@ -68,6 +70,14 @@ export class RequestDetailView {
       !this.request.Assignments.AreLoading() &&
       this.request.Assignments.CurrentStage.list.UserActionAssignments().length
   );
+
+  ShowCloseArea = ko.pureComputed(() => {
+    return (
+      !this.request.IsLoading() &&
+      !this.request.Assignments.AreLoading() &&
+      this.request.Authorization.currentUserCanClose()
+    );
+  });
 
   newComment = {
     input: new TextAreaField({
@@ -192,6 +202,37 @@ export class RequestDetailView {
     }
   };
 
+  promptFulfill = () => {
+    if (
+      this.request.Pipeline.Stage().ActionType == stageActionTypes.Closed &&
+      confirm("Close and finalize request? This action cannot be undone!")
+    ) {
+      this.request.closeAndFinalize(requestStates.fulfilled);
+      return;
+    }
+
+    const openSteps =
+      this.request.Pipeline.Stages().length -
+      this.request.Pipeline.Stage()?.Step;
+
+    if (
+      openSteps &&
+      confirm(
+        `This request still has ${openSteps} open steps! ` +
+          `Are you sure you want to close and finalize it? This action cannot be undone!`
+      )
+    ) {
+      this.request.closeAndFinalize(requestStates.fulfilled);
+      return;
+    }
+  };
+
+  promptCancel = () => {
+    if (confirm("Cancel request? This action cannot be undone!")) {
+      this.request.closeAndFinalize(requestStates.cancelled);
+    }
+  };
+
   validationWatcher = (isValid) => {
     if (
       isValid &&
@@ -273,5 +314,4 @@ export class RequestDetailView {
   constructor() {
     this._context = getAppContext();
   }
-
 }

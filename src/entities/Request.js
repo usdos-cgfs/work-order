@@ -883,6 +883,14 @@ export class RequestEntity {
       if (this.Assignments.list.CurrentUserAssignments().length) return true;
       if (this.RequestorInfo.Requestor()?.ID == user.ID) return true;
     }),
+    currentUserCanClose: ko.pureComputed(() => {
+      return (
+        this.State.IsActive() &&
+        this.Assignments.list
+          .CurrentUserAssignments()
+          .find((assignment) => assignment.isActionable())
+      );
+    }),
     ensureAccess: async (accessValuePairs) => {
       const relFolderPath = this.getRelativeFolderPath();
       const listRefs = this.getAllListRefs();
