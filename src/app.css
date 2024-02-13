@@ -116,8 +116,8 @@ table.dataTable > tbody td {
 }
 
 .new-request-opts {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
   justify-content: start;
 }
