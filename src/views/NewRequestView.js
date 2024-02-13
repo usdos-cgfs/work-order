@@ -30,7 +30,7 @@ export class NewRequestView {
   selectServiceTypeHandler = (data, e) => {
     this.SelectedServiceType(data);
     setTimeout(() => {
-      e.target.scrollIntoView({ behavior: "smooth", block: "center" });
+      e.target.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 460);
     // const descModal = this.getDescriptionModal();
     // descModal.showModal();

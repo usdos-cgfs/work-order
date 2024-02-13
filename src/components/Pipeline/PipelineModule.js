@@ -51,7 +51,8 @@ export default class PipelineModule {
   };
 
   setSelected = (stage) => {
-    if (stage.Step > this.Pipeline.Stage()?.Step) return;
+    if (!this.Pipeline.Stage() || stage.Step > this.Pipeline.Stage()?.Step)
+      return;
     this.SelectedStage(stage);
   };
 
