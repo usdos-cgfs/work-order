@@ -18,9 +18,12 @@ export default class BlobField extends BaseField {
     super(params);
     this.entityType = params.entityType;
     this.multiple = params.multiple;
-    this.entityType.subscribe(this.updateEntityTypeHandler);
-    // this.Value.subscribe(this.updateEntityTypeHandler);
-    this.updateEntityTypeHandler(this.entityType());
+
+    if (ko.isObservable(this.entityType)) {
+      this.entityType.subscribe(this.updateEntityTypeHandler);
+      // this.Value.subscribe(this.updateEntityTypeHandler);
+    }
+    this.updateEntityTypeHandler(ko.unwrap(this.entityType));
   }
 
   toString = ko.pureComputed(() => `${this.Value()?.length ?? "0"} items`);
@@ -36,6 +39,7 @@ export default class BlobField extends BaseField {
       this.TypedValue()?.fromJSON(input);
       return;
     }
+    this.TypedValues.removeAll();
     input.map((obj) => {
       const newEntity = new this.entityConstructor();
       newEntity.fromJSON(obj);
@@ -62,7 +66,8 @@ export default class BlobField extends BaseField {
 
   // use purecomputed for memoization, fields shouldn't change
   Cols = ko.pureComputed(() => {
-    if (!this.entityType()) return [];
+    const entityType = ko.unwrap(this.entityType);
+    if (!entityType) return [];
 
     const newEntity = new this.entityConstructor();
 
