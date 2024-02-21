@@ -179,13 +179,17 @@ table.dataTable > tbody td {
 .request-body .detail-container {
   display: flex;
   justify-content: space-between;
-  align-items: start;
   flex-wrap: wrap;
   gap: 1rem;
 }
 
 .request-body .card.attachments {
   min-width: 340px;
+  flex-grow: 1;
+}
+
+.request-body .card.attachments .form-actions {
+  margin-top: auto;
 }
 
 .request-body .detail {
