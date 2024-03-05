@@ -91,12 +91,14 @@ export class RequestEntity {
 
     if (RequestType) {
       this.RequestType = ServiceType.FindInStore(RequestType);
-      this.RequestBodyBlob = new BlobField({
-        displayName: "Service Type Details",
-        isRequired: false,
-        width: 12,
-        entityType: ko.observable(this.RequestType._constructor),
-      });
+      if (RequestType._constructor) {
+        this.RequestBodyBlob = new BlobField({
+          displayName: "Service Type Details",
+          isRequired: false,
+          width: 12,
+          entityType: ko.observable(this.RequestType._constructor),
+        });
+      }
     }
 
     this.ActivityQueue.subscribe(
@@ -1082,8 +1084,9 @@ export class RequestEntity {
       get: () => this.RequestType,
     }, // {id, title},
     RequestBodyBlob: {
-      get: () => this.RequestBodyBlob.get(),
+      get: () => this.RequestBodyBlob?.get(),
       set: (val) => {
+        if (!this.RequestBodyBlob) return;
         this.RequestBodyBlob.set(val);
         const requestBodyEntity = this.RequestBodyBlob.TypedValue();
         if (requestBodyEntity?.setRequestContext)
