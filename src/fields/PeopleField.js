@@ -13,6 +13,7 @@ registerFieldComponent("people", components);
 export default class PeopleField extends BaseField {
   constructor(params) {
     super(params);
+    this.pickerOptions = params.pickerOptions ?? {};
   }
 
   toString = ko.pureComputed(() => this.Value()?.Title);

@@ -2,7 +2,9 @@
   ><span data-bind="text: displayName"></span
   ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span>:
   <div
-    data-bind="attr: {id: getUniqueId()}, people: Value,
+    data-bind="attr: {id: getUniqueId()}, 
+      people: Value, 
+      pickerOptions: pickerOptions,
       class: ValidationClass"
   ></div>
   <!-- ko if: instructions -->

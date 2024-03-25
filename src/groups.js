@@ -44,6 +44,7 @@ class GroupReport {
   }
 
   showImportModal = ko.observable(false);
+  chkRowPerUser = ko.observable(false);
 
   siteRoleAssignments = ko.observableArray();
 
@@ -61,7 +62,7 @@ class GroupReport {
   }
 
   formatUsersItem(user) {
-    return `${user.LoginName} (${user.Title})`;
+    return `${user.Title} (${user.Email})`;
   }
 
   formatUsersCellExport(groupAssignment) {

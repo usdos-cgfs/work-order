@@ -49,6 +49,14 @@ export function getDefaultGroups() {
   return result;
 }
 
+export async function getGroupUsers(groupName) {
+  const url = `/web/sitegroups/GetByName('${groupName}')/Users`;
+
+  const users = await fetchData(url);
+
+  return users.d.results;
+}
+
 // Used in router
 export const webRoot =
   _spPageContextInfo.webAbsoluteUrl == "/"

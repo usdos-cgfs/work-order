@@ -69,6 +69,9 @@ export default class CH_Overtime extends ConstrainedEntity {
     displayName: "GTM",
     isRequired: this.RequestStage2,
     Visible: this.RequestSubmitted,
+    pickerOptions: ko.observable({
+      SharePointGroupID: 69,
+    }),
   });
   APM = new PeopleField({
     displayName: "APM",

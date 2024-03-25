@@ -2,12 +2,15 @@ import ApplicationDbContext, {
   getAppContext,
 } from "../../../infrastructure/ApplicationDbContext.js";
 
+import { requestOrgStore } from "../../../entities/RequestOrg.js";
+
 import { ValidationError } from "../../../primitives/ValidationError.js";
 import PeopleField from "../../../fields/PeopleField.js";
 
 import { assignmentStates } from "../../../entities/Assignment.js";
 import CH_Overtime from "../Entity.js";
 import ApprovalActions from "../../../components/AssignmentActions/ApprovalModule.js";
+import { getUsersByGroupName } from "../../../infrastructure/Authorization.js";
 
 export default class ActionGovManager extends ApprovalActions {
   constructor(params) {
@@ -26,6 +29,8 @@ export default class ActionGovManager extends ApprovalActions {
     this.gtmWatcher(this.ServiceType?.GTM.get());
     const isValid = this.validate(false);
 
+    this.apmGroup.subscribe(this.apmChangeHandler);
+    this.apmChangeHandler(this.apmGroup());
     // this.newEntity = new CH_Overtime();
     // this.newEntity.fromJSON(this.ServiceType.toJSON());
 
@@ -37,9 +42,34 @@ export default class ActionGovManager extends ApprovalActions {
 
   Editing = ko.observable(true);
 
+  apmGroup = ko.pureComputed(() => {
+    return requestOrgStore().find(
+      (org) => org.Title.toUpperCase() == "CGFS/APMS"
+    );
+  });
+
+  apmChangeHandler = async (group) => {
+    if (!group?.UserGroup?.Title) return;
+    const users = await getUsersByGroupName(group?.UserGroup?.Title);
+
+    const instructionText = users.map((user) => user.Title).join(", ");
+    this.APM.instructions("Options: " + instructionText);
+  };
+
   APM = new PeopleField({
     displayName: "APM",
     isRequired: true,
+    instructions: ko.observable(),
+    pickerOptions: ko.pureComputed(() => {
+      const apmOrg = this.apmGroup();
+
+      if (apmOrg?.UserGroup?.ID) {
+        return {
+          SharePointGroupID: apmOrg.UserGroup.ID,
+        };
+      }
+      return {};
+    }),
   });
 
   GTM = new PeopleField({

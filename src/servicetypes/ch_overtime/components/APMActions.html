@@ -13,6 +13,7 @@
           data-bind="component: {name: COR.components[$parent.DisplayMode()], params: COR}"
         ></div>
       </div>
+      <!-- Only show the addtional fields after GTM and COR have been provided -->
       <!-- ko if:  $parent.ShowSupplementComponent-->
       <div
         data-bind="component: {name: supplementComponents[$parent.DisplayMode()], params: {Entity: ContractorSupplementField.Value() }}"

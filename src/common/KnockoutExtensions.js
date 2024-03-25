@@ -19,43 +19,60 @@ ko.subscribable.fn.subscribeChanged = function (callback) {
 
 ko.bindingHandlers.people = {
   init: function (element, valueAccessor, allBindingsAccessor) {
-    var schema = {};
-    schema["PrincipalAccountType"] = "User";
-    schema["SearchPrincipalSource"] = 15;
-    schema["ShowUserPresence"] = true;
-    schema["ResolvePrincipalSource"] = 15;
-    schema["AllowEmailAddresses"] = true;
-    schema["AllowMultipleValues"] = false;
-    schema["MaximumEntitySuggestions"] = 50;
-    //schema["Width"] = "280px";
-    schema["OnUserResolvedClientScript"] = async function (elemId, userKeys) {
-      //  get reference of People Picker Control
-      var pickerControl = SPClientPeoplePicker.SPClientPeoplePickerDict[elemId];
-      var observable = valueAccessor();
-      var userJSObject = pickerControl.GetControlValueAsJSObject()[0];
-      if (!userJSObject) {
-        observable(null);
-        return;
-      }
+    const pickerOptions = allBindingsAccessor.get("pickerOptions") ?? {};
 
-      if (userJSObject.IsResolved) {
-        if (userJSObject.Key == observable()?.LoginName) return;
-        var user = await ensureUserByKeyAsync(userJSObject.Key);
-        var person = new People(user);
-        observable(person);
-      }
-    };
+    if (ko.isObservable(pickerOptions)) {
+      pickerOptions.subscribe(initPickerElement);
+    }
 
-    // TODO: Minor - accept schema settings as options
-    //var mergedOptions = Object.assign(schema, obs.schemaOpts);
+    initPickerElement(ko.unwrap(pickerOptions));
 
-    //  Initialize the Control, MS enforces to pass the Element ID hence we need to provide
-    //  ID to our element, no other options
-    SPClientPeoplePicker_InitStandaloneControlWrapper(element.id, null, schema);
-    // const helpDiv = document.createElement("div");
-    // helpDiv.innerHTML = "Search surname first e.g. Smith, John";
-    // helpDiv.classList.add("fst-italic", "fw-lighter");
-    // element.appendChild(helpDiv);
+    function initPickerElement(pickerOptions) {
+      var schema = {};
+      schema["PrincipalAccountType"] = "User";
+      schema["SearchPrincipalSource"] = 15;
+      schema["ShowUserPresence"] = true;
+      schema["ResolvePrincipalSource"] = 15;
+      schema["AllowEmailAddresses"] = true;
+      schema["AllowMultipleValues"] = false;
+      schema["MaximumEntitySuggestions"] = 50;
+      //schema["Width"] = "280px";
+      schema["OnUserResolvedClientScript"] = async function (elemId, userKeys) {
+        //  get reference of People Picker Control
+        var pickerControl =
+          SPClientPeoplePicker.SPClientPeoplePickerDict[elemId];
+        var observable = valueAccessor();
+        var userJSObject = pickerControl.GetControlValueAsJSObject()[0];
+        if (!userJSObject) {
+          observable(null);
+          return;
+        }
+
+        if (userJSObject.IsResolved) {
+          if (userJSObject.Key == observable()?.LoginName) return;
+          var user = await ensureUserByKeyAsync(userJSObject.Key);
+          var person = new People(user);
+          observable(person);
+        }
+      };
+
+      Object.assign(schema, pickerOptions);
+
+      // TODO: Minor - accept schema settings as options
+      //var mergedOptions = Object.assign(schema, obs.schemaOpts);
+
+      //  Initialize the Control, MS enforces to pass the Element ID hence we need to provide
+      //  ID to our element, no other options
+      SPClientPeoplePicker_InitStandaloneControlWrapper(
+        element.id,
+        null,
+        schema
+      );
+      // const helpDiv = document.createElement("div");
+      // helpDiv.innerHTML = "Search surname first e.g. Smith, John";
+      // helpDiv.classList.add("fst-italic", "fw-lighter");
+      // element.appendChild(helpDiv);
+    }
   },
   update: function (
     element,

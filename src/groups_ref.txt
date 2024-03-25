@@ -50,20 +50,43 @@
         Close
       </button>
     </div>
+    <div>
+      <label>
+        1 User Per Row:
+        <input type="checkbox" data-bind="checked: chkRowPerUser" />
+      </label>
+    </div>
     <table id="tblSiteGroupsExport" class="table-export">
       <thead>
         <tr>
           <th>Title</th>
-          <th>Users</th>
+          <th>User</th>
+          <!-- ko if: chkRowPerUser -->
+          <th>Email</th>
+          <!-- /ko -->
           <th>Permissions</th>
         </tr>
       </thead>
-      <tbody data-bind="foreach: siteGroupsAssignments">
+      <tbody
+        data-bind="foreach: {data: siteGroupsAssignments, as: 'groupAssignment'}"
+      >
+        <!-- ko if: $root.chkRowPerUser -->
+        <!-- ko foreach: {data: Member.Users.results, as: 'user' }-->
+        <tr>
+          <td data-bind="text: groupAssignment.Member.Title"></td>
+          <td data-bind="text: user.Title"></td>
+          <td data-bind="text: user.Email"></td>
+          <td></td>
+        </tr>
+        <!-- /ko -->
+        <!-- /ko -->
+        <!-- ko ifnot: $root.chkRowPerUser -->
         <tr>
           <td data-bind="text: Member.Title"></td>
           <td data-bind="text: $root.formatUsersCellExport($data)"></td>
           <td data-bind="text: $root.formatPermissionsCellExport($data)"></td>
         </tr>
+        <!-- /ko -->
       </tbody>
     </table>
   </div>

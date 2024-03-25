@@ -5,7 +5,7 @@ import {
   requestOrgStore,
   OrgTypes,
 } from "../entities/RequestOrg.js";
-import { getUserPropsAsync, getDefaultGroups } from "./SAL.js";
+import { getUserPropsAsync, getDefaultGroups, getGroupUsers } from "./SAL.js";
 
 export const permissions = {
   FullControl: "Full Control",
@@ -210,6 +210,13 @@ export function getRequestFolderPermissions(request) {
   return folderPermissions;
 }
 
+export async function getUsersByGroupName(groupName) {
+  const users = await getGroupUsers(groupName);
+
+  if (!users) return [];
+
+  return users.map((userProps) => new People(userProps));
+}
 /**
  * Assignment functions are function that can be called by pipeline stages
  * Each function is bound to the current request (i.e. "this" refers to the Active Request)

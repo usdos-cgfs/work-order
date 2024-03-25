@@ -1,12 +1,13 @@
 export class People {
   constructor({
+    Id,
     ID,
     Title,
     LoginName = null,
     IsGroup = null,
     IsEnsured = false,
   }) {
-    this.ID = ID;
+    this.ID = ID ?? Id;
     this.Title = Title;
     this.LookupValue = Title;
     this.LoginName = LoginName != "" ? LoginName : null;
