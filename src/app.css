@@ -2,6 +2,10 @@
   background-color: #f8f9fb;
 }
 
+#s4-bodyContainer {
+  padding: 0;
+}
+
 #sideNavBox {
   display: none;
 }
@@ -109,6 +113,8 @@ table.dataTable > tbody td {
 .new-request-ops-container.service-selected {
   width: 400px;
   transition: width 0.45s ease-out;
+  max-height: calc(100vh - 175px);
+  overflow: auto;
 }
 
 .new-request-ops-container.service-selected .new-request-opts {
@@ -117,7 +123,7 @@ table.dataTable > tbody td {
 
 .new-request-opts {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 0.99fr));
   gap: 1.5rem;
   justify-content: start;
 }
