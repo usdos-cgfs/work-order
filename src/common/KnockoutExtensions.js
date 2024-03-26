@@ -17,6 +17,99 @@ ko.subscribable.fn.subscribeChanged = function (callback) {
   });
 };
 
+ko.observableArray.fn.subscribeAdded = function (callback) {
+  this.subscribe(
+    function (arrayChanges) {
+      const addedValues = arrayChanges
+        .filter((value) => value.status == "added")
+        .map((value) => value.value);
+      callback(addedValues);
+    },
+    this,
+    "arrayChange"
+  );
+};
+
+ko.bindingHandlers.dateField = {
+  init: function (element, valueAccessor, allBindingsAccessor) {},
+  update: function (
+    element,
+    valueAccessor,
+    allBindings,
+    viewModel,
+    bindingContext
+  ) {},
+};
+
+ko.bindingHandlers.files = {
+  init: function (element, valueAccessor) {
+    function addFiles(fileList) {
+      var value = valueAccessor();
+      if (!fileList.length) {
+        value.removeAll();
+        return;
+      }
+
+      const existingFiles = ko.unwrap(value);
+      const newFileList = [];
+      for (let file of fileList) {
+        if (!existingFiles.find((exFile) => exFile.name == file.name))
+          newFileList.push(file);
+      }
+      ko.utils.arrayPushAll(value, newFileList);
+      return;
+    }
+
+    ko.utils.registerEventHandler(element, "change", function () {
+      addFiles(element.files);
+    });
+
+    const label = element.closest("label");
+    if (!label) return;
+
+    ko.utils.registerEventHandler(label, "dragover", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    });
+
+    ko.utils.registerEventHandler(label, "dragenter", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      label.classList.add("dragging");
+    });
+
+    ko.utils.registerEventHandler(label, "dragleave", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      label.classList.remove("dragging");
+    });
+
+    ko.utils.registerEventHandler(label, "drop", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      let dt = event.originalEvent.dataTransfer;
+      let files = dt.files;
+      addFiles(files);
+    });
+  },
+  update: function (
+    element,
+    valueAccessor,
+    allBindings,
+    viewModel,
+    bindingContext
+  ) {
+    const value = valueAccessor();
+    if (!value().length && element.files.length) {
+      // clear all files
+      element.value = null;
+      return;
+    }
+
+    return;
+  },
+};
+
 ko.bindingHandlers.people = {
   init: function (element, valueAccessor, allBindingsAccessor) {
     const pickerOptions = allBindingsAccessor.get("pickerOptions") ?? {};
@@ -102,17 +195,6 @@ ko.bindingHandlers.people = {
       );
     }
   },
-};
-
-ko.bindingHandlers.dateField = {
-  init: function (element, valueAccessor, allBindingsAccessor) {},
-  update: function (
-    element,
-    valueAccessor,
-    allBindings,
-    viewModel,
-    bindingContext
-  ) {},
 };
 
 const fromPathTemplateLoader = {

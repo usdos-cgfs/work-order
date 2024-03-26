@@ -198,6 +198,12 @@ table.dataTable > tbody td {
   margin-top: auto;
 }
 
+.request-body .card.attachments .new-attachments {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 .request-body .detail {
   flex: 1 0 50%;
 }
@@ -429,6 +435,24 @@ div.sp-peoplepicker-topLevel {
 .form-control,
 .form-select {
   width: 100%;
+}
+
+label.file-upload-field {
+  width: 100%;
+}
+
+label.file-upload-field .dropzone {
+  color: gray;
+  font-size: 1.25rem;
+  font-weight: bold;
+  text-align: center;
+  padding: 1.5rem;
+  border: 2px dashed lightgray;
+  width: 100%;
+}
+
+label.file-upload-field.dragging .dropzone {
+  border: 2px dashed gray;
 }
 
 div.form-control.is-invalid {

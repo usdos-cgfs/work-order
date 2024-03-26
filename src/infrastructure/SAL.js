@@ -52,7 +52,7 @@ export function getDefaultGroups() {
 export async function getGroupUsers(groupName) {
   const url = `/web/sitegroups/GetByName('${groupName}')/Users`;
 
-  const users = await fetchData(url);
+  const users = await spFetch(url);
 
   return users.d.results;
 }
@@ -191,14 +191,14 @@ export async function getUserPropsAsync(userId = _spPageContextInfo.userId) {
   // Get more user info:
   const userInfoUrl = `/Web/GetUserById(${userId})/?$expand=Groups`;
 
-  const userInfo = (await fetchData(userInfoUrl)).d;
+  const userInfo = (await spFetch(userInfoUrl)).d;
 
   // TODO: See if we can just select the properties we need
   // const userPropsUrl = `/sp.userprofiles.peoplemanager/getpropertiesfor(@v)?@v='${encodeURIComponent(
   //   userInfo.LoginName
   // )}'`;
 
-  const userProps = (await fetchData(userPropsUrl))?.d.UserProfileProperties
+  const userProps = (await spFetch(userPropsUrl))?.d.UserProfileProperties
     .results;
 
   function findPropValue(props, key) {
@@ -592,7 +592,7 @@ export function SPList(listDef) {
   async function init() {
     if (!self.config.fieldSchema) {
       const apiEndpoint = `/web/lists/GetByTitle('${self.config.def.title}')/Fields`;
-      const fields = await fetchData(apiEndpoint);
+      const fields = await spFetch(apiEndpoint);
       self.config.fieldSchema = fields.d.results;
     }
   }
@@ -911,10 +911,19 @@ export function SPList(listDef) {
     });
   }
 
+  async function getById(id, fields) {
+    const [queryFields, expandFields] = await getQueryFields(fields);
+
+    const apiEndpoint = `/web/lists/GetByTitle('${self.config.def.title}')/items(${id})?$Select=${queryFields}&$expand=${expandFields}`;
+
+    const result = await spFetch(apiEndpoint);
+    return result.d;
+  }
+
   async function getListFields() {
     if (!self.config.fieldSchema) {
       const apiEndpoint = `/web/lists/GetByTitle('${self.config.def.title}')/Fields`;
-      const fields = await fetchData(apiEndpoint);
+      const fields = await spFetch(apiEndpoint);
       self.config.fieldSchema = fields.d.results;
     }
     return self.config.fieldSchema;
@@ -992,7 +1001,7 @@ export function SPList(listDef) {
       `/web/lists/GetByTitle('${self.config.def.title}')/items?` +
       `${include}&${expand}&${orderBy}&${filter}&${page}`;
 
-    const result = await fetchData(apiEndpoint);
+    const result = await spFetch(apiEndpoint);
     const cursor = {
       results: result?.d?.results,
       _next: result?.d?.__next,
@@ -1003,7 +1012,7 @@ export function SPList(listDef) {
   }
 
   async function loadNextPage(cursor) {
-    const result = await fetchData(cursor._next);
+    const result = await spFetch(cursor._next);
     return {
       results: result?.d?.results,
       _next: result?.d?.__next,
@@ -2067,6 +2076,218 @@ export function SPList(listDef) {
     });
   }
 
+  const UPLOADCHUNKSIZE = 10485760; // PnPJs
+  // const UPLOADCHUNKSIZE = 262144000; // SPO
+
+  const uploadchunkActionTypes = {
+    start: "startupload",
+    continue: "continueupload",
+    finish: "finishupload",
+  };
+
+  async function uploadFileRestChunking(
+    file,
+    relFolderPath,
+    fileName,
+    progress
+  ) {
+    /* https://sharepoint.stackexchange.com/questions/287334/upload-files-250mb-via-sharepoint-rest-api
+https://learn.microsoft.com/en-us/previous-versions/office/developer/sharepoint-rest-reference/dn450841(v=office.15)
+    */
+    const blob = file;
+    const chunkSize = UPLOADCHUNKSIZE;
+    const fileSize = file.size;
+
+    const totalBlocks =
+      parseInt((fileSize / chunkSize).toString(), 10) +
+      (fileSize % chunkSize === 0 ? 1 : 0);
+
+    const fileRef = relFolderPath + "/" + fileName;
+
+    const jobGuid = getGUID();
+    // const jobGuid = crypto.randomUUID
+    //   ? crypto.randomUUID()
+    //   : "74493426-fb10-4e47-bc82-120954b81a60";
+
+    let currentPointer;
+    progress({ currentBlock: 0, totalBlocks });
+    currentPointer = await startUpload(
+      jobGuid,
+      file.slice(0, chunkSize),
+      fileRef,
+      relFolderPath
+    );
+
+    for (let i = 2; i < totalBlocks; i++) {
+      progress({ currentBlock: i, totalBlocks });
+      currentPointer = await continueUpload(
+        jobGuid,
+        file.slice(currentPointer, currentPointer + chunkSize),
+        currentPointer,
+        fileRef
+      );
+    }
+
+    progress({ currentBlock: totalBlocks - 1, totalBlocks });
+    const result = await finishUpload(
+      jobGuid,
+      file.slice(currentPointer),
+      currentPointer,
+      fileRef
+    );
+
+    progress({ currentBlock: totalBlocks, totalBlocks });
+
+    return result;
+  }
+
+  async function startUpload(uploadId, chunk, fileRef, relFolderPath) {
+    const url =
+      `/web/getFolderByServerRelativeUrl(@folder)/files/getByUrlOrAddStub(@file)/StartUpload(guid'${uploadId}')?` +
+      `&@folder='${relFolderPath}'&@file='${fileRef}'`;
+
+    const headers = {
+      "Content-Type": "application/octet-stream",
+    };
+    const opts = {
+      body: chunk,
+    };
+
+    const result = await spFetch(url, "POST", headers, opts);
+    if (!result) {
+      console.error("Error starting upload!");
+      return;
+    }
+
+    return parseFloat(result.d.StartUpload);
+  }
+
+  async function continueUpload(uploadId, chunk, fileOffset, fileRef) {
+    const url =
+      `/web/getFileByServerRelativeUrl(@file)/ContinueUpload(uploadId=guid'${uploadId}',fileOffset=${fileOffset})?` +
+      `&@file='${fileRef}'`;
+
+    const headers = {
+      "Content-Type": "application/octet-stream",
+    };
+    const opts = {
+      body: chunk,
+    };
+
+    const result = await spFetch(url, "POST", headers, opts);
+
+    if (!result) {
+      console.error("Error starting upload!");
+      return;
+    }
+
+    return parseFloat(result.d.ContinueUpload);
+  }
+
+  async function finishUpload(uploadId, chunk, fileOffset, fileRef) {
+    const url =
+      `/web/getFileByServerRelativeUrl(@file)/FinishUpload(uploadId=guid'${uploadId}',fileOffset=${fileOffset})?` +
+      `&@file='${fileRef}'`;
+
+    const headers = {
+      "Content-Type": "application/octet-stream",
+    };
+    const opts = {
+      body: chunk,
+    };
+
+    const result = await spFetch(url, "POST", headers, opts);
+
+    if (!result) {
+      console.error("Error starting upload!");
+      return;
+    }
+
+    return result;
+  }
+
+  async function uploadFileRest(file, relFolderPath, fileName) {
+    return await fetch(
+      _spPageContextInfo.webServerRelativeUrl +
+        `/_api/web/GetFolderByServerRelativeUrl('${relFolderPath}')/Files/add(url='${fileName}',overwrite=true)`,
+      {
+        method: "POST",
+        credentials: "same-origin",
+        body: file,
+        headers: {
+          Accept: "application/json; odata=verbose",
+          "Content-Type": "application/json;odata=nometadata",
+          "X-RequestDigest": document.getElementById("__REQUESTDIGEST").value,
+        },
+      }
+    ).then((response) => {
+      if (!response.ok) {
+        console.error("Error Uploading File", response);
+        return;
+      }
+
+      return response.json();
+    });
+  }
+
+  async function uploadFileToFolderAndUpdateMetadata(
+    file,
+    fileName,
+    relFolderPath,
+    payload,
+    progress = null
+  ) {
+    if (!progress) {
+      progress = () => {};
+    }
+
+    const serverRelFolderPath = getServerRelativeFolderPath(relFolderPath);
+    let result = null;
+    if (file.size > UPLOADCHUNKSIZE) {
+      const job = () =>
+        uploadFileRestChunking(file, serverRelFolderPath, fileName, progress);
+      result = await uploadQueue.addJob(job);
+    } else {
+      progress({ currentBlock: 0, totalBlocks: 1 });
+      result = await uploadFileRest(file, serverRelFolderPath, fileName);
+      progress({ currentBlock: 1, totalBlocks: 1 });
+    }
+
+    await updateUploadedFileMetadata(result.d, payload);
+
+    // check in
+    await checkinWithComment(serverRelFolderPath + "/" + fileName, "");
+
+    let itemUri = result.d.ListItemAllFields.__deferred.uri + "?$select=ID";
+
+    const listItem = await spFetch(itemUri);
+    return listItem.d.ID;
+  }
+
+  async function updateUploadedFileMetadata(fileResult, payload) {
+    var result = await fetch(fileResult.ListItemAllFields.__deferred.uri, {
+      method: "POST",
+      credentials: "same-origin",
+      body: JSON.stringify(payload),
+      headers: {
+        Accept: "application/json; odata=nometadata",
+        "Content-Type": "application/json;odata=nometadata",
+        "X-RequestDigest": document.getElementById("__REQUESTDIGEST").value,
+        "X-HTTP-Method": "MERGE",
+        "If-Match": "*",
+      },
+    }).then((response) => {
+      if (!response.ok) {
+        console.error("Error Updating File", response);
+        return;
+      }
+
+      return response;
+    });
+
+    return result;
+  }
+
   function copyFiles(sourceFolderPath, destFolderPath, callback, onError) {
     const sourcePath = getServerRelativeFolderPath(sourceFolderPath);
     const destPath = getServerRelativeFolderPath(destFolderPath);
@@ -2116,13 +2337,19 @@ export function SPList(listDef) {
   // Ensure List/Library exists on the site
   async function ensureList() {
     // Query List Title
-    const listInfo = await fetchData(
+    const listInfo = await spFetch(
       `/web/lists/GetByTitle('${self.config.def.title}')`
     );
   }
 
+  function checkinWithComment(fileRef, comment) {
+    const url = `/web/GetFileByServerRelativeUrl('${fileRef}')/CheckIn(comment='${comment}',checkintype=0)`;
+    return spFetch(url, "POST");
+  }
+
   const publicMembers = {
     findByIdAsync,
+    getById,
     findByColumnValueAsync,
     loadNextPage,
     getListItemsAsync,
@@ -2137,6 +2364,7 @@ export function SPList(listDef) {
     setFolderReadonlyAsync,
     setFolderPermissionsAsync,
     ensureFolderPermissionsAsync,
+    uploadFileToFolderAndUpdateMetadata,
     uploadNewDocumentAsync,
     copyFilesAsync,
     showModal,
@@ -2145,7 +2373,7 @@ export function SPList(listDef) {
   return publicMembers;
 }
 
-async function fetchData(uri, method = "GET") {
+async function spFetch(uri, method = "GET", headers = {}, opts = {}) {
   const siteEndpoint = uri.startsWith("http")
     ? uri
     : sal.globalConfig.siteUrl + "/_api" + uri;
@@ -2154,7 +2382,9 @@ async function fetchData(uri, method = "GET") {
     headers: {
       Accept: "application/json; odata=verbose",
       "X-RequestDigest": document.getElementById("__REQUESTDIGEST").value,
+      ...headers,
     },
+    ...opts,
   });
 
   if (!response.ok) {
@@ -2163,6 +2393,62 @@ async function fetchData(uri, method = "GET") {
     }
     console.error(response);
   }
-  const result = await response.json();
-  return result;
+
+  try {
+    const result = await response.json();
+    return result;
+  } catch (e) {
+    return;
+  }
 }
+
+window.spFetch = spFetch;
+
+// Other functions
+function getGUID() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+
+  let d = Date.now();
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+    const r = (d + Math.random() * 16) % 16 | 0;
+    d = Math.floor(d / 16);
+    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
+
+class JobProcessor {
+  constructor(maxConcurrency) {
+    this.maxConcurrency = maxConcurrency;
+    this.runningJobs = 0;
+    this.queue = [];
+  }
+
+  addJob(asyncFunction) {
+    return new Promise((resolve, reject) => {
+      const job = async () => {
+        try {
+          const result = await asyncFunction();
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        } finally {
+          this.runningJobs--;
+          this.processQueue();
+        }
+      };
+
+      this.queue.push(job);
+      this.processQueue();
+    });
+  }
+
+  processQueue() {
+    while (this.runningJobs < this.maxConcurrency && this.queue.length > 0) {
+      const job = this.queue.shift();
+      this.runningJobs++;
+      job();
+    }
+  }
+}
+
+const uploadQueue = new JobProcessor(5);

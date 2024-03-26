@@ -561,15 +561,51 @@
                         </table>
                       </div>
                       <!-- /ko -->
-                      <div class="form-actions">
-                        <!-- ko if: Attachments.userCanAttach -->
-                        <button
-                          class="btn btn-primary"
-                          data-bind="click: Attachments.addNew"
+                      <div
+                        data-bind="if: Attachments.userCanAttach"
+                        class="new-attachments"
+                      >
+                        <div
+                          data-bind="if: Attachments.newAttachmentFiles().length"
                         >
-                          Upload
-                        </button>
-                        <!-- /ko -->
+                          <table class="table table-sm">
+                            <thead>
+                              <tr>
+                                <th>Name</th>
+                                <th>Status</th>
+                              </tr>
+                            </thead>
+                            <tbody
+                              data-bind="foreach: Attachments.newAttachmentJobs"
+                            >
+                              <tr>
+                                <td data-bind="text: file.name"></td>
+                                <td data-bind="text: status"></td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                        <div>
+                          <label class="file-upload-field">
+                            <div class="dropzone" data-bind="">
+                              Drop Files or Click Here
+                            </div>
+                            <input
+                              type="file"
+                              style="display: none"
+                              data-bind="files: Attachments.newAttachmentFiles"
+                            />
+                          </label>
+                        </div>
+                        <div class="form-actions">
+                          <button
+                            type="button"
+                            class="btn btn-primary"
+                            data-bind="click: Attachments.addNew, enable: Attachments.newAttachmentFiles().length"
+                          >
+                            Upload
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
