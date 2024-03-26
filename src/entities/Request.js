@@ -91,7 +91,7 @@ export class RequestEntity {
 
     if (RequestType) {
       this.RequestType = ServiceType.FindInStore(RequestType);
-      if (RequestType._constructor) {
+      if (this.RequestType._constructor) {
         this.RequestBodyBlob = new BlobField({
           displayName: "Service Type Details",
           isRequired: false,
