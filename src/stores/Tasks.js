@@ -1,4 +1,4 @@
-import Task from "../primitives/Task.js";
+import { ProgressTask, Task } from "../primitives/Task.js";
 
 export const runningTasks = ko.observableArray();
 
@@ -23,12 +23,19 @@ export const taskDefs = {
   newAction: { msg: "Submitting Action", blocking: false },
   refreshActions: { msg: "Refreshing Actions", blocking: false },
   newAttachment: { msg: "Submitting Attachment", blocking: false },
+  uploadAttachment: (fileName) => {
+    return {
+      msg: `Uploading Attachment: ` + fileName,
+      blocking: true,
+      type: ProgressTask,
+    };
+  },
   refreshAttachments: { msg: "Refreshing Attachments", blocking: false },
   approve: { msg: "Approving Request", blocking: true },
 };
 
 export const addTask = (taskDef) => {
-  const newTask = new Task(taskDef);
+  const newTask = taskDef.type ? new taskDef.type(taskDef) : new Task(taskDef);
 
   runningTasks.push(newTask);
   return newTask;

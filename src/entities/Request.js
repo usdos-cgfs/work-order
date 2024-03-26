@@ -106,10 +106,6 @@ export class RequestEntity {
       this,
       "arrayChange"
     );
-
-    this.Attachments.newAttachmentFiles.subscribeAdded(
-      this.Attachments.newFilesAddedHandler
-    );
   }
 
   // static async Create({
@@ -326,52 +322,39 @@ export class RequestEntity {
       return folderPath;
     },
     newAttachmentFiles: ko.observableArray(),
-    newFilesAddedHandler: (newFiles) => {
-      newFiles.map((file) => {
-        this.Attachments.newAttachmentJobs.push({
-          file,
-          status: ko.observable("pending"),
-        });
-      });
+    removeFile: (file) => {
+      this.Attachments.newAttachmentFiles.remove(file);
     },
-    newAttachmentJobs: ko.observableArray(),
-    newPendingAttachmentJobs: ko.pureComputed(() =>
-      this.Attachments.newAttachmentJobs().filter(
-        (job) => job.status() == "pending"
-      )
-    ),
     addNew: async () => {
       const folderPath = await this.Attachments.createFolder();
       if (!folderPath) alert("Unable to create folder");
       await Promise.all(
-        this.Attachments.newPendingAttachmentJobs().map(
-          async (newAttachmentJob) => {
-            const attachmentTitle =
-              newAttachmentJob.file.name.split(".").slice(0, -1).join(".") ??
-              newAttachmentJob.file.name;
-            await this._context.Attachments.UploadFileToFolderAndUpdateMetadata(
-              newAttachmentJob.file,
-              newAttachmentJob.file.name,
-              folderPath,
-              {
-                Title: attachmentTitle,
-                RequestId: this.ID,
-                IsActive: true,
-              },
-              ({ currentBlock, totalBlocks }) => {
-                newAttachmentJob.status(
-                  `${parseInt((currentBlock / totalBlocks) * 100)}%`
-                );
-              }
-            );
-          }
-        )
+        this.Attachments.newAttachmentFiles().map(async (file) => {
+          const uploadFileTask = addTask(taskDefs.uploadAttachment(file.name));
+          const attachmentTitle =
+            file.name.split(".").slice(0, -1).join(".") ?? file.name;
+          await this._context.Attachments.UploadFileToFolderAndUpdateMetadata(
+            file,
+            file.name,
+            folderPath,
+            {
+              Title: attachmentTitle,
+              RequestId: this.ID,
+              IsActive: true,
+            },
+            ({ currentBlock, totalBlocks }) => {
+              uploadFileTask.updateProgress({
+                percentDone: currentBlock / totalBlocks,
+              });
+            }
+          );
+          finishTask(uploadFileTask);
+        })
       );
       // await this._context.Attachments.UploadFol(folderPath, {
       //   RequestId: this.ID,
       //   RequestTitle: this.Title,
       // });
-      this.Attachments.newAttachmentJobs([]);
       this.Attachments.newAttachmentFiles([]);
       this.Attachments.refresh();
     },

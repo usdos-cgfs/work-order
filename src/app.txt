@@ -10,7 +10,7 @@
       <span class="visually-hidden">Loading...</span>
     </div>
     <ul class="list-unstyled" data-bind="foreach: BlockingTasks">
-      <li data-bind="text: msg + '...'"></li>
+      <li data-bind="text: msg + '... ' + Status()"></li>
     </ul>
   </div>
 </div>
@@ -475,14 +475,14 @@
                     <!-- ko if: RequestBodyBlob -->
                     <div
                       data-bind="component: {
-                        name: RequestBodyBlob.components[DisplayMode().toLowerCase()], 
-                        params: RequestBodyBlob}, 
+                        name: RequestBodyBlob.components[DisplayMode().toLowerCase()],
+                        params: RequestBodyBlob},
                         class: RequestBodyBlob.width"
                     ></div>
                     <!-- /ko -->
                     <div
                       class="col-12 pb-6"
-                      data-bind="component: {name: RequestDescription.components[DisplayMode().toLowerCase()], 
+                      data-bind="component: {name: RequestDescription.components[DisplayMode().toLowerCase()],
                         params: RequestDescription}"
                     ></div>
                   </div>
@@ -500,7 +500,7 @@
                       <!-- ko foreach: Attachments.Validation.Errors -->
                       <div
                         class="alert"
-                        data-bind="text: description, 
+                        data-bind="text: description,
                         class: $parent.Validation.WasValidated() ? 'alert-danger' : 'alert-warning'"
                       ></div>
                       <!-- /ko -->
@@ -565,26 +565,6 @@
                         data-bind="if: Attachments.userCanAttach"
                         class="new-attachments"
                       >
-                        <div
-                          data-bind="if: Attachments.newAttachmentFiles().length"
-                        >
-                          <table class="table table-sm">
-                            <thead>
-                              <tr>
-                                <th>Name</th>
-                                <th>Status</th>
-                              </tr>
-                            </thead>
-                            <tbody
-                              data-bind="foreach: Attachments.newAttachmentJobs"
-                            >
-                              <tr>
-                                <td data-bind="text: file.name"></td>
-                                <td data-bind="text: status"></td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
                         <div>
                           <label class="file-upload-field">
                             <div class="dropzone" data-bind="">
@@ -596,6 +576,45 @@
                               data-bind="files: Attachments.newAttachmentFiles"
                             />
                           </label>
+                        </div>
+                        <div
+                          data-bind="if: Attachments.newAttachmentFiles().length"
+                        >
+                          <!-- Pending:
+                          <ul
+                            data-bind="foreach: Attachments.newAttachmentFiles"
+                          >
+                            <li>
+                              <span data-bind="text: name"></span>
+                              <i
+                                title="Remove File"
+                                data-bind="click: $parent.Attachments.removeFile"
+                                class="fa-solid fa-xmark pointer"
+                              ></i>
+                            </li>
+                          </ul> -->
+                          <table class="table table-sm">
+                            <thead>
+                              <tr>
+                                <th>Pending Upload</th>
+                                <th>Action</th>
+                              </tr>
+                            </thead>
+                            <tbody
+                              data-bind="foreach: Attachments.newAttachmentFiles"
+                            >
+                              <tr>
+                                <td data-bind="text: name"></td>
+                                <td>
+                                  <i
+                                    title="Remove File"
+                                    data-bind="click: $parent.Attachments.removeFile"
+                                    class="fa-solid fa-xmark pointer"
+                                  ></i>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
                         </div>
                         <div class="form-actions">
                           <button
@@ -626,7 +645,7 @@
                     <!-- ko foreach: Attachments.Validation.Errors -->
                     <div
                       class="alert"
-                      data-bind="text: description, 
+                      data-bind="text: description,
                       class: $parent.Validation.WasValidated() ? 'alert-danger' : 'alert-warning'"
                     ></div>
                     <!-- /ko -->
