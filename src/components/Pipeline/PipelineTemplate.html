@@ -51,70 +51,85 @@
             <!-- /ko -->
           </div>
           <!-- /ko -->
-          <div class="mt-4">
-            <h5>Stage Assignments</h5>
-            <p class="text-secondary">
-              View and manage all assignments for this stage.
-            </p>
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Assigned To</th>
-                  <th>Request Org</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th>Completed By</th>
-                  <th>Completed On</th>
-                  <!-- ko if: IsCurrentStage -->
-                  <th>Action</th>
-                  <!-- /ko -->
-                </tr>
-              </thead>
-              <tbody>
-                <!-- ko foreach: AllStageAssignments -->
-                <!-- <tr
+          <div class="mt-4 accordion-item">
+            <div class="accordion-header pointer">
+              <h5
+                class="accordion-title collapsed"
+                data-bs-toggle="collapse"
+                data-bs-target="#stage-assignment-body"
+                aria-expanded="false"
+              >
+                Stage Assignments <i class="indicator fa fa-caret-down"></i>
+              </h5>
+            </div>
+            <div
+              id="stage-assignment-body"
+              class="accordion-collapse collapse"
+              style=""
+            >
+              <p class="text-secondary">
+                View and manage all assignments for this stage.
+              </p>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Assigned To</th>
+                    <th>Request Org</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Completed By</th>
+                    <th>Completed On</th>
+                    <!-- ko if: IsCurrentStage -->
+                    <th>Action</th>
+                    <!-- /ko -->
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- ko foreach: AllStageAssignments -->
+                  <!-- <tr
                   data-bind="
                   css: {'pointer': isUserActionable()},
                   click: toggleExpanded
                   "
                 > -->
-                <tr>
-                  <td data-bind="text: Assignee?.Title"></td>
-                  <td data-bind="text: RequestOrg?.Title"></td>
-                  <td data-bind="text: Role"></td>
-                  <td data-bind="text: Status"></td>
-                  <td data-bind="text: ActionTaker?.Title ?? 'N/A'"></td>
-                  <td
-                    data-bind="text: CompletionDate?.toLocaleString() ?? 'N/A'"
-                  ></td>
-                  <!-- ko if: $parent.IsCurrentStage -->
-                  <td>
-                    <!-- ko if: $parent.userCanAssign -->
-                    <i
-                      class="fas fa-search pointer"
-                      data-bind="click: $parent.view"
-                    ></i>
-                    <i
-                      class="fa fa-trash pointer"
-                      data-bind="click: $parent.remove"
-                    ></i>
+                  <tr>
+                    <td data-bind="text: Assignee?.Title"></td>
+                    <td data-bind="text: RequestOrg?.Title"></td>
+                    <td data-bind="text: Role"></td>
+                    <td data-bind="text: Status"></td>
+                    <td data-bind="text: ActionTaker?.Title ?? 'N/A'"></td>
+                    <td
+                      data-bind="text: CompletionDate?.toLocaleString() ?? 'N/A'"
+                    ></td>
+                    <!-- ko if: $parent.IsCurrentStage -->
+                    <td>
+                      <!-- ko if: $parent.userCanAssign -->
+                      <i
+                        class="fas fa-search pointer"
+                        data-bind="click: $parent.view"
+                      ></i>
+                      <i
+                        class="fa fa-trash pointer"
+                        data-bind="click: $parent.remove"
+                      ></i>
+                      <!-- /ko -->
+                    </td>
                     <!-- /ko -->
-                  </td>
+                  </tr>
+                  <!-- ko if: false && $parent.IsCurrentStage() && isUserActionable() && isExpanded() -->
+                  <tr>
+                    <td colspan="7" data-bind=""></td>
+                  </tr>
                   <!-- /ko -->
-                </tr>
-                <!-- ko if: false && $parent.IsCurrentStage() && isUserActionable() && isExpanded() -->
-                <tr>
-                  <td colspan="7" data-bind=""></td>
-                </tr>
-                <!-- /ko -->
-                <!-- /ko -->
-              </tbody>
-            </table>
-            <!-- ko if: userCanAssign() -->
-            <div
-              data-bind="component: { name: 'new-assignment', params: {addAssignment: addNew } }"
-            ></div>
-            <!-- /ko -->
+                  <!-- /ko -->
+                </tbody>
+              </table>
+              <!-- ko if: userCanAssign() -->
+              <div
+                data-bind="component: { name: 'new-assignment', params: {addAssignment: addNew } }"
+              ></div>
+              <!-- /ko -->
+            </div>
           </div>
         </div>
         <!-- ko if: false -->
