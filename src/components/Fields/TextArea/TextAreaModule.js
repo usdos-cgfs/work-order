@@ -14,6 +14,7 @@ export default class TextAreaModule extends BaseFieldModule {
   initializeEditor() {
     const toolbarOptions = [
       ["bold", "italic", "underline", "strike"], // toggled buttons
+      ["link"],
       ["blockquote", "code-block"],
 
       [{ header: 1 }, { header: 2 }], // custom button values

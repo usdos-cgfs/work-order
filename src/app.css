@@ -517,3 +517,8 @@ div.form-control.is-valid {
 .kpi-red {
   background-image: url("../assets/KPIRed.GIF");
 }
+
+.ql-container {
+  overflow: auto;
+  resize: vertical;
+}
