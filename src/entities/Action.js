@@ -1,6 +1,8 @@
 import { PipelineStage } from "./PipelineStage.js";
 
 export const actionTypes = {
+  Paused: "Paused",
+  Resumed: "Resumed",
   Assigned: "Assigned",
   Unassigned: "Unassigned",
   Created: "Created",

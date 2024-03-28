@@ -64,14 +64,23 @@ import { ValidationError } from "../primitives/ValidationError.js";
 export const requestStates = {
   draft: "Draft",
   open: "Open",
+  paused: "Paused",
   fulfilled: "Completed",
   cancelled: "Cancelled",
   rejected: "Rejected",
 };
 
+export const requestInternalStates = {
+  inProgress: "In Progress",
+  waitingOnCustomer: "Waiting on Customer",
+  researching: "Researching",
+};
+
 const requestStateClasses = {
   Draft: "text-bg-info",
   Open: "text-bg-primary",
+  Paused: "text-bg-warning",
+  "In Progress": "text-bg-primary",
   Completed: "text-bg-success",
   Cancelled: "text-bg-warning",
   Rejected: "text-bg-danger",
@@ -165,6 +174,18 @@ export class RequestEntity {
     StatusClass: ko.pureComputed(() => {
       return requestStateClasses[this.State.Status()];
     }),
+    InternalStatus: ko.observable(),
+    InternalStatusClass: ko.pureComputed(() => {
+      return (
+        requestStateClasses[this.State.InternalStatus()] ??
+        requestStateClasses.Paused
+      );
+    }),
+    IsPaused: ko.pureComputed(
+      () =>
+        this.State.Status() == requestStates.open &&
+        this.State.InternalStatus() != requestInternalStates.inProgress
+    ),
   };
 
   Reporting = {
@@ -232,6 +253,7 @@ export class RequestEntity {
     advance: async () => {
       const pipelineAdvanceTask = addTask(taskDefs.pipeline);
       if (this.promptAdvanceModal) this.promptAdvanceModal.hide();
+      await this.resumeRequest();
 
       const nextStage = this.Pipeline.getNextStage();
 
@@ -695,6 +717,8 @@ export class RequestEntity {
       };
       await this._context.Assignments.UpdateEntity(updateEntity);
 
+      await this.resumeRequest();
+
       this.ActivityQueue.push({
         activity: actionTypes[action],
         data: updateEntity,
@@ -898,7 +922,7 @@ export class RequestEntity {
     }),
     currentUserCanAdvance: ko.pureComputed(() => {
       return (
-        this.State.Status() == requestStates.open &&
+        this.State.IsActive() &&
         this.Assignments.CurrentStage.list.UserActionAssignments().length
       );
     }),
@@ -1030,6 +1054,32 @@ export class RequestEntity {
     return listRefs;
   }
 
+  pauseRequest = async (reason = "Not Provided") => {
+    // TODO: Clear and reset Est. Completion Date
+    this.State.InternalStatus(reason);
+    // this.Dates.EstClosed.Value(null);
+
+    await this._context.Requests.UpdateEntity(this, ["InternalStatus"]);
+
+    this.ActivityQueue.push({
+      activity: actionTypes.Paused,
+      data: reason,
+    });
+  };
+
+  resumeRequest = async () => {
+    if (!this.State.IsPaused()) return;
+
+    this.State.InternalStatus(requestInternalStates.inProgress);
+
+    await this._context.Requests.UpdateEntity(this, ["InternalStatus"]);
+
+    this.ActivityQueue.push({
+      activity: actionTypes.Resumed,
+      data: this,
+    });
+  };
+
   closeAndFinalize = async (status) => {
     const closeId = addTask(taskDefs.closing);
     //1. set all assignments to inactive
@@ -1047,12 +1097,14 @@ export class RequestEntity {
     this.Pipeline.Stage(closedStage);
 
     this.State.Status(status);
+    this.State.InternalStatus(status);
     this.State.IsActive(false);
     this.Dates.Closed.set(new Date());
     await this._context.Requests.UpdateEntity(this, [
       "PipelineStage",
       "PipelineStagePrev",
       "RequestStatus",
+      "InternalStatus",
       "IsActive",
       "ClosedDate",
     ]);
@@ -1094,6 +1146,7 @@ export class RequestEntity {
       obs: this.Pipeline.PreviousStage,
     },
     RequestStatus: this.State.Status,
+    InternalStatus: this.State.InternalStatus,
     RequestSubmitted: this.Dates.Submitted,
     EstClosedDate: this.Dates.EstClosed,
     ClosedDate: this.Dates.Closed,
@@ -1136,6 +1189,7 @@ export class RequestEntity {
       "PipelineStage",
       "PipelineStagePrev",
       "RequestStatus",
+      "InternalStatus",
       "RequestSubmitted",
       "EstClosedDate",
       "ClosedDate",
@@ -1155,6 +1209,7 @@ export class RequestEntity {
       "EstClosedDate",
       "ClosedDate",
       "RequestStatus",
+      "InternalStatus",
       "RequestOrgs",
     ],
     ByServiceType: [

@@ -1,4 +1,4 @@
-import { requestStates } from "../entities/Request.js";
+import { requestInternalStates, requestStates } from "../entities/Request.js";
 import { actionTypes } from "../entities/Action.js";
 
 import { People } from "../entities/People.js";
@@ -152,6 +152,7 @@ export class RequestDetailView {
     );
 
     this.request.State.Status(requestStates.open);
+    this.request.State.InternalStatus(requestInternalStates.inProgress);
     this.request.State.IsActive(true);
 
     createItems: {
@@ -233,6 +234,34 @@ export class RequestDetailView {
     }
   };
 
+  pauseOptions = Object.entries(requestInternalStates)
+    .filter(([key, value]) => value != requestInternalStates.inProgress)
+    .map(([key, value]) => {
+      return { key, value };
+    });
+
+  pauseReason = ko.observable();
+
+  showPause = ko.pureComputed(() => {
+    return (
+      this.request.State.Status() == requestStates.open &&
+      this.request.State.InternalStatus() == requestInternalStates.inProgress
+    );
+  });
+  clickPause = () => {
+    const reason = this.pauseReason();
+    this.pauseReason(null);
+    this.request.pauseRequest(reason);
+  };
+
+  showResume = ko.pureComputed(() => {
+    return this.request.State.IsPaused();
+  });
+
+  clickResume = () => {
+    this.request.resumeRequest();
+  };
+
   validationWatcher = (isValid) => {
     if (
       isValid &&
@@ -290,6 +319,7 @@ export class RequestDetailView {
     request.RequestorInfo.Email(currentUser().EMail);
     //this.request.Title = createNewRequestTitle();
     request.State.Status(requestStates.draft);
+    request.State.InternalStatus(requestStates.draft);
     request.State.IsActive(true);
 
     // Watch for a change in service type

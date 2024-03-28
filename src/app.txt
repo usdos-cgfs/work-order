@@ -897,7 +897,9 @@
         <div class="status-container">
           <div
             class="badge"
-            data-bind="text: request.State.Status, class: request.State.StatusClass"
+            data-bind="text: request.State.InternalStatus, 
+            class: request.State.InternalStatusClass, 
+            attr: {title: request.State.InternalStatus}"
           ></div>
         </div>
         <h6 class="">
@@ -925,35 +927,84 @@
           data-bind="click: refreshAll"
         ></i>
 
-        <!-- ko if: DisplayMode() == DisplayModes.New -->
-        <button
-          type="button"
-          class="btn btn-success ms-3"
-          data-bind="click: submitNewRequest, enable: !request.Validation.WasValidated() || request.Validation.IsValid()"
-        >
-          Submit <span class="fa fa-chevron-right"></span>
-        </button>
-        <!-- /ko -->
-        <!-- ko if: request.Authorization.currentUserCanAdvance -->
-        <!-- ko if: request.Pipeline.getNextStage -->
-        <button
-          type="button"
-          class="btn btn-success ms-3"
-          data-bind="click: nextStageHandler, enable: request.Assignments.CurrentStage.Validation.IsValid"
-        >
-          Next Stage <span class="fa fa-chevron-right"></span>
-        </button>
-        <!-- /ko -->
-        <!-- ko ifnot: request.Pipeline.getNextStage -->
-        <button
-          type="button"
-          class="btn btn-success ms-3"
-          data-bind="click: promptClose, enable: request.Assignments.CurrentStage.Validation.IsValid"
-        >
-          Close and Finalize
-        </button>
-        <!-- /ko -->
-        <!-- /ko -->
+        <div class="actions" role="group">
+          <!-- ko if: DisplayMode() == DisplayModes.New -->
+          <button
+            type="button"
+            class="btn btn-success ms-3"
+            data-bind="click: submitNewRequest, enable: !request.Validation.WasValidated() || request.Validation.IsValid()"
+          >
+            Submit <span class="fa fa-chevron-right"></span>
+          </button>
+          <!-- /ko -->
+          <!-- ko if: request.Authorization.currentUserCanAdvance -->
+          <!-- ko if: showPause -->
+          <div class="dropdown-centered" data-bind="">
+            <button
+              type="button"
+              class="btn btn-secondary toggle-status dropdown-toggle action"
+              data-bs-toggle="dropdown"
+              title="Pause Request"
+            >
+              <i class="fa-solid fa-pause fa-xl"></i>
+            </button>
+            <div class="dropdown-menu p-1">
+              <label class="">
+                <input
+                  placeholder="Reason..."
+                  class="form-select"
+                  list="pause-reason-options"
+                  data-bind="textInput: pauseReason"
+                />
+                <datalist
+                  id="pause-reason-options"
+                  data-bind="foreach: pauseOptions"
+                >
+                  <option
+                    data-bind="text: value, attr: {value: value}"
+                  ></option>
+                </datalist>
+              </label>
+              <button
+                type="button"
+                class="btn btn-success"
+                data-bind="click: clickPause, enable: pauseReason"
+              >
+                Submit
+              </button>
+            </div>
+          </div>
+          <!-- /ko -->
+          <!-- ko if: showResume -->
+          <button
+            type="button"
+            title="Resume Request"
+            class="btn btn-secondary toggle-status action"
+            data-bind="click: clickResume"
+          >
+            <i class="fa-solid fa-play fa-xl"></i>
+          </button>
+          <!-- /ko -->
+          <!-- ko if: request.Pipeline.getNextStage -->
+          <button
+            type="button"
+            class="btn btn-success action"
+            data-bind="click: nextStageHandler, enable: request.Assignments.CurrentStage.Validation.IsValid"
+          >
+            Next Stage <span class="fa fa-chevron-right"></span>
+          </button>
+          <!-- /ko -->
+          <!-- ko ifnot: request.Pipeline.getNextStage -->
+          <button
+            type="button"
+            class="btn btn-success action"
+            data-bind="click: promptClose, enable: request.Assignments.CurrentStage.Validation.IsValid"
+          >
+            Close and Finalize
+          </button>
+          <!-- /ko -->
+          <!-- /ko -->
+        </div>
       </div>
     </script>
 

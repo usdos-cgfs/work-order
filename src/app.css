@@ -234,7 +234,7 @@ table.dataTable > tbody td {
   gap: 1rem;
   justify-content: start;
   align-items: center;
-  padding-right: 0.25rem;
+  /* padding-right: 0.25rem; */
   color: white;
   /* background-color: #a7b3cd; */
   background: linear-gradient(145deg, #aab9d0, #8594ab);
@@ -252,10 +252,38 @@ table.dataTable > tbody td {
   border-bottom-left-radius: 6px;
 }
 
+.quick-actions-bar .status-container .badge {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.quick-actions-bar .actions {
+  height: 100%;
+  display: flex;
+  /* justify-content: end;
+  align-items: stretch; */
+}
+
+.quick-actions-bar .actions button.action {
+  height: 100%;
+  margin: 0;
+  border-radius: 0%;
+}
+
+.quick-actions-bar .actions .toggle-status {
+  min-width: 0px;
+  border-radius: 0%;
+}
+
+.quick-actions-bar .actions > button.action:last-of-type {
+  border-radius: 0% 6px 6px 0%;
+}
+
 .quick-actions-bar button {
-  flex-grow: 1;
+  /* flex-grow: 1;
   height: 95%;
-  min-width: 170px;
+  min-width: 170px; */
 }
 
 .request-detail-components {

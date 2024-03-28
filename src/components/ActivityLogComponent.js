@@ -3,17 +3,17 @@ import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
 
 export class ActivityLogComponent {
   constructor({ addNew, refresh, list, AreLoading }, activityQueue) {
-    activityQueue.subscribe(this.activityQueueWatcher, this, "arrayChange");
+    activityQueue.subscribeAdded(this.activityQueueWatcher);
     this.addNew = addNew;
     this.refresh = refresh;
     this.Actions = list.All;
     this.AreLoading = AreLoading;
   }
 
-  activityQueueWatcher = (changes) => {
-    const activities = changes
-      .filter((change) => change.status == "added")
-      .map((change) => change.value);
+  activityQueueWatcher = (activities) => {
+    // const activities = changes
+    //   .filter((change) => change.status == "added")
+    //   .map((change) => change.value);
 
     activities.map(({ activity, data }) => {
       if (this.actionTypeFunctionMap[activity]) {
@@ -29,6 +29,8 @@ export class ActivityLogComponent {
     Advanced: this.requestAdvanced.bind(this),
     Approved: this.requestApproved.bind(this),
     Rejected: this.requestRejected.bind(this),
+    Paused: this.requestPaused.bind(this),
+    Resumed: this.requestResumed.bind(this),
     Closed: this.requestClosed.bind(this),
   };
 
@@ -43,6 +45,20 @@ export class ActivityLogComponent {
     this.addNew({
       ActionType: actionTypes.Advanced,
       Description: `The request was advanced to stage ${stage.Step}: ${stage.Title}.`,
+    });
+  }
+
+  requestPaused(reason) {
+    this.addNew({
+      ActionType: actionTypes.Paused,
+      Description: reason,
+    });
+  }
+
+  requestResumed() {
+    this.addNew({
+      ActionType: actionTypes.Resumed,
+      Description: "Request clock has been resumed",
     });
   }
 
