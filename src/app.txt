@@ -93,7 +93,7 @@
   }
 </script>
 
-<div id="app" class="" style="display: none" data-bind="visible: HasLoaded">
+<div id="app" class="wo" style="display: none" data-bind="visible: HasLoaded">
   <div
     data-bind="component: {name: 'quick-info', 
     params: { ShowActionOfficeFeatures, ToggleActionOfficeFeatures }}"

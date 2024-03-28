@@ -14,6 +14,10 @@
   margin-left: 20px;
 }
 
+#app button {
+  min-width: 0;
+}
+
 #app {
   /* --bs-primary-rgb: #344767; */
   color: #344767;

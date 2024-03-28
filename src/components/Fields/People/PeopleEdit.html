@@ -14,6 +14,23 @@
   ></div>
   <!-- /ko -->
 </label>
+<!-- ko if: spGroupId -->
+<div class="alert alert-info py-1 my-1">
+  <div class="d-flex align-items-center">
+    This input has restricted options
+    <button
+      type="button"
+      class="btn btn-link py-0 px-1"
+      data-bind="toggles: expandUsers, text: expandUsers() ? 'Hide' : 'Show'"
+    ></button>
+  </div>
+  <!-- ko if: expandUsers -->
+  <ul class="" data-bind="foreach: userOpts">
+    <li data-bind="text: Title"></li>
+  </ul>
+  <!-- /ko -->
+</div>
+<!-- /ko -->
 <!-- ko if: ShowErrors -->
 <!-- ko foreach: Errors -->
 <div class="fw-semibold text-danger" data-bind="text: description"></div>

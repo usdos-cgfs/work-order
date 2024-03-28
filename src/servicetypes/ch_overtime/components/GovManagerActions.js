@@ -52,24 +52,29 @@ export default class ActionGovManager extends ApprovalActions {
     if (!group?.UserGroup?.Title) return;
     const users = await getUsersByGroupName(group?.UserGroup?.Title);
 
-    const instructionText = users.map((user) => user.Title).join(", ");
+    const instructionText = users.map((user) => user.Title).join("; ");
     this.APM.instructions("Options: " + instructionText);
   };
 
   APM = new PeopleField({
     displayName: "APM",
     isRequired: true,
-    instructions: ko.observable(),
-    pickerOptions: ko.pureComputed(() => {
+    spGroupName: ko.pureComputed(() => {
       const apmOrg = this.apmGroup();
 
-      if (apmOrg?.UserGroup?.ID) {
-        return {
-          SharePointGroupID: apmOrg.UserGroup.ID,
-        };
-      }
-      return {};
+      return apmOrg?.UserGroup?.Title;
     }),
+    // instructions: ko.observable(),
+    // pickerOptions: ko.pureComputed(() => {
+    //   const apmOrg = this.apmGroup();
+
+    //   if (apmOrg?.UserGroup?.ID) {
+    //     return {
+    //       SharePointGroupID: apmOrg.UserGroup.ID,
+    //     };
+    //   }
+    //   return {};
+    // }),
   });
 
   GTM = new PeopleField({

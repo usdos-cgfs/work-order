@@ -110,6 +110,16 @@ ko.bindingHandlers.files = {
   },
 };
 
+ko.bindingHandlers.toggles = {
+  init: function (element, valueAccessor) {
+    var value = valueAccessor();
+
+    ko.utils.registerEventHandler(element, "click", function () {
+      value(!value());
+    });
+  },
+};
+
 ko.bindingHandlers.people = {
   init: function (element, valueAccessor, allBindingsAccessor) {
     const pickerOptions = allBindingsAccessor.get("pickerOptions") ?? {};
@@ -161,6 +171,13 @@ ko.bindingHandlers.people = {
         null,
         schema
       );
+
+      for (const input of document
+        .getElementById(element.id)
+        .querySelectorAll("input")) {
+        input.setAttribute("autocomplete", "off");
+        input.setAttribute("aria-autocomplete", "none");
+      }
       // const helpDiv = document.createElement("div");
       // helpDiv.innerHTML = "Search surname first e.g. Smith, John";
       // helpDiv.classList.add("fst-italic", "fw-lighter");
