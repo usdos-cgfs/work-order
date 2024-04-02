@@ -89,15 +89,17 @@ export class User extends People {
     IsGroup = null,
     IsEnsured = false,
     Groups = null,
+    Department = null,
   }) {
     super({ ID, Title, LookupValue, LoginName, IsGroup, IsEnsured });
 
     this.WorkPhone = WorkPhone;
     this.EMail = EMail;
 
+    this.Department = Department;
     this.Groups = Groups;
   }
-
+  Department;
   Groups = [];
 
   isInGroup(group) {
@@ -115,8 +117,8 @@ export class User extends People {
 
   RequestOrgs = ko.pureComputed(() => {
     const groupIds = this.getGroupIds();
-    return requestOrgStore().filter((reqOrg) =>
-      groupIds.includes(reqOrg.UserGroup?.ID)
+    return requestOrgStore().filter(
+      (reqOrg) => reqOrg.Everyone || groupIds.includes(reqOrg.UserGroup?.ID)
     );
   });
 

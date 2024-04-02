@@ -15,6 +15,7 @@ export class RequestOrg {
   }
 
   UserGroup;
+  Everyone;
 
   FieldMap = {
     UserGroup: {
@@ -47,6 +48,7 @@ export class RequestOrg {
       "OrgType",
       "BreakAccess",
       "PreferredEmail",
+      "Everyone",
     ],
   };
 

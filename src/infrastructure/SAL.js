@@ -189,6 +189,7 @@ export async function getUserPropsAsync(userId = _spPageContextInfo.userId) {
   // const userGroupUrl = `/Web/GetUserById(${userId})/Groups`;
 
   // Get more user info:
+  // const userInfoUrl = `/Web/GetUserById(${userId})/?$expand=Groups/users`;
   const userInfoUrl = `/Web/GetUserById(${userId})/?$expand=Groups`;
 
   const userInfo = (await spFetch(userInfoUrl)).d;
@@ -219,8 +220,17 @@ export async function getUserPropsAsync(userId = _spPageContextInfo.userId) {
         ID: group.Id,
         IsGroup: true,
         IsEnsured: true,
+        // Users: group.Users?.results.map((user) => {
+        //   return {
+        //     ID: user.Id,
+        //     LoginName: user.LoginName,
+        //     Title: user.Title,
+        //     EMail: user.Email,
+        //   };
+        // }),
       };
     }),
+    Department: findPropValue(userProps, "Department"),
   };
 }
 
