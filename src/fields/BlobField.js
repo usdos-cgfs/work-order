@@ -19,6 +19,10 @@ export default class BlobField extends BaseField {
     this.entityType = params.entityType;
     this.multiple = params.multiple;
 
+    if (this.multiple) {
+      this.Value = ko.observableArray();
+    }
+
     if (ko.isObservable(this.entityType)) {
       this.entityType.subscribe(this.updateEntityTypeHandler);
       // this.Value.subscribe(this.updateEntityTypeHandler);
@@ -29,26 +33,26 @@ export default class BlobField extends BaseField {
   toString = ko.pureComputed(() => `${this.Value()?.length ?? "0"} items`);
 
   toJSON = ko.pureComputed(() => {
-    if (!this.multiple) return this.TypedValue()?.toJSON();
-    return this.TypedValues().map((value) => value.toJSON());
+    if (!this.multiple) return this.Value()?.toJSON();
+    return this.Value().map((value) => value.toJSON());
   });
 
   fromJSON = (input) => {
     if (!input) return;
     if (!this.multiple) {
-      this.TypedValue()?.fromJSON(input);
+      this.Value()?.fromJSON(input);
       return;
     }
-    this.TypedValues.removeAll();
+    this.Value.removeAll();
     input.map((obj) => {
       const newEntity = new this.entityConstructor();
       newEntity.fromJSON(obj);
-      this.TypedValues.push(newEntity);
+      this.Value.push(newEntity);
     });
   };
 
-  TypedValues = ko.observableArray();
-  TypedValue = ko.observable();
+  // TypedValues = ko.observableArray();
+  // TypedValue = ko.observable();
 
   // Value = ko.pureComputed(() =>
   //   this.multiple ? this.TypedValues() : this.TypedValue()
@@ -58,8 +62,10 @@ export default class BlobField extends BaseField {
     return JSON.stringify(this.toJSON());
   };
 
+  blob;
   set = (val) => {
     if (window.DEBUG) console.log(val);
+    this.blob = val;
     if (val?.constructor == BlobField) {
       // this.fromJSON(val.toJSON());
       return;
@@ -85,25 +91,30 @@ export default class BlobField extends BaseField {
   //   new this.entityConstructor()?.FormFieldKeys()
   // );
 
+  // Support multiple items
   NewItem = ko.observable();
 
   submit = () => {
-    const errors = this.TypedValue()?.validate();
+    const errors = this.NewItem()?.validate();
     if (errors.length) return;
 
-    this.TypedValues.push(this.TypedValue());
+    this.Value.push(this.NewItem());
 
-    this.TypedValue(new this.entityConstructor());
+    this.NewItem(new this.entityConstructor());
   };
 
-  add = (item) => this.TypedValues.push(item);
-  remove = (item) => this.TypedValues.remove(item);
+  add = (item) => this.Value.push(item);
+  remove = (item) => this.Value.remove(item);
 
   updateEntityTypeHandler = (newType) => {
     if (!newType) return;
 
-    this.TypedValue(new this.entityConstructor());
-    this.fromJSON(this.Value());
+    if (!this.multiple) {
+      this.Value(new this.entityConstructor());
+    } else {
+      this.NewItem(new this.entityConstructor());
+    }
+    if (this.blob) this.fromJSON(JSON.parse(this.blob));
 
     // this.applyValueToTypedValues();
   };
@@ -124,27 +135,27 @@ export default class BlobField extends BaseField {
     this.TypedValues(typedItems);
   };
 
-  Errors = ko.pureComputed(() => {
-    if (!this.Visible()) return [];
-    // const isRequired = ko.unwrap(this.isRequired);
-    const isRequired =
-      typeof this.isRequired == "function"
-        ? this.isRequired()
-        : this.isRequired;
-    if (!isRequired) return [];
-    const currentValue = this.multiple ? this.TypedValues() : this.TypedValue();
-    return currentValue
-      ? []
-      : [
-          new ValidationError(
-            "text-field",
-            "required-field",
-            (typeof this.displayName == "function"
-              ? this.displayName()
-              : this.displayName) + ` is required!`
-          ),
-        ];
-  });
+  // Errors = ko.pureComputed(() => {
+  //   if (!this.Visible()) return [];
+  //   // const isRequired = ko.unwrap(this.isRequired);
+  //   const isRequired =
+  //     typeof this.isRequired == "function"
+  //       ? this.isRequired()
+  //       : this.isRequired;
+  //   if (!isRequired) return [];
+  //   const currentValue = this.multiple ? this.TypedValues() : this.TypedValue();
+  //   return currentValue
+  //     ? []
+  //     : [
+  //         new ValidationError(
+  //           "text-field",
+  //           "required-field",
+  //           (typeof this.displayName == "function"
+  //             ? this.displayName()
+  //             : this.displayName) + ` is required!`
+  //         ),
+  //       ];
+  // });
 
   components = components;
 }

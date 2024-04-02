@@ -8,7 +8,7 @@
 <!-- ko if: entityType -->
 <!-- ko ifnot: multiple -->
 <div
-  data-bind="component: {name: TypedValue().components.edit, params: {Entity: TypedValue()}}"
+  data-bind="component: {name: Value()?.components.edit, params: {Entity: Value()}}"
 ></div>
 <!-- /ko -->
 <!-- ko if: multiple -->
@@ -22,7 +22,7 @@
     </tr>
   </thead>
   <tbody data-bind="">
-    <!-- ko foreach: {data: TypedValues, as: 'row'} -->
+    <!-- ko foreach: {data: Value, as: 'row'} -->
     <tr data-bind="">
       <!-- ko foreach: {data: row.FormFields, as: 'col'} -->
       <td data-bind="text: col.toString"></td>
@@ -37,7 +37,7 @@
     </tr>
     <!-- /ko -->
     <tr>
-      <!-- ko foreach: TypedValue()?.FormFields -->
+      <!-- ko foreach: NewItem()?.FormFields -->
       <td>
         <div
           data-bind="component: {name: components.edit, params: $data}"

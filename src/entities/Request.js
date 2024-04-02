@@ -876,7 +876,7 @@ export class RequestEntity {
       this.FieldMap.RequestDescription.validate();
     },
     validateBody: () => {
-      return this.RequestBodyBlob?.TypedValue()?.validate();
+      return this.RequestBodyBlob?.Value()?.validate();
     },
     reset: () => this.Validation.WasValidated(false),
     Errors: {
@@ -892,7 +892,7 @@ export class RequestEntity {
         return errors;
       }),
       ServiceType: ko.pureComputed(() => {
-        return this.RequestBodyBlob?.TypedValue()?.Errors() ?? [];
+        return this.RequestBodyBlob?.Value()?.Errors() ?? [];
       }),
       All: ko.pureComputed(() => [
         ...this.Validation.Errors.Request(),
@@ -1169,7 +1169,7 @@ export class RequestEntity {
       set: (val) => {
         if (!this.RequestBodyBlob) return;
         this.RequestBodyBlob.set(val);
-        const requestBodyEntity = this.RequestBodyBlob.TypedValue();
+        const requestBodyEntity = this.RequestBodyBlob.Value();
         if (requestBodyEntity?.setRequestContext)
           requestBodyEntity.setRequestContext(this);
       },
