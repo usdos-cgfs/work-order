@@ -13,6 +13,8 @@ export default class BaseField {
     this.isRequired = isRequired;
     this.Visible = Visible;
     this.width = width ? "col-md-" + width : "col-md-6";
+
+    this.addFieldRequirement(isRequiredValidationRequirement(this));
   }
 
   Value = ko.observable();
@@ -30,27 +32,19 @@ export default class BaseField {
     return this.Errors();
   };
 
+  _fieldValidationRequirements = ko.observableArray();
+
   Errors = ko.pureComputed(() => {
     if (!this.Visible()) return [];
-    // const isRequired = ko.unwrap(this.isRequired);
-    const isRequired =
-      typeof this.isRequired == "function"
-        ? this.isRequired()
-        : this.isRequired;
-    if (!isRequired) return [];
-    const currentValue = ko.unwrap(this.Value);
-    return currentValue
-      ? []
-      : [
-          new ValidationError(
-            "text-field",
-            "required-field",
-            (typeof this.displayName == "function"
-              ? this.displayName()
-              : this.displayName) + ` is required!`
-          ),
-        ];
+    const errors = this._fieldValidationRequirements()
+      .filter((req) => req.requirement())
+      .map((req) => req.error);
+
+    return errors;
   });
+
+  addFieldRequirement = (requirement) =>
+    this._fieldValidationRequirements.push(requirement);
 
   IsValid = ko.pureComputed(() => !this.Errors().length);
 
@@ -60,4 +54,23 @@ export default class BaseField {
     if (!this.ShowErrors()) return;
     return this.Errors().length ? "is-invalid" : "is-valid";
   });
+}
+
+function isRequiredValidationRequirement(field) {
+  return {
+    requirement: ko.pureComputed(() => {
+      // Return true if field fails validation
+      const isRequired = ko.unwrap(field.isRequired);
+      if (!isRequired) return false;
+
+      const value = ko.unwrap(field.Value);
+      if (value?.constructor == Array) return !value.length;
+      return value === null || value === undefined;
+    }),
+    error: new ValidationError(
+      "text-field",
+      "required-field",
+      `${ko.utils.unwrapObservable(field.displayName)} is required!`
+    ),
+  };
 }
