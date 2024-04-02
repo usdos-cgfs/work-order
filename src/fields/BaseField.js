@@ -32,10 +32,8 @@ export default class BaseField {
 
   Errors = ko.pureComputed(() => {
     if (!this.Visible()) return [];
-    const isRequired =
-      typeof this.isRequired == "function"
-        ? this.isRequired()
-        : this.isRequired;
+    const isRequired = ko.unwrap(this.isRequired);
+
     if (!isRequired) return [];
     return this.Value()
       ? []
