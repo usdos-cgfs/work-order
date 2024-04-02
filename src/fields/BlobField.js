@@ -50,14 +50,21 @@ export default class BlobField extends BaseField {
   TypedValues = ko.observableArray();
   TypedValue = ko.observable();
 
+  // Value = ko.pureComputed(() =>
+  //   this.multiple ? this.TypedValues() : this.TypedValue()
+  // );
+
   get = () => {
     return JSON.stringify(this.toJSON());
   };
 
   set = (val) => {
     if (window.DEBUG) console.log(val);
-    this.Value(JSON.parse(val));
-    this.fromJSON(this.Value());
+    if (val?.constructor == BlobField) {
+      // this.fromJSON(val.toJSON());
+      return;
+    }
+    this.fromJSON(JSON.parse(val));
   };
 
   get entityConstructor() {
@@ -89,6 +96,7 @@ export default class BlobField extends BaseField {
     this.TypedValue(new this.entityConstructor());
   };
 
+  add = (item) => this.TypedValues.push(item);
   remove = (item) => this.TypedValues.remove(item);
 
   updateEntityTypeHandler = (newType) => {
@@ -115,5 +123,28 @@ export default class BlobField extends BaseField {
     });
     this.TypedValues(typedItems);
   };
+
+  Errors = ko.pureComputed(() => {
+    if (!this.Visible()) return [];
+    // const isRequired = ko.unwrap(this.isRequired);
+    const isRequired =
+      typeof this.isRequired == "function"
+        ? this.isRequired()
+        : this.isRequired;
+    if (!isRequired) return [];
+    const currentValue = this.multiple ? this.TypedValues() : this.TypedValue();
+    return currentValue
+      ? []
+      : [
+          new ValidationError(
+            "text-field",
+            "required-field",
+            (typeof this.displayName == "function"
+              ? this.displayName()
+              : this.displayName) + ` is required!`
+          ),
+        ];
+  });
+
   components = components;
 }

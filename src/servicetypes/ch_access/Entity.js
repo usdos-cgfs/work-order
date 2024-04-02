@@ -32,14 +32,19 @@ export default class CH_Access extends BaseServiceDetail {
     displayName: "Access Type",
     options: this.accessTypeOpts,
   });
+
   BadgeNum = new TextField({ displayName: "Badge Num", isRequired: true });
+
   EmployeeType = new SelectField({
     isRequired: true,
     displayName: "Employee Type",
     options: this.employeeTypeOpts,
   });
-  FullName = new TextField({ displayName: "Full Name", isRequired: true });
-  Locations = new TextField({ displayName: "Locations", isRequired: true });
+
+  // FullName = new TextField({ displayName: "Full Name", isRequired: true });
+
+  // Locations = new TextField({ displayName: "Locations", isRequired: true });
+
   Supervisor = new PeopleField({
     displayName: "Supervisor",
     isRequired: true,
