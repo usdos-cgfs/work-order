@@ -8,19 +8,9 @@ import { ValidationError } from "../../../primitives/ValidationError.js";
 import PeopleField from "../../../fields/PeopleField.js";
 
 import { assignmentStates } from "../../../entities/Assignment.js";
-import CH_Overtime from "../Entity.js";
+import CH_Overtime, { getApmOrg, getGtmOrg } from "../Entity.js";
 import ApprovalActions from "../../../components/AssignmentActions/ApprovalModule.js";
 import { getUsersByGroupName } from "../../../infrastructure/Authorization.js";
-
-const getApmOrg = ko.pureComputed(() => {
-  return requestOrgStore().find(
-    (org) => org.Title.toUpperCase() == "CGFS/APMS"
-  );
-});
-
-const getGtmOrg = ko.pureComputed(() =>
-  requestOrgStore().find((org) => org.Title.toUpperCase() == "CGFS/GTMS")
-);
 
 export default class ActionGovManager extends ApprovalActions {
   constructor(params) {
@@ -76,7 +66,6 @@ export default class ActionGovManager extends ApprovalActions {
     isRequired: false,
     spGroupName: ko.pureComputed(() => {
       const gtmOrg = ko.unwrap(getGtmOrg);
-
       return gtmOrg?.UserGroup?.Title;
     }),
   });

@@ -40,6 +40,20 @@ registerServiceTypeActionComponent({
   componentName: "GovManagerActions",
 });
 
+export const getApmOrg = ko.pureComputed(() => {
+  return requestOrgStore().find(
+    (org) => org.Title.toUpperCase() == "CGFS/APMS"
+  );
+});
+
+export const getGtmOrg = ko.pureComputed(() =>
+  requestOrgStore().find((org) => org.Title.toUpperCase() == "CGFS/GTMS")
+);
+
+export const getCorOrg = ko.pureComputed(() =>
+  requestOrgStore().find((org) => org.Title.toUpperCase() == "CGFS/CORS")
+);
+
 export default class CH_Overtime extends ConstrainedEntity {
   constructor(requestContext) {
     super(requestContext);
@@ -69,19 +83,30 @@ export default class CH_Overtime extends ConstrainedEntity {
     displayName: "GTM",
     isRequired: this.RequestStage2,
     Visible: this.RequestSubmitted,
-    pickerOptions: ko.observable({
-      SharePointGroupID: 69,
+    spGroupName: ko.pureComputed(() => {
+      const gtmOrg = ko.unwrap(getGtmOrg);
+      return gtmOrg?.UserGroup?.Title;
     }),
   });
   APM = new PeopleField({
     displayName: "APM",
     isRequired: this.RequestSubmitted,
     Visible: this.RequestSubmitted,
+    spGroupName: ko.pureComputed(() => {
+      const apmOrg = ko.unwrap(getApmOrg);
+
+      return apmOrg?.UserGroup?.Title;
+    }),
   });
   COR = new PeopleField({
     displayName: "COR",
     isRequired: this.RequestStage2,
     Visible: this.RequestSubmitted,
+    spGroupName: ko.pureComputed(() => {
+      const org = ko.unwrap(getCorOrg);
+
+      return org?.UserGroup?.Title;
+    }),
   });
 
   ContractorSupplementField = new LookupField({
