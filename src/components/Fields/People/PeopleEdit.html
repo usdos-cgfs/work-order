@@ -26,7 +26,12 @@
   </div>
   <!-- ko if: expandUsers -->
   <ul class="" data-bind="foreach: userOpts">
-    <li data-bind="text: Title"></li>
+    <li>
+      <span
+        data-bind="text: Title, click: $parent.set"
+        class="btn btn-link py-0"
+      ></span>
+    </li>
   </ul>
   <!-- /ko -->
 </div>
