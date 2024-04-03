@@ -317,6 +317,7 @@ export class RequestDetailView {
     request.RequestorInfo.Requestor(new People(currentUser()));
     request.RequestorInfo.Phone(currentUser().WorkPhone);
     request.RequestorInfo.Email(currentUser().EMail);
+    request.RequestorInfo.OfficeSymbol.set(currentUser().OfficeSymbol);
     //this.request.Title = createNewRequestTitle();
     request.State.Status(requestStates.draft);
     request.State.InternalStatus(requestStates.draft);

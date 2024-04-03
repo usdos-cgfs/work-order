@@ -19,7 +19,7 @@
       <p data-bind="text: ObservableTitle"></p>
     </div>
     <div class="col-6">
-      <h6>Requestor Office:</h6>
+      <h6>Requesting Org:</h6>
       <p data-bind="text: RequestorInfo.Office()?.Title"></p>
     </div>
   </div>
@@ -27,6 +27,10 @@
     <div class="col-6">
       <h6>Requestor:</h6>
       <p data-bind="text: RequestorInfo.Requestor()?.Title"></p>
+    </div>
+    <div class="col-6">
+      <h6>Requestor Office:</h6>
+      <p data-bind="text: RequestorInfo.OfficeSymbol.Value"></p>
     </div>
   </div>
   <div class="row">

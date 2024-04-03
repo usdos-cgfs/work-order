@@ -14,7 +14,7 @@
     </div>
     <div class="col-6 pb-2">
       <div class="form-group">
-        <label><h6>Requestor Office:</h6></label>
+        <label><h6>Requesting Org:</h6></label>
         <select
           class="form-control"
           data-bind="value: RequestorInfo.Office,
@@ -37,6 +37,13 @@
         id="people-requestor"
         data-bind="people: RequestorInfo.Requestor"
       ></div>
+    </div>
+    <div class="col-6 pb-2">
+      <h6>Requestor Office:</h6>
+      <input
+        class="form-control"
+        data-bind="value: RequestorInfo.OfficeSymbol.Value"
+      />
     </div>
   </div>
   <div class="row">

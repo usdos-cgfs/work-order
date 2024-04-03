@@ -166,6 +166,7 @@ export class RequestEntity {
     Phone: ko.observable(),
     Email: ko.observable(),
     Office: ko.observable(),
+    OfficeSymbol: new TextField({ displayName: "Office Symbol" }),
   };
 
   State = {
@@ -1132,6 +1133,7 @@ export class RequestEntity {
     },
     RequestorPhone: this.RequestorInfo.Phone,
     RequestorEmail: this.RequestorInfo.Email,
+    RequestorOfficeSymbol: this.RequestorInfo.OfficeSymbol,
     RequestingOffice: {
       set: (val) => this.RequestorInfo.Office(RequestOrg.Create(val)),
       get: this.RequestorInfo.Office,
@@ -1184,6 +1186,7 @@ export class RequestEntity {
       "Requestor",
       "RequestorPhone",
       "RequestorEmail",
+      "RequestorOfficeSymbol",
       "RequestingOffice",
       "IsActive",
       "PipelineStage",
@@ -1201,6 +1204,7 @@ export class RequestEntity {
       "ID",
       "Title",
       "ServiceType",
+      "RequestorOfficeSymbol",
       "RequestingOffice",
       "RequestOrgs",
       "Requestor",
@@ -1216,6 +1220,7 @@ export class RequestEntity {
       "ID",
       "Title",
       "ServiceType",
+      "RequestorOfficeSymbol",
       "RequestingOffice",
       "Requestor",
       "RequestStatus",

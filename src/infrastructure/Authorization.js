@@ -96,10 +96,10 @@ export class User extends People {
     this.WorkPhone = WorkPhone;
     this.EMail = EMail;
 
-    this.Department = Department;
+    this.OfficeSymbol = Department ?? "CGFS/EX";
     this.Groups = Groups;
   }
-  Department;
+  OfficeSymbol;
   Groups = [];
 
   isInGroup(group) {
