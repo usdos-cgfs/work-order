@@ -12,6 +12,16 @@ import CH_Overtime from "../Entity.js";
 import ApprovalActions from "../../../components/AssignmentActions/ApprovalModule.js";
 import { getUsersByGroupName } from "../../../infrastructure/Authorization.js";
 
+const getApmOrg = ko.pureComputed(() => {
+  return requestOrgStore().find(
+    (org) => org.Title.toUpperCase() == "CGFS/APMS"
+  );
+});
+
+const getGtmOrg = ko.pureComputed(() =>
+  requestOrgStore().find((org) => org.Title.toUpperCase() == "CGFS/GTMS")
+);
+
 export default class ActionGovManager extends ApprovalActions {
   constructor(params) {
     super(params);
@@ -29,8 +39,6 @@ export default class ActionGovManager extends ApprovalActions {
     this.gtmWatcher(this.ServiceType?.GTM.get());
     const isValid = this.validate(false);
 
-    this.apmGroup.subscribe(this.apmChangeHandler);
-    this.apmChangeHandler(this.apmGroup());
     // this.newEntity = new CH_Overtime();
     // this.newEntity.fromJSON(this.ServiceType.toJSON());
 
@@ -42,25 +50,11 @@ export default class ActionGovManager extends ApprovalActions {
 
   Editing = ko.observable(true);
 
-  apmGroup = ko.pureComputed(() => {
-    return requestOrgStore().find(
-      (org) => org.Title.toUpperCase() == "CGFS/APMS"
-    );
-  });
-
-  apmChangeHandler = async (group) => {
-    if (!group?.UserGroup?.Title) return;
-    const users = await getUsersByGroupName(group?.UserGroup?.Title);
-
-    const instructionText = users.map((user) => user.Title).join("; ");
-    this.APM.instructions("Options: " + instructionText);
-  };
-
   APM = new PeopleField({
     displayName: "APM",
     isRequired: true,
     spGroupName: ko.pureComputed(() => {
-      const apmOrg = this.apmGroup();
+      const apmOrg = ko.unwrap(getApmOrg);
 
       return apmOrg?.UserGroup?.Title;
     }),
@@ -80,6 +74,11 @@ export default class ActionGovManager extends ApprovalActions {
   GTM = new PeopleField({
     displayName: "GTM",
     isRequired: false,
+    spGroupName: ko.pureComputed(() => {
+      const gtmOrg = ko.unwrap(getGtmOrg);
+
+      return gtmOrg?.UserGroup?.Title;
+    }),
   });
 
   hasBeenValidated = ko.observable(false);
@@ -129,8 +128,10 @@ export default class ActionGovManager extends ApprovalActions {
     this.ServiceType.APM.set(this.APM.get());
 
     if (this.GTM.get()) {
-      updatedEntity.GTM = this.GTM.get();
       this.ServiceType.GTM.set(this.GTM.get());
+    } else if (this.ServiceType.GTM.get()) {
+      // The user is trying to clear the field
+      this.ServiceType.GTM.set(null);
     }
 
     // await ApplicationDbContext.Set(CH_Overtime).UpdateEntity(updatedEntity);
