@@ -809,14 +809,6 @@
                 Submit Request
               </button>
               <!-- /ko -->
-              <!-- ko if: ShowCloseArea  -->
-              <button class="btn btn-danger" data-bind="click: promptCancel">
-                Close as Cancelled
-              </button>
-              <button class="btn btn-primary" data-bind="click: promptFulfill">
-                Close as Fulfilled
-              </button>
-              <!-- /ko -->
             </div>
           </div>
         </div>
@@ -985,17 +977,35 @@
             <i class="fa-solid fa-play fa-xl"></i>
           </button>
           <!-- /ko -->
+          <!-- ko if: ShowCloseArea  -->
+          <button
+            title="Cancel Request"
+            class="btn btn-danger action"
+            data-bind="click: promptCancel"
+          >
+            <i class="fa-solid fa-ban fa-xl"></i>
+          </button>
+          <!-- /ko -->
           <!-- ko if: request.Pipeline.getNextStage -->
           <button
+            title="Advance to next stage"
             type="button"
             class="btn btn-success action"
             data-bind="click: nextStageHandler, enable: request.Assignments.CurrentStage.Validation.IsValid"
           >
             Next Stage <span class="fa fa-chevron-right"></span>
           </button>
+          <button
+            title="Close Request as Fulfilled"
+            class="btn btn-success action"
+            data-bind="click: promptFulfill"
+          >
+            <i class="fa-solid fa-angles-right fa-lg"></i>
+          </button>
           <!-- /ko -->
           <!-- ko ifnot: request.Pipeline.getNextStage -->
           <button
+            title="Close and finalize"
             type="button"
             class="btn btn-success action"
             data-bind="click: promptClose, enable: request.Assignments.CurrentStage.Validation.IsValid"
