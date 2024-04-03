@@ -49,12 +49,21 @@ export function getDefaultGroups() {
   return result;
 }
 
+const siteGroups = {};
+
 export async function getGroupUsers(groupName) {
-  const url = `/web/sitegroups/GetByName('${groupName}')/Users`;
+  if (siteGroups[groupName]?.Users?.constructor == Array) {
+    return siteGroups[groupName].Users;
+  }
+  const url = `/web/sitegroups/GetByName('${groupName}')?$expand=Users`;
 
-  const users = await spFetch(url);
+  const groupResult = await spFetch(url);
 
-  return users.d.results;
+  const group = groupResult.d;
+  group.Users = group.Users?.results;
+
+  siteGroups[groupName] = group;
+  return group.Users;
 }
 
 // Used in router

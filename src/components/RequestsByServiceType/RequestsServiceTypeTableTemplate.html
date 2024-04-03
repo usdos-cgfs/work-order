@@ -23,7 +23,7 @@
         <td data-bind="text: State.Status"></td>
         <!-- ko foreach: $parent.SupplementCols -->
         <td
-          data-bind="text: rmap.RequestBodyBlob?.TypedValue().FieldMap[key]?.toString()"
+          data-bind="text: rmap.RequestBodyBlob?.Value().FieldMap[key]?.toString()"
         ></td>
         <!-- /ko -->
       </tr>

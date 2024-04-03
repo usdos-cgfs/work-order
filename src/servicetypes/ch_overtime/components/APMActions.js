@@ -14,7 +14,7 @@ export default class ActionAPM extends ApprovalActions {
     if (window.DEBUG) console.log("Hello from APM Actions module.");
     this._context = getAppContext();
 
-    this.ServiceType = params.request.RequestBodyBlob?.TypedValue();
+    this.ServiceType = params.request.RequestBodyBlob?.Value();
     this.Errors = params.errors;
     // this.ServiceType.Entity().GTM.subscribe(this.gtmWatcher);
     this.Request = params.request;
@@ -137,7 +137,7 @@ export default class ActionAPM extends ApprovalActions {
 
     // this.ServiceType.refreshEntity();
 
-    this.Request.RequestBodyBlob.TypedValue(this.newEntity);
+    this.Request.RequestBodyBlob.Value(this.newEntity);
 
     await this._context.Requests.UpdateEntity(this.Request, [
       "RequestBodyBlob",
@@ -154,7 +154,7 @@ export default class ActionAPM extends ApprovalActions {
     this.hasBeenValidated(true);
     if (this.validate().length) return;
 
-    this.Request.RequestBodyBlob.TypedValue(this.newEntity);
+    this.Request.RequestBodyBlob.Value(this.newEntity);
 
     await this._context.Requests.UpdateEntity(this.Request, [
       "RequestBodyBlob",

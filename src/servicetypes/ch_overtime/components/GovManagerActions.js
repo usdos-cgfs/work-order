@@ -17,7 +17,7 @@ export default class ActionGovManager extends ApprovalActions {
     super(params);
     this._context = getAppContext();
 
-    this.ServiceType = params.request.RequestBodyBlob?.TypedValue();
+    this.ServiceType = params.request.RequestBodyBlob?.Value();
     this.Errors = params.errors;
     this.Request = params.request;
 
