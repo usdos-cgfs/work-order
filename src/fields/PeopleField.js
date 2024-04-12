@@ -1,3 +1,4 @@
+import { sortByTitle } from "../common/EntityUtilities.js";
 import { People } from "../entities/People.js";
 import { getUsersByGroupName } from "../infrastructure/Authorization.js";
 import { registerFieldComponent } from "../infrastructure/RegisterComponents.js";
@@ -38,7 +39,7 @@ export default class PeopleField extends BaseField {
     const group = await ensureUserByKeyAsync(groupName);
     this.spGroupId(group.ID);
     const users = await getUsersByGroupName(groupName);
-    this.userOpts(users);
+    this.userOpts(users.sort(sortByTitle));
   };
 
   pickerOptions = ko.pureComputed(() => {
