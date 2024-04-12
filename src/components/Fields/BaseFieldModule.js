@@ -6,7 +6,7 @@ export default class BaseFieldModule {
   _id;
   getUniqueId = () => {
     if (!this._id) {
-      this._id = "field-" + new Date().getTime();
+      this._id = "field-" + Math.floor(Math.random() * 10000);
     }
     return this._id;
   };

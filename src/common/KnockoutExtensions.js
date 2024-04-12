@@ -121,8 +121,8 @@ ko.bindingHandlers.toggles = {
 };
 
 ko.bindingHandlers.people = {
-  init: function (element, valueAccessor, allBindingsAccessor) {
-    const pickerOptions = allBindingsAccessor.get("pickerOptions") ?? {};
+  init: function (element, valueAccessor, allBindings) {
+    const pickerOptions = allBindings.get("pickerOptions") ?? {};
 
     if (ko.isObservable(pickerOptions)) {
       pickerOptions.subscribe(initPickerElement);

@@ -15,7 +15,7 @@ registerFieldComponent("people", components);
 export default class PeopleField extends BaseField {
   constructor(params) {
     super(params);
-    this.pickerOptions = params.pickerOptions ?? {};
+    // this.pickerOptions = params.pickerOptions ?? {};
     this.spGroupName = params.spGroupName ?? null;
 
     if (this.spGroupName) {
