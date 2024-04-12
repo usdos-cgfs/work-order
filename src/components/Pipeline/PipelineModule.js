@@ -1,3 +1,4 @@
+import { actionTypes } from "../../entities/Action.js";
 import { stageActionTypes } from "../../entities/PipelineStage.js";
 import { requestStates } from "../../entities/Request.js";
 import { currentUser } from "../../infrastructure/Authorization.js";
@@ -47,6 +48,34 @@ export default class PipelineModule {
           break;
       }
     }
+  };
+
+  listItemSubText = (stage) => {
+    // return the date the stage was completed or the actiontype
+    const stageAction = ko.unwrap(stage?.ActionType);
+    if (!stageAction) return "";
+    if (stageActionTypes.Closed == stageAction) {
+      return stageAction;
+    }
+    const thisStepNum = stage.Step ?? 0;
+    const nextStepNum = thisStepNum + 1;
+    const nextStage = this.Pipeline.Stages()?.find(
+      (nStage) => nStage.Step == nextStepNum
+    );
+
+    const advancedAction = this.request.Actions.list.All().find((action) => {
+      if (nextStage.ActionType == stageActionTypes.Closed)
+        return action.ActionType == actionTypes.Closed;
+      return (
+        action.PipelineStage?.Step == nextStage.Step &&
+        action.ActionType == actionTypes.Advanced
+      );
+    });
+
+    if (!advancedAction) return stageAction;
+
+    return "Completed: " + advancedAction.Created?.toLocaleDateString();
+    // const advanced = this.request.
   };
 
   setSelected = (stage) => {

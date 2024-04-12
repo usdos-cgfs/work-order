@@ -17,7 +17,7 @@
               <div class="mx-2"></div>
               <div>
                 <div class="fw-bold" data-bind="text: Title"></div>
-                <p data-bind="text: ActionType"></p>
+                <p data-bind="text: $parent.listItemSubText($data)"></p>
               </div>
             </div>
           </li>
