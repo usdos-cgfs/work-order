@@ -179,6 +179,13 @@ export default class CH_Overtime extends ConstrainedEntity {
       const budgetGroup = requestOrgStore().find(
         (org) => org.Title.toUpperCase() == "CGFS/EX/BUDGET"
       )?.UserGroup;
+
+      const exGroup = requestOrgStore().find(
+        (org) => org.Title.toUpperCase() == "CGFS/EX"
+      )?.UserGroup;
+
+      const corGroup = getCorOrg()?.UserGroup;
+      
       const user = currentUser();
 
       return [
@@ -187,6 +194,8 @@ export default class CH_Overtime extends ConstrainedEntity {
         [this.GTM.get(), permissions.RestrictedContribute],
         [this.COR.get(), permissions.RestrictedContribute],
         [budgetGroup, permissions.RestrictedContribute],
+        [exGroup, permissions.RestrictedContribute],
+        [corGroup, permissions.RestrictedContribute],
       ];
     },
   };
