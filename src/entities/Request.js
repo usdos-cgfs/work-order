@@ -1037,8 +1037,10 @@ export class RequestEntity {
   };
 
   getAllListRefs() {
-    const listRefs = this.getInitialListRefs();
-    listRefs.concat([this._context.Comments, this._context.Attachments]);
+    const listRefs = this.getInitialListRefs().concat([
+      this._context.Comments,
+      this._context.Attachments,
+    ]);
     return listRefs;
   }
 
