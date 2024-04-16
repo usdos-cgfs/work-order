@@ -185,7 +185,7 @@ export default class CH_Overtime extends ConstrainedEntity {
       )?.UserGroup;
 
       const corGroup = getCorOrg()?.UserGroup;
-      
+
       const user = currentUser();
 
       return [

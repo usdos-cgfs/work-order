@@ -9,7 +9,7 @@
       class: ValidationClass"
   ></div>
   <!-- /ko -->
-  <!-- ko if: spGroupId -->
+  <!-- ko if: ShowUserSelect -->
   <select
     class="form-select"
     name=""
@@ -17,7 +17,7 @@
     data-bind="options: userOpts, 
     optionsCaption: 'Select...', 
     optionsText: 'Title',
-    value: Value,
+    value: ValueFunc,
     class: ValidationClass"
   ></select>
   <!-- /ko -->

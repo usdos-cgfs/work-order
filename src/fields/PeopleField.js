@@ -19,13 +19,14 @@ export default class PeopleField extends BaseField {
     // this.pickerOptions = params.pickerOptions ?? {};
     this.spGroupName = params.spGroupName ?? null;
 
-    if (this.spGroupName) {
+    if (ko.isObservable(this.spGroupName)) {
       this.spGroupName.subscribe(this.spGroupNameChangedHandler);
     }
     if (ko.unwrap(this.spGroupName)) {
       this.spGroupNameChangedHandler(ko.unwrap(this.spGroupName));
     }
   }
+
   spGroupId = ko.observable();
   userOpts = ko.observableArray();
   expandUsers = ko.observable(false);
