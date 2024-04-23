@@ -424,6 +424,24 @@
             data-bind="text: selectedServiceType() ? selectedServiceType().Title : 'Oops, something went wrong'"
           ></div>
           <div class="content">
+            <!-- ko if: selectedServiceType().IsMigrated -->
+            <div class="ui warning message">
+              <div class="header">
+                This Service Type has been migrated to the new Work Order
+                System!
+              </div>
+              <p>
+                To create a new request, click this
+                <a
+                  target="_blank"
+                  href="https://usdos.sharepoint.com/sites/CGFS/EX/WOCHS/SitePages/app.aspx?tab=new-request-tab"
+                  >link</a
+                >
+                or copy and paste the following url into you're browser:
+              </p>
+              <input style="width: 100%" type="text" disabled value="https://usdos.sharepoint.com/sites/CGFS/EX/WOCHS/SitePages/app.aspx?tab=new-request-tab"></input>
+            </div>
+            <!-- /ko -->
             <div>
               For
               <span data-bind="text: selectedServiceType().Title"></span>
@@ -446,38 +464,22 @@
               <!-- /ko -->
               team.
             </div>
-            <!-- ko if: selectedServiceType().IsMigrated -->
-            <div class="ui warning message">
-              <div class="header">
-                This Service Type has been migrated to the new Work Order
-                System!
-              </div>
-              <p>
-                Click this
-                <a
-                  target="_blank"
-                  href="https://usdos.sharepoint.com/sites/CGFS/EX/WOCHS/SitePages/app.aspx?tab=new-request-tab"
-                  >link</a
-                >
-                or copy and paste the following url into you're browser:
-              </p>
-              <input type="text" disabled>https://usdos.sharepoint.com/sites/CGFS/EX/WOCHS/SitePages/app.aspx?tab=new-request-tab</input>
-            </div>
-            <!-- /ko -->
           </div>
           <div class="actions">
             <div class="actions">
               <div class="ui black deny button" onclick="dismissDescription()">
                 Close
               </div>
+              <!-- ko ifnot: selectedServiceType().IsMigrated -->
               <div
-                data-bind="ifnot: selectedServiceType().IsMigrated"
+                data-bind=""
                 class="ui positive right labeled icon button"
                 onclick="newWorkOrder()"
               >
                 Create New
                 <i class="checkmark icon"></i>
               </div>
+              <!-- /ko -->
             </div>
           </div>
         </div>
