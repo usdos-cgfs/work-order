@@ -286,6 +286,7 @@ var configServiceTypeListDef = {
     DaysToCloseBusiness: { type: "Text", koMap: "empty" },
     EmailPipelineOnClose: { type: "Bool", koMap: "empty" },
     HideReport: { type: "Bool", koMap: "empty" },
+    IsMigrated: { type: "Bool", koMap: "empty" },
     ReminderDays: { type: "Text", koMap: "empty" },
     KPIThresholdYellow: { type: "Text", koMap: "empty" },
     KPIThresholdGreen: { type: "Text", koMap: "empty" },

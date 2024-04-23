@@ -446,6 +446,24 @@
               <!-- /ko -->
               team.
             </div>
+            <!-- ko if: selectedServiceType().IsMigrated -->
+            <div class="ui warning message">
+              <div class="header">
+                This Service Type has been migrated to the new Work Order
+                System!
+              </div>
+              <p>
+                Click this
+                <a
+                  target="_blank"
+                  href="https://usdos.sharepoint.com/sites/CGFS/EX/WOCHS/SitePages/app.aspx?tab=new-request-tab"
+                  >link</a
+                >
+                or copy and paste the following url into you're browser:
+              </p>
+              <input type="text" disabled>https://usdos.sharepoint.com/sites/CGFS/EX/WOCHS/SitePages/app.aspx?tab=new-request-tab</input>
+            </div>
+            <!-- /ko -->
           </div>
           <div class="actions">
             <div class="actions">
@@ -453,6 +471,7 @@
                 Close
               </div>
               <div
+                data-bind="ifnot: selectedServiceType().IsMigrated"
                 class="ui positive right labeled icon button"
                 onclick="newWorkOrder()"
               >
