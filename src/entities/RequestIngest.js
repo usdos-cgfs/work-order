@@ -23,6 +23,7 @@ export class RequestIngest extends ConstrainedEntity {
 
   Body = new TextAreaField({
     displayName: "Body",
+    isRichText: true,
   });
 
   FieldMap = {
@@ -31,6 +32,8 @@ export class RequestIngest extends ConstrainedEntity {
     Title: this.Title,
     Body: this.Body,
   };
+
+  getStagedAttachmentsFolderPath = () => "Staged/" + this.ID;
 
   static Views = {
     All: ["ID", "Title", "From", "CC", "Body"],

@@ -1994,6 +1994,17 @@ export function SPList(listDef) {
     );
   }
 
+  function deleteFolderByPathAsync(relFolderPath) {
+    const serverRelFolderPath = getServerRelativeFolderPath(relFolderPath);
+
+    const url = `/web/GetFolderByServerRelativeUrl('${serverRelFolderPath}')`;
+    const headers = {
+      "If-Match": "*",
+      "X-HTTP-Method": "DELETE",
+    };
+    return spFetch(url, "POST", headers);
+  }
+
   /*****************************************************************
                                   
   ******************************************************************/
@@ -2379,6 +2390,7 @@ https://learn.microsoft.com/en-us/previous-versions/office/developer/sharepoint-
     getItemPermissionsAsync,
     getFolderContentsAsync,
     upsertFolderPathAsync,
+    deleteFolderByPathAsync,
     getServerRelativeFolderPath,
     setFolderReadonlyAsync,
     setFolderPermissionsAsync,

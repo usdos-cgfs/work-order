@@ -8,6 +8,7 @@ import { Attachment } from "../../entities/Attachment.js";
 
 export default class PendingRequestIngestsModule {
   PendingRows = ko.pureComputed(() => {
+    // return [];
     return requestIngests().map((item) => new RequestIngestItem(item));
   });
 
@@ -16,6 +17,19 @@ export default class PendingRequestIngestsModule {
       serviceType.userCanInitiate(currentUser())
     )
   );
+
+  deleteItem = async (requestIngest) => {
+    const context = getAppContext();
+
+    // Delete attachments
+    const folderPath = requestIngest.getStagedAttachmentsFolderPath();
+    await context.Attachments.DeleteFolderByPath(folderPath);
+
+    // Delete item
+    await context.RequestIngest.RemoveEntity(requestIngest);
+
+    requestIngests(await this.context.RequestIngests.ToList());
+  };
 }
 
 class RequestIngestItem {
@@ -25,11 +39,14 @@ class RequestIngestItem {
     this.ConvertTo.subscribe(this.onConvertToChangeHandler);
   }
 
+  ShowBody = ko.observable(false);
+
   ConvertTo = ko.observable();
 
   onConvertToChangeHandler = (convertTo) => {
     if (!convertTo) return null;
     this.ConvertTo(null);
+    this.ShowBody(false);
     console.log("converting to...", convertTo);
     convertToServiceType(convertTo, this.requestIngest);
   };

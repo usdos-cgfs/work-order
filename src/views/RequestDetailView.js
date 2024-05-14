@@ -138,11 +138,13 @@ export class RequestDetailView {
       finishTask(breakingPermissionsTask);
 
       if (hasStagedAttachments) {
+        const stagingFolderPath = this.request.getRelativeFolderPathStaging();
         await this._context.Attachments.CopyFolderContents(
-          this.request.getRelativeFolderPathStaging(),
+          stagingFolderPath,
           folderPath
         );
         // Delete
+        await this._context.Attachments.DeleteFolderByPath(stagingFolderPath);
       }
     }
 

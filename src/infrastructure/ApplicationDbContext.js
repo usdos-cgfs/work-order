@@ -278,6 +278,10 @@ class EntitySet {
     return this.ListRef.upsertFolderPathAsync(folderPath);
   };
 
+  DeleteFolderByPath = function (folderPath) {
+    return this.ListRef.deleteFolderByPathAsync(folderPath);
+  };
+
   // Permissions
   SetFolderReadOnly = async function (relFolderPath) {
     return this.ListRef.setFolderReadonlyAsync(relFolderPath);
