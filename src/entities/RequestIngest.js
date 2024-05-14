@@ -31,6 +31,7 @@ export class RequestIngest extends ConstrainedEntity {
   });
 
   FieldMap = {
+    To: this.To,
     From: this.From,
     CC: this.CC,
     Title: this.Title,
