@@ -13,6 +13,10 @@ export class RequestIngest extends ConstrainedEntity {
     displayName: "From",
   });
 
+  To = new TextField({
+    displayName: "To",
+  });
+
   CC = new TextField({
     displayName: "CC",
   });
@@ -36,7 +40,7 @@ export class RequestIngest extends ConstrainedEntity {
   getStagedAttachmentsFolderPath = () => "Staged/" + this.ID;
 
   static Views = {
-    All: ["ID", "Title", "From", "CC", "Body"],
+    All: ["ID", "Title", "From", "To", "CC", "Body"],
   };
 
   static ListDef = {

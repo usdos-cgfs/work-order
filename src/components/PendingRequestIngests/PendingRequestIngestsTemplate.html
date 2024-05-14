@@ -15,7 +15,7 @@
             <button
               type="button"
               class="btn btn-link"
-              title="show additional details"
+              title="Toggle additional details"
               data-bind="text: requestIngest.Title.toString(), 
                     toggles: ShowBody"
             ></button>
@@ -35,17 +35,40 @@
           </td>
         </tr>
         <!-- ko if: ShowBody -->
+        <!-- ko using: requestIngest -->
+        <tr>
+          <td colspan="3">
+            <div class="d-flex justify-content-start gap-5 w-full">
+              <div
+                data-bind="component: {
+                      name: To.components.view, 
+                      params: To}"
+              ></div>
+              <div
+                data-bind="component: {
+                      name: CC.components.view, 
+                      params: CC}"
+              ></div>
+              <div
+                data-bind="component: {
+                      name: From.components.view, 
+                      params: From}"
+              ></div>
+            </div>
+          </td>
+        </tr>
         <tr>
           <td colspan="3">
             <div
               style="max-height: 75vh"
               class="overflow-auto"
               data-bind="component: {
-                    name: requestIngest.Body.components.view, 
-                    params: requestIngest.Body}"
+                    name: Body.components.view, 
+                    params: Body}"
             ></div>
           </td>
         </tr>
+        <!-- /ko -->
         <!-- /ko -->
       </tbody>
     </table>
