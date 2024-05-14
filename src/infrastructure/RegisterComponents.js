@@ -3,6 +3,13 @@ import ConstrainedEntityModule from "../components/ConstrainedEntity/Constrained
 export function RegisterComponents() {
   // Regular Components
   registerComponent({
+    name: "pending-request-ingests",
+    folder: "PendingRequestIngests",
+    module: "PendingRequestIngestsModule",
+    template: "PendingRequestIngestsTemplate",
+  });
+
+  registerComponent({
     name: "approver-actions",
     folder: "AssignmentActions",
     module: "ApprovalModule",

@@ -96,6 +96,7 @@ export class RequestEntity {
 
     if (!ID) {
       this.DisplayMode(DisplayModes.New);
+      this.State.Status(requestStates.draft);
     }
 
     if (RequestType) {
@@ -976,17 +977,25 @@ export class RequestEntity {
 
   getAppLinkElement = () =>
     `<a href="${this.getAppLink()}" target="blank">${this.Title}</a>`;
+
   /**
    * Returns the generic relative path without the list/library name
    * e.g. EX/2929-20199
    */
-  getRelativeFolderPath = ko.pureComputed(
-    () =>
-      `${this.RequestorInfo.Office()?.Title.replace(
-        "/",
-        "_"
-      )}/${this.ObservableTitle()}`
-  );
+  getRelativeFolderPath = ko.pureComputed(() => {
+    if (this.State.Status() == requestStates.draft)
+      return this.getRelativeFolderPathStaging();
+
+    const requestorOffice = this.RequestorInfo.Office()?.Title.replace(
+      "/",
+      "_"
+    );
+    return `${requestorOffice}/${this.ObservableTitle()}`;
+  });
+
+  getRelativeFolderPathStaging = () => {
+    return `Staged/${this.ObservableTitle()}`;
+  };
 
   getFolderUrl = ko.pureComputed(() =>
     this._context.Requests.GetFolderUrl(this.getRelativeFolderPath())

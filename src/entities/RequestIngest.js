@@ -2,6 +2,13 @@ import { TextAreaField, TextField } from "../fields/index.js";
 import ConstrainedEntity from "../primitives/ConstrainedEntity.js";
 
 export class RequestIngest extends ConstrainedEntity {
+  constructor({ ID, Title }) {
+    super();
+    this.ID = ID;
+    this.Title = Title;
+    this.LookupValue = Title;
+  }
+
   From = new TextField({
     displayName: "From",
   });
@@ -26,7 +33,7 @@ export class RequestIngest extends ConstrainedEntity {
   };
 
   static Views = {
-    All: ["ID", "Title", "From", "CC", "Subject", "Body"],
+    All: ["ID", "Title", "From", "CC", "Body"],
   };
 
   static ListDef = {
