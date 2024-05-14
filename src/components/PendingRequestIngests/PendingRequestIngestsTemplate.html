@@ -29,7 +29,12 @@
             ></select>
           </td>
           <td>
-            <button type="button" title="Delete Item" class="btn btn-link">
+            <button
+              type="button"
+              title="Delete Item"
+              class="btn btn-link"
+              data-bind="click: $parent.deleteItem"
+            >
               <span class="fas fa-trash pointer"></span>
             </button>
           </td>

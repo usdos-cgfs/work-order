@@ -18,7 +18,7 @@ export default class PendingRequestIngestsModule {
     )
   );
 
-  deleteItem = async (requestIngest) => {
+  deleteItem = async ({ requestIngest }) => {
     const context = getAppContext();
 
     // Delete attachments
@@ -26,9 +26,9 @@ export default class PendingRequestIngestsModule {
     await context.Attachments.DeleteFolderByPath(folderPath);
 
     // Delete item
-    await context.RequestIngest.RemoveEntity(requestIngest);
+    await context.RequestIngests.RemoveEntity(requestIngest);
 
-    requestIngests(await this.context.RequestIngests.ToList());
+    requestIngests(await context.RequestIngests.ToList());
   };
 }
 
