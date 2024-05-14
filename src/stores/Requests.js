@@ -21,6 +21,8 @@ requestsByStatusMap.set(
   new RequestsByStatusSet(requestStates.rejected)
 );
 
+export const requestIngests = ko.observableArray();
+
 //     'Closed': new RequestsByStatusSet(requestStates.closed),
 
 // export const allOpenRequests = new RequestsByStatusSet(requestStates.open)

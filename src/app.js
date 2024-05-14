@@ -31,7 +31,7 @@ import { RegisterComponents } from "./infrastructure/RegisterComponents.js";
 import { blockingTasks, runningTasks } from "./stores/Tasks.js";
 
 import { Tabs } from "./env.js";
-import { requestsByStatusMap } from "./stores/Requests.js";
+import { requestsByStatusMap, requestIngests } from "./stores/Requests.js";
 
 window.WorkOrder = window.WorkOrder || {};
 
@@ -103,10 +103,13 @@ class App {
 
   InitData = async () => {
     // This is the non-blocking minimum data that should be loaded
-
     const openRequestsSet = requestsByStatusMap.get(requestStates.open);
 
     await openRequestsSet.init();
+
+    // Fetch any requests that are ready for ingest
+
+    requestIngests(await this.context.RequestIngests.ToList());
   };
 
   Init = async function () {
