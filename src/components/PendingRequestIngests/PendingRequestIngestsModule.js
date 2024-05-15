@@ -59,16 +59,25 @@ async function convertToServiceType(serviceType, requestIngest) {
     ServiceType: serviceType,
   });
 
+  const emailBody = requestIngest.Body.Value();
   // Attempt any service type specific mapping
-  newRequest.RequestDescription.Value(requestIngest.Body.Value());
+  if (newRequest.RequestBodyBlob?.Value()?.fromEmail) {
+    newRequest.RequestBodyBlob?.Value()?.fromEmail(emailBody);
+  }
+
+  // Set the email content as the body
+  newRequest.RequestDescription.Value(emailBody);
 
   // Check if there are any attachments
   const context = getAppContext();
-  const requestIngestAttachmentPath = "Staged/" + requestIngest.ID;
+  const requestIngestAttachmentPath =
+    requestIngest.getStagedAttachmentsFolderPath();
+
   const attachmentCount = await context.Attachments.GetItemsByFolderPath(
     requestIngestAttachmentPath,
     Attachment.Views.All
   );
+
   if (attachmentCount.length) {
     console.log("Copying attachments");
     const folderPath = await newRequest.Attachments.createFolder();
