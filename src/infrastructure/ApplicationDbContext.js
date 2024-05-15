@@ -9,6 +9,7 @@ import { ServiceType } from "../entities/ServiceType.js";
 import { Action } from "../entities/Action.js";
 import { Attachment } from "../entities/Attachment.js";
 import { Comment } from "../entities/Comment.js";
+import { RequestIngest } from "../entities/RequestIngest.js";
 
 const DEBUG = false;
 
@@ -46,6 +47,8 @@ export default class ApplicationDbContext {
   Notifications = new EntitySet(Notification);
 
   Requests = new EntitySet(RequestEntity);
+
+  RequestIngests = new EntitySet(RequestIngest);
 
   ConfigHolidays = new EntitySet(Holiday);
 
@@ -273,6 +276,10 @@ class EntitySet {
 
   UpsertFolderPath = async function (folderPath) {
     return this.ListRef.upsertFolderPathAsync(folderPath);
+  };
+
+  DeleteFolderByPath = function (folderPath) {
+    return this.ListRef.deleteFolderByPathAsync(folderPath);
   };
 
   // Permissions

@@ -108,6 +108,7 @@ export class RequestDetailView {
     this.request.DisplayMode(DisplayModes.View);
 
     // 2. Create Folder Structure
+    this.request.State.Status(requestStates.open);
     const folderPath = this.request.getRelativeFolderPath();
 
     createFolders: {
@@ -115,6 +116,9 @@ export class RequestDetailView {
       const folderPerms = this.request.getFolderPermissions();
 
       const listRefs = this.request.getInitialListRefs();
+      // See if we have any staged attachments
+      const hasStagedAttachments = this.request.Attachments.list.All().length;
+      if (hasStagedAttachments) listRefs.push(this._context.Attachments);
 
       await Promise.all(
         listRefs.map(async (listRef) => {
@@ -132,6 +136,16 @@ export class RequestDetailView {
         })
       );
       finishTask(breakingPermissionsTask);
+
+      if (hasStagedAttachments) {
+        const stagingFolderPath = this.request.getRelativeFolderPathStaging();
+        await this._context.Attachments.CopyFolderContents(
+          stagingFolderPath,
+          folderPath
+        );
+        // Delete
+        await this._context.Attachments.DeleteFolderByPath(stagingFolderPath);
+      }
     }
 
     // 3. Initialize request header
@@ -151,7 +165,6 @@ export class RequestDetailView {
         .map((stage) => stage.RequestOrg)
     );
 
-    this.request.State.Status(requestStates.open);
     this.request.State.InternalStatus(requestInternalStates.inProgress);
     this.request.State.IsActive(true);
 
@@ -314,14 +327,16 @@ export class RequestDetailView {
   };
 
   createNewRequest = async ({ request }) => {
-    request.RequestorInfo.Requestor(new People(currentUser()));
-    request.RequestorInfo.Phone(currentUser().WorkPhone);
-    request.RequestorInfo.Email(currentUser().EMail);
-    request.RequestorInfo.OfficeSymbol.set(currentUser().OfficeSymbol);
+    const { Requestor, Phone, Email, OfficeSymbol } = request.RequestorInfo;
+    if (!Requestor()) Requestor(new People(currentUser()));
+    if (!Phone()) Phone(currentUser().WorkPhone);
+    if (!Email()) Email(currentUser().EMail);
+    if (!OfficeSymbol.get()) OfficeSymbol.set(currentUser().OfficeSymbol);
     //this.request.Title = createNewRequestTitle();
-    request.State.Status(requestStates.draft);
-    request.State.InternalStatus(requestStates.draft);
-    request.State.IsActive(true);
+    const { Status, InternalStatus, IsActive } = request.State;
+    if (!Status()) Status(requestStates.draft);
+    if (!InternalStatus()) InternalStatus(requestStates.draft);
+    if (!IsActive()) IsActive(true);
 
     // Watch for a change in service type
     request.LoadedAt(new Date());

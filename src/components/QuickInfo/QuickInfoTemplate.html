@@ -1,5 +1,5 @@
 <div id="quick-info" class="d-flex justify-content-between mb-3">
-  <div class="d-flex flex-column justify-content-end">
+  <div class="action-group d-flex flex-column justify-content-end">
     <!-- ko if: ShowActionOfficeToggle -->
     <div class="form-check form-switch">
       <label class="form-check-label"
@@ -116,11 +116,22 @@
         </div>
       </div>
     </div>
+    <div class="w-full" data-bind='component: "pending-request-ingests"'></div>
     <!-- /ko -->
   </div>
 </div>
 
 <style>
+  #quick-info {
+    gap: 1rem;
+  }
+
+  #quick-info .action-group {
+    min-width: 224px;
+    width: 224px;
+    padding: 1rem;
+  }
+
   #quick-info .status-cards {
     display: flex;
     gap: 1rem;
