@@ -27,19 +27,19 @@ export default class FiscalIrregularities extends BaseServiceDetail {
   });
 
   PointOfContact = new PeopleField({
-    displayName: "Point of Contact",
+    displayName: "Point of Contacts",
     isRequired: true,
   });
 
   CableMRN = new TextField({
     displayName: "Cable MRN",
-    isRequired: true,
+    isRequired: false,
   });
 
   CableDate = new DateField({
     displayName: "Cable Date",
     type: dateFieldTypes.date,
-    isRequired: true,
+    isRequired: false,
   });
 
   USDValue = new TextField({
@@ -52,6 +52,10 @@ export default class FiscalIrregularities extends BaseServiceDetail {
     displayName: "Type of Irregularity",
     options: ["Shortage", "Overage"],
     isRequired: true,
+  });
+
+  ShowShortageDocs = ko.pureComputed(() => {
+    return this.USDValue.Value() && this.FIType.Value() == "Shortage";
   });
 
   FieldMap = {
