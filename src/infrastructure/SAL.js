@@ -1952,12 +1952,8 @@ export function SPList(listDef) {
 
       function onSetFolderPermissionsFailure(sender, args) {
         console.error(
-          "Failed to update permissions on item: " +
-            this.folderItem.get_lookupValue() +
-            args.get_message() +
-            "\n" +
-            args.get_stackTrace(),
-          false
+          "Failed to update permissions on item: " + args.get_message(),
+          args
         );
       }
 
