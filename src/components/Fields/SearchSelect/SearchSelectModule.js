@@ -1,4 +1,4 @@
-import BaseFieldModule from "../BaseFieldModule.js";
+import { html, BaseFieldModule } from "../BaseFieldModule.js";
 
 export default class SearchSelectModule extends BaseFieldModule {
   constructor(field) {

@@ -1,5 +1,5 @@
 import { registerFieldComponent } from "../infrastructure/RegisterComponents.js";
-import BaseField from "./BaseField.js";
+import { BaseField } from "./index.js";
 
 const components = {
   view: "text-area-view",

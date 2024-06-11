@@ -1,9 +1,13 @@
 import { sortByTitle } from "../common/EntityUtilities.js";
 import { People } from "../entities/People.js";
+import { PeopleModule } from "../components/Fields/PeopleModule.js";
 import { getUsersByGroupName } from "../infrastructure/Authorization.js";
-import { registerFieldComponent } from "../infrastructure/RegisterComponents.js";
+import {
+  html,
+  registerFieldComponent,
+} from "../infrastructure/RegisterComponents.js";
 import { ensureUserByKeyAsync } from "../infrastructure/SAL.js";
-import BaseField from "./BaseField.js";
+import { BaseField } from "./index.js";
 
 const components = {
   view: "people-view",
@@ -11,7 +15,7 @@ const components = {
   new: "people-edit",
 };
 
-registerFieldComponent("people", components);
+// registerFieldComponent("people", components);
 
 export default class PeopleField extends BaseField {
   constructor(params) {
@@ -57,3 +61,13 @@ export default class PeopleField extends BaseField {
 
   components = components;
 }
+
+ko.components.register(components.edit, {
+  template: PeopleModule.editTemplate,
+  viewModel: PeopleModule,
+});
+
+ko.components.register(components.view, {
+  template: PeopleModule.viewTemplate,
+  viewModel: PeopleModule,
+});

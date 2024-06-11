@@ -1,4 +1,4 @@
-export { default as BaseField } from "./BaseField.js";
+export * from "./BaseField.js";
 export { default as BlobField } from "./BlobField.js";
 export { default as CheckboxField } from "./CheckboxField.js";
 export { default as DateField } from "./DateField.js";

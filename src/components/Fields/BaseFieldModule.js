@@ -1,4 +1,6 @@
-export default class BaseFieldModule {
+export const html = String.raw;
+
+export class BaseFieldModule {
   constructor(params) {
     Object.assign(this, params);
   }

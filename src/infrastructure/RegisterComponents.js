@@ -1,5 +1,7 @@
 import ConstrainedEntityModule from "../components/ConstrainedEntity/ConstrainedEntityModule.js";
 
+export const html = String.raw;
+
 export function RegisterComponents() {
   // Regular Components
   registerComponent({

@@ -1,6 +1,6 @@
 import { ValidationError } from "../primitives/ValidationError.js";
 
-export default class BaseField {
+export class BaseField {
   constructor({
     displayName,
     instructions = null,

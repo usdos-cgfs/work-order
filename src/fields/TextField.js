@@ -1,5 +1,6 @@
 import { registerFieldComponent } from "../infrastructure/RegisterComponents.js";
-import BaseField from "./BaseField.js";
+import { BaseField } from "./index.js";
+
 // import ValidationError from "../primitives/ValidationError.js";
 
 const components = {
