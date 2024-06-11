@@ -21,6 +21,11 @@ export default class FiscalIrregularities extends BaseServiceDetail {
     super(params);
   }
 
+  CaseNumber = new TextField({
+    displayName: "Case Number",
+    isRequired: false,
+  });
+
   PostLocation = new TextField({
     displayName: "Post Location",
     isRequired: true,
