@@ -1,6 +1,9 @@
-import { html, BaseFieldModule } from "../BaseFieldModule.js";
+import { html, BaseFieldModule } from "./BaseFieldModule.js";
 
-export default class TextAreaModule extends BaseFieldModule {
+const editTemplate = html``;
+const viewTemplate = html``;
+
+export class TextAreaModule extends BaseFieldModule {
   constructor(params) {
     super(params);
   }
@@ -51,4 +54,18 @@ export default class TextAreaModule extends BaseFieldModule {
       Value(editor.root.textContent ? editor.root.innerHTML : "");
     });
   }
+
+  static view = "text-area-view";
+  static edit = "text-area-edit";
+  static new = "text-area-new";
 }
+
+ko.components.register(TextAreaModule.edit, {
+  template: editTemplate,
+  viewModel: TextAreaModule,
+});
+
+ko.components.register(TextAreaModule.view, {
+  template: viewTemplate,
+  viewModel: TextAreaModule,
+});

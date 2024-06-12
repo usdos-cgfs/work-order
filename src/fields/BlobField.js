@@ -1,17 +1,9 @@
-import { registerFieldComponent } from "../infrastructure/RegisterComponents.js";
 import { BaseField } from "./index.js";
 import {
   mapObjectToEntity,
   mapEntityToObject,
 } from "../infrastructure/ApplicationDbContext.js";
-
-const components = {
-  view: "blob-view",
-  edit: "blob-edit",
-  new: "blob-edit",
-};
-
-registerFieldComponent("blob", components);
+import { BlobModule } from "../components/Fields/index.js";
 
 export default class BlobField extends BaseField {
   constructor(params) {
@@ -157,5 +149,5 @@ export default class BlobField extends BaseField {
   //       ];
   // });
 
-  components = components;
+  components = BlobModule;
 }

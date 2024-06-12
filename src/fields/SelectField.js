@@ -1,13 +1,6 @@
+import { SelectModule } from "../components/Fields/index.js";
 import { registerFieldComponent } from "../infrastructure/RegisterComponents.js";
 import { BaseField } from "./index.js";
-
-const components = {
-  view: "select-view",
-  edit: "select-edit",
-  new: "select-edit",
-};
-
-registerFieldComponent("select", components);
 
 export default class SelectField extends BaseField {
   constructor({
@@ -45,5 +38,5 @@ export default class SelectField extends BaseField {
 
   Options = ko.observableArray();
 
-  components = components;
+  components = SelectModule;
 }

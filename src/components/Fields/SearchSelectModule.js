@@ -1,6 +1,9 @@
-import { html, BaseFieldModule } from "../BaseFieldModule.js";
+import { html, BaseFieldModule } from "./BaseFieldModule.js";
 
-export default class SearchSelectModule extends BaseFieldModule {
+const editTemplate = html``;
+const viewTemplate = html``;
+
+export class SearchSelectModule extends BaseFieldModule {
   constructor(field) {
     super(field);
     this.Options = field.Options;
@@ -61,4 +64,18 @@ export default class SearchSelectModule extends BaseFieldModule {
       this.InputGroupFocused(false);
     }, 0);
   };
+
+  static view = "-view";
+  static edit = "-edit";
+  static new = "-new";
 }
+
+ko.components.register(SearchSelectModule.edit, {
+  template: editTemplate,
+  viewModel: SearchSelectModule,
+});
+
+ko.components.register(SearchSelectModule.view, {
+  template: viewTemplate,
+  viewModel: SearchSelectModule,
+});

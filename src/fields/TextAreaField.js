@@ -1,3 +1,4 @@
+import { TextAreaModule } from "../components/Fields/index.js";
 import { registerFieldComponent } from "../infrastructure/RegisterComponents.js";
 import { BaseField } from "./index.js";
 
@@ -16,5 +17,5 @@ export default class TextAreaField extends BaseField {
     this.attr = params.attr ?? {};
   }
 
-  components = components;
+  components = TextAreaModule;
 }

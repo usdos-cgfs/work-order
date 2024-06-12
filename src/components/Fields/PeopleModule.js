@@ -82,4 +82,18 @@ export class PeopleModule extends BaseFieldModule {
 
   static viewTemplate = viewTemplate;
   static editTemplate = editTemplate;
+
+  static view = "people-view";
+  static edit = "people-edit";
+  static new = "people-edit";
 }
+
+ko.components.register(PeopleModule.edit, {
+  template: editTemplate,
+  viewModel: PeopleModule,
+});
+
+ko.components.register(PeopleModule.view, {
+  template: viewTemplate,
+  viewModel: PeopleModule,
+});

@@ -59,15 +59,15 @@ export default class PeopleField extends BaseField {
 
   set = (val) => this.Value(People.Create(val));
 
-  components = components;
+  components = PeopleModule;
 }
 
-ko.components.register(components.edit, {
-  template: PeopleModule.editTemplate,
-  viewModel: PeopleModule,
-});
+// ko.components.register(components.edit, {
+//   template: PeopleModule.editTemplate,
+//   viewModel: PeopleModule,
+// });
 
-ko.components.register(components.view, {
-  template: PeopleModule.viewTemplate,
-  viewModel: PeopleModule,
-});
+// ko.components.register(components.view, {
+//   template: PeopleModule.viewTemplate,
+//   viewModel: PeopleModule,
+// });

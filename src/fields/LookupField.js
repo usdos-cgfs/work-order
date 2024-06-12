@@ -1,14 +1,6 @@
+import { LookupModule } from "../components/Fields/index.js";
 import ApplicationDbContext from "../infrastructure/ApplicationDbContext.js";
-import { registerFieldComponent } from "../infrastructure/RegisterComponents.js";
 import { BaseField } from "./index.js";
-
-const components = {
-  view: "lookup-view",
-  edit: "lookup-edit",
-  new: "lookup-edit",
-};
-
-registerFieldComponent("lookup", components);
 
 export default class LookupField extends BaseField {
   constructor({
@@ -148,7 +140,7 @@ export default class LookupField extends BaseField {
     return new this.entityType(val);
   };
 
-  components = components;
+  components = LookupModule;
 }
 
 // Should fully constrain all entities, this is ridiculous
