@@ -1,6 +1,7 @@
 import { html, BaseFieldModule, register } from "./BaseFieldModule.js";
 
-const editTemplate = html`<label class="fw-semibold"
+const editTemplate = html`
+  <label class="fw-semibold"
     ><span data-bind="text: displayName"></span
     ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span>:
     <!-- ko if: isSearch -->
@@ -46,7 +47,8 @@ const editTemplate = html`<label class="fw-semibold"
   <!-- ko foreach: Errors -->
   <div class="fw-semibold text-danger" data-bind="text: description"></div>
   <!-- /ko -->
-  <!-- /ko --> `;
+  <!-- /ko -->
+`;
 
 export class LookupModule extends BaseFieldModule {
   constructor(params) {

@@ -1,11 +1,7 @@
 import { sortByTitle } from "../common/EntityUtilities.js";
-import { People } from "../entities/People.js";
 import { PeopleModule } from "../components/Fields/PeopleModule.js";
+import { People } from "../entities/People.js";
 import { getUsersByGroupName } from "../infrastructure/Authorization.js";
-import {
-  html,
-  registerFieldComponent,
-} from "../infrastructure/RegisterComponents.js";
 import { ensureUserByKeyAsync } from "../infrastructure/SAL.js";
 import { BaseField } from "./index.js";
 
@@ -14,8 +10,6 @@ const components = {
   edit: "people-edit",
   new: "people-edit",
 };
-
-// registerFieldComponent("people", components);
 
 export default class PeopleField extends BaseField {
   constructor(params) {

@@ -1,6 +1,7 @@
 import { html, BaseFieldModule, register } from "./BaseFieldModule.js";
 
-const editTemplate = html`<h5>
+const editTemplate = html`
+  <h5>
     <span data-bind="text: displayName"></span
     ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span>:
   </h5>
@@ -60,9 +61,11 @@ const editTemplate = html`<h5>
     </tbody>
   </table>
   <!-- /ko -->
-  <!-- /ko --> `;
+  <!-- /ko -->
+`;
 
-const viewTemplate = html`<h5>
+const viewTemplate = html`
+  <h5>
     <span data-bind="text: displayName"></span
     ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span>:
   </h5>
@@ -97,7 +100,8 @@ const viewTemplate = html`<h5>
     </tbody>
   </table>
   <!-- /ko -->
-  <!-- /ko --> `;
+  <!-- /ko -->
+`;
 
 export class BlobModule extends BaseFieldModule {
   constructor(params) {

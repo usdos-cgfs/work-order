@@ -1,6 +1,7 @@
 import { html, BaseFieldModule, register } from "./BaseFieldModule.js";
 
-const editTemplate = html`<label class="fw-semibold"
+const editTemplate = html`
+  <label class="fw-semibold"
     ><span data-bind="text: displayName"></span
     ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span>:
     <!-- ko if: multiple -->
@@ -38,20 +39,14 @@ const editTemplate = html`<label class="fw-semibold"
   <!-- ko foreach: Errors -->
   <div class="fw-semibold text-danger" data-bind="text: description"></div>
   <!-- /ko -->
-  <!-- /ko --> `;
-
-const viewTemplate = html`<div
-    class="fw-semibold"
-    data-bind="text: displayName"
-  ></div>
-  <div data-bind="text: toString"></div> `;
+  <!-- /ko -->
+`;
 
 export class SelectModule extends BaseFieldModule {
   constructor(params) {
     super(params);
   }
 
-  static viewTemplate = viewTemplate;
   static editTemplate = editTemplate;
 
   static view = "select-view";

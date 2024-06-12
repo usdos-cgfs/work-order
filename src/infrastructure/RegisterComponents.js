@@ -150,25 +150,6 @@ export function registerComponent({
   });
 }
 
-export function registerFieldComponent(name, components) {
-  // register both our view and edit components
-
-  Object.keys(components).map((view) => {
-    const componentName = components[view];
-    if (ko.components.isRegistered(componentName)) {
-      return;
-    }
-    ko.components.register(componentName, {
-      template: {
-        fromPath: `/components/Fields/${name}/${name}${view}.html`,
-      },
-      viewModel: {
-        viaLoader: `/components/Fields/${name}/${name}Module.js`,
-      },
-    });
-  });
-}
-
 export function registerServiceTypeViewComponents({ uid, components }) {
   // If we don't specify a view, default to the template views
   Object.keys(components).forEach((view) => {

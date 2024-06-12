@@ -1,5 +1,4 @@
 import { SelectModule } from "../components/Fields/index.js";
-import { registerFieldComponent } from "../infrastructure/RegisterComponents.js";
 import { BaseField } from "./index.js";
 
 export default class SelectField extends BaseField {

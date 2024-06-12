@@ -1,60 +1,63 @@
 import { html, BaseFieldModule, register } from "./BaseFieldModule.js";
 
-const editTemplate = html`<div class="component field">
-  <!-- ko if: isRichText -->
-  <label class="fw-semibold"
-    ><span data-bind="text: displayName"></span
-    ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span
-    >:</label
-  >
-  <!-- ko if: instructions -->
-  <div
-    class="fw-lighter fst-italic text-secondary"
-    data-bind="html: instructions"
-  ></div>
-  <!-- /ko -->
-  <div class="richtext-field" data-bind="childrenComplete: childrenHaveLoaded">
-    <!-- Create the editor container -->
-    <div
-      class="form-control"
-      data-bind="attr: {'id': getUniqueId()}, class: ValidationClass"
-      style="height: 150px"
+const editTemplate = html`
+  <div class="component field">
+    <!-- ko if: isRichText -->
+    <label class="fw-semibold"
+      ><span data-bind="text: displayName"></span
+      ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span
+      >:</label
     >
-      <div data-bind="html: Value"></div>
-    </div>
-  </div>
-  <!-- /ko -->
-  <!-- ko ifnot: isRichText -->
-  <label class="fw-semibold"
-    ><span data-bind="text: displayName"></span
-    ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span>:
     <!-- ko if: instructions -->
     <div
       class="fw-lighter fst-italic text-secondary"
       data-bind="html: instructions"
     ></div>
     <!-- /ko -->
-    <textarea
-      name=""
-      id=""
-      cols="30"
-      rows="10"
-      class="form-control"
-      data-bind="textInput: Value, class: ValidationClass, attr: attr"
-    ></textarea>
-  </label>
-  <!-- /ko -->
-  <!-- ko if: ShowErrors -->
-  <!-- ko foreach: Errors -->
-  <div class="fw-semibold text-danger" data-bind="text: description"></div>
-  <!-- /ko -->
-  <!-- /ko -->
-</div> `;
+    <div
+      class="richtext-field"
+      data-bind="childrenComplete: childrenHaveLoaded"
+    >
+      <!-- Create the editor container -->
+      <div
+        class="form-control"
+        data-bind="attr: {'id': getUniqueId()}, class: ValidationClass"
+        style="height: 150px"
+      >
+        <div data-bind="html: Value"></div>
+      </div>
+    </div>
+    <!-- /ko -->
+    <!-- ko ifnot: isRichText -->
+    <label class="fw-semibold"
+      ><span data-bind="text: displayName"></span
+      ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span>:
+      <!-- ko if: instructions -->
+      <div
+        class="fw-lighter fst-italic text-secondary"
+        data-bind="html: instructions"
+      ></div>
+      <!-- /ko -->
+      <textarea
+        name=""
+        id=""
+        cols="30"
+        rows="10"
+        class="form-control"
+        data-bind="textInput: Value, class: ValidationClass, attr: attr"
+      ></textarea>
+    </label>
+    <!-- /ko -->
+    <!-- ko if: ShowErrors -->
+    <!-- ko foreach: Errors -->
+    <div class="fw-semibold text-danger" data-bind="text: description"></div>
+    <!-- /ko -->
+    <!-- /ko -->
+  </div>
+`;
 
-const viewTemplate = html`<div
-    class="fw-semibold"
-    data-bind="text: displayName"
-  ></div>
+const viewTemplate = html`
+  <div class="fw-semibold" data-bind="text: displayName"></div>
   <!-- ko if: Value -->
   <!-- ko if: isRichText -->
   <div data-bind="html: Value"></div>
@@ -65,7 +68,8 @@ const viewTemplate = html`<div
   <!-- /ko -->
   <!-- ko ifnot: Value -->
   <div class="fst-italic">Not provided.</div>
-  <!-- /ko --> `;
+  <!-- /ko -->
+`;
 
 export class TextAreaModule extends BaseFieldModule {
   constructor(params) {
