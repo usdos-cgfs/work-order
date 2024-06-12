@@ -68,6 +68,12 @@ export default class PeopleField extends BaseField {
       this.Value(People.Create(val));
       return;
     }
+
+    if (!val) {
+      this.Value.removeAll();
+      return;
+    }
+
     const vals = val.results ?? val;
 
     if (!vals.length) {
