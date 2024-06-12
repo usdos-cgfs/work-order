@@ -24,6 +24,12 @@ const components = {
 
 registerServiceTypeViewComponents({ uid: "template", components });
 
+const getApmOrg = ko.pureComputed(() => {
+  return requestOrgStore().find(
+    (org) => org.Title.toUpperCase() == "CGFS/APMS"
+  );
+});
+
 export default class TemplateRequest extends BaseServiceDetail {
   constructor(entityParams) {
     super(entityParams);
@@ -38,6 +44,15 @@ export default class TemplateRequest extends BaseServiceDetail {
     ...this.FieldMap,
     SamplePeople: new PeopleField({
       displayName: "Supervisor",
+      isRequired: false,
+    }),
+    SampleMultiPeople: new PeopleField({
+      displayName: "Multiple People",
+      isRequired: false,
+      multiple: true,
+    }),
+    SampleGroupPeople: new PeopleField({
+      displayName: "Group People",
       isRequired: false,
     }),
     SampleSelect: new SelectField({

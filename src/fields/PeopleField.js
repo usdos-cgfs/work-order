@@ -16,6 +16,10 @@ export default class PeopleField extends BaseField {
     super(params);
     // this.pickerOptions = params.pickerOptions ?? {};
     this.spGroupName = params.spGroupName ?? null;
+    this.multiple = params.multiple ?? false;
+    // this.pickerOptions = params.pickerOptions ?? {};
+
+    this.Value = this.multiple ? ko.observableArray() : ko.observable();
 
     if (ko.isObservable(this.spGroupName)) {
       this.spGroupName.subscribe(this.spGroupNameChangedHandler);
@@ -42,26 +46,32 @@ export default class PeopleField extends BaseField {
   };
 
   pickerOptions = ko.pureComputed(() => {
-    const opts = {};
     const groupId = ko.unwrap(this.spGroupId);
+
+    const opts = {
+      AllowMultipleValues: this.multiple,
+    };
+
     if (groupId) opts.SharePointGroupID = groupId;
 
     return opts;
   });
 
-  toString = ko.pureComputed(() => this.Value()?.Title);
+  toString = ko.pureComputed(() => {
+    if (!this.multiple) return this.Value()?.Title;
 
-  set = (val) => this.Value(People.Create(val));
+    return this.Value()?.map((user) => user.Title);
+  });
+
+  set = (val) => {
+    if (!this.multiple) {
+      this.Value(People.Create(val));
+      return;
+    }
+    this.Value(
+      this.multiple ? val.map((u) => People.Create(u)) : People.Create(val)
+    );
+  };
 
   components = PeopleModule;
 }
-
-// ko.components.register(components.edit, {
-//   template: PeopleModule.editTemplate,
-//   viewModel: PeopleModule,
-// });
-
-// ko.components.register(components.view, {
-//   template: PeopleModule.viewTemplate,
-//   viewModel: PeopleModule,
-// });

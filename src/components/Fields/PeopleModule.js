@@ -40,10 +40,20 @@ const editTemplate = html`
 
 const viewTemplate = html`
   <div class="fw-semibold" data-bind="text: displayName"></div>
-  <!-- ko if: Value()?.Title -->
-  <div data-bind="text: Value()?.Title"></div>
+  <!-- ko if: toString -->
+  <!-- ko ifnot: multiple -->
+  <div
+    data-bind="text: toString, 
+      attr: {title: Value()?.LoginName}"
+  ></div>
   <!-- /ko -->
-  <!-- ko ifnot: Value()?.Title -->
+  <!-- ko if: multiple -->
+  <ul data-bind="foreach: Value">
+    <li data-bind="attr: {title: LoginName}, text: Title"></li>
+  </ul>
+  <!-- /ko -->
+  <!-- /ko -->
+  <!-- ko ifnot: toString -->
   <div class="fst-italic">Not provided.</div>
   <!-- /ko -->
 `;
@@ -73,12 +83,6 @@ export class PeopleModule extends BaseFieldModule {
     const options = ko.unwrap(this.userOpts);
     return options.length;
   });
-
-  getUniqueId = () => {
-    return `people-component-${this.displayName}-${Math.floor(
-      Math.random() * 100
-    )}`;
-  };
 
   static viewTemplate = viewTemplate;
   static editTemplate = editTemplate;
