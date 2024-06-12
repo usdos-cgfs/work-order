@@ -1,4 +1,4 @@
-import { html, BaseFieldModule } from "./BaseFieldModule.js";
+import { html, BaseFieldModule, register } from "./BaseFieldModule.js";
 
 const editTemplate = html`
   <label class="fw-semibold w-100"
@@ -88,12 +88,4 @@ export class PeopleModule extends BaseFieldModule {
   static new = "people-edit";
 }
 
-ko.components.register(PeopleModule.edit, {
-  template: editTemplate,
-  viewModel: PeopleModule,
-});
-
-ko.components.register(PeopleModule.view, {
-  template: viewTemplate,
-  viewModel: PeopleModule,
-});
+register(PeopleModule);

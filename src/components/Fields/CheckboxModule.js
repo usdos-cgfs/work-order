@@ -1,24 +1,47 @@
-import { html, BaseFieldModule } from "./BaseFieldModule.js";
+import { html, BaseFieldModule, register } from "./BaseFieldModule.js";
 
-const editTemplate = html``;
-const viewTemplate = html``;
+const editTemplate = html`<div class="form-check form-switch">
+  <label class="form-check-label"
+    ><span class="fw-semibold" data-bind="text: displayName"></span>
+    <input
+      class="form-check-input"
+      type="checkbox"
+      role="switch"
+      data-bind="checked: Value"
+    />
+    <!-- ko if: instructions -->
+    <div
+      class="fw-lighter fst-italic text-secondary"
+      data-bind="html: instructions"
+    ></div>
+    <!-- /ko -->
+  </label>
+</div> `;
+
+const viewTemplate = html`<div class="form-check form-switch">
+  <label class="form-check-label"
+    ><span class="fw-semibold" data-bind="text: displayName"></span>
+    <input
+      class="form-check-input"
+      type="checkbox"
+      role="switch"
+      data-bind="checked: Value"
+      disabled
+    />
+  </label>
+</div> `;
 
 export class CheckboxModule extends BaseFieldModule {
   constructor(params) {
     super(params);
   }
 
+  static viewTemplate = viewTemplate;
+  static editTemplate = editTemplate;
+
   static view = "checkbox-view";
   static edit = "checkbox-edit";
-  static new = "checkbox-new";
+  static new = "checkbox-edit";
 }
 
-ko.components.register(CheckboxModule.edit, {
-  template: editTemplate,
-  viewModel: CheckboxModule,
-});
-
-ko.components.register(CheckboxModule.view, {
-  template: viewTemplate,
-  viewModel: CheckboxModule,
-});
+register(CheckboxModule);

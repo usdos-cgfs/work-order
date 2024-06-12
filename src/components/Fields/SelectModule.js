@@ -1,24 +1,62 @@
-import { html, BaseFieldModule } from "./BaseFieldModule.js";
+import { html, BaseFieldModule, register } from "./BaseFieldModule.js";
 
-const editTemplate = html``;
-const viewTemplate = html``;
+const editTemplate = html`<label class="fw-semibold"
+    ><span data-bind="text: displayName"></span
+    ><span data-bind="if: isRequired" class="fw-bold text-danger">*</span>:
+    <!-- ko if: multiple -->
+    <select
+      class="form-select"
+      name=""
+      id=""
+      multiple="true"
+      data-bind="options: Options, 
+  optionsCaption: 'Select...', 
+  selectedOptions: Value,
+  class: ValidationClass"
+    ></select>
+    <div class="fst-italic fw-light">Hold ctrl to select multiple.</div>
+    <!-- /ko -->
+    <!-- ko ifnot: multiple -->
+    <select
+      class="form-select"
+      name=""
+      id=""
+      data-bind="options: Options, 
+    optionsCaption: 'Select...', 
+    value: Value,
+    class: ValidationClass"
+    ></select>
+    <!-- /ko -->
+    <!-- ko if: instructions -->
+    <div
+      class="fw-lighter fst-italic text-secondary"
+      data-bind="html: instructions"
+    ></div>
+    <!-- /ko -->
+  </label>
+  <!-- ko if: ShowErrors -->
+  <!-- ko foreach: Errors -->
+  <div class="fw-semibold text-danger" data-bind="text: description"></div>
+  <!-- /ko -->
+  <!-- /ko --> `;
+
+const viewTemplate = html`<div
+    class="fw-semibold"
+    data-bind="text: displayName"
+  ></div>
+  <div data-bind="text: toString"></div> `;
 
 export class SelectModule extends BaseFieldModule {
   constructor(params) {
     super(params);
   }
 
+  static viewTemplate = viewTemplate;
+  static editTemplate = editTemplate;
+
   static view = "select-view";
   static edit = "select-edit";
-  static new = "select-new";
+  static new = "select-edit";
 }
 
-ko.components.register(SelectModule.edit, {
-  template: editTemplate,
-  viewModel: SelectModule,
-});
-
-ko.components.register(SelectModule.view, {
-  template: viewTemplate,
-  viewModel: SelectModule,
-});
+register(SelectModule);

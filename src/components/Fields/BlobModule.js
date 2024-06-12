@@ -1,4 +1,4 @@
-import { html, BaseFieldModule } from "./BaseFieldModule.js";
+import { html, BaseFieldModule, register } from "./BaseFieldModule.js";
 
 const editTemplate = html`<h5>
     <span data-bind="text: displayName"></span
@@ -104,17 +104,12 @@ export class BlobModule extends BaseFieldModule {
     super(params);
   }
 
+  static viewTemplate = viewTemplate;
+  static editTemplate = editTemplate;
+
   static view = "blob-view";
   static edit = "blob-edit";
-  static new = "blob-new";
+  static new = "blob-edit";
 }
 
-ko.components.register(BlobModule.edit, {
-  template: editTemplate,
-  viewModel: BlobModule,
-});
-
-ko.components.register(BlobModule.view, {
-  template: viewTemplate,
-  viewModel: BlobModule,
-});
+register(BlobModule);
