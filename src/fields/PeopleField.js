@@ -68,9 +68,13 @@ export default class PeopleField extends BaseField {
       this.Value(People.Create(val));
       return;
     }
-    this.Value(
-      this.multiple ? val.map((u) => People.Create(u)) : People.Create(val)
-    );
+    const vals = val.results ?? val;
+
+    if (!vals.length) {
+      this.Value.removeAll();
+      return;
+    }
+    this.Value(vals.map((u) => People.Create(u)));
   };
 
   components = PeopleModule;
