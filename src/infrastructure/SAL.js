@@ -965,6 +965,7 @@ export function SPList(listDef) {
         return;
       }
       switch (fieldSchema.TypeAsString) {
+        case "UserMulti":
         case "User":
         case "LookupMulti":
         case "Lookup":

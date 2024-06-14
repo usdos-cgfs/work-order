@@ -139,30 +139,52 @@ ko.bindingHandlers.people = {
       schema["AllowEmailAddresses"] = true;
       schema["AllowMultipleValues"] = false;
       schema["MaximumEntitySuggestions"] = 50;
-      //schema["Width"] = "280px";
+
+      Object.assign(schema, pickerOptions);
+
       schema["OnUserResolvedClientScript"] = async function (elemId, userKeys) {
+        const multiple = schema.AllowMultipleValues;
+
         //  get reference of People Picker Control
         var pickerControl =
           SPClientPeoplePicker.SPClientPeoplePickerDict[elemId];
         var observable = valueAccessor();
-        var userJSObject = pickerControl.GetControlValueAsJSObject()[0];
-        if (!userJSObject) {
-          observable(null);
+        var userJSObjects = pickerControl.GetControlValueAsJSObject();
+        if (!userJSObjects.length) {
+          multiple ? observable.removeAll() : observable(null);
           return;
         }
 
-        if (userJSObject.IsResolved) {
-          if (userJSObject.Key == observable()?.LoginName) return;
-          var user = await ensureUserByKeyAsync(userJSObject.Key);
-          var person = new People(user);
-          observable(person);
+        if (!multiple) {
+          const userObj = userJSObjects[0];
+          if (userObj.IsResolved) {
+            if (userObj.Key == observable()?.LoginName) return;
+            var user = await ensureUserByKeyAsync(userObj.Key);
+            var person = new People(user);
+            observable(person);
+          }
+          return;
         }
+
+        const currentUserKeys = observable().map((u) => u.LoginName);
+
+        const people = await Promise.all(
+          userJSObjects
+            .filter((userObj) => userObj.IsResolved)
+            .map(async (userObj) => {
+              // If this user is already resolved, return it
+              const existingUser = observable().find(
+                (u) => u.LoginName == userObj.Key
+              );
+
+              if (existingUser) return existingUser;
+
+              var user = await ensureUserByKeyAsync(userObj.Key);
+              return new People(user);
+            })
+        );
+        observable(people);
       };
-
-      Object.assign(schema, pickerOptions);
-
-      // TODO: Minor - accept schema settings as options
-      //var mergedOptions = Object.assign(schema, obs.schemaOpts);
 
       //  Initialize the Control, MS enforces to pass the Element ID hence we need to provide
       //  ID to our element, no other options
@@ -172,16 +194,13 @@ ko.bindingHandlers.people = {
         schema
       );
 
+      // Clear input autocomplete suggestions
       for (const input of document
         .getElementById(element.id)
         .querySelectorAll("input")) {
         input.setAttribute("autocomplete", "off");
         input.setAttribute("aria-autocomplete", "none");
       }
-      // const helpDiv = document.createElement("div");
-      // helpDiv.innerHTML = "Search surname first e.g. Smith, John";
-      // helpDiv.classList.add("fst-italic", "fw-lighter");
-      // element.appendChild(helpDiv);
     }
   },
   update: function (
@@ -191,26 +210,58 @@ ko.bindingHandlers.people = {
     viewModel,
     bindingContext
   ) {
+    const pickerOptions = ko.unwrap(allBindings.get("pickerOptions") ?? {});
+
     var pickerControl =
       SPClientPeoplePicker.SPClientPeoplePickerDict[element.id + "_TopSpan"];
-    var userValue = ko.utils.unwrapObservable(valueAccessor());
 
-    if (!userValue) {
-      // Clear the form
+    var userValue = ko.unwrap(valueAccessor());
+
+    if (!pickerOptions.AllowMultipleValues) {
+      // This control supports a single user
+      if (!userValue) {
+        // Clear the form
+        pickerControl?.DeleteProcessedUser();
+        return;
+      }
+
+      if (
+        userValue &&
+        !pickerControl
+          .GetAllUserInfo()
+          .find((pickerUser) => pickerUser.DisplayText == userValue.LookupValue)
+      ) {
+        pickerControl.AddUserKeys(
+          userValue.LoginName ?? userValue.LookupValue ?? userValue.Title
+        );
+      }
+
+      return;
+    }
+
+    // This control supports multiple users
+    if (!userValue.length) {
       pickerControl?.DeleteProcessedUser();
       return;
     }
 
-    if (
-      userValue &&
-      !pickerControl
-        .GetAllUserInfo()
-        .find((pickerUser) => pickerUser.DisplayText == userValue.LookupValue)
-    ) {
-      pickerControl.AddUserKeys(
-        userValue.LoginName ?? userValue.LookupValue ?? userValue.Title
-      );
-    }
+    // Add new users
+    userValue.map((u) => {
+      if (
+        !pickerControl
+          .GetAllUserInfo()
+          .find((pickerUser) => pickerUser.DisplayText == u.LookupValue)
+      ) {
+        pickerControl.AddUserKeys(u.LoginName ?? u.LookupValue ?? u.Title);
+      }
+    });
+
+    // Remove Existing users
+    pickerControl.GetAllUserInfo().map((pickerUser) => {
+      if (!userValue.find((u) => u.LookupValue == pickerUser.DisplayText)) {
+        // TODO:
+      }
+    });
   },
 };
 
