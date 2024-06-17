@@ -7,9 +7,12 @@ import { currentUser } from "../../infrastructure/Authorization.js";
 
 import { makeDataTable } from "../../common/DataTableExtensions.js";
 import { assignmentStates } from "../../entities/Assignment.js";
+import { BaseComponent } from "../BaseComponent.js";
+import { myAssignmentsTemplate } from "./MyAssignmentsTemplate.js";
 
-export default class MyAssignmentsModule {
+export class MyAssignmentsModule extends BaseComponent {
   constructor(Assignments) {
+    super();
     // this.listBeforeChangeSubscritption = this.MyAssignments.subscribe(
     //   this.listBeforeChangeWatcher,
     //   this,
@@ -80,4 +83,7 @@ export default class MyAssignmentsModule {
     this.listAfterChangeSubscription.dispose();
     this.listAfterChangeSubscription.dispose();
   };
+
+  static name = "my-assignments-table";
+  static template = myAssignmentsTemplate;
 }

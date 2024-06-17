@@ -76,12 +76,12 @@ export function RegisterComponents() {
   //   template: "RequestsServiceTypeTableTemplate",
   // });
 
-  registerComponentFromPath({
-    name: "my-assignments-table",
-    folder: "MyAssignments",
-    module: "MyAssignmentsModule",
-    template: "MyAssignmentsTemplate",
-  });
+  // registerComponentFromPath({
+  //   name: "my-assignments-table",
+  //   folder: "MyAssignments",
+  //   module: "MyAssignmentsModule",
+  //   template: "MyAssignmentsTemplate",
+  // });
 
   registerComponentFromPath({
     name: "request-header-view",
