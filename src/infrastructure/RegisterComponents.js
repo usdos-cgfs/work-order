@@ -131,12 +131,12 @@ export function RegisterComponents() {
   //   template: "NewAssignmentTemplate",
   // });
 
-  registerComponentFromPath({
-    name: "task-toast",
-    folder: "Toasts",
-    module: "TaskToastModule",
-    template: "TaskToastTemplate",
-  });
+  // registerComponentFromPath({
+  //   name: "task-toast",
+  //   folder: "Toasts",
+  //   module: "TaskToastModule",
+  //   template: "TaskToastTemplate",
+  // });
 }
 
 export function registerComponentFromConstructor(constructor) {
