@@ -97,18 +97,18 @@ export function RegisterComponents() {
   //   template: "RequestHeaderEditTemplate",
   // });
 
-  registerComponentFromPath({
-    name: "request-body-view",
-    folder: "RequestBody",
-    module: "RequestBodyModule",
-    template: "RequestBodyViewTemplate",
-  });
-  registerComponentFromPath({
-    name: "request-body-edit",
-    folder: "RequestBody",
-    module: "RequestBodyModule",
-    template: "RequestBodyEditTemplate",
-  });
+  // registerComponentFromPath({
+  //   name: "request-body-view",
+  //   folder: "RequestBody",
+  //   module: "RequestBodyModule",
+  //   template: "RequestBodyViewTemplate",
+  // });
+  // registerComponentFromPath({
+  //   name: "request-body-edit",
+  //   folder: "RequestBody",
+  //   module: "RequestBodyModule",
+  //   template: "RequestBodyEditTemplate",
+  // });
 
   registerComponentFromPath({
     name: "pipeline-component",

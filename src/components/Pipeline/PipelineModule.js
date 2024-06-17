@@ -2,9 +2,12 @@ import { actionTypes } from "../../entities/Action.js";
 import { stageActionTypes } from "../../entities/PipelineStage.js";
 import { requestStates } from "../../constants/index.js";
 import { currentUser } from "../../infrastructure/Authorization.js";
+import { BaseComponent } from "../BaseComponent.js";
+import { pipelineTemplate } from "./PipelineTemplate.js";
 
-export default class PipelineModule {
+export class PipelineModule extends BaseComponent {
   constructor({ request }) {
+    super();
     this.request = request;
     this.Pipeline = request.Pipeline;
 
@@ -98,6 +101,9 @@ export default class PipelineModule {
   );
 
   StageDetail;
+
+  static name = "pipeline-component";
+  static template = pipelineTemplate;
 }
 
 class PipelineStageDetail {
