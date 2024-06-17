@@ -1,4 +1,8 @@
-import { html, BaseFieldModule, register } from "./BaseFieldModule.js";
+import {
+  html,
+  BaseFieldModule,
+  registerFieldComponents,
+} from "./BaseFieldModule.js";
 
 const editTemplate = html`
   <label class="fw-semibold"
@@ -62,4 +66,4 @@ export class LookupModule extends BaseFieldModule {
   static new = "lookup-edit";
 }
 
-register(LookupModule);
+registerFieldComponents(LookupModule);

@@ -1,4 +1,8 @@
-import { html, BaseFieldModule, register } from "./BaseFieldModule.js";
+import {
+  html,
+  BaseFieldModule,
+  registerFieldComponents,
+} from "./BaseFieldModule.js";
 
 const editTemplate = html`
   <div class="component field">
@@ -131,4 +135,4 @@ export class TextAreaModule extends BaseFieldModule {
   static new = "text-area-edit";
 }
 
-register(TextAreaModule);
+registerFieldComponents(TextAreaModule);

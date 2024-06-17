@@ -1,4 +1,8 @@
-import { html, BaseFieldModule, register } from "./BaseFieldModule.js";
+import {
+  html,
+  BaseFieldModule,
+  registerFieldComponents,
+} from "./BaseFieldModule.js";
 
 const editTemplate = html`
   <div class="form-check form-switch">
@@ -48,4 +52,4 @@ export class CheckboxModule extends BaseFieldModule {
   static new = "checkbox-edit";
 }
 
-register(CheckboxModule);
+registerFieldComponents(CheckboxModule);

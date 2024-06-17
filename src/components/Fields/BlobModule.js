@@ -1,4 +1,8 @@
-import { html, BaseFieldModule, register } from "./BaseFieldModule.js";
+import {
+  html,
+  BaseFieldModule,
+  registerFieldComponents,
+} from "./BaseFieldModule.js";
 
 const editTemplate = html`
   <h5>
@@ -116,4 +120,4 @@ export class BlobModule extends BaseFieldModule {
   static new = "blob-edit";
 }
 
-register(BlobModule);
+registerFieldComponents(BlobModule);

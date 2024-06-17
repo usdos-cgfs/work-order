@@ -1,4 +1,8 @@
-import { html, BaseFieldModule, register } from "./BaseFieldModule.js";
+import {
+  html,
+  BaseFieldModule,
+  registerFieldComponents,
+} from "./BaseFieldModule.js";
 
 const editTemplate = html`
   <label class="fw-semibold"
@@ -34,4 +38,4 @@ export class TextModule extends BaseFieldModule {
   static new = "text-edit";
 }
 
-register(TextModule);
+registerFieldComponents(TextModule);
