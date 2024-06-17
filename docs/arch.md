@@ -53,3 +53,15 @@ Blob field should be interchangeable with Lookup, we're basically storing the en
 ## Request Service Type Logic
 
 Let's assume that we'll always know the service type of our requests
+
+# App Bundling Roadmap
+
+1. Components
+2. Service Type Views
+   a. Rename entities
+3. Service Type Action components
+
+Review uses of:
+registerComponents
+registerServiceTypeViewComponents,
+registerServiceTypeActionComponent,

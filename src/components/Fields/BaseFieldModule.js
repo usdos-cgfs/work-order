@@ -1,3 +1,4 @@
+// Hint: use the es6-string-html VS Code module to make template literals easier to read
 export const html = String.raw;
 
 export function register(constructor) {

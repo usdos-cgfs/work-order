@@ -1,5 +1,5 @@
 import Entity from "./Entity.js";
-import { registerComponent } from "../infrastructure/RegisterComponents.js";
+import { registerComponentFromPath } from "../infrastructure/RegisterComponents.js";
 
 /**
  * Constrained Entity's are validated based on their declared fields.
@@ -13,7 +13,7 @@ export const defaultComponents = {
 };
 
 Object.keys(defaultComponents).map((key) =>
-  registerComponent({
+  registerComponentFromPath({
     name: defaultComponents[key],
     folder: "ConstrainedEntity",
     module: "ConstrainedEntityModule",
