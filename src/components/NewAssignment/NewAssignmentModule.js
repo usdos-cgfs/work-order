@@ -3,9 +3,12 @@ import {
   roles,
   stageActionRoleMap,
 } from "../../infrastructure/Authorization.js";
+import { BaseComponent } from "../BaseComponent.js";
+import { newAssignmentTemplate } from "./NewAssignmentTemplate.js";
 
-export default class NewAssignmentModule {
+export class NewAssignmentModule extends BaseComponent {
   constructor({ addAssignment, stage = null }) {
+    super();
     this.stage = stage;
     this.addAssignment = addAssignment;
 
@@ -45,4 +48,7 @@ export default class NewAssignmentModule {
     this.Assignee(null);
     this.Role(null);
   };
+
+  static name = "new-assignment";
+  static template = newAssignmentTemplate;
 }

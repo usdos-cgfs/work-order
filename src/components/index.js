@@ -8,3 +8,4 @@ export * from "./MyAssignments/MyAssignmentsModule.js";
 export * from "./RequestHeader/RequestHeaderModules.js";
 export * from "./Pipeline/PipelineModule.js";
 export * from "./QuickInfo/QuickInfoModule.js";
+export * from "./NewAssignment/NewAssignmentModule.js";
