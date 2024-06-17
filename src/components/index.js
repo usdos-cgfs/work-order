@@ -5,3 +5,4 @@ export * from "./RequestsByStatus/RequestsByStatusTableModules.js";
 export * from "./RequestsByServiceType/RequestsByServiceTypeModule.js";
 export * from "./RequestsByServiceType/RequestsByServiceTypeTableModule.js";
 export * from "./MyAssignments/MyAssignmentsModule.js";
+export * from "./RequestHeader/RequestHeaderModules.js";

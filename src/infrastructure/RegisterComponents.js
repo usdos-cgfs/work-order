@@ -83,19 +83,19 @@ export function RegisterComponents() {
   //   template: "MyAssignmentsTemplate",
   // });
 
-  registerComponentFromPath({
-    name: "request-header-view",
-    folder: "RequestHeader",
-    module: "RequestHeaderModule",
-    template: "RequestHeaderViewTemplate",
-  });
+  // registerComponentFromPath({
+  //   name: "request-header-view",
+  //   folder: "RequestHeader",
+  //   module: "RequestHeaderModule",
+  //   template: "RequestHeaderViewTemplate",
+  // });
 
-  registerComponentFromPath({
-    name: "request-header-edit",
-    folder: "RequestHeader",
-    module: "RequestHeaderModule",
-    template: "RequestHeaderEditTemplate",
-  });
+  // registerComponentFromPath({
+  //   name: "request-header-edit",
+  //   folder: "RequestHeader",
+  //   module: "RequestHeaderModule",
+  //   template: "RequestHeaderEditTemplate",
+  // });
 
   registerComponentFromPath({
     name: "request-body-view",
