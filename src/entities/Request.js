@@ -1,25 +1,24 @@
-import { RequestOrg } from "../entities/RequestOrg.js";
-import { ServiceType } from "../entities/ServiceType.js";
-import { actionTypes } from "../entities/Action.js";
 import {
-  PipelineStage,
-  pipelineStageStore,
-  stageActionTypes,
-} from "../entities/PipelineStage.js";
-import {
+  Action,
+  actionTypes,
+  Attachment,
   Assignment,
   assignmentRoles,
   assignmentStates,
-  assignmentRoleComponentMap,
   activeAssignmentsError,
-} from "../entities/Assignment.js";
-import { Attachment } from "../entities/Attachment.js";
-import { Comment } from "../entities/Comment.js";
-import { Action } from "../entities/Action.js";
+  Comment,
+  RequestOrg,
+  PipelineStage,
+  pipelineStageStore,
+  stageActionTypes,
+  ServiceType,
+} from "../entities/index.js";
 
 import { People } from "./People.js";
+
+import { requestStates, requestInternalStates } from "../constants/index.js";
+
 import { ActivityLogComponent } from "../components/ActivityLogComponent.js";
-import DateField from "../fields/DateField.js";
 
 import {
   createNewRequestTitle,
@@ -30,7 +29,6 @@ import {
   calculateBusinessDays,
 } from "../common/DateUtilities.js";
 import * as Router from "../common/Router.js";
-import { registerServiceTypeActionComponent } from "../infrastructure/RegisterComponents.js";
 
 import {
   currentUser,
@@ -38,15 +36,20 @@ import {
   stageActionRoleMap,
   AssignmentFunctions,
 } from "../infrastructure/Authorization.js";
+
 import {
   emitCommentNotification,
   emitRequestNotification,
 } from "../infrastructure/Notifications.js";
+
 import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
 
-import TextField from "../fields/TextField.js";
-import TextAreaField from "../fields/TextAreaField.js";
-import BlobField from "../fields/BlobField.js";
+import {
+  BlobField,
+  DateField,
+  TextField,
+  TextAreaField,
+} from "../fields/index.js";
 
 import { DisplayModes } from "../views/RequestDetailView.js";
 
@@ -61,20 +64,6 @@ import { ValidationError } from "../primitives/ValidationError.js";
 //   cancelled: { ID: 4, Title: "Cancelled" },
 //   rejected: { ID: 5, Title: "Rejected" },
 // };
-export const requestStates = {
-  draft: "Draft",
-  open: "Open",
-  paused: "Paused",
-  fulfilled: "Completed",
-  cancelled: "Cancelled",
-  rejected: "Rejected",
-};
-
-export const requestInternalStates = {
-  inProgress: "In Progress",
-  waitingOnCustomer: "Waiting on Customer",
-  researching: "Researching",
-};
 
 const requestStateClasses = {
   Draft: "text-bg-info",

@@ -12,12 +12,12 @@ export function RegisterComponents() {
   }
 
   // Regular Components
-  registerComponentFromPath({
-    name: "pending-request-ingests",
-    folder: "PendingRequestIngests",
-    module: "PendingRequestIngestsModule",
-    template: "PendingRequestIngestsTemplate",
-  });
+  // registerComponentFromPath({
+  //   name: "pending-request-ingests",
+  //   folder: "PendingRequestIngests",
+  //   module: "PendingRequestIngestsModule",
+  //   template: "PendingRequestIngestsTemplate",
+  // });
 
   // registerComponentFromPath({
   //   name: "approver-actions",

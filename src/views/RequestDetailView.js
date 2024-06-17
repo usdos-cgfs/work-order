@@ -1,4 +1,4 @@
-import { requestInternalStates, requestStates } from "../entities/Request.js";
+import { requestInternalStates, requestStates } from "../constants/index.js";
 import { actionTypes } from "../entities/Action.js";
 
 import { People } from "../entities/People.js";

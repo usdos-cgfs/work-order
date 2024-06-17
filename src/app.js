@@ -1,9 +1,10 @@
+import { RegisterComponents } from "./infrastructure/RegisterComponents.js";
 import { RequestDetailView, DisplayModes } from "./views/RequestDetailView.js";
 import { NewRequestView } from "./views/NewRequestView.js";
 import { OfficeRequestsView } from "./views/OfficeRequestsView.js";
 import { MyRequestsView } from "./views/MyRequestsView.js";
 
-import { RequestEntity, requestStates } from "./entities/Request.js";
+import { RequestEntity } from "./entities/Request.js";
 import { requestOrgStore } from "./entities/RequestOrg.js";
 import { pipelineStageStore } from "./entities/PipelineStage.js";
 import { serviceTypeStore } from "./entities/ServiceType.js";
@@ -27,7 +28,6 @@ import {
 import { InitSal } from "./infrastructure/SAL.js";
 
 import MyAssignmentsView from "./views/MyAssignmentsView.js";
-import { RegisterComponents } from "./infrastructure/RegisterComponents.js";
 import { blockingTasks, runningTasks } from "./stores/Tasks.js";
 
 import { Tabs } from "./env.js";
@@ -42,7 +42,6 @@ async function CreateApp() {
   CreateAppContext();
   window.WorkOrder.App = await App.Create();
   ko.applyBindings(window.WorkOrder.App);
-  await window.WorkOrder.App.InitData();
 }
 
 class App {
@@ -101,17 +100,6 @@ class App {
     }),
   };
 
-  InitData = async () => {
-    // This is the non-blocking minimum data that should be loaded
-    const openRequestsSet = requestsByStatusMap.get(requestStates.open);
-
-    await openRequestsSet.init();
-
-    // Fetch any requests that are ready for ingest
-
-    requestIngests(await this.context.RequestIngests.ToList());
-  };
-
   Init = async function () {
     configLists: {
       var pipelinesPromise = this.context.ConfigPipelines.ToList().then(
@@ -157,6 +145,9 @@ class App {
       }
       this.Tab(startTab);
     }
+    // Fetch any requests that are ready for ingest
+
+    requestIngests(await this.context.RequestIngests.ToList());
 
     this.HasLoaded(true);
     // Kick off the initial data load

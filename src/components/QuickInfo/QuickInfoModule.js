@@ -1,5 +1,5 @@
 import { assignmentStates } from "../../entities/Assignment.js";
-import { requestStates } from "../../entities/Request.js";
+import { requestStates } from "../../constants/index.js";
 import { currentUser } from "../../infrastructure/Authorization.js";
 
 import { requestsByStatusMap } from "../../stores/Requests.js";

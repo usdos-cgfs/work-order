@@ -2,7 +2,7 @@ import { requestOrgStore } from "./entities/RequestOrg.js";
 import { pipelineStageStore } from "./entities/PipelineStage.js";
 import { serviceTypeStore } from "./entities/ServiceType.js";
 import { holidayStore } from "./entities/Holiday.js";
-import { requestStates } from "./entities/Request.js";
+import { requestStates } from "./constants/index.js";
 
 import "./common/KnockoutExtensions.js";
 

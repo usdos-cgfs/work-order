@@ -1,4 +1,4 @@
-import { requestStates } from "../../entities/Request.js";
+import { requestStates } from "../../constants/index.js";
 
 import { requestsByStatusMap } from "../../stores/Requests.js";
 import { assignmentsStore } from "../../stores/Assignments.js";

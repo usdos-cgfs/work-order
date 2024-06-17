@@ -1,5 +1,5 @@
 import { getUrlParam, setUrlParam } from "../common/Router.js";
-import { requestStates } from "../entities/Request.js";
+import { requestStates } from "../constants/index.js";
 import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
 import { requestsByStatusMap } from "../stores/Requests.js";
 

@@ -1,12 +1,18 @@
-import { requestIngests } from "../../stores/Requests.js";
-import { serviceTypeStore } from "../../entities/ServiceType.js";
-import { RequestEntity } from "../../entities/Request.js";
+import {
+  Attachment,
+  serviceTypeStore,
+  RequestEntity,
+} from "../../entities/index.js";
 
 import { currentUser } from "../../infrastructure/Authorization.js";
 import { getAppContext } from "../../infrastructure/ApplicationDbContext.js";
-import { Attachment } from "../../entities/Attachment.js";
 
-export default class PendingRequestIngestsModule {
+import { BaseComponent } from "../index.js";
+import { pendingRequestsIngestTemplate } from "./PendingRequestIngestsTemplate.js";
+
+import { requestIngests } from "../../stores/Requests.js";
+
+export class PendingRequestIngestsModule extends BaseComponent {
   PendingRows = ko.pureComputed(() => {
     // return [];
     return requestIngests().map((item) => new RequestIngestItem(item));
@@ -30,6 +36,9 @@ export default class PendingRequestIngestsModule {
 
     requestIngests(await context.RequestIngests.ToList());
   };
+
+  static name = "pending-request-ingests";
+  static template = pendingRequestsIngestTemplate;
 }
 
 class RequestIngestItem {

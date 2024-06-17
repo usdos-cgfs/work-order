@@ -1,4 +1,4 @@
-import { requestStates } from "../entities/Request.js";
+import { requestStates } from "../constants/RequestStates.js";
 
 import { RequestsByStatusSet } from "../infrastructure/RequestsByStatusSet.js";
 

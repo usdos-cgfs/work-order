@@ -1,6 +1,6 @@
 import { actionTypes } from "../../entities/Action.js";
 import { stageActionTypes } from "../../entities/PipelineStage.js";
-import { requestStates } from "../../entities/Request.js";
+import { requestStates } from "../../constants/index.js";
 import { currentUser } from "../../infrastructure/Authorization.js";
 
 export default class PipelineModule {

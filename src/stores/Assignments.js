@@ -1,5 +1,5 @@
 import { Assignment, assignmentStates } from "../entities/Assignment.js";
-import { requestStates } from "../entities/Request.js";
+import { requestStates } from "../constants/index.js";
 import { requestsByStatusMap } from "./Requests.js";
 import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
 import { currentUser } from "../infrastructure/Authorization.js";
