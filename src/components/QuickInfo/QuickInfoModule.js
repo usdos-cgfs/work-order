@@ -4,9 +4,12 @@ import { currentUser } from "../../infrastructure/Authorization.js";
 
 import { requestsByStatusMap } from "../../stores/Requests.js";
 import { assignmentsStore } from "../../stores/Assignments.js";
+import { BaseComponent } from "../BaseComponent.js";
+import { quickInfoTemplate } from "./QuickInfoTemplate.js";
 
-export default class QuickInfoModule {
+export class QuickInfoModule extends BaseComponent {
   constructor({ ShowActionOfficeFeatures, ToggleActionOfficeFeatures }) {
+    super();
     this.ShowActionOfficeFeatures = ShowActionOfficeFeatures;
     this.ToggleActionOfficeFeatures = ToggleActionOfficeFeatures;
   }
@@ -31,4 +34,7 @@ export default class QuickInfoModule {
   toggleInfoContainer = (data, event) => {
     event.target.closest(".status-info").classList.toggle("active");
   };
+
+  static name = "quick-info";
+  static template = quickInfoTemplate;
 }

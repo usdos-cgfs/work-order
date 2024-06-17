@@ -110,19 +110,19 @@ export function RegisterComponents() {
   //   template: "RequestBodyEditTemplate",
   // });
 
-  registerComponentFromPath({
-    name: "pipeline-component",
-    folder: "Pipeline",
-    module: "PipelineModule",
-    template: "PipelineTemplate",
-  });
+  // registerComponentFromPath({
+  //   name: "pipeline-component",
+  //   folder: "Pipeline",
+  //   module: "PipelineModule",
+  //   template: "PipelineTemplate",
+  // });
 
-  registerComponentFromPath({
-    name: "quick-info",
-    folder: "QuickInfo",
-    module: "QuickInfoModule",
-    template: "QuickInfoTemplate",
-  });
+  // registerComponentFromPath({
+  //   name: "quick-info",
+  //   folder: "QuickInfo",
+  //   module: "QuickInfoModule",
+  //   template: "QuickInfoTemplate",
+  // });
 
   registerComponentFromPath({
     name: "new-assignment",
