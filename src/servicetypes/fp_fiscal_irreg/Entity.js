@@ -32,8 +32,9 @@ export default class FiscalIrregularities extends BaseServiceDetail {
   });
 
   PointOfContact = new PeopleField({
-    displayName: "Point of Contacts",
+    displayName: "Point(s) of Contact",
     isRequired: true,
+    multiple: true,
   });
 
   CableMRN = new TextField({
@@ -65,6 +66,7 @@ export default class FiscalIrregularities extends BaseServiceDetail {
 
   FieldMap = {
     ...this.FieldMap,
+    CaseNumber: this.CaseNumber,
     PostLocation: this.PostLocation,
     PointOfContact: this.PointOfContact,
     CableMRN: this.CableMRN,
