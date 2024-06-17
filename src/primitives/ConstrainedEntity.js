@@ -1,6 +1,5 @@
 import Entity from "./Entity.js";
-import { registerComponentFromPath } from "../infrastructure/RegisterComponents.js";
-
+// import { ConstrainedEntityComponents } from "../components/index.js";
 /**
  * Constrained Entity's are validated based on their declared fields.
  * We are expecting user input, so need to validate each input field.
@@ -11,15 +10,6 @@ export const defaultComponents = {
   edit: "default-constrained-edit",
   new: "default-constrained-edit",
 };
-
-Object.keys(defaultComponents).map((key) =>
-  registerComponentFromPath({
-    name: defaultComponents[key],
-    folder: "ConstrainedEntity",
-    module: "ConstrainedEntityModule",
-    template: "Default" + key,
-  })
-);
 
 export default class ConstrainedEntity extends Entity {
   constructor(params) {
