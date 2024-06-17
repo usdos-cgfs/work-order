@@ -40,26 +40,26 @@ export function RegisterComponents() {
   //   template: "AssignTemplate",
   // });
 
-  registerComponentFromPath({
-    name: "open-requests-table",
-    folder: "RequestsByStatus",
-    module: "RequestsByStatusTableModule",
-    template: "OpenRequestsTableTemplate",
-  });
+  // registerComponentFromPath({
+  //   name: "open-requests-table",
+  //   folder: "RequestsByStatus",
+  //   module: "RequestsByStatusTableModule",
+  //   template: "OpenRequestsTableTemplate",
+  // });
 
-  registerComponentFromPath({
-    name: "open-office-requests-table",
-    folder: "RequestsByStatus",
-    module: "RequestsByStatusTableModule",
-    template: "OpenOfficeRequestsTableTemplate",
-  });
+  // registerComponentFromPath({
+  //   name: "open-office-requests-table",
+  //   folder: "RequestsByStatus",
+  //   module: "RequestsByStatusTableModule",
+  //   template: "OpenOfficeRequestsTableTemplate",
+  // });
 
-  registerComponentFromPath({
-    name: "closed-requests-table",
-    folder: "RequestsByStatus",
-    module: "RequestsByStatusTableModule",
-    template: "ClosedRequestsTableTemplate",
-  });
+  // registerComponentFromPath({
+  //   name: "closed-requests-table",
+  //   folder: "RequestsByStatus",
+  //   module: "RequestsByStatusTableModule",
+  //   template: "ClosedRequestsTableTemplate",
+  // });
 
   // Requests By Service Type
   registerComponentFromPath({
