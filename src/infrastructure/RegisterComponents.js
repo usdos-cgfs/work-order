@@ -62,19 +62,19 @@ export function RegisterComponents() {
   // });
 
   // Requests By Service Type
-  registerComponentFromPath({
-    name: "requests-by-service-type",
-    folder: "RequestsByServiceType",
-    module: "RequestsByServiceTypeModule",
-    template: "RequestsServiceTypeTemplate",
-  });
+  // registerComponentFromPath({
+  //   name: "requests-by-service-type",
+  //   folder: "RequestsByServiceType",
+  //   module: "RequestsByServiceTypeModule",
+  //   template: "RequestsServiceTypeTemplate",
+  // });
 
-  registerComponentFromPath({
-    name: "requests-by-service-type-table",
-    folder: "RequestsByServiceType",
-    module: "RequestsByServiceTypeTableModule",
-    template: "RequestsServiceTypeTableTemplate",
-  });
+  // registerComponentFromPath({
+  //   name: "requests-by-service-type-table",
+  //   folder: "RequestsByServiceType",
+  //   module: "RequestsByServiceTypeTableModule",
+  //   template: "RequestsServiceTypeTableTemplate",
+  // });
 
   registerComponentFromPath({
     name: "my-assignments-table",

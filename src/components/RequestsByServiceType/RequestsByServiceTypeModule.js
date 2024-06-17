@@ -1,8 +1,11 @@
 import { serviceTypeStore } from "../../entities/ServiceType.js";
 import { currentUser } from "../../infrastructure/Authorization.js";
+import { BaseComponent } from "../BaseComponent.js";
+import { requestsByServiceTypeTemplate } from "./RequestsServiceTypeTemplate.js";
 
-export default class RequestsByServiceTypeModule {
+export class RequestsByServiceTypeModule extends BaseComponent {
   constructor(params) {
+    super();
     this.key = params.key;
   }
 
@@ -13,4 +16,7 @@ export default class RequestsByServiceTypeModule {
   );
 
   SelectedService = ko.observable();
+
+  static name = "requests-by-service-type";
+  static template = requestsByServiceTypeTemplate;
 }

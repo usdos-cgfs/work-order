@@ -2,9 +2,12 @@ import { makeDataTable } from "../../common/DataTableExtensions.js";
 import { RequestEntity } from "../../entities/Request.js";
 
 import { getAppContext } from "../../infrastructure/ApplicationDbContext.js";
+import { BaseComponent } from "../BaseComponent.js";
+import { requestsByServiceTypeTableTemplate } from "./RequestsServiceTypeTableTemplate.js";
 
-export default class RequestsByServiceTypeTableModule {
+export class RequestsByServiceTypeTableModule extends BaseComponent {
   constructor({ service, key }) {
+    super();
     if (window.DEBUG) console.log("New Service Type Table", service.Title);
     this.ServiceType = service;
     this.key = key;
@@ -88,4 +91,7 @@ export default class RequestsByServiceTypeTableModule {
     //   20
     // );
   };
+
+  static name = "requests-by-service-type-table";
+  static template = requestsByServiceTypeTableTemplate;
 }
