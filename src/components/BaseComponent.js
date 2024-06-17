@@ -1,8 +1,8 @@
 export const html = String.raw;
 
-export function registerComponent(constructor) {
-  ko.components.register(constructor.name, {
-    template: constructor.template,
-    viewModel: constructor,
-  });
+export class BaseComponent {
+  constructor() {}
+
+  static name = "base-component";
+  static template = html`<div>No Component Registered!</div>`;
 }

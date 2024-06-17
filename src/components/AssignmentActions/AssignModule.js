@@ -1,8 +1,11 @@
 import { assignmentStates } from "../../entities/Assignment.js";
 import { roles } from "../../infrastructure/Authorization.js";
+import { BaseComponent } from "../index.js";
+import { assignTemplate } from "./AssignTemplate.js";
 
-export default class AssignModule {
+export class AssignModule extends BaseComponent {
   constructor({ request, assignment, addAssignment, completeAssignment }) {
+    super();
     this.allAssignments = request.Assignments.list.All;
     this.assignment = assignment;
     this.addAssignment = addAssignment;
@@ -30,4 +33,7 @@ export default class AssignModule {
     };
   });
   // this is the callback function we pass to the new assignments subcomponent
+
+  static name = "assigner-actions";
+  static template = assignTemplate;
 }

@@ -1,8 +1,11 @@
 import { assignmentStates } from "../../entities/Assignment.js";
 import { currentUser } from "../../infrastructure/Authorization.js";
+import { BaseComponent } from "../index.js";
+import { approvalTemplate } from "./ApprovalTemplate.js";
 
-export default class ApprovalActions {
+export class ApprovalActions extends BaseComponent {
   constructor(params) {
+    super();
     // this._context = getAppContext();
     this.assignment = params.assignment;
     // this.ServiceType = params.request.ServiceType;
@@ -77,4 +80,7 @@ export default class ApprovalActions {
   undo = async () => {
     // TODO: Minor - We should have an undo option instead of a "Reject Instead"
   };
+
+  static name = "approver-actions";
+  static template = approvalTemplate;
 }

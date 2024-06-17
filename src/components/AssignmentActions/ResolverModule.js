@@ -1,20 +1,29 @@
 import { assignmentStates } from "../../entities/Assignment.js";
 import { currentUser } from "../../infrastructure/Authorization.js";
+import { BaseComponent } from "../index.js";
+import { resolverTemplate } from "./ResolverTemplate.js";
 
-export default function (params) {
-  console.log("hello from resolver module", params);
+export class ResolverModule extends BaseComponent {
+  constructor(params) {
+    super();
+    console.log("hello from resolver module", params);
 
-  const assignment = params.assignment;
-  const complete = async () => {
+    this.assignment = params.assignment;
+    this.completeAssignment = params.completeAssignment;
+  }
+  assignmentStates = assignmentStates;
+
+  complete = async () => {
     console.log("complete");
-    params.completeAssignment(params.assignment, assignmentStates.Completed);
+    this.completeAssignment(this.assignment, assignmentStates.Completed);
   };
 
-  const completeHandler = () => {
+  completeHandler = () => {
     console.log("approved");
     // Check if we have been directly assigned or as an action office
+    const assignment = this.assignment;
     if (assignment.userIsDirectlyAssigned(currentUser())) {
-      complete();
+      this.complete();
       return;
     }
 
@@ -24,16 +33,14 @@ export default function (params) {
           `This assignment is assigned to ${assignment.Assignee.Title}. Do you want to complete on their behalf? `
         )
       ) {
-        complete();
+        this.complete();
       }
       return;
     }
 
     alert("You are not authorized to approve this request!");
   };
-  return {
-    assignment,
-    assignmentStates,
-    completeHandler,
-  };
+
+  static name = "resolver-actions";
+  static template = resolverTemplate;
 }

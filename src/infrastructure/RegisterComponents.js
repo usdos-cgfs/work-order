@@ -1,8 +1,16 @@
 import ConstrainedEntityModule from "../components/ConstrainedEntity/ConstrainedEntityModule.js";
-
+import * as Components from "../components/index.js";
 export const html = String.raw;
 
 export function RegisterComponents() {
+  // register our components
+  for (const key in Components) {
+    const component = Components[key];
+    if (component.prototype instanceof Components.BaseComponent) {
+      registerComponentFromConstructor(component);
+    }
+  }
+
   // Regular Components
   registerComponentFromPath({
     name: "pending-request-ingests",
@@ -11,26 +19,26 @@ export function RegisterComponents() {
     template: "PendingRequestIngestsTemplate",
   });
 
-  registerComponentFromPath({
-    name: "approver-actions",
-    folder: "AssignmentActions",
-    module: "ApprovalModule",
-    template: "ApprovalTemplate",
-  });
+  // registerComponentFromPath({
+  //   name: "approver-actions",
+  //   folder: "AssignmentActions",
+  //   module: "ApprovalModule",
+  //   template: "ApprovalTemplate",
+  // });
 
-  registerComponentFromPath({
-    name: "resolver-actions",
-    folder: "AssignmentActions",
-    module: "ResolverModule",
-    template: "ResolverTemplate",
-  });
+  // registerComponentFromPath({
+  //   name: "resolver-actions",
+  //   folder: "AssignmentActions",
+  //   module: "ResolverModule",
+  //   template: "ResolverTemplate",
+  // });
 
-  registerComponentFromPath({
-    name: "assigner-actions",
-    folder: "AssignmentActions",
-    module: "AssignModule",
-    template: "AssignTemplate",
-  });
+  // registerComponentFromPath({
+  //   name: "assigner-actions",
+  //   folder: "AssignmentActions",
+  //   module: "AssignModule",
+  //   template: "AssignTemplate",
+  // });
 
   registerComponentFromPath({
     name: "open-requests-table",
@@ -128,6 +136,13 @@ export function RegisterComponents() {
     folder: "Toasts",
     module: "TaskToastModule",
     template: "TaskToastTemplate",
+  });
+}
+
+export function registerComponentFromConstructor(constructor) {
+  ko.components.register(constructor.name, {
+    template: constructor.template,
+    viewModel: constructor,
   });
 }
 
