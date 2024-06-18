@@ -1,18 +1,17 @@
-import TextField from "../../fields/TextField.js";
-import PeopleField from "../../fields/PeopleField.js";
-import SelectField from "../../fields/SelectField.js";
-import DateField, { dateFieldTypes } from "../../fields/DateField.js";
-import TextAreaField from "../../fields/TextAreaField.js";
-import CheckboxField from "../../fields/CheckboxField.js";
-import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
-import LookupField from "../../fields/LookupField.js";
+import {
+  CheckboxField,
+  DateField,
+  dateFieldTypes,
+  LookupField,
+  PeopleField,
+  SelectField,
+  TextAreaField,
+  TextField,
+} from "../../fields/index.js";
 
 import { RequestOrg, requestOrgStore } from "../../entities/RequestOrg.js";
 import { ServiceType, serviceTypeStore } from "../../entities/ServiceType.js";
-import {
-  registerComponentFromConstructor,
-  registerServiceTypeViewComponents,
-} from "../../infrastructure/RegisterComponents.js";
+import { registerComponentFromConstructor } from "../../infrastructure/RegisterComponents.js";
 import BaseServiceDetail from "../BaseServiceDetail.js";
 import { templateViewTemplate } from "./views/View.js";
 import { templateEditTemplate } from "./views/Edit.js";
