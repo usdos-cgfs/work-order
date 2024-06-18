@@ -1,3 +1,4 @@
+import { ConstrainedEntityEditModule } from "../../components/index.js";
 import {
   DateField,
   PeopleField,
@@ -5,16 +6,25 @@ import {
   TextField,
   dateFieldTypes,
 } from "../../fields/index.js";
-import { registerServiceTypeViewComponents } from "../../infrastructure/RegisterComponents.js";
+import { registerComponentFromConstructor } from "../../infrastructure/RegisterComponents.js";
+import { defaultComponents } from "../../primitives/ConstrainedEntity.js";
 import BaseServiceDetail from "../BaseServiceDetail.js";
+import { fiscalIrregEditTemplate } from "./views/Edit.js";
 
 const components = {
-  view: "svc-fiscal-irreg-view",
+  ...defaultComponents,
   edit: "svc-fiscal-irreg-edit",
-  new: "svc-fiscal-irreg-edit",
 };
 
-registerServiceTypeViewComponents({ uid: "fp_fiscal_irreg", components });
+class FiscalIrregularitiesEditModule extends ConstrainedEntityEditModule {
+  constructor(params) {
+    super(params);
+  }
+  static name = components.edit;
+  static template = fiscalIrregEditTemplate;
+}
+
+registerComponentFromConstructor(FiscalIrregularitiesEditModule);
 
 export default class FiscalIrregularities extends BaseServiceDetail {
   constructor(params) {
