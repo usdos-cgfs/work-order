@@ -1,4 +1,3 @@
-import { ConstrainedEntityComponents } from "../components/index.js";
 import * as Components from "../components/index.js";
 export const html = String.raw;
 

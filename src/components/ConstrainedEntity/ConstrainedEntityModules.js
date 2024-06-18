@@ -27,9 +27,3 @@ export class ConstrainedEntityEditModule extends ConstrainedEntityBaseModule {
   static name = defaultComponents.edit;
   static template = constrainedEntityEditTemplate;
 }
-
-export class ConstrainedEntityComponents {
-  static view = ConstrainedEntityViewModule.name;
-  static edit = ConstrainedEntityEditModule.name;
-  static new = ConstrainedEntityEditModule.name;
-}
