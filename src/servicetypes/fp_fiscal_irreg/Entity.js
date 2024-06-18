@@ -14,6 +14,7 @@ import { fiscalIrregEditTemplate } from "./views/Edit.js";
 const components = {
   ...defaultComponents,
   edit: "svc-fiscal-irreg-edit",
+  new: "svc-fiscal-irreg-edit",
 };
 
 class FiscalIrregularitiesEditModule extends ConstrainedEntityEditModule {
