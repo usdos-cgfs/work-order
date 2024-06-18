@@ -1,11 +1,6 @@
-import TextField from "../../fields/TextField.js";
-import PeopleField from "../../fields/PeopleField.js";
-import SelectField from "../../fields/SelectField.js";
-import DateField from "../../fields/DateField.js";
-import TextAreaField from "../../fields/TextAreaField.js";
-import CheckboxField from "../../fields/CheckboxField.js";
+import { TextField, SelectField } from "../../fields/index.js";
 
-import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import { defaultComponents } from "../../primitives/ConstrainedEntity.js";
 
 import { getAppContext } from "../../infrastructure/ApplicationDbContext.js";
 import { currentUser } from "../../infrastructure/Authorization.js";
@@ -14,6 +9,25 @@ import { requestOrgStore } from "../../entities/RequestOrg.js";
 import { serviceTypeStore } from "../../entities/ServiceType.js";
 import { RequestEntity } from "../../entities/Request.js";
 import BaseServiceDetail from "../BaseServiceDetail.js";
+import { ConstrainedEntityViewModule } from "../../components/index.js";
+import { itSoftwareViewTemplate } from "./views/View.js";
+import { registerComponentFromConstructor } from "../../infrastructure/RegisterComponents.js";
+
+const components = {
+  ...defaultComponents,
+  view: "svc-it_software-view",
+};
+
+class ITSoftwareViewModule extends ConstrainedEntityViewModule {
+  constructor(params) {
+    super(params);
+  }
+
+  static name = components.view;
+  static template = itSoftwareViewTemplate;
+}
+
+registerComponentFromConstructor(ITSoftwareViewModule);
 
 export default class ITSoftware extends BaseServiceDetail {
   constructor(params) {
@@ -29,9 +43,11 @@ export default class ITSoftware extends BaseServiceDetail {
     // 1. Generate the description of the new request
     let procurementDescription = "<ul>";
     Object.values(this.FieldMap).forEach((field) => {
-      procurementDescription += `<li>${
-        field.displayName
-      }: ${field.toString()}</li>`;
+      if (field) {
+        procurementDescription += `<li>${
+          field.displayName
+        }: ${field.toString()}</li>`;
+      }
     });
     procurementDescription += "</ul>";
 
@@ -109,6 +125,7 @@ export default class ITSoftware extends BaseServiceDetail {
     }),
   };
 
+  components = components;
   static Views = {
     All: ["ID", "Title", "Request"],
   };
