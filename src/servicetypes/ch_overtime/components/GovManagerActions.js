@@ -1,18 +1,14 @@
-import ApplicationDbContext, {
-  getAppContext,
-} from "../../../infrastructure/ApplicationDbContext.js";
-
-import { requestOrgStore } from "../../../entities/RequestOrg.js";
+import { getAppContext } from "../../../infrastructure/ApplicationDbContext.js";
 
 import { ValidationError } from "../../../primitives/ValidationError.js";
-import PeopleField from "../../../fields/PeopleField.js";
+import { PeopleField } from "../../../fields/index.js";
 
 import { assignmentStates } from "../../../entities/Assignment.js";
-import CH_Overtime, { getApmOrg, getGtmOrg } from "../Entity.js";
-import ApprovalActions from "../../../components/AssignmentActions/ApprovalModule.js";
-import { getUsersByGroupName } from "../../../infrastructure/Authorization.js";
+import { getApmOrg, getGtmOrg } from "../Entity.js";
+import { ApprovalActions } from "../../../components/index.js";
+import { govManagerActionsTemplate } from "./GovManagerActionsTemplate.js";
 
-export default class ActionGovManager extends ApprovalActions {
+export class CH_OvertimeGovManagerActions extends ApprovalActions {
   constructor(params) {
     super(params);
     this._context = getAppContext();
@@ -135,6 +131,9 @@ export default class ActionGovManager extends ApprovalActions {
     this.Editing(false);
     this.hasBeenSaved(true);
   };
+
+  static name = "GovManagerActions";
+  static template = govManagerActionsTemplate;
 }
 
 const errorSource = "gov-manager-actions";

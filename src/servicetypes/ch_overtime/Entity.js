@@ -1,7 +1,11 @@
-import { People } from "../../entities/People.js";
-import PeopleField from "../../fields/PeopleField.js";
-import TextField from "../../fields/TextField.js";
-import DateField, { dateFieldTypes } from "../../fields/DateField.js";
+import {
+  DateField,
+  dateFieldTypes,
+  LookupField,
+  PeopleField,
+  TextField,
+} from "../../fields/index.js";
+
 import { requestOrgStore } from "../../entities/RequestOrg.js";
 
 import ApplicationDbContext from "../../infrastructure/ApplicationDbContext.js";
@@ -11,18 +15,23 @@ import {
 } from "../../infrastructure/Authorization.js";
 import ContractorSupplement from "../contractor_supplement/Entity.js";
 
-import ConstrainedEntity, {
-  defaultComponents,
-} from "../../primitives/ConstrainedEntity.js";
-
-import BaseServiceDetail from "../BaseServiceDetail.js";
+import { defaultComponents } from "../../primitives/ConstrainedEntity.js";
 
 import {
-  registerServiceTypeViewComponents,
   registerServiceTypeActionComponent,
+  registerComponentFromConstructor,
 } from "../../infrastructure/RegisterComponents.js";
 
-import LookupField from "../../fields/LookupField.js";
+import { chOvertimeViewTemplate } from "./views/View.js";
+import { chOvertimeEditTemplate } from "./views/Edit.js";
+
+import {
+  ConstrainedEntityEditModule,
+  ConstrainedEntityViewModule,
+} from "../../components/index.js";
+import BaseServiceDetail from "../BaseServiceDetail.js";
+import { CH_OvertimeAPMActions } from "./components/APMActions.js";
+import { CH_OvertimeGovManagerActions } from "./components/GovManagerActions.js";
 
 const components = {
   view: "svc-ch_overtime-view",
@@ -30,16 +39,12 @@ const components = {
   new: "svc-ch_overtime-edit",
 };
 
-registerServiceTypeViewComponents({ uid: "ch_overtime", components });
-registerServiceTypeActionComponent({
-  uid: "ch_overtime",
-  componentName: "APMActions",
-});
-registerServiceTypeActionComponent({
-  uid: "ch_overtime",
-  componentName: "GovManagerActions",
-});
+// Register action components
+registerComponentFromConstructor(CH_OvertimeAPMActions);
+registerComponentFromConstructor(CH_OvertimeGovManagerActions);
 
+// It makes sense to keep these here, rather than moving them to the store
+// since they are pretty service type/instance specific.
 export const getApmOrg = ko.pureComputed(() => {
   return requestOrgStore().find(
     (org) => org.Title.toUpperCase() == "CGFS/APMS"
@@ -54,7 +59,28 @@ export const getCorOrg = ko.pureComputed(() =>
   requestOrgStore().find((org) => org.Title.toUpperCase() == "CGFS/CORS")
 );
 
-export default class CH_Overtime extends ConstrainedEntity {
+class CH_OvertimeViewModule extends ConstrainedEntityViewModule {
+  constructor(params) {
+    super(params);
+  }
+
+  static name = components.view;
+  static template = chOvertimeViewTemplate;
+}
+
+class CH_OvertimeEditModule extends ConstrainedEntityEditModule {
+  constructor(params) {
+    super(params);
+  }
+
+  static name = components.edit;
+  static template = chOvertimeEditTemplate;
+}
+
+registerComponentFromConstructor(CH_OvertimeEditModule);
+registerComponentFromConstructor(CH_OvertimeViewModule);
+
+export default class CH_Overtime extends BaseServiceDetail {
   constructor(requestContext) {
     super(requestContext);
     // if (requestContext.Request) this.Request = requestContext.Request;

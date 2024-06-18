@@ -1,14 +1,13 @@
-import ApplicationDbContext, {
-  getAppContext,
-} from "../../../infrastructure/ApplicationDbContext.js";
+import { getAppContext } from "../../../infrastructure/ApplicationDbContext.js";
 import ContractorSupplement from "../../contractor_supplement/Entity.js";
 
 import { ValidationError } from "../../../primitives/ValidationError.js";
 import CH_Overtime from "../Entity.js";
 import { assignmentStates } from "../../../entities/Assignment.js";
-import ApprovalActions from "../../../components/AssignmentActions/ApprovalModule.js";
+import { ApprovalActions } from "../../../components/index.js";
+import { apmActionsTemplate } from "./APMActionsTemplate.js";
 
-export default class ActionAPM extends ApprovalActions {
+export class CH_OvertimeAPMActions extends ApprovalActions {
   constructor(params) {
     super(params);
     if (window.DEBUG) console.log("Hello from APM Actions module.");
@@ -167,6 +166,9 @@ export default class ActionAPM extends ApprovalActions {
     this.hasBeenSaved(true);
     this.Editing(false);
   };
+
+  static name = "APMActions";
+  static template = apmActionsTemplate;
 }
 
 const errorSource = "apm-actions";
