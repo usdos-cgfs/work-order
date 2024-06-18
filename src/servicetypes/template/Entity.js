@@ -9,8 +9,17 @@ import LookupField from "../../fields/LookupField.js";
 
 import { RequestOrg, requestOrgStore } from "../../entities/RequestOrg.js";
 import { ServiceType, serviceTypeStore } from "../../entities/ServiceType.js";
-import { registerServiceTypeViewComponents } from "../../infrastructure/RegisterComponents.js";
+import {
+  registerComponentFromConstructor,
+  registerServiceTypeViewComponents,
+} from "../../infrastructure/RegisterComponents.js";
 import BaseServiceDetail from "../BaseServiceDetail.js";
+import { templateViewTemplate } from "./views/View.js";
+import { templateEditTemplate } from "./views/Edit.js";
+import {
+  ConstrainedEntityEditModule,
+  ConstrainedEntityViewModule,
+} from "../../components/index.js";
 
 /* 
 Components and registration are only necessary if we have custom views in our ./views folder
@@ -22,13 +31,34 @@ const components = {
   new: "svc-template-edit",
 };
 
-registerServiceTypeViewComponents({ uid: "template", components });
+// registerServiceTypeViewComponents({ uid: "template", components });
 
 const getApmOrg = ko.pureComputed(() => {
   return requestOrgStore().find(
     (org) => org.Title.toUpperCase() == "CGFS/APMS"
   );
 });
+
+class TemplateRequestViewModule extends ConstrainedEntityViewModule {
+  constructor(params) {
+    super(params);
+  }
+
+  static name = components.view;
+  static template = templateViewTemplate;
+}
+
+class TemplateRequestEditModule extends ConstrainedEntityEditModule {
+  constructor(params) {
+    super(params);
+  }
+
+  static name = components.edit;
+  static template = templateEditTemplate;
+}
+
+registerComponentFromConstructor(TemplateRequestEditModule);
+registerComponentFromConstructor(TemplateRequestViewModule);
 
 export default class TemplateRequest extends BaseServiceDetail {
   constructor(entityParams) {
