@@ -1,11 +1,39 @@
-import TextField from "../../fields/TextField.js";
-import PeopleField from "../../fields/PeopleField.js";
-import SelectField from "../../fields/SelectField.js";
-import DateField, { dateFieldTypes } from "../../fields/DateField.js";
-import TextAreaField from "../../fields/TextAreaField.js";
-import CheckboxField from "../../fields/CheckboxField.js";
-import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import {
+  ConstrainedEntityEditModule,
+  ConstrainedEntityViewModule,
+} from "../../components/index.js";
+import { TextField, SelectField } from "../../fields/index.js";
+import { registerComponentFromConstructor } from "../../infrastructure/RegisterComponents.js";
 import BaseServiceDetail from "../BaseServiceDetail.js";
+import { propSpaceEditTemplate } from "./views/Edit.js";
+import { propSpaceViewTemplate } from "./views/View.js";
+
+const components = {
+  view: "svc-prop_space-view",
+  edit: "svc-prop_space-edit",
+  new: "svc-prop_space-edit",
+};
+
+class PropertySpaceEditModule extends ConstrainedEntityEditModule {
+  constructor(params) {
+    super(params);
+  }
+
+  static name = components.edit;
+  static template = propSpaceEditTemplate;
+}
+
+class PropertySpaceViewModule extends ConstrainedEntityViewModule {
+  constructor(params) {
+    super(params);
+  }
+
+  static name = components.view;
+  static template = propSpaceViewTemplate;
+}
+
+registerComponentFromConstructor(PropertySpaceEditModule);
+registerComponentFromConstructor(PropertySpaceViewModule);
 
 export default class PropertySpace extends BaseServiceDetail {
   constructor(params) {
@@ -175,6 +203,8 @@ export default class PropertySpace extends BaseServiceDetail {
       }),
     }),
   };
+
+  components = components;
 
   static Views = {
     All: [
