@@ -1,13 +1,20 @@
-import TextField from "../../fields/TextField.js";
-import PeopleField from "../../fields/PeopleField.js";
-import SelectField from "../../fields/SelectField.js";
-import DateField, { dateFieldTypes } from "../../fields/DateField.js";
-import TextAreaField from "../../fields/TextAreaField.js";
-import CheckboxField from "../../fields/CheckboxField.js";
-import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import {
+  DateField,
+  dateFieldTypes,
+  SelectField,
+  TextAreaField,
+  TextField,
+} from "../../fields/index.js";
+
 import BaseServiceDetail from "../BaseServiceDetail.js";
 
-import { registerServiceTypeViewComponents } from "../../infrastructure/RegisterComponents.js";
+import { registerComponentFromConstructor } from "../../infrastructure/RegisterComponents.js";
+import {
+  ConstrainedEntityEditModule,
+  ConstrainedEntityViewModule,
+} from "../../components/index.js";
+import { diplomaticPassportEditTemplate } from "./views/Edit.js";
+import { diplomaticPassportViewTemplate } from "./views/View.js";
 
 const documentTypes = {
   Passport: "Passport",
@@ -25,9 +32,28 @@ const components = {
   new: "svc-diplomatic_passport-edit",
 };
 
-registerServiceTypeViewComponents({ uid: "diplomatic_passport", components });
+class DiplomaticPassportEditModule extends ConstrainedEntityEditModule {
+  constructor(params) {
+    super(params);
+  }
 
-export default class DipomaticPassportVisa extends BaseServiceDetail {
+  static name = components.edit;
+  static template = diplomaticPassportEditTemplate;
+}
+
+class DiplomaticPassportViewModule extends ConstrainedEntityViewModule {
+  constructor(params) {
+    super(params);
+  }
+
+  static name = components.view;
+  static template = diplomaticPassportViewTemplate;
+}
+
+registerComponentFromConstructor(DiplomaticPassportEditModule);
+registerComponentFromConstructor(DiplomaticPassportViewModule);
+
+export default class DiplomaticPassportVisa extends BaseServiceDetail {
   constructor(params) {
     super(params);
   }
@@ -169,6 +195,6 @@ export default class DipomaticPassportVisa extends BaseServiceDetail {
   static ListDef = {
     name: "st_diplomatic_passport",
     title: "st_diplomatic_passport",
-    fields: DipomaticPassportVisa.Views.All,
+    fields: DiplomaticPassportVisa.Views.All,
   };
 }

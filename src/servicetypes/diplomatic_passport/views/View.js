@@ -1,0 +1,54 @@
+import { html } from "../../../components/BaseComponent.js";
+export const diplomaticPassportViewTemplate = html`
+  <div>
+    <div class="row row-cols-2" data-bind="using: FieldMap">
+      <div
+        class="col pb-2"
+        data-bind="component: {name: DocumentType.components.view, params: DocumentType}"
+      ></div>
+      <div
+        class="col pb-2"
+        data-bind="component: {name: RequestType.components.view, params: RequestType}"
+      ></div>
+    </div>
+    <!-- ko if: TypesSelected -->
+    <div class="row row-cols-2" data-bind="using: FieldMap">
+      <div
+        class="col pb-2"
+        data-bind="component: {name: JobTitle.components.view, params: JobTitle}"
+      ></div>
+      <div
+        class="col pb-2"
+        data-bind="component: {name: Grade.components.view, params: Grade}"
+      ></div>
+    </div>
+    <h4>Travel Information</h4>
+    <div class="row row-cols-2" data-bind="foreach: TravelFields">
+      <div
+        class="col pb-2"
+        data-bind="component: {name: components.view, params: $data}"
+      ></div>
+    </div>
+    <h4>Personal Information</h4>
+    <div class="row row-cols-2" data-bind="foreach: PersonalFields">
+      <div
+        class="col pb-2"
+        data-bind="component: {name: components.view, params: $data}"
+      ></div>
+    </div>
+    <!-- ko if: ShowPassportInfo -->
+    <h4>Passport Information</h4>
+    <div class="row row-cols-2" data-bind="foreach: PassportFields">
+      <div
+        class="col pb-2"
+        data-bind="component: {name: components.view, params: $data}"
+      ></div>
+    </div>
+    <!-- /ko -->
+    <div
+      class="col col-12 pb-2"
+      data-bind="component: {name: FieldMap.Justification.components.view, params: FieldMap.Justification}"
+    ></div>
+    <!-- /ko -->
+  </div>
+`;
