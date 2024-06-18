@@ -1,6 +1,5 @@
-import TextField from "../../fields/TextField.js";
-import CheckboxField from "../../fields/CheckboxField.js";
-import ConstrainedEntity from "../../primitives/ConstrainedEntity.js";
+import { CheckboxField, TextField } from "../../fields/index.js";
+
 import BaseServiceDetail from "../BaseServiceDetail.js";
 
 export default class CH_Supplies extends BaseServiceDetail {
