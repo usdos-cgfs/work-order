@@ -4,7 +4,7 @@ import { ValidationError } from "../../../primitives/ValidationError.js";
 import { PeopleField } from "../../../fields/index.js";
 
 import { assignmentStates } from "../../../entities/Assignment.js";
-import { getApmOrg, getGtmOrg } from "../Entity.js";
+import { getApmOrg, getGtmOrg } from "../CHOvertimeDetail.js";
 import { ApprovalActions } from "../../../components/index.js";
 import { govManagerActionsTemplate } from "./GovManagerActionsTemplate.js";
 

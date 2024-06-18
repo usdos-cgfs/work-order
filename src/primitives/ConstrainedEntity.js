@@ -11,7 +11,7 @@ export const defaultComponents = {
   new: "default-constrained-edit",
 };
 
-export default class ConstrainedEntity extends Entity {
+export class ConstrainedEntity extends Entity {
   constructor(params) {
     super(params);
   }

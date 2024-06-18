@@ -1,5 +1,5 @@
 import { TextAreaField, TextField } from "../fields/index.js";
-import ConstrainedEntity from "../primitives/ConstrainedEntity.js";
+import { ConstrainedEntity } from "../primitives/index.js";
 
 export class RequestIngest extends ConstrainedEntity {
   constructor({ ID, Title }) {

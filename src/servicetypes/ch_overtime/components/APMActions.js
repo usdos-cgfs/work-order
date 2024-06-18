@@ -1,8 +1,8 @@
 import { getAppContext } from "../../../infrastructure/ApplicationDbContext.js";
-import ContractorSupplement from "../../contractor_supplement/Entity.js";
+import { ContractorSupplement } from "../../index.js";
 
 import { ValidationError } from "../../../primitives/ValidationError.js";
-import CH_Overtime from "../Entity.js";
+import { CH_Overtime } from "../CHOvertimeDetail.js";
 import { assignmentStates } from "../../../entities/Assignment.js";
 import { ApprovalActions } from "../../../components/index.js";
 import { apmActionsTemplate } from "./APMActionsTemplate.js";

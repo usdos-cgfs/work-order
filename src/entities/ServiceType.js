@@ -1,6 +1,19 @@
 import { assetsPath } from "../env.js";
 import ApplicationDbContext from "../infrastructure/ApplicationDbContext.js";
 import { systemRoles } from "../infrastructure/Authorization.js";
+import * as ServiceTypeDetails from "../servicetypes/index.js";
+
+const getServiceDetailByUID = (uid) => {
+  let result = null;
+  for (const detail in ServiceTypeDetails) {
+    //console.log(ServiceTypeDetails[detail].uid);
+    if (ServiceTypeDetails[detail].uid == uid) {
+      result = ServiceTypeDetails[detail];
+      break;
+    }
+  }
+  return result;
+};
 
 export const getTemplateElementId = (uid) => `tmpl-${uid}`;
 
@@ -77,18 +90,17 @@ export class ServiceType {
     // this.ServiceType.IsLoading(true);
     let serviceModule = null;
     try {
-      serviceModule = await import(getModuleFilePath(this.UID));
+      serviceModule = getServiceDetailByUID(this.UID);
+      // serviceModule = await import(getModuleFilePath(this.UID));
       if (!serviceModule) {
-        console.error("Could not find service module");
-        return null;
+        console.error("Could not find service module", this);
       }
+      this._constructor = serviceModule;
     } catch (e) {
-      console.error("Cannot import service type module", e);
-      return;
+      console.error("Cannot import service type module", e, this);
+    } finally {
+      this._initialized = true;
     }
-
-    this._initialized = true;
-    this._constructor = serviceModule.default;
   };
 
   // TODO: Minor - this should be in a servicetype manager service
