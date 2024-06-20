@@ -55,12 +55,22 @@
 <!-- Knockout -->
 <script src="/sites/CGFS/Style Library/apps/wo/lib/knockout/knockout-3.5.1.js"></script>
 
-<link href="/sites/CGFS/Style Library/apps/wo/dist/app.css" rel="stylesheet" />
+<!-- <link href="/sites/CGFS/Style Library/apps/wo/dist/app.css" rel="stylesheet" /> -->
+<link
+  href="https://cdn.jsdelivr.net/gh/peterfbacklund/wo@main/dist/app_bundle.css"
+  rel="stylesheet"
+/>
 
 <div id="app"></div>
+
+<!-- <script
+  defer
+  type="module"
+  src="/sites/CGFS/Style Library/apps/wo/dist/app.js"
+></script> -->
 
 <script
   defer
   type="module"
-  src="/sites/CGFS/Style Library/apps/wo/dist/app.js"
+  src="https://cdn.jsdelivr.net/gh/peterfbacklund/wo@main/dist/app_bundle.js"
 ></script>
