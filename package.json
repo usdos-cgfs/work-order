@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "dev": "esbuild src/app_bundle.js --bundle --outdir=\"P:/Style Library/apps/wo/dist/\"",
     "build": "esbuild src/app_bundle.js --bundle --outfile=dist/app.js"
   },
   "devDependencies": {

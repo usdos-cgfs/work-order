@@ -1983,7 +1983,8 @@
           resolve();
         },
         function(sender, args) {
-          alert("Error initializing SAL");
+          alert("Error initializing SAL: " + args.get_message());
+          console.error("Error initializing SAL: " + args.get_message(), args);
           reject2();
         }
       );
@@ -10715,8 +10716,6 @@
           return this.Assignments.list.All();
         }),
         CurrentUserAssignments: ko.pureComputed(() => {
-          if (window.DEBUG)
-            console.log(`Request ${this.ID}: User Assignments Updated`);
           if (!this.Assignments.list.All().length) {
             return [];
           }
@@ -10799,7 +10798,6 @@
           (asg) => asg.RequestOrg = RequestOrg.FindInStore(asg.RequestOrg) ?? asg.RequestOrg
         );
         this.Assignments.list.All(assignments);
-        if (window.DEBUG) console.log(`Request ${this.ID} Assignments Updated`);
         this.Assignments.HaveLoaded(true);
         this.Assignments.AreLoading(false);
       },
@@ -13494,12 +13492,14 @@ optionsText: 'Title'"
     tab.show();
   };
   if (document.readyState === "ready" || document.readyState === "complete") {
-    CreateApp();
+    ExecuteOrDelayUntilScriptLoaded(function() {
+      SP.SOD.executeFunc("sp.js", "SP.ClientContext", CreateApp);
+    }, "sp.js");
   } else {
     document.onreadystatechange = () => {
       if (document.readyState === "complete" || document.readyState === "ready") {
         ExecuteOrDelayUntilScriptLoaded(function() {
-          SP.SOD.executeFunc("sp.js", "SP.ClientContext", CreateApp());
+          SP.SOD.executeFunc("sp.js", "SP.ClientContext", CreateApp);
         }, "sp.js");
       }
     };

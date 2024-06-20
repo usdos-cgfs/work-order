@@ -1,29 +1,3 @@
-<link
-  href="/sites/CGFS/Style Library/apps/wo/lib/quill/quill.snow.1.3.6.css"
-  rel="stylesheet"
-/>
-<link
-  href="/sites/CGFS/Style Library/apps/wo/lib/bootstrap-5.3.0/css/bootstrap.min.css"
-  rel="stylesheet"
-/>
-
-<link
-  href="/sites/CGFS/Style Library/apps/wo/lib/fontawesome-6.4.0/css/all.min.css"
-  rel="stylesheet"
-/>
-<link href="/sites/CGFS/Style Library/apps/wo/src/app.css" rel="stylesheet" />
-
-<script src="/sites/CGFS/Style Library/apps/wo/lib/quill/quill.1.3.6.min.js"></script>
-<script src="/sites/CGFS/Style Library/apps/wo/lib/bootstrap-5.3.0/js/bootstrap.bundle.min.js"></script>
-<script src="/sites/CGFS/Style Library/apps/wo/lib/knockout/knockout-3.5.1.js"></script>
-<!-- <script src="/sites/CGFS/Style Library/apps/wo/lib/knockout/knockout.mapping-latest.js"></script> -->
-
-<!-- Search Select Web Component -->
-<script
-  type="module"
-  src="/sites/CGFS/Style Library/apps/wo/lib/webcomponents/searchselect/searchselect.js"
-></script>
-
 <!-- SharePoint Libraries -->
 
 <script type="text/javascript" src="../Apps/_layouts/15/sp.runtime.js"></script>
@@ -51,13 +25,44 @@
 ></script>
 <script type="text/javascript" src="../Apps/_layouts/15/autofill.js"></script>
 
-<!-- <script src="../Style Library/wo/lib/knockout/knockout-3.5.1.js"></script> -->
+<!-- Other Libraries -->
+<!-- Quill JS -->
+<link
+  href="/sites/CGFS/Style Library/apps/wo/lib/quill/quill.snow.1.3.6.css"
+  rel="stylesheet"
+/>
+<script src="/sites/CGFS/Style Library/apps/wo/lib/quill/quill.1.3.6.min.js"></script>
 
-<!-- <script
-  defer
+<!-- Bootstrap -->
+<link
+  href="/sites/CGFS/Style Library/apps/wo/lib/bootstrap-5.3.0/css/bootstrap.min.css"
+  rel="stylesheet"
+/>
+<script src="/sites/CGFS/Style Library/apps/wo/lib/bootstrap-5.3.0/js/bootstrap.bundle.min.js"></script>
+
+<!-- FontAwesome -->
+<link
+  href="/sites/CGFS/Style Library/apps/wo/lib/fontawesome-6.4.0/css/all.min.css"
+  rel="stylesheet"
+/>
+
+<!-- DataTables -->
+<link
+  href="/sites/CGFS/Style Library/apps/wo/lib/DataTables/datatables.min.css"
+  rel="stylesheet"
+/>
+<script src="/sites/CGFS/Style Library/apps/wo/lib/DataTables/datatables.min.js"></script>
+
+<!-- Knockout -->
+<script src="/sites/CGFS/Style Library/apps/wo/lib/knockout/knockout-3.5.1.js"></script>
+
+<!-- Search Select Web Component -->
+<script
   type="module"
-  src="/sites/CGFS/Style Library/apps/wo/src/app.js"
-></script> -->
+  src="/sites/CGFS/Style Library/apps/wo/lib/webcomponents/searchselect/searchselect.js"
+></script>
+
+<link href="/sites/CGFS/Style Library/apps/wo/src/app.css" rel="stylesheet" />
 <script>
   window.appRoot = "/sites/CGFS/Style Library/apps/wo";
 </script>

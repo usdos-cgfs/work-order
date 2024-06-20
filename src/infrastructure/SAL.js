@@ -132,7 +132,8 @@ export async function InitSal() {
         resolve();
       },
       function (sender, args) {
-        alert("Error initializing SAL");
+        alert("Error initializing SAL: " + args.get_message());
+        console.error("Error initializing SAL: " + args.get_message(), args);
         reject();
       }
     );

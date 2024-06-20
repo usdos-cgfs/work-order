@@ -493,8 +493,8 @@ export class RequestEntity {
         return this.Assignments.list.All();
       }),
       CurrentUserAssignments: ko.pureComputed(() => {
-        if (window.DEBUG)
-          console.log(`Request ${this.ID}: User Assignments Updated`);
+        // if (window.DEBUG)
+        //   console.log(`Request ${this.ID}: User Assignments Updated`);
         if (!this.Assignments.list.All().length) {
           return [];
         }
@@ -619,7 +619,7 @@ export class RequestEntity {
       );
 
       this.Assignments.list.All(assignments);
-      if (window.DEBUG) console.log(`Request ${this.ID} Assignments Updated`);
+      // if (window.DEBUG) console.log(`Request ${this.ID} Assignments Updated`);
       this.Assignments.HaveLoaded(true);
       this.Assignments.AreLoading(false);
     },
