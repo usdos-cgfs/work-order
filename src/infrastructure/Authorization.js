@@ -77,8 +77,6 @@ export const stageActionRoleMap = {
 export const currentUser = ko.observable();
 
 export class User extends People {
-  Groups = [];
-
   constructor({
     ID,
     Title,

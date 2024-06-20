@@ -219,7 +219,7 @@ if (document.readyState === "ready" || document.readyState === "complete") {
   document.onreadystatechange = () => {
     if (document.readyState === "complete" || document.readyState === "ready") {
       ExecuteOrDelayUntilScriptLoaded(function () {
-        SP.SOD.executeFunc("sp.js", "SP.ClientContext", CreateApp());
+        SP.SOD.executeFunc("sp.js", "SP.ClientContext", CreateApp);
       }, "sp.js");
     }
   };
