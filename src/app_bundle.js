@@ -10,7 +10,6 @@
 // import "../lib/knockout/knockout-3.5.1.js";
 // import "../lib/knockout/knockout.mapping-latest.js";
 // import "../lib/DataTables/datatables.min.js";
-import "./app.css";
 import "../lib/webcomponents/searchselect/searchselect.js";
 import appTemplate from "./app.txt";
 import "./app.js";

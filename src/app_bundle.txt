@@ -57,7 +57,7 @@
 
 <!-- <link href="/sites/CGFS/Style Library/apps/wo/dist/app.css" rel="stylesheet" /> -->
 <link
-  href="https://cdn.jsdelivr.net/gh/peterfbacklund/wo@main/dist/app_bundle.css"
+  href="https://cdn.jsdelivr.net/gh/usdos-cgfs/worker-order-pub@main/dist/app_bundle.css"
   rel="stylesheet"
 />
 
@@ -72,5 +72,5 @@
 <script
   defer
   type="module"
-  src="https://cdn.jsdelivr.net/gh/peterfbacklund/wo@main/dist/app_bundle.js"
+  src="https://cdn.jsdelivr.net/gh/usdos-cgfs/worker-order-pub@main/dist/app_bundle.js"
 ></script>
