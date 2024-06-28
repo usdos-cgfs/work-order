@@ -12,14 +12,16 @@ export class CH_Notice extends BaseServiceDetail {
     DistributionGroup: new SelectField({
       displayName: "Distribution Group",
       options: [
-        "CGFS Offices",
-        "DOS Offices in Charleston",
-        "Both (CGFS and DOS Offices)",
+        "All CGFS CHS [Direct hires/contractors]",
+        "All CHS Bureaus + Passport Center [Direct hires/contractors]",
+        "GS 15 managing director distro list",
+        "Supervisors CHS",
       ],
       isRequired: true,
     }),
     NoticeDates: new TextAreaField({
       displayName: "Notification Dates",
+      instructions: "*Please include reminder dates.",
       isRequired: true,
     }),
   };
