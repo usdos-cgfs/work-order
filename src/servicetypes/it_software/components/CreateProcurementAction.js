@@ -1,6 +1,7 @@
 import { ResolverModule, html } from "../../../components/index.js";
 import { getAppContext } from "../../../infrastructure/ApplicationDbContext.js";
 import { RequestEntity, serviceTypeStore } from "../../../entities/index.js";
+import { currentUser } from "../../../infrastructure/Authorization.js";
 
 const createProcurementTemplate = html`
   <!-- ko if: assignment.Status != assignmentStates.Completed -->
@@ -77,7 +78,7 @@ export class CreateProcurementAction extends ResolverModule {
       (service) => service.UID == "procurement"
     );
 
-    const newRequest = new RequestEntity({
+    const newRequest = RequestEntity.CreateByServiceType({
       ServiceType: procurementServiceTypeDef,
     });
 

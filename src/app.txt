@@ -572,6 +572,7 @@
                             </div>
                             <input
                               type="file"
+                              multiple="true"
                               style="display: none"
                               data-bind="files: Attachments.newAttachmentFiles"
                             />

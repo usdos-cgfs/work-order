@@ -1188,6 +1188,13 @@ export class RequestEntity {
     },
   };
 
+  static CreateByServiceType({ ServiceType }) {
+    const newRequest = new RequestEntity({ ServiceType });
+    newRequest.Author.set(currentUser());
+
+    return newRequest;
+  }
+
   static Views = {
     All: [
       "ID",

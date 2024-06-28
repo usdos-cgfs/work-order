@@ -2341,15 +2341,14 @@ https://learn.microsoft.com/en-us/previous-versions/office/developer/sharepoint-
             callback();
           },
           function (sender, args) {
-            console.log("error: ") + args.get_message();
-            onError;
+            console.log("error: ", args.getMessage());
+            onError(args);
           }
         );
       },
       function (sender, args) {
         console.error("Unable to copy files: ", args.get_message());
-        console.error(sender);
-        console.error(args);
+        console.error(sender, args);
         onError(args);
       }
     );

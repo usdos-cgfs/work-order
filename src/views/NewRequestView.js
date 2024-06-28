@@ -51,7 +51,7 @@ export class NewRequestView {
 
     await serviceType.initializeEntity();
 
-    const newRequest = new RequestEntity({
+    const newRequest = RequestEntity.CreateByServiceType({
       ServiceType: serviceType,
     });
 
