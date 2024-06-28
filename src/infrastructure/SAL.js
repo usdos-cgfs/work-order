@@ -2350,7 +2350,7 @@ https://learn.microsoft.com/en-us/previous-versions/office/developer/sharepoint-
         console.error("Unable to copy files: ", args.get_message());
         console.error(sender);
         console.error(args);
-        reject(args);
+        onError(args);
       }
     );
   }
