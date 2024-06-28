@@ -652,6 +652,8 @@ export class RequestEntity {
         assignment.PipelineStage = this.Pipeline.Stage();
       }
 
+      assignment.CustomComponent = assignment.PipelineStage.ActionComponentName;
+
       assignment.Status = assignment.Role.initialStatus;
 
       const folderPath = this.getRelativeFolderPath();
