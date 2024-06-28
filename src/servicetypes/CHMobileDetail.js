@@ -31,7 +31,7 @@ export class CH_Mobile extends BaseServiceDetail {
     }),
     Carrier: new TextField({
       displayName: "Carrier",
-      isRequired: true,
+      isRequired: false,
     }),
   };
 

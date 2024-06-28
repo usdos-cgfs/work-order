@@ -21,7 +21,7 @@ export class CH_Notice extends BaseServiceDetail {
     }),
     NoticeDates: new TextAreaField({
       displayName: "Notification Dates",
-      instructions: "*Please include reminder dates.",
+      instructions: "*Please also include reminder dates.",
       isRequired: true,
     }),
   };

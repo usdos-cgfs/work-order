@@ -20,24 +20,10 @@ export class CH_Supplies extends BaseServiceDetail {
       displayName: "Quantity",
       isRequired: true,
     }),
-    InStock: new CheckboxField({
-      displayName: "In Stock",
-    }),
-    SpecialOrder: new CheckboxField({
-      displayName: "Special Order",
-    }),
   };
 
   static Views = {
-    All: [
-      "ID",
-      "Title",
-      "Vendor",
-      "ItemNum",
-      "Quantity",
-      "InStock",
-      "SpecialOrder",
-    ],
+    All: ["ID", "Title", "Vendor", "ItemNum", "Quantity"],
   };
 
   static ListDef = {
