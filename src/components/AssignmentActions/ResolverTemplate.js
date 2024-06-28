@@ -17,7 +17,7 @@ export const resolverTemplate = html`
           </div>
         </div>
         <div>
-          <div>Please confirm you have completed any necessary actions!</div>
+          <p>Please confirm you have completed any necessary actions!</p>
           <div class="d-flex justify-content-start">
             <button
               class="ms-3 btn btn-success"

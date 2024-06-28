@@ -1,6 +1,11 @@
-import { PeopleField, SelectField, TextField } from "../fields/index.js";
+import { PeopleField, SelectField, TextField } from "../../fields/index.js";
+import { registerComponentFromConstructor } from "../../infrastructure/RegisterComponents.js";
 
-import { BaseServiceDetail } from "./BaseServiceDetail.js";
+import { BaseServiceDetail } from "../BaseServiceDetail.js";
+import { CH_GenerateAccessControlEmailActions } from "./components/GenerateAccessControlEmailAction.js";
+
+// We just do this here so it get's pull in on the import chain
+registerComponentFromConstructor(CH_GenerateAccessControlEmailActions);
 
 export class AccessFletc extends BaseServiceDetail {
   constructor(params) {

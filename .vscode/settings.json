@@ -20,6 +20,16 @@
         "deployOnSave": ["WO Style Library"],
         "removeOnChange": ["WO Style Library"],
         "syncWhenOpen": true
+      },
+      {
+        "name": "lib",
+        "description": "Only Files in lib folder",
+        "files": ["lib/**"],
+        "exclude": ["**.md", "**.json"],
+
+        "deployOnSave": ["WO Style Library"],
+        "removeOnChange": ["WO Style Library"],
+        "syncWhenOpen": true
       }
     ],
     "targets": [

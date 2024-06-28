@@ -779,6 +779,7 @@ export class RequestEntity {
         PipelineStage: stage,
         IsActive: true,
         Role: stageActionRoleMap[stage.ActionType],
+        CustomComponent: stage.ActionComponentName,
       });
 
       await this.Assignments.addNew(newAssignment);
