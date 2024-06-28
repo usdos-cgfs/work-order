@@ -49,6 +49,7 @@ import {
   DateField,
   TextField,
   TextAreaField,
+  PeopleField,
 } from "../fields/index.js";
 
 import { DisplayModes } from "../views/RequestDetailView.js";
@@ -158,6 +159,10 @@ export class RequestEntity {
     Office: ko.observable(),
     OfficeSymbol: new TextField({ displayName: "Office Symbol" }),
   };
+
+  Author = new PeopleField({
+    displayName: "Created By",
+  });
 
   State = {
     IsActive: ko.observable(),
@@ -919,6 +924,7 @@ export class RequestEntity {
       );
     }),
     currentUserCanSupplement: ko.pureComputed(() => {
+      if (this.DisplayMode() == DisplayModes.New) return true;
       // determines whether the current user can add attachments or modify
       const user = currentUser();
       if (!user) {
@@ -1128,6 +1134,7 @@ export class RequestEntity {
     Title: this.ObservableTitle,
     RequestSubject: this.RequestSubject,
     RequestDescription: this.RequestDescription,
+    Author: this.Author,
     Requestor: {
       set: (val) => this.RequestorInfo.Requestor(People.Create(val)),
       get: this.RequestorInfo.Requestor,
@@ -1200,6 +1207,7 @@ export class RequestEntity {
       "RequestOrgs",
       "ServiceType",
       "RequestBodyBlob",
+      "Author",
     ],
     ByStatus: [
       "ID",

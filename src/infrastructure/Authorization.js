@@ -160,14 +160,15 @@ export class User extends People {
 export function getRequestFolderPermissions(request) {
   const defaultGroups = getDefaultGroups();
   const requestor = request.RequestorInfo.Requestor();
+  const submitter = request.Author.Value();
   const requestorOffice = request.RequestorInfo.Office(); // this should be set during validation
 
   const folderPermissions = [
     [new People(defaultGroups.owners), permissions.FullControl],
     [staticGroups.RestrictedReaders, permissions.RestrictedRead],
+    [requestor, permissions.RestrictedContribute],
+    [submitter, permissions.RestrictedContribute],
   ];
-
-  folderPermissions.push([requestor, permissions.RestrictedContribute]);
 
   if (requestorOffice && !requestorOffice.BreakAccess) {
     folderPermissions.push([

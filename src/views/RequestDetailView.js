@@ -328,7 +328,10 @@ export class RequestDetailView {
 
   createNewRequest = async ({ request }) => {
     const { Requestor, Phone, Email, OfficeSymbol } = request.RequestorInfo;
+    const Author = request.Author.Value;
+
     if (!Requestor()) Requestor(new People(currentUser()));
+    if (!Author()) Author(new People(currentUser()));
     if (!Phone()) Phone(currentUser().WorkPhone);
     if (!Email()) Email(currentUser().EMail);
     if (!OfficeSymbol.get()) OfficeSymbol.set(currentUser().OfficeSymbol);
