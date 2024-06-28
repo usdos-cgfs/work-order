@@ -1,3 +1,7 @@
+#s4-workspace #s4-titlerow {
+  height: 90px;
+}
+
 #s4-workspace {
   background-color: #f8f9fb;
 }
