@@ -16,6 +16,16 @@ export class EmailRequestModule extends BaseComponent {
   request;
   notification = ko.observable();
 
+  insertRequestLink = () => {
+    const link = this.request.getAppLinkElement();
+
+    const body = this.notification().Body.Value();
+
+    this.notification().Body.Value(body + `<br>` + link);
+  };
+
+  sendEmail = () => {};
+
   init() {
     const notification = createRequestDetailNotification({
       request: this.request,

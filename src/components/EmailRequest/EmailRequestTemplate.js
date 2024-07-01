@@ -26,8 +26,36 @@ export const emailRequestTemplate = html`
       </div>
       <div data-bind="with: notification">
         <div
+          data-bind="component: {name: ToString.components.edit, params: ToString}"
+        ></div>
+        <div
+          data-bind="component: {name: CCString.components.edit, params: CCString}"
+        ></div>
+        <div
           data-bind="component: {name: Body.components.edit, params: Body}"
         ></div>
+        <div>
+          <button
+            type="button"
+            class="btn btn-link"
+            data-bind="click: $parent.insertRequestLink"
+            title="Insert a hyperlink to this request"
+          >
+            <i class="fa-solid fa-link"></i>
+            Insert Request Link
+          </button>
+        </div>
+      </div>
+      <div>
+        <button
+          type="button"
+          class="btn btn-success"
+          data-bind="click: sendEmail"
+          title="Insert a hyperlink to this request"
+        >
+          <i class="fa-solid fa-paper-plane"></i>
+          Send
+        </button>
       </div>
     </div>
   </dialog>

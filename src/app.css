@@ -338,6 +338,14 @@ dialog[open].card {
   display: flex !important;
 }
 
+#dialog-email-request label {
+  width: 100%;
+}
+
+#dialog-email-request .richtext-field .form-control {
+  min-height: 450px;
+}
+
 .accordion-title .indicator {
   flex-shrink: 0;
   width: 1.25rem;
