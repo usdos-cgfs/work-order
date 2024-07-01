@@ -1,6 +1,7 @@
 import {
   DateField,
   dateFieldTypes,
+  PeopleField,
   SelectField,
   TextAreaField,
   TextField,
@@ -86,6 +87,10 @@ export class DiplomaticPassportVisa extends BaseServiceDetail {
     RequestType: new SelectField({
       displayName: "Request Type",
       options: Object.values(requestTypes),
+      isRequired: true,
+    }),
+    Supervisor: new PeopleField({
+      displayName: "Supervisor",
       isRequired: true,
     }),
     Grade: new TextField({

@@ -22,6 +22,12 @@ export const diplomaticPassportEditTemplate = html`
         data-bind="component: {name: Grade.components.edit, params: Grade}"
       ></div>
     </div>
+    <div class="row row-cols-2" data-bind="using: FieldMap">
+      <div
+        class="col pb-2"
+        data-bind="component: {name: Supervisor.components.edit, params: Supervisor}"
+      ></div>
+    </div>
     <h4>Travel Information</h4>
     <div class="row row-cols-2" data-bind="foreach: TravelFields">
       <div
