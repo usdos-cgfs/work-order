@@ -3,6 +3,11 @@ import { TextAreaField, TextField } from "../fields/index.js";
 export class Notification {
   constructor() {}
 
+  Title = new TextField({
+    displayName: "Subject",
+    isRequired: true,
+  });
+
   ToString = new TextField({
     displayName: "To",
     isRequired: true,

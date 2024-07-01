@@ -26,6 +26,9 @@ export const emailRequestTemplate = html`
       </div>
       <div data-bind="with: notification">
         <div
+          data-bind="component: {name: Title.components.edit, params: Title}"
+        ></div>
+        <div
           data-bind="component: {name: ToString.components.edit, params: ToString}"
         ></div>
         <div
