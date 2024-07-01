@@ -333,6 +333,7 @@ table.dataTable > tbody td {
 
 dialog.card {
   display: none !important;
+  height: fit-content;
 }
 dialog[open].card {
   display: flex !important;

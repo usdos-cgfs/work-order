@@ -88,12 +88,21 @@ export const emailRequestTemplate = html`
           </tbody>
         </table>
       </div>
-      <div>
+      <div class="d-flex justify-content-end gap-3">
+        <button
+          type="button"
+          class="btn btn-danger"
+          data-bind="click: closeDialog"
+          title="Close cancel"
+        >
+          <i class="fa-solid fa-circle-xmark"></i>
+          Cancel
+        </button>
         <button
           type="button"
           class="btn btn-success"
           data-bind="click: sendEmail"
-          title="Insert a hyperlink to this request"
+          title="Send email"
         >
           <i class="fa-solid fa-paper-plane"></i>
           Send
