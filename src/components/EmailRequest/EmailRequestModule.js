@@ -1,6 +1,7 @@
 import { Notification } from "../../entities/index.js";
+import { createRequestDetailNotification } from "../../infrastructure/Notifications.js";
 import { registerComponentFromConstructor } from "../../infrastructure/RegisterComponents.js";
-import { BaseComponent } from "../index.js";
+import { BaseComponent, html } from "../index.js";
 import { emailRequestTemplate } from "./EmailRequestTemplate.js";
 
 const dialogId = "dialog-email-request";
@@ -16,9 +17,9 @@ export class EmailRequestModule extends BaseComponent {
   notification = ko.observable();
 
   init() {
-    const notification = new Notification();
-
-    notification.Body.Value(this.request.RequestBodyBlob?.Value()?.toHTML());
+    const notification = createRequestDetailNotification({
+      request: this.request,
+    });
 
     this.notification(notification);
   }

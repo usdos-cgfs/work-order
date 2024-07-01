@@ -1,9 +1,11 @@
 import { currentUser } from "./Authorization.js";
 import { getAppContext } from "./ApplicationDbContext.js";
-import { RequestOrg } from "../entities/RequestOrg.js";
+import { RequestOrg, Notification } from "../entities/index.js";
 import { assignmentRoles } from "../entities/Assignment.js";
 
 import { siteTitle } from "../env.js";
+
+const html = String.raw;
 
 const requestActionTypeFunctionMap = {
   Created: requestCreatedNotification,
@@ -11,6 +13,37 @@ const requestActionTypeFunctionMap = {
   Assigned: requestAssignedNotification,
   Closed: requestClosedNotification,
 };
+
+export function createRequestDetailNotification({ request }) {
+  const notification = new Notification();
+
+  const reqPairs = [
+    `Request ID: ${request.Title}`,
+    `Submitted On: ${request.Dates.Submitted.toString()}`,
+    `Requestor Info:`,
+    `Name: ${request.RequestorInfo.Requestor()?.Title}`,
+    `Phone: ${request.RequestorInfo.Phone()}`,
+    `Email: ${request.RequestorInfo.Email()}`,
+    `Office Symbol: ${request.RequestorInfo.OfficeSymbol.toString()}`,
+  ];
+
+  const requestHeaderHtml = `<p>${reqPairs.join(`<br>`)}</p>`;
+
+  const requestBodyHtml = request.RequestBodyBlob?.Value()?.toHTML();
+
+  const requestDescHtml = html`
+    <p>
+      ${ko.unwrap(request.RequestDescription.displayName)}:<br />
+      ${request.RequestDescription.Value()}
+    </p>
+  `;
+
+  notification.Body.Value(
+    [requestHeaderHtml, requestBodyHtml, requestDescHtml].join(`<br>`)
+  );
+
+  return notification;
+}
 
 export async function emitCommentNotification(comment, request) {
   const toArray = [request.RequestorInfo.Requestor(), currentUser()];
