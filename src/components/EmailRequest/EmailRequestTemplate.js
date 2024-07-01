@@ -34,17 +34,56 @@ export const emailRequestTemplate = html`
         <div
           data-bind="component: {name: Body.components.edit, params: Body}"
         ></div>
-        <div>
-          <button
-            type="button"
-            class="btn btn-link"
-            data-bind="click: $parent.insertRequestLink"
-            title="Insert a hyperlink to this request"
-          >
-            <i class="fa-solid fa-link"></i>
-            Insert Request Link
-          </button>
-        </div>
+      </div>
+      <div>
+        <button
+          type="button"
+          class="btn btn-link"
+          data-bind="click: insertRequestLink"
+          title="Insert a hyperlink to this request"
+        >
+          <i class="fa-solid fa-link"></i>
+          Insert Request Link
+        </button>
+        <button
+          type="button"
+          class="btn btn-link"
+          data-bind="click: includeAttachments"
+          title="Include attachments from request"
+        >
+          Include Request Attachments
+        </button>
+      </div>
+      <div data-bind="if: attachments().length" class="attachments-section">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>File Name</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody data-bind="foreach: attachments">
+            <tr>
+              <td>
+                <div data-bind="text: Title"></div>
+              </td>
+              <td>
+                <a
+                  target="_blank"
+                  data-bind="attr: { href: FileRef }, text: FileLeafRef"
+                ></a>
+              </td>
+              <td>
+                <i
+                  class="fa-solid fa-circle-xmark"
+                  title="Don't include"
+                  data-bind="click:  $parent.removeAttachment"
+                ></i>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
       <div>
         <button

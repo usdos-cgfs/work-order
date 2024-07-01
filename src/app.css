@@ -345,6 +345,9 @@ dialog[open].card {
 #dialog-email-request .richtext-field .form-control {
   min-height: 450px;
 }
+#dialog-email-request .attachments-section {
+  max-width: 600px;
+}
 
 .accordion-title .indicator {
   flex-shrink: 0;
