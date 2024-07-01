@@ -931,6 +931,10 @@
           </button>
           <!-- /ko -->
           <!-- ko if: request.Authorization.currentUserCanAdvance -->
+          <div
+            class="action"
+            data-bind="component: {name: 'send-request-as-email', params: {request} }"
+          ></div>
           <!-- ko if: showPause -->
           <div class="dropdown-centered" data-bind="">
             <button

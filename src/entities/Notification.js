@@ -1,5 +1,22 @@
+import { TextAreaField, TextField } from "../fields/index.js";
+
 export class Notification {
   constructor() {}
+
+  ToString = new TextField({
+    displayName: "To",
+    isRequired: true,
+  });
+
+  CCString = new TextField({
+    displayName: "CC",
+    isRequired: true,
+  });
+
+  Body = new TextAreaField({
+    displayName: "Body",
+    isRichText: true,
+  });
 
   static Views = {
     All: [
