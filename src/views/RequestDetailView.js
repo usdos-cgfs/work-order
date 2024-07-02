@@ -79,6 +79,18 @@ export class RequestDetailView {
     );
   });
 
+  ShowFulfillArea = ko.pureComputed(() => {
+    return (
+      !this.request.IsLoading() &&
+      !this.request.Assignments.AreLoading() &&
+      this.request.Authorization.currentUserCanClose()
+    );
+  });
+
+  EnableChangeStatusArea = ko.pureComputed(() => {
+    return this.request.Authorization.currentUserCanAdvance();
+  });
+
   newComment = {
     input: new TextAreaField({
       displayName: "Please provide additional comments/instructions here",

@@ -887,13 +887,101 @@
 
     <script type="text/html" id="tmpl-quick-actions-bar">
       <div class="quick-actions-bar card">
-        <div class="status-container">
-          <div
-            class="badge"
-            data-bind="text: request.State.InternalStatus, 
-            class: request.State.InternalStatusClass, 
-            attr: {title: request.State.InternalStatus}"
-          ></div>
+        <div
+          class="btn-group actions dropdown status-container rounded-start"
+          role="group"
+        >
+          <button type="button" class="btn btn-secondary">
+            <div
+              class="badge"
+              data-bind="text: request.State.InternalStatus, 
+              class: request.State.InternalStatusClass, 
+              attr: {title: request.State.InternalStatus}"
+            ></div>
+          </button>
+          <button
+            type="button"
+            data-bs-toggle="dropdown"
+            class="btn btn-secondary toggle-status dropdown-toggle dropdown-toggle-split"
+            title="Change status"
+            data-bind="enable: EnableChangeStatusArea"
+          ></button>
+          <div class="dropdown-menu p-1 status-dropdown">
+            <div data-bind="if: showPause" class="status-section-pause">
+              <div class="dropdown-header">Pause Request</div>
+              <div class="mx-2">
+                <div class="d-flex">
+                  <label class="me-1">
+                    <input
+                      placeholder="Pause Reason..."
+                      class="form-select"
+                      list="pause-reason-options"
+                      data-bind="textInput: pauseReason"
+                    />
+                    <datalist
+                      id="pause-reason-options"
+                      data-bind="foreach: pauseOptions"
+                    >
+                      <option
+                        data-bind="text: value, attr: {value: value}"
+                      ></option>
+                    </datalist>
+                  </label>
+                  <button
+                    type="button"
+                    class="btn btn-success"
+                    data-bind="click: clickPause, enable: pauseReason"
+                  >
+                    Submit
+                  </button>
+                </div>
+                <div class="form-text mx-2">
+                  *Changing status will pause request.
+                </div>
+              </div>
+            </div>
+            <div data-bind="if: showResume" class="status-section-resume">
+              <div class="dropdown-header">Resume Request</div>
+              <div class="mx-2">
+                <button
+                  type="button"
+                  title="Resume Request"
+                  class="btn btn-success"
+                  data-bind="click: clickResume"
+                >
+                  Resume Request
+                  <i class="fa-solid fa-play fa-xl"></i>
+                </button>
+              </div>
+            </div>
+            <div class="dropdown-divider"></div>
+            <div
+              class="text-nowrap"
+              data-bind="if: ShowCloseArea"
+              class="status-section-close"
+            >
+              <div class="dropdown-diver"></div>
+              <div class="dropdown-header">Close Request</div>
+              <div class="mx-2">
+                <button
+                  title="Cancel Request"
+                  class="btn btn-link text-danger action"
+                  data-bind="click: promptCancel"
+                >
+                  <i class="fa-solid fa-ban fa-xl"></i>
+                  Cancel Request
+                </button>
+                <button
+                  title="Close Request as Fulfilled"
+                  class="btn btn-link text-success action"
+                  data-bind="click: promptFulfill"
+                >
+                  Close Request as Fulfilled
+                  <i class="fa-solid fa-angles-right fa-lg"></i>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
         <h6 class="">
           Request ID <br />
@@ -935,62 +1023,6 @@
             class="action"
             data-bind="component: {name: 'send-request-as-email', params: {request} }"
           ></div>
-          <!-- ko if: showPause -->
-          <div class="dropdown-centered" data-bind="">
-            <button
-              type="button"
-              class="btn btn-secondary toggle-status dropdown-toggle action"
-              data-bs-toggle="dropdown"
-              title="Pause Request"
-            >
-              <i class="fa-solid fa-pause fa-xl"></i>
-            </button>
-            <div class="dropdown-menu p-1">
-              <label class="">
-                <input
-                  placeholder="Reason..."
-                  class="form-select"
-                  list="pause-reason-options"
-                  data-bind="textInput: pauseReason"
-                />
-                <datalist
-                  id="pause-reason-options"
-                  data-bind="foreach: pauseOptions"
-                >
-                  <option
-                    data-bind="text: value, attr: {value: value}"
-                  ></option>
-                </datalist>
-              </label>
-              <button
-                type="button"
-                class="btn btn-success"
-                data-bind="click: clickPause, enable: pauseReason"
-              >
-                Submit
-              </button>
-            </div>
-          </div>
-          <!-- /ko -->
-          <!-- ko if: showResume -->
-          <button
-            type="button"
-            title="Resume Request"
-            class="btn btn-secondary toggle-status action"
-            data-bind="click: clickResume"
-          >
-            <i class="fa-solid fa-play fa-xl"></i>
-          </button>
-          <!-- /ko -->
-          <!-- ko if: ShowCloseArea  -->
-          <button
-            title="Cancel Request"
-            class="btn btn-danger action"
-            data-bind="click: promptCancel"
-          >
-            <i class="fa-solid fa-ban fa-xl"></i>
-          </button>
-          <!-- /ko -->
           <!-- ko if: request.Pipeline.getNextStage -->
           <button
             title="Advance to next stage"
@@ -999,13 +1031,6 @@
             data-bind="click: nextStageHandler, enable: request.Assignments.CurrentStage.Validation.IsValid"
           >
             Next Stage <span class="fa fa-chevron-right"></span>
-          </button>
-          <button
-            title="Close Request as Fulfilled"
-            class="btn btn-success action"
-            data-bind="click: promptFulfill"
-          >
-            <i class="fa-solid fa-angles-right fa-lg"></i>
           </button>
           <!-- /ko -->
           <!-- ko ifnot: request.Pipeline.getNextStage -->
