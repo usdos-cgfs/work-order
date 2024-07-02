@@ -98,6 +98,7 @@ export class User extends People {
 
     this.WorkPhone = WorkPhone;
     this.EMail = EMail;
+    this.Email = EMail;
 
     this.OfficeSymbol = Department ?? "CGFS/EX";
     this.Groups = Groups;
@@ -225,7 +226,7 @@ export async function getUsersByGroupName(groupName) {
 }
 
 export async function ensurePerson(person) {
-  const ensured = await ensureUserByKeyAsync(person.getKey());
+  const ensured = await ensureUserByKeyAsync(person.LoginName ?? person.Title);
   if (!ensured) return null;
   return new People(ensured);
 }

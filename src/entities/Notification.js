@@ -8,7 +8,9 @@ import {
 import { RequestEntity } from "./Request.js";
 
 export class Notification {
-  constructor({ Title, Body, Request }) {
+  constructor({ To, CC, Title, Body, Request }) {
+    this.ToString.Value(To);
+    this.CCString.Value(CC);
     this.Title.Value(Title);
     this.Body.Value(Body);
     this.Request.Value(Request);

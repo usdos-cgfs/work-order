@@ -62,15 +62,15 @@ export async function emitCommentNotification(comment, request) {
       ccArray.push(asg.RequestOrg);
     });
 
-  const notification = {
-    To: toArray,
-    CC: ccArray,
+  const notification = new Notification({
+    To: await arrEntityToEmailString(toArray),
+    CC: await arrEntityToEmailString(ccArray),
     Request: request,
     Title: formatNotificationTitle(request, "New Comment"),
     Body: `${
       currentUser().Title
     } has left a new comment on ${request.getAppLinkElement()}:<br/><br/>`,
-  };
+  });
 
   await createNotification(notification, request.getRelativeFolderPath());
 }
@@ -91,6 +91,8 @@ async function requestCreatedNotification(request) {
   if (window.DEBUG)
     console.log("Sending Request Created Notification for: ", request);
 
+  const context = getAppContext();
+
   const actionOffices = [
     ...new Set(
       request.Pipeline.RequestOrgs()?.map((requestOrg) => requestOrg.Title)
@@ -102,8 +104,11 @@ async function requestCreatedNotification(request) {
     actionOfficeLiString += `<li>${office}</li>`;
   });
 
-  const submitterNotification = {
-    To: [request.RequestorInfo.Requestor(), currentUser()],
+  const submitterEmails = [request.RequestorInfo.Requestor(), currentUser()];
+  const submitterTo = await arrEntityToEmailString(submitterEmails);
+
+  const submitterNotification = new Notification({
+    To: submitterTo,
     Title: formatNotificationTitle(request, `New`),
     Body:
       `<p>Your ${request.RequestType.Title} request has been successfully submitted.</p>` +
@@ -117,7 +122,7 @@ async function requestCreatedNotification(request) {
       "<p>To view the request, please click the link above, or copy and paste the below URL into your browser:</br>" +
       request.getAppLink(),
     Request: request,
-  };
+  });
 
   await createNotification(
     submitterNotification,
@@ -125,10 +130,14 @@ async function requestCreatedNotification(request) {
   );
 
   // Notification Sent to Action Offices to let them know an item's been submitted
-  const requestOrgNotification = {
-    To: request.Pipeline.RequestOrgs()?.map((requestOrg) =>
-      RequestOrg.FindInStore(requestOrg)
-    ),
+  const pipelineOrgs = request.Pipeline.RequestOrgs()?.map((requestOrg) =>
+    RequestOrg.FindInStore(requestOrg)
+  );
+
+  const to = await arrEntityToEmailString(pipelineOrgs);
+
+  const requestOrgNotification = new Notification({
+    To: to,
     Title: formatNotificationTitle(request, `New`),
     Body:
       "<p>Greetings Colleagues,<br><br> A new service request has been opened requiring your attention:<br>" +
@@ -143,7 +152,7 @@ async function requestCreatedNotification(request) {
       "<p>To view the request, please click the link above, or copy and paste the below URL into your browser:</br>" +
       request.getAppLink(),
     Request: request,
-  };
+  });
 
   await createNotification(
     requestOrgNotification,
@@ -228,29 +237,41 @@ async function requestClosedNotification(request, action) {
 async function createNotification(notification, relFolderPath) {
   const context = getAppContext();
 
-  const newNotification = new Notification();
+  // const newNotification = new Notification();
 
-  const emailToString = emailStringMapper(notification.To);
-  const emailToPeople = entityPeopleMapper(notification.To);
+  // const emailToString = emailStringMapper(notification.To);
+  // const emailToPeople = entityPeopleMapper(notification.To);
 
-  newNotification.ToString.Value(emailToString);
-  newNotification.To.set(emailToPeople);
+  // newNotification.ToString.Value(emailToString);
+  // newNotification.To.set(emailToPeople);
 
-  const emailCCString = emailStringMapper(notification.CC);
-  const emailCCPeople = entityPeopleMapper(notification.CC);
-  newNotification.CCString.Value(emailCCString);
-  newNotification.CC.set(emailCCPeople);
+  // const emailCCString = emailStringMapper(notification.CC);
+  // const emailCCPeople = entityPeopleMapper(notification.CC);
+  // newNotification.CCString.Value(emailCCString);
+  // newNotification.CC.set(emailCCPeople);
 
-  const emailBCCString = emailStringMapper(notification.BCC);
-  const emailBCCPeople = entityPeopleMapper(notification.BCC);
-  newNotification.BCCString.Value(emailBCCString);
-  newNotification.BCC.set(emailBCCPeople);
+  // const emailBCCString = emailStringMapper(notification.BCC);
+  // const emailBCCPeople = entityPeopleMapper(notification.BCC);
+  // newNotification.BCCString.Value(emailBCCString);
+  // newNotification.BCC.set(emailBCCPeople);
 
-  newNotification.Body.Value(notification.Body);
+  // newNotification.Body.Value(notification.Body);
 
-  newNotification.Request.Value(notification.Request);
+  // newNotification.Request.Value(notification.Request);
 
   await context.Notifications.AddEntity(notification, relFolderPath);
+}
+
+async function arrEntityToEmailString(arr) {
+  // Take an array or request orgs and people, and return to an email string;
+  const emailStrings = await Promise.all(
+    arr.map(async (entity) => {
+      if (entity.OrgType) return reqOrgToEmailString(entity);
+      return peopleToEmailString(entity);
+    })
+  );
+
+  return emailStrings.filter((val) => val).join("; ");
 }
 
 async function reqOrgToEmailString(entity) {
