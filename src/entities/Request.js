@@ -705,6 +705,12 @@ export class RequestEntity {
         data: assignment,
       });
     },
+    notify: async (assignment) => {
+      this.ActivityQueue.push({
+        activity: actionTypes.Assigned,
+        data: assignment,
+      });
+    },
     complete: async (assignment, action, refresh = true) => {
       const updateEntity = {
         ID: assignment.ID,

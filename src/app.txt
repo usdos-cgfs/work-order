@@ -1110,12 +1110,19 @@
                     <td>
                       <!-- ko if: $parent.userCanAssign -->
                       <i
+                        title="View Assignment"
                         class="fas fa-search pointer"
                         data-bind="click: $parent.view"
                       ></i>
                       <i
+                        title="Cancel Assignment"
                         class="fa fa-trash pointer"
                         data-bind="click: $parent.remove"
+                      ></i>
+                      <i
+                        title="Send Reminder Email"
+                        class="fa-solid fa-envelope pointer"
+                        data-bind="click: $parent.notify"
                       ></i>
                       <!-- /ko -->
                     </td>
