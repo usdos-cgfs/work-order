@@ -539,6 +539,7 @@ export async function ensureUserByKeyAsync(userName) {
         ID: oUser.get_id(),
         Title: oUser.get_title(),
         LoginName: oUser.get_loginName(),
+        Email: oUser.get_email(),
         IsEnsured: true,
         IsGroup: false,
       };

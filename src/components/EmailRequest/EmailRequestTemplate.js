@@ -25,14 +25,16 @@ export const emailRequestTemplate = html`
         </div>
       </div>
       <div data-bind="with: notification">
+        <div>
+          <div
+            data-bind="component: {name: ToString.components.edit, params: ToString}"
+          ></div>
+          <div
+            data-bind="component: {name: CCString.components.edit, params: CCString}"
+          ></div>
+        </div>
         <div
           data-bind="component: {name: Title.components.edit, params: Title}"
-        ></div>
-        <div
-          data-bind="component: {name: ToString.components.edit, params: ToString}"
-        ></div>
-        <div
-          data-bind="component: {name: CCString.components.edit, params: CCString}"
         ></div>
         <div
           data-bind="component: {name: Body.components.edit, params: Body}"

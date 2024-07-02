@@ -1,6 +1,10 @@
-import { currentUser } from "./Authorization.js";
+import {
+  currentUser,
+  ensurePerson,
+  getUsersByGroupName,
+} from "./Authorization.js";
 import { getAppContext } from "./ApplicationDbContext.js";
-import { RequestOrg, Notification } from "../entities/index.js";
+import { RequestOrg, Notification, People } from "../entities/index.js";
 import { assignmentRoles } from "../entities/Assignment.js";
 
 import { siteTitle } from "../env.js";
@@ -44,6 +48,8 @@ export function createRequestDetailNotification({ request }) {
 
   return notification;
 }
+
+export function submitNotification(notification) {}
 
 export async function emitCommentNotification(comment, request) {
   const toArray = [request.RequestorInfo.Requestor(), currentUser()];
@@ -165,7 +171,7 @@ async function requestAssignedNotification(request, action) {
     default:
   }
 
-  const assignedNotification = {
+  const assignedNotification = new Notification({
     Title: formatNotificationTitle(request, "Assigned"),
     Body:
       `<p>Greetings Colleagues,<br><br>You have been assigned the role of\
@@ -179,19 +185,24 @@ async function requestAssignedNotification(request, action) {
       request.getAppLink() +
       "</p>",
     Request: request,
-  };
+  });
 
   // Only send to assignee if they are different than the Request Org
-  const assignee = action.data?.Assignee;
+  const assignee = new People(action.data?.Assignee);
   const assignedReqOrg = RequestOrg.FindInStore(action.data?.RequestOrg);
   if (assignee?.ID != assignedReqOrg?.UserGroup.ID) {
-    assignedNotification.To = [assignee];
-    assignedNotification.CC = [assignedReqOrg];
+    const to = await peopleToEmailString(assignee);
+    assignedNotification.ToString.Value(to);
+    const cc = await reqOrgToEmailString(assignedReqOrg);
+    assignedNotification.CCString.Value(cc);
   } else {
-    assignedNotification.To = [assignedReqOrg];
+    const to = await reqOrgToEmailString(assignedReqOrg);
+    assignedNotification.ToString.Value(to);
   }
 
-  await createNotification(
+  const context = getAppContext();
+
+  await context.Notifications.AddEntity(
     assignedNotification,
     request.getRelativeFolderPath()
   );
@@ -217,16 +228,59 @@ async function requestClosedNotification(request, action) {
 async function createNotification(notification, relFolderPath) {
   const context = getAppContext();
 
-  notification.ToString = emailStringMapper(notification.To);
-  notification.To = entityPeopleMapper(notification.To);
+  const newNotification = new Notification();
 
-  notification.CCString = emailStringMapper(notification.CC);
-  notification.CC = entityPeopleMapper(notification.CC);
+  const emailToString = emailStringMapper(notification.To);
+  const emailToPeople = entityPeopleMapper(notification.To);
 
-  notification.BCCString = emailStringMapper(notification.BCC);
-  notification.BCC = entityPeopleMapper(notification.BCC);
+  newNotification.ToString.Value(emailToString);
+  newNotification.To.set(emailToPeople);
+
+  const emailCCString = emailStringMapper(notification.CC);
+  const emailCCPeople = entityPeopleMapper(notification.CC);
+  newNotification.CCString.Value(emailCCString);
+  newNotification.CC.set(emailCCPeople);
+
+  const emailBCCString = emailStringMapper(notification.BCC);
+  const emailBCCPeople = entityPeopleMapper(notification.BCC);
+  newNotification.BCCString.Value(emailBCCString);
+  newNotification.BCC.set(emailBCCPeople);
+
+  newNotification.Body.Value(notification.Body);
+
+  newNotification.Request.Value(notification.Request);
 
   await context.Notifications.AddEntity(notification, relFolderPath);
+}
+
+async function reqOrgToEmailString(entity) {
+  // entity is request org and has preferred email
+  if (entity.PreferredEmail) return entity.PreferredEmail;
+
+  // entity is request org and has Usergroup
+  if (entity.UserGroup) {
+    const group = entity.FieldMap.UserGroup.get();
+    return getUserEmailsByGroupTitle(group.Title);
+  }
+}
+
+async function peopleToEmailString(person) {
+  if (!person.IsEnsured) {
+    person = await ensurePerson(person);
+    if (!person) return;
+  }
+
+  if (person.IsGroup) return getUserEmailsByGroupTitle(person.Title);
+
+  return person.Email;
+}
+
+async function getUserEmailsByGroupTitle(title) {
+  const users = await getUsersByGroupName(title);
+  return users
+    .filter((u) => u.Email)
+    .map((u) => u.Email)
+    .join(";");
 }
 
 /**
