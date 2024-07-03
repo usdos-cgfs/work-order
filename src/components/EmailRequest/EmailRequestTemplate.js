@@ -37,6 +37,9 @@ export const emailRequestTemplate = html`
           data-bind="component: {name: Title.components.edit, params: Title}"
         ></div>
         <div
+          data-bind="component: {name: SendAs.components.edit, params: SendAs}"
+        ></div>
+        <div
           data-bind="component: {name: Body.components.edit, params: Body}"
         ></div>
       </div>

@@ -9,9 +9,10 @@ export default class SelectField extends BaseField {
     options,
     multiple = false,
     optionsText,
+    instructions,
   }) {
-    super({ Visible, displayName, isRequired });
-    this.Options(options);
+    super({ Visible, displayName, isRequired, instructions });
+    ko.isObservable(options) ? (this.Options = options) : this.Options(options);
     this.multiple = multiple;
     this.Value = multiple ? ko.observableArray() : ko.observable();
     this.optionsText = optionsText;

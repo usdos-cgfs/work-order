@@ -4,16 +4,23 @@ import {
   PeopleField,
   DateField,
   LookupField,
+  SelectField,
 } from "../fields/index.js";
+import { currentUser } from "../infrastructure/Authorization.js";
 import { RequestEntity } from "./Request.js";
 
 export class Notification {
-  constructor({ To, CC, Title, Body, Request }) {
-    this.ToString.Value(To);
-    this.CCString.Value(CC);
-    this.Title.Value(Title);
-    this.Body.Value(Body);
-    this.Request.Value(Request);
+  constructor() {}
+
+  static Create({ To = "", CC = "", Title = "", Body = "", Request = null }) {
+    const notification = new Notification();
+    notification.ToString.Value(To);
+    notification.CCString.Value(CC);
+    notification.Title.Value(Title);
+    notification.Body.Value(Body);
+    notification.Request.Value(Request);
+
+    return notification;
   }
 
   Title = new TextField({
@@ -51,6 +58,24 @@ export class Notification {
     multiple: true,
   });
 
+  sendAsOpts = ko.pureComputed(() => {
+    const user = ko.unwrap(currentUser);
+    if (!user) return [];
+    const opts = user
+      ?.ActionOffices()
+      .map((ao) => ao.PreferredEmail)
+      .filter((email) => email);
+
+    if (user.Email) opts.unshift(user.Email);
+    return opts ?? [];
+  });
+
+  SendAs = new SelectField({
+    displayName: "Send From (optional)",
+    options: this.sendAsOpts,
+    instructions: "*only pre-approved mailboxes are supported.",
+  });
+
   Body = new TextAreaField({
     displayName: "Body",
     isRichText: true,
@@ -72,6 +97,7 @@ export class Notification {
     CC: this.CC,
     BCCString: this.BCCString,
     BCC: this.BCC,
+    SendAs: this.SendAs,
     Body: this.Body,
     Sent: this.Sent,
   };

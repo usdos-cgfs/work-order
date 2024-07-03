@@ -908,12 +908,12 @@
           ></button>
           <div class="dropdown-menu p-1 status-dropdown">
             <div data-bind="if: showPause" class="status-section-pause">
-              <div class="dropdown-header">Pause Request</div>
+              <div class="dropdown-header">Change Status</div>
               <div class="mx-2">
                 <div class="d-flex">
                   <label class="me-1">
                     <input
-                      placeholder="Pause Reason..."
+                      placeholder="New Status..."
                       class="form-select"
                       list="pause-reason-options"
                       data-bind="textInput: pauseReason"

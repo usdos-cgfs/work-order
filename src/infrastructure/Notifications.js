@@ -62,7 +62,7 @@ export async function emitCommentNotification(comment, request) {
       ccArray.push(asg.RequestOrg);
     });
 
-  const notification = new Notification({
+  const notification = Notification.Create({
     To: await arrEntityToEmailString(toArray),
     CC: await arrEntityToEmailString(ccArray),
     Request: request,
@@ -107,7 +107,7 @@ async function requestCreatedNotification(request) {
   const submitterEmails = [request.RequestorInfo.Requestor(), currentUser()];
   const submitterTo = await arrEntityToEmailString(submitterEmails);
 
-  const submitterNotification = new Notification({
+  const submitterNotification = Notification.Create({
     To: submitterTo,
     Title: formatNotificationTitle(request, `New`),
     Body:
@@ -136,7 +136,7 @@ async function requestCreatedNotification(request) {
 
   const to = await arrEntityToEmailString(pipelineOrgs);
 
-  const requestOrgNotification = new Notification({
+  const requestOrgNotification = Notification.Create({
     To: to,
     Title: formatNotificationTitle(request, `New`),
     Body:
@@ -180,7 +180,7 @@ async function requestAssignedNotification(request, action) {
     default:
   }
 
-  const assignedNotification = new Notification({
+  const assignedNotification = Notification.Create({
     Title: formatNotificationTitle(request, "Assigned"),
     Body:
       `<p>Greetings Colleagues,<br><br>You have been assigned the role of\
@@ -221,8 +221,11 @@ async function requestClosedNotification(request, action) {
   // TODO: Medium - CC the action offices
   if (window.DEBUG)
     console.log("Sending Request Closed Notification for: ", request);
-  const closedNotification = {
-    To: [request.RequestorInfo.Requestor()],
+
+  const to = await arrEntityToEmailString([request.RequestorInfo.Requestor()]);
+
+  const closedNotification = Notification.Create({
+    To: to,
     Title: formatNotificationTitle(request, "Closed " + request.State.Status()),
     Body:
       `<p>Greetings Colleagues,<br><br>The following request has been ${request.State.Status()}:<br>` +
@@ -230,7 +233,7 @@ async function requestClosedNotification(request, action) {
       "</p>" +
       "<p>This request cannot be re-opened.</p>",
     Request: request,
-  };
+  });
   await createNotification(closedNotification, request.getRelativeFolderPath());
 }
 
