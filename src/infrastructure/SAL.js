@@ -588,6 +588,17 @@ sal.getSPSiteGroupByName = function (groupName) {
   return userGroup;
 };
 
+export function copyFileAsync(sourcePath, destPath) {
+  // const sourcePath = getServerRelativeFolderPath(source);
+  // const destPath = getServerRelativeFolderPath(dest);
+
+  const uri =
+    `/web/getFileByServerRelativeUrl('${sourcePath}')/` +
+    `copyTo(strNewUrl='${destPath}',bOverWrite=true)`;
+
+  return spFetch(uri, "POST");
+}
+
 export function SPList(listDef) {
   /*
       Expecting a list definition object in the following format:
@@ -1400,7 +1411,10 @@ export function SPList(listDef) {
       ? "/" + self.config.def.name + "/"
       : "/Lists/" + self.config.def.name + "/";
 
-    return sal.globalConfig.siteUrl + listPath + relFolderPath;
+    const root = sal.globalConfig.siteUrl + listPath;
+
+    if (relFolderPath.startsWith(root)) return relFolderPath;
+    return root + relFolderPath;
   }
 
   function upsertFolderPathAsync(folderPath) {
@@ -2362,6 +2376,26 @@ https://learn.microsoft.com/en-us/previous-versions/office/developer/sharepoint-
     });
   }
 
+  function copyFileAsync(sourcePath, dest) {
+    const destPath = getServerRelativeFolderPath(dest);
+
+    const uri =
+      `/web/getFileByServerRelativeUrl(@s)/` +
+      `copyTo(strNewUrl=@d,bOverWrite=true)` +
+      `?@s='${sourcePath}'&@d='${destPath}'`;
+
+    return spFetch(uri, "POST");
+  }
+
+  async function copyAttachmentFromPath(sourcePath, item, fileName = null) {
+    if (!fileName) fileName = sourcePath.split("/").pop();
+    const destPath = getServerRelativeFolderPath(
+      `Attachments/${item.ID}/${fileName}`
+    );
+
+    return copyFileAsync(sourcePath, destPath);
+  }
+
   // Ensure List/Library exists on the site
   async function ensureList() {
     // Query List Title
@@ -2396,6 +2430,8 @@ https://learn.microsoft.com/en-us/previous-versions/office/developer/sharepoint-
     uploadFileToFolderAndUpdateMetadata,
     uploadNewDocumentAsync,
     copyFilesAsync,
+    copyFileAsync,
+    copyAttachmentFromPath,
     showModal,
   };
 

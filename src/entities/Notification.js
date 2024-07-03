@@ -115,6 +115,7 @@ export class Notification {
       "Sent",
       "Request",
       "DateToSend",
+      "FileRef",
     ],
   };
 

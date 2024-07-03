@@ -42,14 +42,18 @@ export function createRequestDetailNotification({ request }) {
     </p>
   `;
 
+  // Temp for testing
+
+  notification.ToString.Value("backlkupf@test");
+  notification.CCString.Value("fletcc@test");
+  notification.Title.Value("A test notifciation");
+
   notification.Body.Value(
     [requestHeaderHtml, requestBodyHtml, requestDescHtml].join(`<br>`)
   );
 
   return notification;
 }
-
-export function submitNotification(notification) {}
 
 export async function emitCommentNotification(comment, request) {
   const toArray = [request.RequestorInfo.Requestor(), currentUser()];
@@ -72,7 +76,7 @@ export async function emitCommentNotification(comment, request) {
     } has left a new comment on ${request.getAppLinkElement()}:<br/><br/>`,
   });
 
-  await createNotification(notification, request.getRelativeFolderPath());
+  await submitNotification(notification, request.getRelativeFolderPath());
 }
 
 export function emitRequestNotification(request, action) {
@@ -124,7 +128,7 @@ async function requestCreatedNotification(request) {
     Request: request,
   });
 
-  await createNotification(
+  await submitNotification(
     submitterNotification,
     request.getRelativeFolderPath()
   );
@@ -154,7 +158,7 @@ async function requestCreatedNotification(request) {
     Request: request,
   });
 
-  await createNotification(
+  await submitNotification(
     requestOrgNotification,
     request.getRelativeFolderPath()
   );
@@ -234,35 +238,28 @@ async function requestClosedNotification(request, action) {
       "<p>This request cannot be re-opened.</p>",
     Request: request,
   });
-  await createNotification(closedNotification, request.getRelativeFolderPath());
+  await submitNotification(closedNotification, request.getRelativeFolderPath());
 }
 
-async function createNotification(notification, relFolderPath) {
+export async function submitNotification(
+  notification,
+  relFolderPath,
+  attachments = null
+) {
   const context = getAppContext();
 
-  // const newNotification = new Notification();
-
-  // const emailToString = emailStringMapper(notification.To);
-  // const emailToPeople = entityPeopleMapper(notification.To);
-
-  // newNotification.ToString.Value(emailToString);
-  // newNotification.To.set(emailToPeople);
-
-  // const emailCCString = emailStringMapper(notification.CC);
-  // const emailCCPeople = entityPeopleMapper(notification.CC);
-  // newNotification.CCString.Value(emailCCString);
-  // newNotification.CC.set(emailCCPeople);
-
-  // const emailBCCString = emailStringMapper(notification.BCC);
-  // const emailBCCPeople = entityPeopleMapper(notification.BCC);
-  // newNotification.BCCString.Value(emailBCCString);
-  // newNotification.BCC.set(emailBCCPeople);
-
-  // newNotification.Body.Value(notification.Body);
-
-  // newNotification.Request.Value(notification.Request);
-
   await context.Notifications.AddEntity(notification, relFolderPath);
+
+  // await context.Notifications.LoadEntity(notification);
+
+  if (attachments) {
+    attachments.map(async (attachment) => {
+      await context.Notifications.CopyAttachmentFromPath(
+        attachment.FileRef,
+        notification
+      );
+    });
+  }
 }
 
 async function arrEntityToEmailString(arr) {
