@@ -1,16 +1,14 @@
 import { html } from "../index.js";
 
 export const emailRequestTemplate = html`
-  <div>
-    <button
-      title="Create Email from Request"
-      type="button"
-      class="btn btn-link"
-      data-bind="click: showDialog"
-    >
-      <i class="fa-solid fa-envelope"></i>
-    </button>
-  </div>
+  <button
+    title="Create Email from Request"
+    type="button"
+    class="btn btn-link action"
+    data-bind="click: showDialog"
+  >
+    <i class="fa-solid fa-envelope"></i>
+  </button>
   <dialog id="dialog-email-request" class="card">
     <div class="card-body">
       <div class="card-title d-flex justify-content-between align-items-center">

@@ -916,7 +916,8 @@
                       placeholder="New Status..."
                       class="form-select"
                       list="pause-reason-options"
-                      data-bind="textInput: pauseReason"
+                      data-bind="textInput: pauseReason, 
+                        attr: {placeholder: request.State.InternalStatus}"
                     />
                     <datalist
                       id="pause-reason-options"

@@ -66,7 +66,7 @@ export class Notification {
       .map((ao) => ao.PreferredEmail)
       .filter((email) => email);
 
-    if (user.Email) opts.unshift(user.Email);
+    // if (user.Email) opts.unshift(user.Email);
     return opts ?? [];
   });
 
