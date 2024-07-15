@@ -47,12 +47,14 @@ export class EmailRequestModule extends BaseComponent {
 
   sendEmail = async () => {
     const notification = ko.unwrap(this.Notification);
+
+    this.closeDialog();
     // TODO: Validate notification
     if (!notification) return;
 
     const attachments = ko.unwrap(this.Attachments);
 
-    await submitNotification(
+    const result = await submitNotification(
       notification,
       this.request.getRelativeFolderPath(),
       attachments
@@ -78,8 +80,4 @@ export class EmailRequestModule extends BaseComponent {
 
   static name = "send-request-as-email";
   static template = emailRequestTemplate;
-}
-
-class NotificationAttachment {
-  constructor(attachment) {}
 }

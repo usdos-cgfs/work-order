@@ -4,8 +4,13 @@ import {
   getUsersByGroupName,
 } from "./Authorization.js";
 import { getAppContext } from "./ApplicationDbContext.js";
-import { RequestOrg, Notification, People } from "../entities/index.js";
-import { assignmentRoles } from "../entities/Assignment.js";
+import {
+  RequestOrg,
+  Notification,
+  People,
+  assignmentRoles,
+} from "../entities/index.js";
+import { addTask, finishTask, taskDefs } from "../stores/Tasks.js";
 
 import { siteTitle } from "../env.js";
 
@@ -248,18 +253,28 @@ export async function submitNotification(
 ) {
   const context = getAppContext();
 
+  const newNotificationTask = addTask(taskDefs.newNotification);
   await context.Notifications.AddEntity(notification, relFolderPath);
 
   // await context.Notifications.LoadEntity(notification);
 
   if (attachments) {
-    attachments.map(async (attachment) => {
-      await context.Notifications.CopyAttachmentFromPath(
-        attachment.FileRef,
-        notification
-      );
-    });
+    await Promise.all(
+      attachments.map(async (attachment) => {
+        const copyAttachmentTask = addTask(
+          taskDefs.copyAttachment(attachment.FileLeafRef)
+        );
+        await context.Notifications.CopyAttachmentFromPath(
+          attachment.FileRef,
+          notification
+        );
+        finishTask(copyAttachmentTask);
+      })
+    );
   }
+  finishTask(newNotificationTask);
+
+  return true;
 }
 
 async function arrEntityToEmailString(arr) {
