@@ -2393,7 +2393,34 @@ https://learn.microsoft.com/en-us/previous-versions/office/developer/sharepoint-
       `Attachments/${item.ID}/${fileName}`
     );
 
-    return copyFileAsync(sourcePath, destPath);
+    const destItem = getServerRelativeFolderPath(`${item.ID}/${fileName}`);
+
+    const attachmentUri = `/web/lists/getbytitle('${self.config.def.title}')/items(${item.ID})/AttachmentFiles/add(FileName='${fileName}')`;
+
+    const sourceUri = `/web/GetFileByServerRelativeUrl('${sourcePath}')/$value`;
+    const fileResponse = await spFetch(sourceUri, "GET", null, null, "blob");
+    if (!fileResponse) {
+      return;
+    }
+    // const fileBlob = await fileResponse.blob();
+    const fileArrayBuffer = await fileResponse.arrayBuffer();
+
+    const headers = {
+      "Content-Length": fileArrayBuffer.byteLength,
+    };
+
+    const opts = {
+      body: fileArrayBuffer,
+    };
+
+    const attachmentResponse = await spFetch(
+      attachmentUri,
+      "POST",
+      headers,
+      opts
+    );
+
+    return attachmentResponse;
   }
 
   // Ensure List/Library exists on the site
@@ -2438,7 +2465,13 @@ https://learn.microsoft.com/en-us/previous-versions/office/developer/sharepoint-
   return publicMembers;
 }
 
-async function spFetch(uri, method = "GET", headers = {}, opts = {}) {
+async function spFetch(
+  uri,
+  method = "GET",
+  headers = {},
+  opts = {},
+  responseType = "json"
+) {
   const siteEndpoint = uri.startsWith("http")
     ? uri
     : sal.globalConfig.siteUrl + "/_api" + uri;
@@ -2460,10 +2493,20 @@ async function spFetch(uri, method = "GET", headers = {}, opts = {}) {
   }
 
   try {
-    const result = await response.json();
+    let result;
+    switch (responseType) {
+      case "json":
+        result = await response.json();
+        break;
+      case "blob":
+        result = await response.blob();
+        break;
+      default:
+        result = response;
+    }
     return result;
   } catch (e) {
-    return;
+    return response;
   }
 }
 

@@ -24,7 +24,7 @@ export const emailRequestTemplate = html`
           ></i>
         </div>
       </div>
-      <div data-bind="with: notification">
+      <div data-bind="with: Notification">
         <div>
           <div
             data-bind="component: {name: ToString.components.edit, params: ToString}"
@@ -56,13 +56,13 @@ export const emailRequestTemplate = html`
         <button
           type="button"
           class="btn btn-link"
-          data-bind="click: includeAttachments"
+          data-bind="click: includeAttachments, enable: ShowIncludeAttachments"
           title="Include attachments from request"
         >
           Include Request Attachments
         </button>
       </div>
-      <div data-bind="if: attachments().length" class="attachments-section">
+      <div data-bind="if: Attachments().length" class="attachments-section">
         <table class="table">
           <thead>
             <tr>
@@ -71,7 +71,7 @@ export const emailRequestTemplate = html`
               <th>Action</th>
             </tr>
           </thead>
-          <tbody data-bind="foreach: attachments">
+          <tbody data-bind="foreach: Attachments">
             <tr>
               <td>
                 <div data-bind="text: Title"></div>

@@ -18,35 +18,39 @@ export class EmailRequestModule extends BaseComponent {
   }
 
   request;
-  notification = ko.observable();
-  attachments = ko.observableArray();
+  Notification = ko.observable();
+  Attachments = ko.observableArray();
 
   insertRequestLink = () => {
     const link = this.request.getAppLinkElement();
 
-    const body = this.notification().Body.Value();
+    const body = this.Notification().Body.Value();
 
-    this.notification().Body.Value(link + `<br>` + body);
+    this.Notification().Body.Value(link + `<br>` + body);
   };
+
+  ShowIncludeAttachments = ko.pureComputed(
+    () => this.request.Attachments.list.Active().length
+  );
 
   includeAttachments = () => {
     // Load attachments
     const attachments = this.request.Attachments.list
       .Active()
       .map((attachment) => attachment);
-    this.attachments(attachments);
+    this.Attachments(attachments);
   };
 
   removeAttachment = (attachment) => {
-    this.attachments.remove(attachment);
+    this.Attachments.remove(attachment);
   };
 
   sendEmail = async () => {
-    const notification = ko.unwrap(this.notification);
+    const notification = ko.unwrap(this.Notification);
     // TODO: Validate notification
     if (!notification) return;
 
-    const attachments = ko.unwrap(this.attachments);
+    const attachments = ko.unwrap(this.Attachments);
 
     await submitNotification(
       notification,
@@ -60,7 +64,7 @@ export class EmailRequestModule extends BaseComponent {
       request: this.request,
     });
 
-    this.notification(notification);
+    this.Notification(notification);
   }
 
   showDialog() {
