@@ -45,18 +45,21 @@ export const emailRequestTemplate = html`
         <button
           type="button"
           class="btn btn-link"
+          title="Add a hyperlink to the request"
           data-bind="click: insertRequestLink"
           title="Insert a hyperlink to this request"
         >
           <i class="fa-solid fa-link"></i>
-          Insert Request Link
+          Insert Direct Link to Request
         </button>
         <button
           type="button"
           class="btn btn-link"
+          title="Add request attachments to this notification"
           data-bind="click: includeAttachments, enable: ShowIncludeAttachments"
           title="Include attachments from request"
         >
+          <i class="fa-solid fa-file-circle-plus"></i>
           Include Request Attachments
         </button>
       </div>
@@ -81,11 +84,16 @@ export const emailRequestTemplate = html`
                 ></a>
               </td>
               <td>
-                <i
-                  class="fa-solid fa-circle-xmark"
-                  title="Don't include"
-                  data-bind="click:  $parent.removeAttachment"
-                ></i>
+                <button
+                  type="button"
+                  class="btn btn-link"
+                  title="Don't include this attachment on the notification"
+                >
+                  <i
+                    class="fa-solid fa-circle-xmark"
+                    data-bind="click:  $parent.removeAttachment"
+                  ></i>
+                </button>
               </td>
             </tr>
           </tbody>

@@ -31,6 +31,8 @@ export class Notification {
   ToString = new TextField({
     displayName: "To",
     isRequired: true,
+    instructions:
+      "Use ; to separate emails (e.g. smithj@state.gov;carls@state.gov;)",
   });
 
   To = new PeopleField({
@@ -41,6 +43,8 @@ export class Notification {
   CCString = new TextField({
     displayName: "CC",
     isRequired: true,
+    instructions:
+      "Use ; to separate emails (e.g. smithj@state.gov;carls@state.gov;)",
   });
 
   CC = new PeopleField({

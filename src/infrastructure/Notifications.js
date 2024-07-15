@@ -30,10 +30,10 @@ export function createRequestDetailNotification({ request }) {
     `Request ID: ${request.Title}`,
     `Submitted On: ${request.Dates.Submitted.toString()}`,
     `Requestor Info:`,
-    `Name: ${request.RequestorInfo.Requestor()?.Title}`,
-    `Phone: ${request.RequestorInfo.Phone()}`,
-    `Email: ${request.RequestorInfo.Email()}`,
-    `Office Symbol: ${request.RequestorInfo.OfficeSymbol.toString()}`,
+    `${request.RequestorInfo.Requestor()?.Title}`,
+    `${request.RequestorInfo.Phone()}`,
+    `${request.RequestorInfo.Email()}`,
+    `${request.RequestorInfo.OfficeSymbol.toString()}`,
   ];
 
   const requestHeaderHtml = `<p>${reqPairs.join(`<br>`)}</p>`;
@@ -49,9 +49,11 @@ export function createRequestDetailNotification({ request }) {
 
   // Temp for testing
 
-  notification.ToString.Value("backlkupf@test");
-  notification.CCString.Value("fletcc@test");
-  notification.Title.Value("A test notifciation");
+  // notification.ToString.Value("backlkupf@test");
+  const user = currentUser();
+  if (user?.Email) notification.CCString.Value(user.Email + ";");
+
+  // notification.Title.Value("A test notifciation");
 
   notification.Body.Value(
     [requestHeaderHtml, requestBodyHtml, requestDescHtml].join(`<br>`)
