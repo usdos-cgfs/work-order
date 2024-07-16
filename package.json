@@ -1,7 +1,6 @@
 {
   "scripts": {
-    "dev": "esbuild src/app_bundle.js --bundle --outdir=\"P:/Style Library/apps/wo/dist/\"",
-    "local": "node esbuild.dev.config.mjs",
+    "dev": "node esbuild.dev.config.mjs",
     "build": "node esbuild.config.mjs"
   },
   "devDependencies": {
