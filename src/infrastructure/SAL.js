@@ -539,6 +539,7 @@ export async function ensureUserByKeyAsync(userName) {
         ID: oUser.get_id(),
         Title: oUser.get_title(),
         LoginName: oUser.get_loginName(),
+        Email: oUser.get_email(),
         IsEnsured: true,
         IsGroup: false,
       };
@@ -586,6 +587,17 @@ sal.getSPSiteGroupByName = function (groupName) {
   }
   return userGroup;
 };
+
+export function copyFileAsync(sourcePath, destPath) {
+  // const sourcePath = getServerRelativeFolderPath(source);
+  // const destPath = getServerRelativeFolderPath(dest);
+
+  const uri =
+    `/web/getFileByServerRelativeUrl('${sourcePath}')/` +
+    `copyTo(strNewUrl='${destPath}',bOverWrite=true)`;
+
+  return spFetch(uri, "POST");
+}
 
 export function SPList(listDef) {
   /*
@@ -1399,7 +1411,10 @@ export function SPList(listDef) {
       ? "/" + self.config.def.name + "/"
       : "/Lists/" + self.config.def.name + "/";
 
-    return sal.globalConfig.siteUrl + listPath + relFolderPath;
+    const root = sal.globalConfig.siteUrl + listPath;
+
+    if (relFolderPath.startsWith(root)) return relFolderPath;
+    return root + relFolderPath;
   }
 
   function upsertFolderPathAsync(folderPath) {
@@ -2361,6 +2376,53 @@ https://learn.microsoft.com/en-us/previous-versions/office/developer/sharepoint-
     });
   }
 
+  function copyFileAsync(sourcePath, dest) {
+    const destPath = getServerRelativeFolderPath(dest);
+
+    const uri =
+      `/web/getFileByServerRelativeUrl(@s)/` +
+      `copyTo(strNewUrl=@d,bOverWrite=true)` +
+      `?@s='${sourcePath}'&@d='${destPath}'`;
+
+    return spFetch(uri, "POST");
+  }
+
+  async function copyAttachmentFromPath(sourcePath, item, fileName = null) {
+    if (!fileName) fileName = sourcePath.split("/").pop();
+    const destPath = getServerRelativeFolderPath(
+      `Attachments/${item.ID}/${fileName}`
+    );
+
+    const destItem = getServerRelativeFolderPath(`${item.ID}/${fileName}`);
+
+    const attachmentUri = `/web/lists/getbytitle('${self.config.def.title}')/items(${item.ID})/AttachmentFiles/add(FileName='${fileName}')`;
+
+    const sourceUri = `/web/GetFileByServerRelativeUrl('${sourcePath}')/$value`;
+    const fileResponse = await spFetch(sourceUri, "GET", null, null, "blob");
+    if (!fileResponse) {
+      return;
+    }
+    // const fileBlob = await fileResponse.blob();
+    const fileArrayBuffer = await fileResponse.arrayBuffer();
+
+    const headers = {
+      "Content-Length": fileArrayBuffer.byteLength,
+    };
+
+    const opts = {
+      body: fileArrayBuffer,
+    };
+
+    const attachmentResponse = await spFetch(
+      attachmentUri,
+      "POST",
+      headers,
+      opts
+    );
+
+    return attachmentResponse;
+  }
+
   // Ensure List/Library exists on the site
   async function ensureList() {
     // Query List Title
@@ -2395,13 +2457,21 @@ https://learn.microsoft.com/en-us/previous-versions/office/developer/sharepoint-
     uploadFileToFolderAndUpdateMetadata,
     uploadNewDocumentAsync,
     copyFilesAsync,
+    copyFileAsync,
+    copyAttachmentFromPath,
     showModal,
   };
 
   return publicMembers;
 }
 
-async function spFetch(uri, method = "GET", headers = {}, opts = {}) {
+async function spFetch(
+  uri,
+  method = "GET",
+  headers = {},
+  opts = {},
+  responseType = "json"
+) {
   const siteEndpoint = uri.startsWith("http")
     ? uri
     : sal.globalConfig.siteUrl + "/_api" + uri;
@@ -2423,10 +2493,20 @@ async function spFetch(uri, method = "GET", headers = {}, opts = {}) {
   }
 
   try {
-    const result = await response.json();
+    let result;
+    switch (responseType) {
+      case "json":
+        result = await response.json();
+        break;
+      case "blob":
+        result = await response.blob();
+        break;
+      default:
+        result = response;
+    }
     return result;
   } catch (e) {
-    return;
+    return response;
   }
 }
 

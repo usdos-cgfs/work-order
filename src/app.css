@@ -249,7 +249,7 @@ table.dataTable > tbody td {
   border-width: 0px;
 }
 
-.quick-actions-bar .status-container {
+/* .quick-actions-bar .status-container {
   height: 100%;
   display: flex;
   justify-content: center;
@@ -258,12 +258,16 @@ table.dataTable > tbody td {
   background-color: #8b9aaf;
   border-top-left-radius: 6px;
   border-bottom-left-radius: 6px;
-}
+} */
 
 .quick-actions-bar .status-container .badge {
   max-width: 140px;
   overflow: hidden;
   text-overflow: ellipsis;
+  vertical-align: bottom;
+}
+
+.quick-actions-bar .status-section-pause {
 }
 
 .quick-actions-bar .actions {
@@ -333,9 +337,21 @@ table.dataTable > tbody td {
 
 dialog.card {
   display: none !important;
+  height: fit-content;
 }
 dialog[open].card {
   display: flex !important;
+}
+
+#dialog-email-request label {
+  width: 100%;
+}
+
+#dialog-email-request .richtext-field .form-control {
+  min-height: 450px;
+}
+#dialog-email-request .attachments-section {
+  max-width: 600px;
 }
 
 .accordion-title .indicator {

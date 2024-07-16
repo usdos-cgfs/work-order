@@ -31,6 +31,13 @@ export const taskDefs = {
     };
   },
   refreshAttachments: { msg: "Refreshing Attachments", blocking: false },
+  copyAttachment: (fileName) => {
+    return {
+      msg: "Copying attachment: " + fileName,
+      blocking: true,
+    };
+  },
+  newNotification: { msg: "Submitting Notification", blocking: true },
   approve: { msg: "Approving Request", blocking: true },
 };
 

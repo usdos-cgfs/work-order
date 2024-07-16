@@ -1,4 +1,4 @@
-import { SPList } from "./SAL.js";
+import { SPList, copyFileAsync } from "./SAL.js";
 import { Assignment } from "../entities/Assignment.js";
 import { Notification } from "../entities/Notification.js";
 import { RequestEntity } from "../entities/Request.js";
@@ -33,8 +33,28 @@ export const lookupType = {
 
 const virtualSets = new Map();
 
-export default class ApplicationDbContext {
+class DbContext {
   constructor() {}
+
+  CopyFileAsync = async function (source, dest) {
+    return copyFileAsync(source, dest);
+  };
+
+  static Set = (listDef) => {
+    const key = listDef.name;
+    if (!virtualSets.has(key)) {
+      const newSet = new EntitySet(listDef);
+      virtualSets.set(key, newSet);
+      return newSet;
+    }
+    return virtualSets.get(key);
+  };
+}
+
+export default class ApplicationDbContext extends DbContext {
+  constructor() {
+    super();
+  }
 
   Actions = new EntitySet(Action);
 
@@ -57,16 +77,6 @@ export default class ApplicationDbContext {
   ConfigPipelines = new EntitySet(PipelineStage);
 
   ConfigServiceTypes = new EntitySet(ServiceType);
-
-  static Set = (listDef) => {
-    const key = listDef.name;
-    if (!virtualSets.has(key)) {
-      const newSet = new EntitySet(listDef);
-      virtualSets.set(key, newSet);
-      return newSet;
-    }
-    return virtualSets.get(key);
-  };
 }
 
 class EntitySet {
@@ -342,6 +352,22 @@ class EntitySet {
 
   CopyFolderContents = async function (sourceFolder, targetFolder) {
     return this.ListRef.copyFilesAsync(sourceFolder, targetFolder);
+  };
+
+  CopyFileAsync = async function (sourceServerRelativeUrl, siteDestUrl) {
+    return this.ListRef.copyFileAsync(sourceServerRelativeUrl, siteDestUrl);
+  };
+
+  CopyAttachmentFromPath = async function (
+    sourceServerRelativeUrl,
+    entity,
+    filename = null
+  ) {
+    return this.ListRef.copyAttachmentFromPath(
+      sourceServerRelativeUrl,
+      entity,
+      filename
+    );
   };
 
   // Form Methods
