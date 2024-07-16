@@ -1,9 +1,33 @@
 {
   "scripts": {
     "dev": "esbuild src/app_bundle.js --bundle --outdir=\"P:/Style Library/apps/wo/dist/\"",
+    "local": "node esbuild.dev.config.mjs",
     "build": "node esbuild.config.mjs"
   },
   "devDependencies": {
     "esbuild": "0.21.5"
+  },
+  "test": {
+    "FullName": {
+      "ID": 1,
+      "Title": "Peter F. Backlund",
+      "LoginName": "i:0#.w|cgfs\\backlundpf",
+      "LookupValue": "Peter F. Backlund",
+      "Email": "backlundpf@test.com",
+      "IsGroup": false,
+      "IsEnsured": true
+    },
+    "GovManager": {
+      "ID": 23,
+      "Title": "Greg D. Fletcher",
+      "LoginName": "i:0#.w|cgfs\\fletchergd",
+      "LookupValue": "Greg D. Fletcher",
+      "Email": "",
+      "IsGroup": false,
+      "IsEnsured": true
+    },
+    "DateStart": "2024-07-31T00:00:00.000Z",
+    "DateEnd": "2024-08-02T00:00:00.000Z",
+    "Hours": "21"
   }
 }
