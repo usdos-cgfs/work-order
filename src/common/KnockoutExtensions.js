@@ -195,9 +195,7 @@ ko.bindingHandlers.people = {
       );
 
       // Clear input autocomplete suggestions
-      for (const input of document
-        .getElementById(element.id)
-        .querySelectorAll("input")) {
+      for (const input of element.querySelectorAll("input")) {
         input.setAttribute("autocomplete", "off");
         input.setAttribute("aria-autocomplete", "none");
       }
