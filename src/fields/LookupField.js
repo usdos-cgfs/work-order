@@ -1,5 +1,5 @@
 import { LookupModule } from "../components/Fields/index.js";
-import ApplicationDbContext from "../infrastructure/ApplicationDbContext.js";
+import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
 import { BaseField } from "./index.js";
 
 export default class LookupField extends BaseField {
@@ -22,9 +22,16 @@ export default class LookupField extends BaseField {
     this.Value = multiple ? ko.observableArray() : ko.observable();
 
     this.entityType = entityType;
-    this.entitySet = ApplicationDbContext.Set(entityType);
+    // this.entitySet = getAppContext().Set(entityType);
     this.lookupCol = lookupCol ?? "Title";
     this.optionsText = optionsText ?? ((item) => item[this.lookupCol]);
+  }
+
+  _entitySet;
+  get entitySet() {
+    if (!this._entitySet)
+      this._entitySet = getAppContext().Set(this.entityType);
+    return this._entitySet;
   }
 
   isSearch = false;

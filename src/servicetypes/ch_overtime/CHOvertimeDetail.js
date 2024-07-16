@@ -8,7 +8,9 @@ import {
 
 import { requestOrgStore } from "../../entities/RequestOrg.js";
 
-import ApplicationDbContext from "../../infrastructure/ApplicationDbContext.js";
+import ApplicationDbContext, {
+  getAppContext,
+} from "../../infrastructure/ApplicationDbContext.js";
 import {
   currentUser,
   permissions,
@@ -17,10 +19,7 @@ import { ContractorSupplement } from "../ContractorSupplementDetail.js";
 
 import { defaultComponents } from "../../primitives/ConstrainedEntity.js";
 
-import {
-  registerServiceTypeActionComponent,
-  registerComponentFromConstructor,
-} from "../../infrastructure/RegisterComponents.js";
+import { registerComponentFromConstructor } from "../../infrastructure/RegisterComponents.js";
 
 import { chOvertimeViewTemplate } from "./views/View.js";
 import { chOvertimeEditTemplate } from "./views/Edit.js";
@@ -145,7 +144,7 @@ export class CH_Overtime extends BaseServiceDetail {
   });
 
   ContractorSupplement = {
-    set: ApplicationDbContext.Set(ContractorSupplement),
+    set: getAppContext().Set(ContractorSupplement),
     findByRequest: async (request) => {
       const contractorSupplementResult =
         await this.ContractorSupplement.set.FindByColumnValue(

@@ -40,14 +40,23 @@ class DbContext {
     return copyFileAsync(source, dest);
   };
 
-  static Set = (listDef) => {
-    const key = listDef.name;
-    if (!virtualSets.has(key)) {
-      const newSet = new EntitySet(listDef);
-      virtualSets.set(key, newSet);
+  virtualSets = new Map();
+
+  Set = (entityType) => {
+    const key = entityType.ListDef.name;
+
+    // If we have a defined entityset, return that
+    const set = Object.values(this)
+      .filter((val) => val.constructor.name == EntitySet.name)
+      .find((set) => set.ListDef?.name == key);
+    if (set) return set;
+
+    if (!this.virtualSets.has(key)) {
+      const newSet = new EntitySet(entityType);
+      this.virtualSets.set(key, newSet);
       return newSet;
     }
-    return virtualSets.get(key);
+    return this.virtualSets.get(key);
   };
 }
 
