@@ -1,56 +1,62 @@
-import { RequestOrg } from "../entities/RequestOrg.js";
-import { ServiceType } from "../entities/ServiceType.js";
-import { actionTypes } from "../entities/Action.js";
 import {
-  PipelineStage,
-  pipelineStageStore,
-  stageActionTypes,
-} from "../entities/PipelineStage.js";
-import {
+  Action,
+  actionTypes,
+  Attachment,
   Assignment,
   assignmentRoles,
   assignmentStates,
-  assignmentRoleComponentMap,
   activeAssignmentsError,
-} from "../entities/Assignment.js";
-import { Attachment } from "../entities/Attachment.js";
-import { Comment } from "../entities/Comment.js";
-import { Action } from "../entities/Action.js";
+  Comment,
+  RequestOrg,
+  PipelineStage,
+  pipelineStageStore,
+  stageActionTypes,
+  ServiceType,
+} from "../entities/index.js";
 
 import { People } from "./People.js";
+
+import { requestStates, requestInternalStates } from "../constants/index.js";
+
 import { ActivityLogComponent } from "../components/ActivityLogComponent.js";
-import { NewAssignmentComponent } from "../components/NewAssignmentComponent.js";
-import DateField from "../fields/DateField.js";
 
 import {
   createNewRequestTitle,
   sortByField,
 } from "../common/EntityUtilities.js";
 import {
-  calculateEffectiveSubmissionDate,
   businessDaysFromDate,
+  calculateBusinessDays,
 } from "../common/DateUtilities.js";
 import * as Router from "../common/Router.js";
-import { registerServiceTypeActionComponent } from "../common/KnockoutExtensions.js";
-
-import { addTask, finishTask, taskDefs } from "../stores/Tasks.js";
 
 import {
   currentUser,
   getRequestFolderPermissions,
   stageActionRoleMap,
   AssignmentFunctions,
-  permissions,
 } from "../infrastructure/Authorization.js";
+
 import {
   emitCommentNotification,
   emitRequestNotification,
 } from "../infrastructure/Notifications.js";
+
 import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
+
+import {
+  BlobField,
+  DateField,
+  TextField,
+  TextAreaField,
+  PeopleField,
+} from "../fields/index.js";
 
 import { DisplayModes } from "../views/RequestDetailView.js";
 
-import { Tabs } from "../app.js";
+import { Tabs } from "../env.js";
+import { addTask, finishTask, taskDefs } from "../stores/Tasks.js";
+import { ValidationError } from "../primitives/ValidationError.js";
 
 // export const requestStates = {
 //   draft: { ID: 1, Title: "Draft" },
@@ -59,24 +65,40 @@ import { Tabs } from "../app.js";
 //   cancelled: { ID: 4, Title: "Cancelled" },
 //   rejected: { ID: 5, Title: "Rejected" },
 // };
-export const requestStates = {
-  draft: "Draft",
-  open: "Open",
-  fulfilled: "Completed",
-  cancelled: "Cancelled",
-  rejected: "Rejected",
+
+const requestStateClasses = {
+  Draft: "text-bg-info",
+  Open: "text-bg-primary",
+  Paused: "text-bg-warning",
+  "In Progress": "text-bg-primary",
+  Completed: "text-bg-success",
+  Cancelled: "text-bg-warning",
+  Rejected: "text-bg-danger",
 };
 
-// TODO: implement as BaseEntity
+// TODO: implement as Entity
 export class RequestEntity {
-  constructor({ ID = null, Title = null, ServiceType = null }) {
+  constructor({ ID = null, Title = null, ServiceType: RequestType = null }) {
     this.ID = ID;
-    this.Title = Title;
+    this.Title = Title ?? createNewRequestTitle();
     this.LookupValue = Title;
     this._context = getAppContext();
 
     if (!ID) {
       this.DisplayMode(DisplayModes.New);
+      this.State.Status(requestStates.draft);
+    }
+
+    if (RequestType) {
+      this.RequestType = ServiceType.FindInStore(RequestType);
+      if (this.RequestType._constructor) {
+        this.RequestBodyBlob = new BlobField({
+          displayName: "Service Type Details",
+          isRequired: false,
+          width: 12,
+          entityType: ko.observable(this.RequestType._constructor),
+        });
+      }
     }
 
     this.ActivityQueue.subscribe(
@@ -85,6 +107,16 @@ export class RequestEntity {
       "arrayChange"
     );
   }
+
+  // static async Create({
+  //   ID = null,
+  //   Title = null,
+  //   ServiceType: RequestType = null,
+  // }) {
+  //   const serviceType = ServiceType.FindInStore(RequestType);
+  //   await serviceType.initializeEntity();
+  //   return new RequestEntity({ ID, Title, ServiceType: serviceType });
+  // }
 
   DisplayMode = ko.observable(DisplayModes.View);
   Displaymodes = DisplayModes;
@@ -106,18 +138,61 @@ export class RequestEntity {
   ObservableTitle = ko.observable();
 
   RequestSubject = ko.observable();
-  RequestDescription = ko.observable();
+  RequestDescription = new TextAreaField({
+    displayName: ko.pureComputed(
+      () => this.RequestType?.DescriptionTitle ?? "Description"
+    ),
+    instructions: ko.pureComputed(
+      () => this.RequestType?.DescriptionFieldInstructions
+    ),
+    isRichText: true,
+    isRequired: ko.pureComputed(
+      () => this.RequestType?.DescriptionRequired ?? false
+    ),
+    width: "12",
+  });
 
   RequestorInfo = {
     Requestor: ko.observable(),
     Phone: ko.observable(),
     Email: ko.observable(),
     Office: ko.observable(),
+    OfficeSymbol: new TextField({ displayName: "Office Symbol" }),
   };
+
+  Author = new PeopleField({
+    displayName: "Created By",
+  });
 
   State = {
     IsActive: ko.observable(),
     Status: ko.observable(),
+    StatusClass: ko.pureComputed(() => {
+      return requestStateClasses[this.State.Status()];
+    }),
+    InternalStatus: ko.observable(),
+    InternalStatusClass: ko.pureComputed(() => {
+      return (
+        requestStateClasses[this.State.InternalStatus()] ??
+        requestStateClasses.Paused
+      );
+    }),
+    IsPaused: ko.pureComputed(
+      () =>
+        this.State.Status() == requestStates.open &&
+        this.State.InternalStatus() != requestInternalStates.inProgress
+    ),
+  };
+
+  Reporting = {
+    MeetingStandard: ko.pureComputed(() => this.Reporting.AgingDays() <= 0),
+    AgingDays: ko.pureComputed(
+      () => this.Reporting.OpenDays() - this.RequestType.DaysToCloseBusiness
+    ),
+    OpenDays: ko.pureComputed(() => {
+      const endDate = this.Dates.Closed.Value() ?? new Date();
+      return calculateBusinessDays(this.Dates.Submitted.Value(), endDate);
+    }),
   };
 
   Dates = {
@@ -128,66 +203,43 @@ export class RequestEntity {
 
   RequestOrgs = ko.observable();
 
-  ServiceType = {
-    IsLoading: ko.observable(false),
-    Entity: ko.observable(),
-    Def: ko.observable(),
-    instantiateEntity: async (newSvcType = this.ServiceType.Def()) => {},
-    refreshEntity: async () => {
-      if (DEBUG) console.log("ServiceType: Refresh Triggered");
-      if (!this.ServiceType.Def()?.HasTemplate) return;
-      this.ServiceType.IsLoading(true);
-      if (!this.ID) {
-        const newEntity = await this.ServiceType.Def().instantiateEntity(this);
-        this.ServiceType.Entity(newEntity);
-        this.ServiceType.IsLoading(false);
-        return;
-      }
-      await this.ServiceType.Def()?.initializeEntity();
-      const results = await this.ServiceType.Def()
-        ?.getListRef()
-        ?.GetItemsByFolderPath(this.getRelativeFolderPath());
+  // ServiceType = {
+  //   IsLoading: ko.observable(false),
+  //   Entity: ko.observable(),
+  //   // Def: ko.observable(),
+  //   refreshEntity: async () => {
+  //     return;
+  //   },
+  // };
 
-      if (!results.length) {
-        console.error("cannot find servicetype entity");
-        this.ServiceType.IsLoading(false);
-        return;
-      }
+  RequestType;
 
-      // This should never happen if we index our Request Lookup Column
-      if (results.length > 1)
-        alert("Multiple service type entities found for this request!");
-
-      const entity = results[0];
-      entity.Request = this;
-      this.ServiceType.Entity(entity);
-      this.ServiceType.IsLoading(false);
-    },
-    createEntity: async (newEntity = this.ServiceType.Entity()) => {
-      if (!newEntity) return;
-      newEntity.Title = this.Title;
-      const folderPath = this.getRelativeFolderPath();
-      await this.ServiceType.Def()
-        .getListRef()
-        .AddEntity(newEntity, folderPath, this);
-      // newEntity.ID = newSvcTypeItemId;
-    },
-    updateEntity: async (fields) => {
-      if (!this.ServiceType.Entity()) return;
-      await this.ServiceType.Def()
-        ?.getListRef()
-        ?.UpdateEntity(this.ServiceType.Entity(), fields);
-    },
-  };
+  RequestBodyBlob;
+  // = new BlobField({
+  //   displayName: "Service Type Details",
+  //   isRequired: false,
+  //   width: 12,
+  //   entityType: ko.observable(),
+  // });
 
   Pipeline = {
     Stage: ko.observable(),
-    Icon: ko.pureComputed(() => this.ServiceType.Def()?.Icon),
+    PreviousStage: ko.observable(),
+    Icon: ko.pureComputed(() => this.RequestType?.Icon),
     Stages: ko.pureComputed(() => {
-      if (!this.ServiceType.Def()) return [];
-      return pipelineStageStore()
-        .filter((stage) => stage.ServiceType.ID == this.ServiceType.Def()?.ID)
+      if (!this.RequestType) return [];
+      const typeStages = pipelineStageStore()
+        .filter((stage) => stage.ServiceType?.ID == this.RequestType?.ID)
         .sort(sortByField("Step"));
+      const completedStage = PipelineStage.GetCompletedStage();
+      completedStage.Step = typeStages.length + 1;
+      typeStages.push(completedStage);
+      return typeStages;
+    }),
+    RequestOrgs: ko.pureComputed(() => {
+      return this.Pipeline.Stages()
+        .filter((stage) => stage.RequestOrg)
+        .map((stage) => stage.RequestOrg);
     }),
     getNextStage: ko.pureComputed(() => {
       const thisStepNum = this.Pipeline.Stage()?.Step ?? 0;
@@ -195,30 +247,46 @@ export class RequestEntity {
       return this.Pipeline.Stages()?.find((stage) => stage.Step == nextStepNum);
     }),
     advance: async () => {
+      const pipelineAdvanceTask = addTask(taskDefs.pipeline);
       if (this.promptAdvanceModal) this.promptAdvanceModal.hide();
+      await this.resumeRequest();
 
-      const thisStage = this.Pipeline.Stage();
       const nextStage = this.Pipeline.getNextStage();
 
-      if (!nextStage) {
+      if (nextStage.ActionType == stageActionTypes.Closed) {
         // End of the Pipeline; time to close
         console.log("Closing Request");
         this.closeAndFinalize(requestStates.fulfilled);
+        finishTask(pipelineAdvanceTask);
         return null;
       }
+
+      const thisStage = this.Pipeline.Stage();
+      this.Pipeline.PreviousStage(thisStage);
+
       this.Pipeline.Stage(nextStage);
 
-      await this._context.Requests.UpdateEntity(this, ["PipelineStage"]);
+      await this._context.Requests.UpdateEntity(this, [
+        "PipelineStage",
+        "PipelineStagePrev",
+      ]);
 
       this.ActivityQueue.push({
         activity: actionTypes.Advanced,
         data: nextStage,
       });
 
-      // If this is a notification stage, advance.
+      await this.Assignments.createStageAssignments(nextStage);
+
+      // If this is a notification stage, advance. The activity logger will emit our notification.
       if (nextStage.ActionType == stageActionTypes.Notification) {
         this.Pipeline.advance();
       }
+
+      if (nextStage.ActionType == stageActionTypes.Closed) {
+        this.closeAndFinalize(requestStates.fulfilled);
+      }
+      finishTask(pipelineAdvanceTask);
     },
   };
 
@@ -230,11 +298,30 @@ export class RequestEntity {
         this.Attachments.list.All().filter((attachment) => attachment.IsActive)
       ),
     },
+    Validation: {
+      Errors: ko.pureComputed(() => {
+        let errors = [];
+        let minAttachments = this.RequestType?.AttachmentsRequiredCnt ?? 0;
+        if (minAttachments < 0) minAttachments = 1;
+        const attachmentsCount = this.Attachments.list.Active().length;
+        if (attachmentsCount < minAttachments) {
+          errors.push(
+            new ValidationError(
+              "attachment-count-mismatch",
+              "request-header",
+              `This request has ${this.RequestType.attachmentsRequiredCntString()} required attachment(s)!`
+            )
+          );
+        }
+        return errors;
+      }),
+    },
     userCanAttach: ko.pureComputed(() =>
       this.Authorization.currentUserCanSupplement()
     ),
-    addNew: async () => {
-      const folderPath = this.getRelativeFolderPath();
+    createFolder: async () => {
+      const newAttachmentTask = addTask(taskDefs.newAttachment);
+      let folderPath = this.getRelativeFolderPath();
       const folderPerms = this.getFolderPermissions();
 
       try {
@@ -243,17 +330,55 @@ export class RequestEntity {
           folderPath,
           folderPerms
         );
-        await this._context.Attachments.UploadNewDocument(folderPath, {
-          RequestId: this.ID,
-          RequestTitle: this.Title,
-        });
         this.Attachments.refresh();
       } catch (e) {
-        console.error("Error creating folder: ");
+        console.error("Error creating folder: ", e);
+        folderPath = null;
+      } finally {
+        finishTask(newAttachmentTask);
       }
+      return folderPath;
+    },
+    newAttachmentFiles: ko.observableArray(),
+    removeFile: (file) => {
+      this.Attachments.newAttachmentFiles.remove(file);
+    },
+    addNew: async () => {
+      const folderPath = await this.Attachments.createFolder();
+      if (!folderPath) alert("Unable to create folder");
+      await Promise.all(
+        this.Attachments.newAttachmentFiles().map(async (file) => {
+          const uploadFileTask = addTask(taskDefs.uploadAttachment(file.name));
+          const attachmentTitle =
+            file.name.split(".").slice(0, -1).join(".") ?? file.name;
+          await this._context.Attachments.UploadFileToFolderAndUpdateMetadata(
+            file,
+            file.name,
+            folderPath,
+            {
+              Title: attachmentTitle,
+              RequestId: this.ID,
+              IsActive: true,
+            },
+            ({ currentBlock, totalBlocks }) => {
+              uploadFileTask.updateProgress({
+                percentDone: currentBlock / totalBlocks,
+              });
+            }
+          );
+          finishTask(uploadFileTask);
+        })
+      );
+      // await this._context.Attachments.UploadFol(folderPath, {
+      //   RequestId: this.ID,
+      //   RequestTitle: this.Title,
+      // });
+      this.Attachments.newAttachmentFiles([]);
+      this.Attachments.refresh();
     },
     refresh: async () => {
       if (!this.Title) return;
+      const refreshAttachmentsTask = addTask(taskDefs.refreshAttachments);
       this.Attachments.AreLoading(true);
       try {
         const attachments =
@@ -266,6 +391,7 @@ export class RequestEntity {
         console.warn("Looks like there are no attachments", e);
       }
       this.Attachments.AreLoading(false);
+      finishTask(refreshAttachmentsTask);
     },
     view: (attachment) => {
       //console.log("viewing", attachment);
@@ -301,6 +427,7 @@ export class RequestEntity {
       return this.Authorization.currentUserCanSupplement();
     }),
     addNew: async (comment) => {
+      const newCommentTask = addTask(taskDefs.newComment);
       const folderPath = this.getRelativeFolderPath();
       const folderPerms = this.getFolderPermissions();
 
@@ -318,12 +445,15 @@ export class RequestEntity {
         this.Comments.refresh();
       } catch (e) {
         console.error("Error creating folder: ");
+      } finally {
+        finishTask(newCommentTask);
       }
     },
     update: async (comment) => {
       // TODO ?
     },
     refresh: async () => {
+      const refreshCommentsTask = addTask(taskDefs.refreshComments);
       this.Comments.AreLoading(true);
       const folderPath = this.getRelativeFolderPath();
       const comments = await this._context.Comments.GetItemsByFolderPath(
@@ -332,12 +462,22 @@ export class RequestEntity {
       );
       this.Comments.list.All(comments);
       this.Comments.AreLoading(false);
+      finishTask(refreshCommentsTask);
     },
     sendNotification: async (comment) => {
+      const notifyCommentTask = addTask(taskDefs.newComment);
       await emitCommentNotification(comment, this);
       comment.NotificationSent = true;
       await this._context.Comments.UpdateEntity(comment, ["NotificationSent"]);
       this.Comments.refresh();
+      finishTask(notifyCommentTask);
+    },
+    remove: async (comment) => {
+      const removeCommentTask = addTask(taskDefs.removeComment);
+      comment.IsActive = false;
+      await this._context.Comments.UpdateEntity(comment, ["IsActive"]);
+      this.Comments.refresh();
+      finishTask(removeCommentTask);
     },
   };
 
@@ -358,6 +498,11 @@ export class RequestEntity {
         return this.Assignments.list.All();
       }),
       CurrentUserAssignments: ko.pureComputed(() => {
+        // if (window.DEBUG)
+        //   console.log(`Request ${this.ID}: User Assignments Updated`);
+        if (!this.Assignments.list.All().length) {
+          return [];
+        }
         // We need find assignments where the current user is directly assigned:
         // or They're in a group that's been assigned:
         const userGroupIds = currentUser().getGroupIds();
@@ -378,6 +523,8 @@ export class RequestEntity {
         return assignments;
       }),
     },
+    getFolderUrl: () =>
+      this._context.Assignments.GetFolderUrl(this.getRelativeFolderPath()),
     CurrentStage: {
       list: {
         ActionAssignments: ko.pureComputed(() => {
@@ -423,14 +570,6 @@ export class RequestEntity {
               (assignment) => assignment.Status == assignmentStates.InProgress
             );
           if (activeAssignments) {
-            // If we have assignment components and there isn't already a variable set
-            // this.Assignments.CurrentStage.Validation.Errors(
-            //   this.Assignments.CurrentStage.Validation.Errors()
-            //     .filter(
-            //       (error) => error.source != activeAssignmentsError.source
-            //     )
-            //     .push(activeAssignmentsError)
-            // );
             if (
               this.Assignments.CurrentStage.Validation.Errors.indexOf(
                 activeAssignmentsError
@@ -448,97 +587,55 @@ export class RequestEntity {
             return false;
           }
         }),
-        setActiveAssignmentsError: (activeAssignments) => {},
       },
       UserCanAdvance: ko.pureComputed(() => {
         return this.Assignments.CurrentStage.list.UserActionAssignments()
           .length;
       }),
-      AssignmentComponents: {
-        Generic: ko.pureComputed(() => {
-          const stage = this.Pipeline.Stage();
-          if (!stage) {
-            return [];
-          }
-          const assignmentComponents = this.Assignments.CurrentStage.list
-            .UserActionAssignments()
-            .map((assignment) => {
-              return {
-                request: this,
-                assignment,
-                addAssignment: this.Assignments.addNew,
-                completeAssignment: this.Assignments.complete,
-                errors: this.Assignments.CurrentStage.Validation.Errors,
-                actionComponentName: ko.observable(
-                  assignmentRoleComponentMap[assignment.Role]
-                ),
-              };
-            });
-
-          return assignmentComponents;
-        }),
-        Custom: ko.pureComputed(() => {
-          const stage = this.Pipeline.Stage();
-          const serviceType = this.ServiceType.Def();
-          const serviceTypeEntity = this.ServiceType.Entity();
-          if (
-            !serviceType?.UID ||
-            !stage?.ActionComponentName ||
-            !serviceTypeEntity ||
-            this.ServiceType.IsLoading()
-          ) {
-            return;
-          }
-          // Check if the user is assigned to this stage
-          if (
-            !this.Assignments.CurrentStage.list.UserActionAssignments().length
-          ) {
-            return;
-          }
-          try {
-            registerServiceTypeActionComponent({
-              componentName: stage.ActionComponentName,
-              uid: serviceType.UID,
-            });
+      AssignmentComponents: ko.pureComputed(() => {
+        return this.Assignments.CurrentStage.list
+          .UserActionAssignments()
+          .map((assignment) => {
             return {
-              actionComponentName: stage.ActionComponentName,
-              serviceType: this.ServiceType,
               request: this,
+              assignment,
+              addAssignment: this.Assignments.addNew,
+              completeAssignment: this.Assignments.complete,
               errors: this.Assignments.CurrentStage.Validation.Errors,
+              actionComponentName: assignment.getComponentName(),
             };
-          } catch (e) {
-            console.error(
-              `Error registering declared assignment action: ${stage.ActionComponentName}`,
-              e
-            );
-          }
-        }),
-        Any: ko.pureComputed(
-          () =>
-            this.Assignments.CurrentStage.AssignmentComponents.Generic()
-              .length ||
-            this.Assignments.CurrentStage.AssignmentComponents.Custom()
-        ),
-      },
+          });
+      }),
     },
     refresh: async () => {
       this.Assignments.AreLoading(true);
       // Create a list of Assignment instances from raw entities
-      const assignmentObjs =
-        await this._context.Assignments.GetItemsByFolderPath(
-          this.getRelativeFolderPath(),
-          Assignment.Views.All
-        );
-      const assignments =
-        assignmentObjs?.map(Assignment.CreateFromObject) ?? [];
+      const assignments = await this._context.Assignments.GetItemsByFolderPath(
+        this.getRelativeFolderPath(),
+        Assignment.Views.All
+      );
+      // const assignments =
+      //   assignmentObjs?.map(Assignment.CreateFromObject) ?? [];
+      // Load request orgs
+      assignments.map(
+        (asg) =>
+          (asg.RequestOrg =
+            RequestOrg.FindInStore(asg.RequestOrg) ?? asg.RequestOrg)
+      );
 
       this.Assignments.list.All(assignments);
+      // if (window.DEBUG) console.log(`Request ${this.ID} Assignments Updated`);
       this.Assignments.HaveLoaded(true);
       this.Assignments.AreLoading(false);
     },
     userCanAssign: ko.pureComputed(() => {
       // TODO: Major
+      // If user is a member of the request org assigned to this stage.
       if (!this.State.IsActive()) return false;
+      const assignedOrg = this.Pipeline.Stage()?.RequestOrg;
+      if (!assignedOrg) return false;
+      const user = currentUser();
+      if (user.isInRequestOrg(assignedOrg)) return true;
       return false;
     }),
     addNew: async (assignment = null) => {
@@ -555,6 +652,8 @@ export class RequestEntity {
         assignment.PipelineStage = this.Pipeline.Stage();
       }
 
+      assignment.CustomComponent = assignment.PipelineStage.ActionComponentName;
+
       assignment.Status = assignment.Role.initialStatus;
 
       const folderPath = this.getRelativeFolderPath();
@@ -562,11 +661,19 @@ export class RequestEntity {
       await this._context.Assignments.AddEntity(assignment, folderPath, this);
       // Have to await this for the next permissions set.
       await this.Assignments.refresh();
+      // update the Request Orgs
+      if (
+        !this.RequestOrgs().find((org) => org.ID == assignment.RequestOrg.ID)
+      ) {
+        this.RequestOrgs.push(assignment.RequestOrg);
+        await this._context.Requests.UpdateEntity(this, ["RequestOrgs"]);
+      }
       //this.request.ActivityLog.assignmentAdded(assignment);
       this.ActivityQueue.push({
         activity: actionTypes.Assigned,
         data: assignment,
       });
+
       if (assignment.Role?.permissions) {
         // assignment.Assignee.Roles = [assignment.Role.permissions];
         this.Authorization.ensureAccess([
@@ -598,7 +705,13 @@ export class RequestEntity {
         data: assignment,
       });
     },
-    complete: async (assignment, action) => {
+    notify: async (assignment) => {
+      this.ActivityQueue.push({
+        activity: actionTypes.Assigned,
+        data: assignment,
+      });
+    },
+    complete: async (assignment, action, refresh = true) => {
       const updateEntity = {
         ID: assignment.ID,
         Status: assignmentStates[action],
@@ -608,48 +721,79 @@ export class RequestEntity {
       };
       await this._context.Assignments.UpdateEntity(updateEntity);
 
+      await this.resumeRequest();
+
       this.ActivityQueue.push({
         activity: actionTypes[action],
         data: updateEntity,
       });
 
-      this.Assignments.refresh();
+      if (refresh) this.Assignments.refresh();
     },
     createStageAssignments: async (stage = this.Pipeline.Stage()) => {
       if (!stage?.ActionType) return;
 
+      if (stage.ActionType == actionTypes.Closed) return;
+
       // If this stage is already assigned (e.g. from a previous assignment stage), skip it
       if (
-        this.Pipeline.Stages().find((stage) =>
-          this.Assignments.list
-            .All()
-            .map((assignment) => assignment.PipelineStage?.ID)
-            .includes(stage.ID)
-        )
+        this.Assignments.list
+          .All()
+          .find((assignment) => assignment.PipelineStage?.ID == stage.ID)
       )
         return;
 
-      // TODO: Minor - Use assignment entity constructor
-      const newAssignment = {
+      if (
+        stage.AssignmentFunction &&
+        AssignmentFunctions[stage.AssignmentFunction]
+      ) {
+        try {
+          const newAssignments = AssignmentFunctions[stage.AssignmentFunction](
+            this,
+            stage
+          );
+          await Promise.all(
+            newAssignments.map((newAssignment) =>
+              this.Assignments.addNew(newAssignment)
+            )
+          );
+        } catch (e) {
+          console.warn("Error creating stage assignments", stage);
+          alert(e.message);
+          return;
+        }
+        return;
+      }
+
+      if (stage.WildCardAssignee) {
+        try {
+          const newAssignments = AssignmentFunctions.getWildcard(
+            this,
+            stage,
+            stage.WildCardAssignee
+          );
+          await Promise.all(
+            newAssignments.map((newAssignment) =>
+              this.Assignments.addNew(newAssignment)
+            )
+          );
+        } catch (e) {
+          console.warn("Error creating stage assignments", stage);
+          alert(e.message);
+          return;
+        }
+        return;
+      }
+
+      const newAssignment = new Assignment({
         Assignee:
           stage.Assignee ?? RequestOrg.FindInStore(stage.RequestOrg)?.UserGroup,
         RequestOrg: stage.RequestOrg,
         PipelineStage: stage,
         IsActive: true,
         Role: stageActionRoleMap[stage.ActionType],
-      };
-
-      if (
-        stage.AssignmentFunction &&
-        AssignmentFunctions[stage.AssignmentFunction]
-      ) {
-        const people =
-          AssignmentFunctions[stage.AssignmentFunction].bind(this)();
-
-        if (people && people.Title) {
-          newAssignment.Assignee = people;
-        }
-      }
+        CustomComponent: stage.ActionComponentName,
+      });
 
       await this.Assignments.addNew(newAssignment);
     },
@@ -661,6 +805,7 @@ export class RequestEntity {
       All: ko.observableArray(),
     },
     refresh: async () => {
+      const refreshActionsTask = addTask(taskDefs.refreshActions);
       if (!this.ID) return;
       this.Actions.AreLoading(true);
       const actions = await this._context.Actions.GetItemsByFolderPath(
@@ -669,15 +814,25 @@ export class RequestEntity {
       );
       this.Actions.list.All(actions);
       this.Actions.AreLoading(false);
+      finishTask(refreshActionsTask);
     },
     addNew: async (action) => {
       if (!this.ID || !action) return;
-
+      const newActionTask = addTask(taskDefs.newAction);
       const folderPath = this.getRelativeFolderPath();
       // const actionObj = Object.assign(new Action(), action);
       action.PipelineStage = action.PipelineStage ?? this.Pipeline.Stage();
       await this._context.Actions.AddEntity(action, folderPath, this.request);
       this.Actions.refresh();
+      finishTask(newActionTask);
+    },
+    showDialog: () => {
+      const dialog = document.getElementById("dialog-action-log");
+      dialog.showModal();
+    },
+    closeDialog: () => {
+      const dialog = document.getElementById("dialog-action-log");
+      dialog.close();
     },
   };
 
@@ -698,13 +853,6 @@ export class RequestEntity {
       switch (action.activity) {
         case actionTypes.Assigned:
         case actionTypes.Unassigned:
-          // update the Request Orgs
-          this.RequestOrgs(
-            this.Assignments.list
-              .All()
-              .map((assignment) => assignment.RequestOrg)
-          );
-          await this._context.Requests.UpdateEntity(this, ["RequestOrgs"]);
           break;
         case actionTypes.Rejected:
           {
@@ -715,7 +863,6 @@ export class RequestEntity {
           }
           break;
         case actionTypes.Advanced:
-          await this.Assignments.createStageAssignments(action.data);
           break;
       }
     });
@@ -723,21 +870,34 @@ export class RequestEntity {
 
   Validation = {
     validate: () => {
+      this.Validation.WasValidated(true);
       // 1. Validate Header
+      this.Validation.validateHeader();
       // 2. Validate Body
       this.Validation.validateBody();
       return this.Validation.IsValid();
     },
-    validateHeader: () => {},
-    validateBody: () => {
-      const serviceTypeEntity = this.ServiceType.Entity();
-      if (!serviceTypeEntity) return;
-      return serviceTypeEntity.validate();
+    validateHeader: () => {
+      this.FieldMap.RequestDescription.validate();
     },
+    validateBody: () => {
+      return this.RequestBodyBlob?.Value()?.validate();
+    },
+    reset: () => this.Validation.WasValidated(false),
     Errors: {
-      Request: ko.observableArray(),
+      Request: ko.pureComputed(() => {
+        let errors = [];
+        // Check if there are required attachments
+
+        errors = errors.concat(this.Attachments.Validation.Errors());
+
+        // Required description
+        errors = errors.concat(this.FieldMap.RequestDescription.Errors());
+
+        return errors;
+      }),
       ServiceType: ko.pureComputed(() => {
-        return this.ServiceType.Entity()?.Errors() ?? [];
+        return this.RequestBodyBlob?.Value()?.Errors() ?? [];
       }),
       All: ko.pureComputed(() => [
         ...this.Validation.Errors.Request(),
@@ -746,6 +906,7 @@ export class RequestEntity {
       ]),
     },
     IsValid: ko.pureComputed(() => !this.Validation.Errors.All().length),
+    WasValidated: ko.observable(false),
     CurrentStage: {
       IsValid: () => this.Assignments.CurrentStage.Validation.IsValid(),
       Errors: ko.pureComputed(() =>
@@ -766,12 +927,13 @@ export class RequestEntity {
     }),
     currentUserCanAdvance: ko.pureComputed(() => {
       return (
-        this.State.Status() == requestStates.open &&
+        this.State.IsActive() &&
         this.Assignments.CurrentStage.list.UserActionAssignments().length
       );
     }),
     currentUserCanSupplement: ko.pureComputed(() => {
-      // determines whether the current user can add attachments or
+      if (this.DisplayMode() == DisplayModes.New) return true;
+      // determines whether the current user can add attachments or modify
       const user = currentUser();
       if (!user) {
         console.warn("Current user not set!");
@@ -780,6 +942,14 @@ export class RequestEntity {
       if (!this.State.IsActive()) return false;
       if (this.Assignments.list.CurrentUserAssignments().length) return true;
       if (this.RequestorInfo.Requestor()?.ID == user.ID) return true;
+    }),
+    currentUserCanClose: ko.pureComputed(() => {
+      return (
+        this.State.IsActive() &&
+        this.Assignments.list
+          .CurrentUserAssignments()
+          .find((assignment) => assignment.isActionable())
+      );
     }),
     ensureAccess: async (accessValuePairs) => {
       const relFolderPath = this.getRelativeFolderPath();
@@ -811,16 +981,28 @@ export class RequestEntity {
 
   getAppLinkElement = () =>
     `<a href="${this.getAppLink()}" target="blank">${this.Title}</a>`;
+
   /**
    * Returns the generic relative path without the list/library name
    * e.g. EX/2929-20199
    */
-  getRelativeFolderPath = ko.pureComputed(
-    () =>
-      `${this.RequestorInfo.Office().Title.replace(
-        "/",
-        "_"
-      )}/${this.ObservableTitle()}`
+  getRelativeFolderPath = ko.pureComputed(() => {
+    if (this.State.Status() == requestStates.draft)
+      return this.getRelativeFolderPathStaging();
+
+    const requestorOffice = this.RequestorInfo.Office()?.Title.replace(
+      "/",
+      "_"
+    );
+    return `${requestorOffice}/${this.ObservableTitle()}`;
+  });
+
+  getRelativeFolderPathStaging = () => {
+    return `Staged/${this.ObservableTitle()}`;
+  };
+
+  getFolderUrl = ko.pureComputed(() =>
+    this._context.Requests.GetFolderUrl(this.getRelativeFolderPath())
   );
 
   getFolderPermissions = () => getRequestFolderPermissions(this);
@@ -843,17 +1025,23 @@ export class RequestEntity {
 
   // Controls
   refreshAll = async () => {
+    const refreshId = addTask(taskDefs.refresh);
     this.IsLoading(true);
     await this.refreshRequest();
     // These can be started when we have the ID
-    this.Attachments.refresh();
-    this.Actions.refresh();
-    this.Comments.refresh();
-    await this.ServiceType.refreshEntity();
+    const relatedRecordPromises = [
+      this.Attachments.refresh(),
+      this.Actions.refresh(),
+      this.Comments.refresh(),
+      this.Assignments.refresh(),
+    ];
+
     // Assignments are dependent on the serviceType being loaded
-    this.Assignments.refresh();
+
+    await Promise.all(relatedRecordPromises);
     this.LoadedAt(new Date());
     this.IsLoading(false);
+    finishTask(refreshId);
   };
 
   refreshRequest = async () => {
@@ -862,8 +1050,10 @@ export class RequestEntity {
   };
 
   getAllListRefs() {
-    const listRefs = this.getInitialListRefs();
-    listRefs.concat([this._context.Comments, this._context.Attachments]);
+    const listRefs = this.getInitialListRefs().concat([
+      this._context.Comments,
+      this._context.Attachments,
+    ]);
     return listRefs;
   }
 
@@ -874,21 +1064,63 @@ export class RequestEntity {
       this._context.Assignments,
       this._context.Notifications,
     ];
-    if (this.ServiceType.Def()?.getListRef()) {
-      listRefs.push(this.ServiceType.Def().getListRef());
-    }
+    // if (this.RequestType?.getListRef()) {
+    //   listRefs.push(this.RequestType.getListRef());
+    // }
     return listRefs;
   }
 
+  pauseRequest = async (reason = "Not Provided") => {
+    // TODO: Clear and reset Est. Completion Date
+    this.State.InternalStatus(reason);
+    // this.Dates.EstClosed.Value(null);
+
+    await this._context.Requests.UpdateEntity(this, ["InternalStatus"]);
+
+    this.ActivityQueue.push({
+      activity: actionTypes.Paused,
+      data: reason,
+    });
+  };
+
+  resumeRequest = async () => {
+    if (!this.State.IsPaused()) return;
+
+    this.State.InternalStatus(requestInternalStates.inProgress);
+
+    await this._context.Requests.UpdateEntity(this, ["InternalStatus"]);
+
+    this.ActivityQueue.push({
+      activity: actionTypes.Resumed,
+      data: this,
+    });
+  };
+
   closeAndFinalize = async (status) => {
+    const closeId = addTask(taskDefs.closing);
     //1. set all assignments to inactive
+    this.Assignments.list.InProgress().map((assignment) => {
+      this.Assignments.complete(assignment, assignmentStates.Cancelled, false);
+      // assignment.Status = assignmentStates.Cancelled;
+      // this._context.Assignments.UpdateEntity(assignment);
+    });
 
     //2. Set request properties
+    const closedStage = PipelineStage.GetCompletedStage();
+
+    const thisStage = this.Pipeline.Stage();
+    this.Pipeline.PreviousStage(thisStage);
+    this.Pipeline.Stage(closedStage);
+
     this.State.Status(status);
+    this.State.InternalStatus(status);
     this.State.IsActive(false);
     this.Dates.Closed.set(new Date());
     await this._context.Requests.UpdateEntity(this, [
+      "PipelineStage",
+      "PipelineStagePrev",
       "RequestStatus",
+      "InternalStatus",
       "IsActive",
       "ClosedDate",
     ]);
@@ -900,6 +1132,7 @@ export class RequestEntity {
     // 4. Update Permissions;
     await this.Authorization.setReadonly();
     this.refreshAll();
+    finishTask(closeId);
   };
 
   // FieldMaps are used by the ApplicationDbContext and define
@@ -909,12 +1142,14 @@ export class RequestEntity {
     Title: this.ObservableTitle,
     RequestSubject: this.RequestSubject,
     RequestDescription: this.RequestDescription,
+    Author: this.Author,
     Requestor: {
       set: (val) => this.RequestorInfo.Requestor(People.Create(val)),
       get: this.RequestorInfo.Requestor,
     },
     RequestorPhone: this.RequestorInfo.Phone,
     RequestorEmail: this.RequestorInfo.Email,
+    RequestorOfficeSymbol: this.RequestorInfo.OfficeSymbol,
     RequestingOffice: {
       set: (val) => this.RequestorInfo.Office(RequestOrg.Create(val)),
       get: this.RequestorInfo.Office,
@@ -924,7 +1159,12 @@ export class RequestEntity {
       factory: PipelineStage.FindInStore,
       obs: this.Pipeline.Stage,
     },
+    PipelineStagePrev: {
+      factory: PipelineStage.FindInStore,
+      obs: this.Pipeline.PreviousStage,
+    },
     RequestStatus: this.State.Status,
+    InternalStatus: this.State.InternalStatus,
     RequestSubmitted: this.Dates.Submitted,
     EstClosedDate: this.Dates.EstClosed,
     ClosedDate: this.Dates.Closed,
@@ -936,10 +1176,30 @@ export class RequestEntity {
       get: this.RequestOrgs,
     },
     ServiceType: {
-      set: (val) => this.ServiceType.Def(ServiceType.Create(val)),
-      get: this.ServiceType.Def,
+      set: (val) => {
+        const type = ServiceType.FindInStore(val);
+        this.RequestType = type;
+      },
+      get: () => this.RequestType,
     }, // {id, title},
+    RequestBodyBlob: {
+      get: () => this.RequestBodyBlob?.get(),
+      set: (val) => {
+        if (!this.RequestBodyBlob) return;
+        this.RequestBodyBlob.set(val);
+        const requestBodyEntity = this.RequestBodyBlob.Value();
+        if (requestBodyEntity?.setRequestContext)
+          requestBodyEntity.setRequestContext(this);
+      },
+    },
   };
+
+  static CreateByServiceType({ ServiceType }) {
+    const newRequest = new RequestEntity({ ServiceType });
+    newRequest.Author.set(currentUser());
+
+    return newRequest;
+  }
 
   static Views = {
     All: [
@@ -949,20 +1209,26 @@ export class RequestEntity {
       "Requestor",
       "RequestorPhone",
       "RequestorEmail",
+      "RequestorOfficeSymbol",
       "RequestingOffice",
       "IsActive",
       "PipelineStage",
+      "PipelineStagePrev",
       "RequestStatus",
+      "InternalStatus",
       "RequestSubmitted",
       "EstClosedDate",
       "ClosedDate",
       "RequestOrgs",
       "ServiceType",
+      "RequestBodyBlob",
+      "Author",
     ],
     ByStatus: [
       "ID",
       "Title",
       "ServiceType",
+      "RequestorOfficeSymbol",
       "RequestingOffice",
       "RequestOrgs",
       "Requestor",
@@ -971,13 +1237,24 @@ export class RequestEntity {
       "EstClosedDate",
       "ClosedDate",
       "RequestStatus",
+      "InternalStatus",
       "RequestOrgs",
+    ],
+    ByServiceType: [
+      "ID",
+      "Title",
+      "ServiceType",
+      "RequestorOfficeSymbol",
+      "RequestingOffice",
+      "Requestor",
+      "RequestStatus",
+      "RequestBodyBlob",
     ],
   };
 
   static ListDef = {
-    name: "WorkOrder",
-    title: "Work Order",
+    name: "Requests",
+    title: "Requests",
     fields: RequestEntity.Views.All,
   };
 }

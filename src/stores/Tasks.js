@@ -1,57 +1,61 @@
+import { ProgressTask, Task } from "../primitives/Task.js";
+
 export const runningTasks = ko.observableArray();
 
 export const blockingTasks = ko.pureComputed(() => {
-  return runningTasks.filter((task) => task.def.blocking);
+  return runningTasks().filter((task) => task.IsBlocking()) ?? [];
 });
 
 export const taskDefs = {
   init: { msg: "Initializing the Application", blocking: true },
-  save: { msg: "Saving Request...", blocking: true },
-  cancelAction: { msg: "Cancelling Action...", blocking: true },
-  view: { msg: "Viewing Request...", blocking: false },
-  refresh: { msg: "Refreshing Request...", blocking: true },
-  permissions: { msg: "Updating Request Item Permissions...", blocking: true },
-  lock: { msg: "Locking Request...", blocking: true },
-  closing: { msg: "Closing Request...", blocking: true },
-  pipeline: { msg: "Progressing to Next Stage...", blocking: true },
-  newComment: { msg: "Refreshing Comments...", blocking: false },
-  notifyComment: { msg: "Sending Comment Email...", blocking: false },
-  newAction: { msg: "Refreshing Actions...", blocking: false },
-  approve: { msg: "Approving Request...", blocking: true },
+  save: { msg: "Saving Request", blocking: true },
+  cancelAction: { msg: "Cancelling Action", blocking: true },
+  view: { msg: "Viewing Request", blocking: false },
+  refresh: { msg: "Refreshing Request", blocking: false },
+  permissions: { msg: "Updating Request Item Permissions", blocking: true },
+  lock: { msg: "Locking Request", blocking: true },
+  closing: { msg: "Closing Request", blocking: true },
+  pipeline: { msg: "Progressing to Next Stage", blocking: true },
+  newComment: { msg: "Submitting Comment", blocking: false },
+  refreshComments: { msg: "Refreshing Comments", blocking: false },
+  notifyComment: { msg: "Sending Comment Email", blocking: false },
+  removeComment: { msg: "Removing Comment", blocking: false },
+  newAction: { msg: "Submitting Action", blocking: false },
+  refreshActions: { msg: "Refreshing Actions", blocking: false },
+  newAttachment: { msg: "Submitting Attachment", blocking: false },
+  uploadAttachment: (fileName) => {
+    return {
+      msg: `Uploading Attachment: ` + fileName,
+      blocking: true,
+      type: ProgressTask,
+    };
+  },
+  refreshAttachments: { msg: "Refreshing Attachments", blocking: false },
+  copyAttachment: (fileName) => {
+    return {
+      msg: "Copying attachment: " + fileName,
+      blocking: true,
+    };
+  },
+  newNotification: { msg: "Submitting Notification", blocking: true },
+  approve: { msg: "Approving Request", blocking: true },
 };
 
 export const addTask = (taskDef) => {
-  var newTask = {
-    id: Math.floor(Math.random() * 100000 + 1),
-    def: taskDef,
-  };
+  const newTask = taskDef.type ? new taskDef.type(taskDef) : new Task(taskDef);
 
-  newTask.timeout = window.setTimeout(function () {
-    console.error("this task is aging:", newTask);
-    alert(
-      "Something seems to have gone wrong performing the following action: " +
-        newTask.def.msg
-    );
-  }, 5000);
   runningTasks.push(newTask);
-  return newTask.id;
+  return newTask;
 };
 
-export const finishTask = function (taskId) {
-  let activeTask = runningTasks().find(function (taskItem) {
-    return taskItem.id == taskId;
-  });
-
+export const finishTask = function (activeTask) {
   if (activeTask) {
-    window.clearTimeout(activeTask.timeout);
-    removeTask(activeTask);
+    activeTask.markComplete();
+    window.setTimeout(() => removeTask(activeTask), 3000);
+    // runningTasks.remove(activeTask);
   }
 };
 
 const removeTask = function (taskToRemove) {
-  runningTasks(
-    runningTasks().filter(function (task) {
-      return task.id != taskToRemove.id;
-    })
-  );
+  runningTasks.remove(taskToRemove);
 };

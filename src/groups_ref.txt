@@ -1,0 +1,139 @@
+<style>
+  .add {
+    background-color: lightgreen;
+  }
+</style>
+
+<iframe id="CsvExpFrame" style="display: none"></iframe>
+
+<input style="width: 500px" data-bind="textInput: requestUri" />
+<button type="button" data-bind="click: submitRequest">Submit</button>
+
+<div>
+  <button type="button" data-bind="click: clickViewExportModal">
+    View for Export
+  </button>
+  <input type="file" name="" id="inputImportGroupsCsv" />
+  <button type="button" data-bind="click: clickViewImportModal">Import</button>
+  <table id="tblSiteGroups">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Users</th>
+        <th>Permissions</th>
+      </tr>
+    </thead>
+    <tbody data-bind="foreach: siteGroupsAssignments">
+      <tr>
+        <td data-bind="text: Member.Title"></td>
+        <td>
+          <ul data-bind="foreach: Member.Users.results">
+            <li data-bind="text: $root.formatUsersItem($data)"></li>
+          </ul>
+        </td>
+        <td>
+          <ul data-bind="foreach: RoleDefinitionBindings.results">
+            <li data-bind="text: Name"></li>
+          </ul>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<dialog id="dlgExportView">
+  <div>
+    <div>
+      <button type="button" data-bind="click: clickExportSiteGroups">
+        Export
+      </button>
+      <button type="button" data-bind="click: clickCloseExportModal">
+        Close
+      </button>
+    </div>
+    <div>
+      <label>
+        1 User Per Row:
+        <input type="checkbox" data-bind="checked: chkRowPerUser" />
+      </label>
+    </div>
+    <table id="tblSiteGroupsExport" class="table-export">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>User</th>
+          <!-- ko if: chkRowPerUser -->
+          <th>Email</th>
+          <!-- /ko -->
+          <th>Permissions</th>
+        </tr>
+      </thead>
+      <tbody
+        data-bind="foreach: {data: siteGroupsAssignments, as: 'groupAssignment'}"
+      >
+        <!-- ko if: $root.chkRowPerUser -->
+        <!-- ko foreach: {data: Member.Users.results, as: 'user' }-->
+        <tr>
+          <td data-bind="text: groupAssignment.Member.Title"></td>
+          <td data-bind="text: user.Title"></td>
+          <td data-bind="text: user.Email"></td>
+          <td></td>
+        </tr>
+        <!-- /ko -->
+        <!-- /ko -->
+        <!-- ko ifnot: $root.chkRowPerUser -->
+        <tr>
+          <td data-bind="text: Member.Title"></td>
+          <td data-bind="text: $root.formatUsersCellExport($data)"></td>
+          <td data-bind="text: $root.formatPermissionsCellExport($data)"></td>
+        </tr>
+        <!-- /ko -->
+      </tbody>
+    </table>
+  </div>
+</dialog>
+<dialog id="dlgImportView" data-bind="showModal: showImportModal">
+  <div>
+    <div>
+      <button type="button" data-bind="click: clickImportSiteGroups">
+        Import
+      </button>
+      <button type="button" data-bind="click: clickCloseImportModal">
+        Close
+      </button>
+    </div>
+    <table id="tblSiteGroupsImport" class="table-export">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Users</th>
+          <th>Permissions</th>
+        </tr>
+      </thead>
+      <tbody data-bind="foreach: importSiteGroupsValidationResults">
+        <tr>
+          <td data-bind="text: title, css: {add: !existingGroup}"></td>
+          <td data-bind="">
+            <ul data-bind="foreach: users">
+              <li
+                data-bind="text: $data, css: {add: !$parent.userInGroup($data)}"
+              ></li>
+            </ul>
+          </td>
+          <td data-bind="">
+            <ul data-bind="foreach: permissions">
+              <li data-bind="text: $data"></li>
+            </ul>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</dialog>
+<!-- <script src="/sites/CGFS/Style Library/apps/wo/lib/knockout/knockout-3.5.1.js"></script> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.0/knockout-min.js"></script>
+
+<script
+  defer
+  type="module"
+  src="/sites/CGFS/Style Library/apps/wo/src/groups.js"
+></script>

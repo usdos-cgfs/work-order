@@ -1,17 +1,10 @@
-import { registerFieldComponent } from "../infrastructure/RegisterComponents.js";
-import BaseField from "./BaseField.js";
+import { DateModule } from "../components/Fields/index.js";
+import { BaseField } from "./index.js";
 
 export const dateFieldTypes = {
   date: "date",
   datetime: "datetime-local",
 };
-
-const components = {
-  view: "date-view",
-  edit: "date-edit",
-};
-
-registerFieldComponent("date", components);
 
 /**
  * This field needs to convert between locale and UTC Dates stored on the server;
@@ -23,7 +16,7 @@ export default class DateField extends BaseField {
     this.type = params.type ?? dateFieldTypes.date;
   }
 
-  toString = () => {
+  toString = ko.pureComputed(() => {
     // if this is datetime vs date we expect different things
     switch (this.type) {
       case dateFieldTypes.date:
@@ -33,7 +26,7 @@ export default class DateField extends BaseField {
       default:
         return "";
     }
-  };
+  });
 
   toSortableDateString = () => this.Value()?.format("yyyy-MM-dd");
   toLocaleDateString = () => this.Value()?.toLocaleDateString();
@@ -87,5 +80,5 @@ export default class DateField extends BaseField {
     },
   });
 
-  components = components;
+  components = DateModule;
 }

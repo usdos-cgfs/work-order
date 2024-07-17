@@ -1,9 +1,9 @@
 import { getAppContext } from "./ApplicationDbContext.js";
 import { RequestEntity } from "../entities/Request.js";
-import { Assignment } from "../entities/Assignment.js";
 
 export class RequestsByStatusSet {
-  constructor(status) {
+  constructor(status, includeAssignments) {
+    this.includeAssignments = includeAssignments;
     this.filter = status;
   }
 
@@ -24,14 +24,18 @@ export class RequestsByStatusSet {
       false
     );
 
-    this.List(requestsByStatus.results);
+    const requests = requestsByStatus.results;
+    if (this.includeAssignments) {
+      requests.map((request) => request.Assignments.refresh());
+    }
+    this.List(requests);
 
     const end = new Date();
     if (window.DEBUG)
       console.log(
-        `Request by status Set - ${this.filter}: ${
-          requestsByStatus.results.length
-        } cnt in ${end - start}`
+        `Request by status Set - ${this.filter}: ${requests.length} cnt in ${
+          end - start
+        }`
       );
     this.HasLoaded(true);
     this.IsLoading(false);

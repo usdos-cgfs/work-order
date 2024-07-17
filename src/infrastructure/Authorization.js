@@ -1,8 +1,16 @@
 import { People } from "../entities/People.js";
-import { assignmentStates } from "../entities/Assignment.js";
-import { OrgTypes, requestOrgStore } from "../entities/RequestOrg.js";
-
-import { getUserPropsAsync, getDefaultGroups } from "./SAL.js";
+import { Assignment, assignmentStates } from "../entities/Assignment.js";
+import {
+  RequestOrg,
+  requestOrgStore,
+  OrgTypes,
+} from "../entities/RequestOrg.js";
+import {
+  getUserPropsAsync,
+  getDefaultGroups,
+  getGroupUsers,
+  ensureUserByKeyAsync,
+} from "./SAL.js";
 
 export const permissions = {
   FullControl: "Full Control",
@@ -17,20 +25,25 @@ export const permissions = {
 };
 
 var staticGroups = {
-  RestrictedReaders: { Title: "Restricted Readers" },
+  RestrictedReaders: new People({ ID: null, Title: "Restricted Readers" }),
+};
+
+export const systemRoles = {
+  Admin: "Admin",
+  ActionOffice: "ActionOffice",
 };
 
 export const roles = {
   ActionResolver: {
     LookupValue: "Action Resolver",
-    description: "Completes an action before moving request forward",
+    description: "Confirms completion of an action.",
     isAssignable: true,
     permissions: permissions.RestrictedContribute,
     initialStatus: assignmentStates.InProgress,
   },
   Assigner: {
     LookupValue: "Assigner",
-    description: "Assigns the next stage in the pipeline.",
+    description: "Can create additional assignments.",
     isAssignable: true,
     permissions: permissions.RestrictedContribute,
     initialStatus: assignmentStates.InProgress,
@@ -68,33 +81,33 @@ export const stageActionRoleMap = {
 // Holds a User object
 export const currentUser = ko.observable();
 
-export class User {
-  Groups = [];
-
+export class User extends People {
   constructor({
     ID,
     Title,
     LoginName = null,
+    LookupValue = null,
     WorkPhone = null,
     EMail = null,
     IsGroup = null,
     IsEnsured = false,
     Groups = null,
+    Department = null,
   }) {
-    this.ID = ID;
-    this.Title = Title;
-    this.LookupValue = Title;
-    this.LoginName = LoginName;
+    super({ ID, Title, LookupValue, LoginName, IsGroup, IsEnsured });
+
     this.WorkPhone = WorkPhone;
     this.EMail = EMail;
-    this.IsGroup = IsGroup;
-    // Has the user data been fetched? Used for binding handlers.
-    this.IsEnsured = IsEnsured;
+    this.Email = EMail;
 
+    this.OfficeSymbol = Department ?? "CGFS/EX";
     this.Groups = Groups;
   }
+  OfficeSymbol;
+  Groups = [];
 
   isInGroup(group) {
+    if (!group?.ID) return false;
     return this.getGroupIds().includes(group.ID);
   }
 
@@ -108,8 +121,8 @@ export class User {
 
   RequestOrgs = ko.pureComputed(() => {
     const groupIds = this.getGroupIds();
-    return requestOrgStore().filter((reqOrg) =>
-      groupIds.includes(reqOrg.UserGroup?.ID)
+    return requestOrgStore().filter(
+      (reqOrg) => reqOrg.Everyone || groupIds.includes(reqOrg.UserGroup?.ID)
     );
   });
 
@@ -126,12 +139,26 @@ export class User {
   });
 
   IsActionOffice = ko.pureComputed(() => this.ActionOffices().length);
+  IsSiteOwner = ko.pureComputed(() =>
+    this.isInGroup(getDefaultGroups().owners)
+  );
+
+  hasSystemRole = (systemRole) => {
+    const userIsOwner = this.IsSiteOwner();
+    switch (systemRole) {
+      case systemRoles.Admin:
+        return userIsOwner;
+        break;
+      case systemRoles.ActionOffice:
+        return userIsOwner || this.ActionOffices().length;
+      default:
+    }
+  };
 
   static Create = async function () {
     // TODO: Major - Switch to getUserPropertiesAsync since that includes phone # etc
     const userProps = await getUserPropsAsync();
-    //const userProps2 = await UserManager.getUserPropertiesAsync();
-
+    // const userProps2 = await UserManager.getUserPropertiesAsync();
     return new User(userProps);
   };
 }
@@ -139,14 +166,15 @@ export class User {
 export function getRequestFolderPermissions(request) {
   const defaultGroups = getDefaultGroups();
   const requestor = request.RequestorInfo.Requestor();
+  const submitter = request.Author.Value();
   const requestorOffice = request.RequestorInfo.Office(); // this should be set during validation
 
   const folderPermissions = [
-    [defaultGroups.owners, permissions.FullControl],
+    [new People(defaultGroups.owners), permissions.FullControl],
     [staticGroups.RestrictedReaders, permissions.RestrictedRead],
+    [requestor, permissions.RestrictedContribute],
+    [submitter, permissions.RestrictedContribute],
   ];
-
-  folderPermissions.push([requestor, permissions.RestrictedContribute]);
 
   if (requestorOffice && !requestorOffice.BreakAccess) {
     folderPermissions.push([
@@ -157,9 +185,7 @@ export function getRequestFolderPermissions(request) {
 
   // break pipeline stages at front?
   request.Pipeline.Stages()?.forEach((stage) => {
-    const stageOrg = requestOrgStore().find(
-      (org) => org.ID == stage.RequestOrg.ID
-    );
+    const stageOrg = RequestOrg.FindInStore(stage.RequestOrg);
     if (stageOrg) {
       folderPermissions.push([
         stageOrg.UserGroup,
@@ -171,11 +197,19 @@ export function getRequestFolderPermissions(request) {
       stage.AssignmentFunction &&
       AssignmentFunctions[stage.AssignmentFunction]
     ) {
-      const boundAssignmenttFunc =
-        AssignmentFunctions[stage.AssignmentFunction].bind(request);
-      const people = boundAssignmenttFunc();
-      if (people && people.Title) {
-        folderPermissions.push([people, permissions.RestrictedContribute]);
+      try {
+        const assignments = AssignmentFunctions[stage.AssignmentFunction](
+          request,
+          stage
+        );
+        assignments.forEach((assignment) => {
+          const people = assignment.Assignee;
+          if (people && people.Title) {
+            folderPermissions.push([people, permissions.RestrictedContribute]);
+          }
+        });
+      } catch (e) {
+        console.warn("Error creating stage assignments", stage);
       }
     }
   });
@@ -183,26 +217,142 @@ export function getRequestFolderPermissions(request) {
   return folderPermissions;
 }
 
+export async function getUsersByGroupName(groupName) {
+  const users = await getGroupUsers(groupName);
+
+  if (!users) return [];
+
+  return users.map((userProps) => new People(userProps));
+}
+
+export async function ensurePerson(person) {
+  const ensured = await ensureUserByKeyAsync(person.LoginName ?? person.Title);
+  if (!ensured) return null;
+  return new People(ensured);
+}
 /**
  * Assignment functions are function that can be called by pipeline stages
  * Each function is bound to the current request (i.e. "this" refers to the Active Request)
  * Functions should return a user/group entity.
+ *
+ * NOTE: Some service types register their own assignment functions in their respective Entity.js
+ * files.
  */
 
 export const AssignmentFunctions = {
   TestFunc: function () {
-    return this.RequestorInfo.Requestor();
+    return request.RequestorInfo.Requestor();
   },
-  getGovManager: function () {
-    return this.ServiceType.Entity()?.GovManager();
+  ch_overtimeGovManager: function (request, stage) {
+    const assignee = request.RequestBodyBlob?.Value()?.GovManager.get();
+    if (!assignee) {
+      throw new Error("Could not find stage Assignee");
+    }
+
+    const newCustomAssignment = new Assignment({
+      Assignee: assignee,
+      RequestOrg: stage.RequestOrg,
+      PipelineStage: stage,
+      IsActive: true,
+      Role: roles.ActionResolver,
+      CustomComponent: "GovManagerActions",
+    });
+
+    // const newApprovalAssignment = new Assignment({
+    //   Assignee: assignee,
+    //   RequestOrg: stage.RequestOrg,
+    //   PipelineStage: stage,
+    //   IsActive: true,
+    //   Role: roles.Approver,
+    // });
+    return [newCustomAssignment];
   },
-  getAPM: function () {
-    return this.ServiceType.Entity()?.APM();
+  ch_overtimeAPM: function (request, stage) {
+    const assignee = request.RequestBodyBlob?.Value()?.FieldMap.APM.get();
+    if (!assignee) {
+      throw new Error("Could not find stage Assignee");
+    }
+
+    const newCustomAssignment = new Assignment({
+      Assignee: assignee,
+      RequestOrg: stage.RequestOrg,
+      PipelineStage: stage,
+      IsActive: true,
+      Role: roles.ActionResolver,
+      CustomComponent: "APMActions",
+    });
+
+    // const newApprovalAssignment = new Assignment({
+    //   Assignee: assignee,
+    //   RequestOrg: stage.RequestOrg,
+    //   PipelineStage: stage,
+    //   IsActive: true,
+    //   Role: roles.Approver,
+    // });
+
+    return [newCustomAssignment];
   },
-  getGTM: function () {
-    return this.ServiceType.Entity()?.GTM();
+  getGTM: function (request, stage) {
+    const assignee = request.RequestBodyBlob?.Value()?.FieldMap.GTM.get();
+    if (!assignee) {
+      throw new Error("Could not find stage Assignee");
+    }
+    return [
+      new Assignment({
+        Assignee: assignee,
+        RequestOrg: stage.RequestOrg,
+        PipelineStage: stage,
+        IsActive: true,
+        Role: roles.Approver,
+      }),
+    ];
   },
-  getCOR: function () {
-    return this.ServiceType.Entity()?.COR();
+  getCOR: function (request, stage) {
+    const assignee = request.RequestBodyBlob?.Value()?.FieldMap.COR.get();
+    if (!assignee) {
+      throw new Error("Could not find stage Assignee");
+    }
+    return [
+      new Assignment({
+        Assignee: assignee,
+        RequestOrg: stage.RequestOrg,
+        PipelineStage: stage,
+        IsActive: true,
+        Role: roles.Approver,
+      }),
+    ];
+  },
+  getSupervisor: function (request, stage) {
+    return [
+      new Assignment({
+        Assignee: getPersonFromRequestBody(request, "Supervisor"),
+        RequestOrg: stage.RequestOrg,
+        PipelineStage: stage,
+        IsActive: true,
+        Role: roles.Approver,
+      }),
+    ];
+  },
+  getWildcard: function (request, stage, wildcard) {
+    return [
+      new Assignment({
+        Assignee: getPersonFromRequestBody(request, wildcard),
+        RequestOrg: stage.RequestOrg,
+        PipelineStage: stage,
+        IsActive: true,
+        Role: roles.Approver,
+        CustomComponent: stage.ActionComponentName,
+      }),
+    ];
   },
 };
+
+function getPersonFromRequestBody(request, fieldName) {
+  const assignee = request.RequestBodyBlob?.Value()?.FieldMap[fieldName]?.get();
+  if (!assignee) {
+    throw new Error(
+      `Could not find assignee field on current request: ${fieldName}`
+    );
+  }
+  return assignee;
+}

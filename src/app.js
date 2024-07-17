@@ -1,13 +1,14 @@
+import { RegisterComponents } from "./infrastructure/RegisterComponents.js";
 import { RequestDetailView, DisplayModes } from "./views/RequestDetailView.js";
 import { NewRequestView } from "./views/NewRequestView.js";
 import { OfficeRequestsView } from "./views/OfficeRequestsView.js";
 import { MyRequestsView } from "./views/MyRequestsView.js";
 
 import { RequestEntity } from "./entities/Request.js";
-import { RequestOrg, requestOrgStore } from "./entities/RequestOrg.js";
-import { PipelineStage, pipelineStageStore } from "./entities/PipelineStage.js";
-import { ServiceType, serviceTypeStore } from "./entities/ServiceType.js";
-import { holidayStore, Holiday } from "./entities/Holiday.js";
+import { requestOrgStore } from "./entities/RequestOrg.js";
+import { pipelineStageStore } from "./entities/PipelineStage.js";
+import { serviceTypeStore } from "./entities/ServiceType.js";
+import { holidayStore } from "./entities/Holiday.js";
 
 import "./common/KnockoutExtensions.js";
 import { sortByTitle } from "./common/EntityUtilities.js";
@@ -15,17 +16,22 @@ import { getUrlParam, setUrlParam } from "./common/Router.js";
 
 import { assignmentsStore } from "./stores/Assignments.js";
 
-import { User, currentUser } from "./infrastructure/Authorization.js";
-import ApplicationDbContext, {
+import {
+  User,
+  currentUser,
+  systemRoles,
+} from "./infrastructure/Authorization.js";
+import {
   getAppContext,
-  setAppContext,
+  CreateAppContext,
 } from "./infrastructure/ApplicationDbContext.js";
 import { InitSal } from "./infrastructure/SAL.js";
 
 import MyAssignmentsView from "./views/MyAssignmentsView.js";
-import { RegisterComponents } from "./infrastructure/RegisterComponents.js";
+import { blockingTasks, runningTasks } from "./stores/Tasks.js";
 
-export const assetsPath = window.appRoot + "/src";
+import { Tabs } from "./env.js";
+import { requestsByStatusMap, requestIngests } from "./stores/Requests.js";
 
 window.WorkOrder = window.WorkOrder || {};
 
@@ -33,23 +39,19 @@ async function CreateApp() {
   ko.options.deferUpdates = true;
   await InitSal();
   RegisterComponents();
-  const context = new ApplicationDbContext();
-  setAppContext(context);
-  window.WorkOrder.Report = await App.Create();
-  ko.applyBindings(window.WorkOrder.Report);
+  CreateAppContext();
+  window.WorkOrder.App = await App.Create();
+  ko.applyBindings(window.WorkOrder.App);
 }
-
-export const Tabs = {
-  MyRequests: "my-requests-tab",
-  NewRequest: "new-request-tab",
-  RequestDetail: "request-detail-tab",
-};
 
 class App {
   constructor() {
     this.Tab.subscribe(tabWatcher);
-    this.HasLoaded(true);
+    window.addEventListener("popstate", this.popStateHandler);
   }
+
+  RunningTasks = runningTasks;
+  BlockingTasks = blockingTasks;
 
   ToggleActionOfficeFeatures = ko.observable(true);
   ShowActionOfficeFeatures = ko.pureComputed(
@@ -64,9 +66,13 @@ class App {
   Tab = ko.observable();
   TabClicked = (data, e) => this.Tab(e.target.getAttribute("id"));
 
-  RequestDetail = ko.observable();
-  OpenRequests = ko.observableArray();
-  MyOpenAssignments = assignmentsStore.getOpenByRequest;
+  popStateHandler = (event) => {
+    if (event.state) {
+      if (event.state.tab) this.Tab(event.state.tab);
+    }
+  };
+
+  MyActiveAssignments = assignmentsStore.MyActiveAssignments;
   //   MyOpenAssignments = ko.pureComputed(() =>
   //   this.CurrentUser()
   //     ? assignmentsStore.getOpenByUser(this.CurrentUser())()
@@ -85,7 +91,14 @@ class App {
   MyRequestsView = new MyRequestsView();
   MyAssignmentsView = new MyAssignmentsView();
   NewRequestView = new NewRequestView();
-  RequestDetailView = ko.observable();
+  RequestDetailView = new RequestDetailView();
+  // RequestDetailView = ko.observable();
+
+  Authorization = {
+    currentUserIsAdmin: ko.pureComputed(() => {
+      return currentUser()?.hasSystemRole(systemRoles.Admin);
+    }),
+  };
 
   Init = async function () {
     configLists: {
@@ -98,7 +111,12 @@ class App {
       );
 
       var serviceTypePromise = this.context.ConfigServiceTypes.ToList().then(
-        (arr) => this.Config.serviceTypeStore(arr.sort(sortByTitle))
+        async (arr) => {
+          await Promise.all(
+            arr.map(async (service) => service.initializeEntity())
+          );
+          this.Config.serviceTypeStore(arr.sort(sortByTitle));
+        }
       );
 
       const holidaysPromise = this.context.ConfigHolidays.ToList().then(
@@ -120,33 +138,33 @@ class App {
     routing: {
       var startTab = getUrlParam("tab") || Tabs.MyRequests;
       var reqId = getUrlParam("reqId");
-      if (reqId) {
+      if (reqId && startTab == Tabs.RequestDetail) {
         this.viewRequestByTitle(reqId);
       } else if (startTab == Tabs.RequestDetail) {
         startTab = Tabs.NewRequest;
       }
       this.Tab(startTab);
     }
+    // Fetch any requests that are ready for ingest
+
+    requestIngests(await this.context.RequestIngests.ToList());
+
+    this.HasLoaded(true);
+    // Kick off the initial data load
+    // this.InitData();
   };
 
-  static Create = async function () {
-    const report = new App();
-    await report.Init();
-    return report;
+  SelectNewRequest = (data, e) => {
+    this.Tab(Tabs.NewRequest);
   };
 
-  SelectNewRequestButton = (data, e) => {};
-
-  NewRequest = (data, e) => {
+  NewRequest = ({ request = null, serviceType = null }) => {
     const props = {
-      request: new RequestEntity({}),
+      request: request ?? new RequestEntity({}),
       displayMode: DisplayModes.New,
     };
-    if (data && data.ID) {
-      props.serviceType = data;
-    }
     setUrlParam("reqId", "");
-    this.RequestDetailView(new RequestDetailView(props));
+    this.RequestDetailView.createNewRequest(props);
     this.Tab(Tabs.RequestDetail);
   };
 
@@ -172,13 +190,16 @@ class App {
     //   Title: "230330-6165",
     // };
     setUrlParam("reqId", request.Title);
-    this.RequestDetailView(
-      new RequestDetailView({
-        request,
-        context: this.context,
-      })
-    );
+    this.RequestDetailView.viewRequest({
+      request,
+    });
     this.Tab(Tabs.RequestDetail);
+  };
+
+  static Create = async function () {
+    const report = new App();
+    await report.Init();
+    return report;
   };
 }
 
@@ -197,11 +218,9 @@ if (document.readyState === "ready" || document.readyState === "complete") {
 } else {
   document.onreadystatechange = () => {
     if (document.readyState === "complete" || document.readyState === "ready") {
-      SP.SOD.executeFunc(
-        "sp.js",
-        "SP.ClientContext",
-        ExecuteOrDelayUntilScriptLoaded(CreateApp, "sp.js")
-      );
+      ExecuteOrDelayUntilScriptLoaded(function () {
+        SP.SOD.executeFunc("sp.js", "SP.ClientContext", CreateApp);
+      }, "sp.js");
     }
   };
 }

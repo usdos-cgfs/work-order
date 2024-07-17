@@ -1,6 +1,19 @@
-import { registerServiceTypeViewComponents } from "../infrastructure/RegisterComponents.js";
-import { assetsPath } from "../app.js";
+import { assetsPath } from "../env.js";
 import ApplicationDbContext from "../infrastructure/ApplicationDbContext.js";
+import { systemRoles } from "../infrastructure/Authorization.js";
+import * as ServiceTypeDetails from "../servicetypes/index.js";
+
+const getServiceDetailByUID = (uid) => {
+  let result = null;
+  for (const detail in ServiceTypeDetails) {
+    //console.log(ServiceTypeDetails[detail].uid);
+    if (ServiceTypeDetails[detail].uid == uid) {
+      result = ServiceTypeDetails[detail];
+      break;
+    }
+  }
+  return result;
+};
 
 export const getTemplateElementId = (uid) => `tmpl-${uid}`;
 
@@ -49,26 +62,6 @@ export class ServiceType {
     return this._listRef;
   };
 
-  _components = null;
-  getViewComponents = () => {
-    if (this._components) return this._components;
-    if (!this.UID) {
-      return null;
-    }
-    this._components = {
-      View: "svc-view-" + this.UID,
-      Edit: "svc-edit-" + this.UID,
-    };
-
-    registerServiceTypeViewComponents({
-      uid: this.UID,
-      components: this._components,
-    });
-    // TODO: Minor - this is hacky, maybe we should pass the filename as well when we register
-    this._components.New = this._components.Edit;
-    return this._components;
-  };
-
   _constructor = null;
 
   instantiateEntity = async (requestContext) => {
@@ -95,29 +88,37 @@ export class ServiceType {
       return;
     }
     // this.ServiceType.IsLoading(true);
+    let serviceModule = null;
     try {
-      const serviceModule = await import(getModuleFilePath(this.UID));
+      serviceModule = getServiceDetailByUID(this.UID);
+      // serviceModule = await import(getModuleFilePath(this.UID));
       if (!serviceModule) {
-        console.error("Could not find service module");
-        return null;
+        console.error("Could not find service module", this);
       }
-      this._initialized = true;
-      this._constructor = serviceModule.default;
+      this._constructor = serviceModule;
     } catch (e) {
-      console.error("Cannot import service type module", e);
+      console.error("Cannot import service type module", e, this);
+    } finally {
+      this._initialized = true;
     }
   };
 
   // TODO: Minor - this should be in a servicetype manager service
   userCanInitiate = (user) => {
     if (!this.Active) return false;
+    if (user.hasSystemRole(systemRoles.Admin)) return true;
+    if (this.RequestingOrgs.length > 0) {
+      return (
+        this.RequestingOrgs.find((ro) => user.isInRequestOrg(ro)) !== undefined
+      );
+    }
     return true;
   };
 
-  static Create = function ({ ID, LookupValue }) {
-    const newServiceType = new ServiceType({ ID, Title: LookupValue });
-    const serviceType = serviceTypeStore().find((service) => service.ID == ID);
-    return Object.assign(newServiceType, serviceType);
+  attachmentsRequiredCntString = () => {
+    if (!this.AttachmentsRequiredCnt) return "no";
+    if (this.AttachmentsRequiredCnt < 0) return "multiple";
+    return this.AttachmentsRequiredCnt;
   };
 
   static FindInStore = function (serviceType) {
@@ -133,13 +134,16 @@ export class ServiceType {
       "Active",
       "HasTemplate",
       "DescriptionTitle",
+      "DescriptionRequired",
+      "DescriptionFieldInstructions",
       "Description",
       "Icon",
       "AttachmentsRequiredCnt",
-      "DescriptionRequired",
       "AttachmentDescription",
       "DaysToCloseBusiness",
       "UID",
+      "ReportingOrgs",
+      "RequestingOrgs",
     ],
   };
 

@@ -1,0 +1,55 @@
+{
+  "deploy.reloaded": {
+    "packages": [
+      {
+        "name": "All Files",
+        "description": "Package version 2.0",
+        "files": ["lib/**", "src/**", "assets/**"],
+        "exclude": ["**.md", "**.json"],
+
+        "deployOnSave": ["WO Style Library"],
+        "removeOnChange": ["WO Style Library"],
+        "syncWhenOpen": true
+      },
+      {
+        "name": "Source Only",
+        "description": "Only Files in src folder",
+        "files": ["src/**"],
+        "exclude": ["**.md", "**.json"],
+
+        "deployOnSave": ["WO Style Library"],
+        "removeOnChange": ["WO Style Library"],
+        "syncWhenOpen": true
+      },
+      {
+        "name": "Dist Only",
+        "description": "Only Files in dist folder",
+        "files": ["dist/**"],
+        "exclude": ["**.md", "**.json"],
+
+        "deployOnSave": ["WO Style Library"],
+        "removeOnChange": ["WO Style Library"],
+        "syncWhenOpen": true
+      },
+      {
+        "name": "lib",
+        "description": "Only Files in lib folder",
+        "files": ["lib/**"],
+        "exclude": ["**.md", "**.json"],
+
+        "deployOnSave": ["WO Style Library"],
+        "removeOnChange": ["WO Style Library"],
+        "syncWhenOpen": true
+      }
+    ],
+    "targets": [
+      {
+        "type": "local",
+        "name": "WO Style Library",
+        "description": "Style Library of http://cgfs16index1dev:25000/sites/CGFS",
+
+        "dir": "P:/Style Library/apps/wo"
+      }
+    ]
+  }
+}

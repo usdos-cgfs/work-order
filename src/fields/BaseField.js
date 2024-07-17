@@ -1,16 +1,20 @@
 import { ValidationError } from "../primitives/ValidationError.js";
 
-export default class BaseField {
+export class BaseField {
   constructor({
     displayName,
+    instructions = null,
     isRequired = false,
     width,
-    Visible = () => true,
+    Visible = ko.pureComputed(() => true),
   }) {
     this.displayName = displayName;
+    this.instructions = instructions;
     this.isRequired = isRequired;
     this.Visible = Visible;
-    this.width = width ? "col-" + width : "col";
+    this.width = width ? "col-md-" + width : "col-md-6";
+
+    this.addFieldRequirement(isRequiredValidationRequirement(this));
   }
 
   Value = ko.observable();
@@ -20,27 +24,29 @@ export default class BaseField {
 
   toString = ko.pureComputed(() => this.Value());
 
-  validate = () => {
-    this.ShowErrors(true);
+  toJSON = () => this.Value();
+  fromJSON = (val) => this.Value(val);
+
+  validate = (showErrors = true) => {
+    this.ShowErrors(showErrors);
+    return this.Errors();
   };
 
+  _fieldValidationRequirements = ko.observableArray();
+
   Errors = ko.pureComputed(() => {
-    if (!this.ShowErrors() || !this.Visible()) return [];
-    const isRequired =
-      typeof this.isRequired == "function"
-        ? this.isRequired()
-        : this.isRequired;
-    if (!isRequired) return [];
-    return this.Value()
-      ? []
-      : [
-          new ValidationError(
-            "text-field",
-            "required-field",
-            this.displayName + ` is required!`
-          ),
-        ];
+    if (!this.Visible()) return [];
+    const errors = this._fieldValidationRequirements()
+      .filter((req) => req.requirement())
+      .map((req) => req.error);
+
+    return errors;
   });
+
+  addFieldRequirement = (requirement) =>
+    this._fieldValidationRequirements.push(requirement);
+
+  IsValid = ko.pureComputed(() => !this.Errors().length);
 
   ShowErrors = ko.observable(false);
 
@@ -48,4 +54,23 @@ export default class BaseField {
     if (!this.ShowErrors()) return;
     return this.Errors().length ? "is-invalid" : "is-valid";
   });
+}
+
+function isRequiredValidationRequirement(field) {
+  return {
+    requirement: ko.pureComputed(() => {
+      // Return true if field fails validation
+      const isRequired = ko.unwrap(field.isRequired);
+      if (!isRequired) return false;
+
+      const value = ko.unwrap(field.Value);
+      if (value?.constructor == Array) return !value.length;
+      return value === null || value === undefined;
+    }),
+    error: new ValidationError(
+      "text-field",
+      "required-field",
+      `${ko.utils.unwrapObservable(field.displayName)} is required!`
+    ),
+  };
 }

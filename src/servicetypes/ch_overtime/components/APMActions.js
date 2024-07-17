@@ -1,70 +1,112 @@
-import ApplicationDbContext, {
-  getAppContext,
-} from "../../../infrastructure/ApplicationDbContext.js";
-import ContractorSupplement from "../../contractor_supplement/ContractorSupplement.js";
+import { getAppContext } from "../../../infrastructure/ApplicationDbContext.js";
+import { ContractorSupplement } from "../../index.js";
 
-export default class ActionAPM {
+import { ValidationError } from "../../../primitives/ValidationError.js";
+import { CH_Overtime } from "../CHOvertimeDetail.js";
+import { assignmentStates } from "../../../entities/Assignment.js";
+import { ApprovalActions } from "../../../components/index.js";
+import { apmActionsTemplate } from "./APMActionsTemplate.js";
+
+export class CH_OvertimeAPMActions extends ApprovalActions {
   constructor(params) {
-    console.log("Hello from APM Actions module.");
+    super(params);
+    if (window.DEBUG) console.log("Hello from APM Actions module.");
     this._context = getAppContext();
-    this.ServiceType = params.serviceType;
+
+    this.ServiceType = params.request.RequestBodyBlob?.Value();
     this.Errors = params.errors;
     // this.ServiceType.Entity().GTM.subscribe(this.gtmWatcher);
     this.Request = params.request;
-    this.Supplement = this.ServiceType.Entity().ContractorSupplement;
-    this.Entity = this.ServiceType.Entity;
 
-    this.contractorSupplementEntity =
-      this.Supplement.entity() ?? new ContractorSupplement();
-    this.validate();
+    this.newEntity = new CH_Overtime();
+    this.newEntity.fromJSON(this.ServiceType.toJSON());
+    this.init();
   }
+  newEntity = null;
 
-  contractorSupplementEntity;
+  HasLoaded = ko.observable(false);
+
+  Editing = ko.observable(true);
+
+  DisplayMode = ko.pureComputed(() => {
+    return this.Editing() ? "edit" : "view";
+  });
 
   init = async () => {
-    //   "edit-contractor-supplement",
-    //   this.ServiceType.Def().UID
-    // );
-    // const entityExists = await this.Supplement.refresh();
-    // console.log("Found supplement", entityExists);
+    // await ApplicationDbContext.Set(CH_Overtime).LoadEntity(this.newEntity);
+    // this.newEntity.Request = this.Request;
+    // Create a clone of the service type entity
+    // Object.assign(this.newEntity, this.ServiceType.Entity());
+    // this.newEntity = new CH_Overtime(params.request);
+    // this.newEntity.ID = this.ServiceType.Entity().ID;
+    // this.newEntity.Request = params.request;
+
+    if (window.DEBUG) console.log("setting supplement");
+    await this.newEntity.setRequestContext(this.Request);
+    // await new Promise();
+    // await this.newEntity.ContractorSupplementField.ensure();
+    if (!this.newEntity.ContractorSupplementField.Value())
+      this.newEntity.ContractorSupplementField.Value(
+        new ContractorSupplement({
+          Title: this.Request.Title,
+          Request: this.Request,
+        })
+      );
+
+    const isValid = this.validate(false);
+    if (this.assignment.Status != assignmentStates.InProgress)
+      this.Editing(false);
+    this.IsCompleted(!isValid.length);
+    this.HasLoaded(true);
   };
 
   hasBeenValidated = ko.observable(false);
   hasBeenSaved = ko.observable(false);
+  IsCompleted = ko.observable(false);
 
-  getValidationErrors = () => {
+  validate = (showErrors = true) => {
+    if (!this.newEntity) return [];
     const errors = [];
-    if (!this.Entity().GTM()) {
-      errors.push({
-        source: errorSource,
-        description: "Please provide a GTM.",
-      });
-    }
-    if (!this.Entity().COR()) {
-      errors.push({
-        source: errorSource,
-        description: "Please provide a COR.",
-      });
+
+    if (this.newEntity.GTM.validate(showErrors).length) {
+      errors.push(
+        new ValidationError(
+          errorSource,
+          "required-field",
+          "Please provide a GTM."
+        )
+      );
     }
 
-    if (!this.contractorSupplementEntity.IsValid()) {
-      errors.push({
-        source: errorSource,
-        description: "Please provide the contractor supplemental information.",
-      });
+    if (this.newEntity.COR.validate(showErrors).length) {
+      errors.push(
+        new ValidationError(
+          errorSource,
+          "required-field",
+          "Please provide a COR."
+        )
+      );
     }
 
-    return errors;
-  };
+    if (
+      this.newEntity.ContractorSupplementField.Value().validate(showErrors)
+        .length
+    ) {
+      errors.push(
+        new ValidationError(
+          errorSource,
+          "required-field",
+          "Please provide the contractor supplemental information."
+        )
+      );
+    }
 
-  validate = () => {
-    const validationErrors = this.getValidationErrors();
     this.Errors(
       this.Errors()
         .filter((e) => e.source != errorSource)
-        .concat(validationErrors)
+        .concat(errors)
     );
-    return validationErrors;
+    return errors;
   };
 
   // gtmWatcher = (user) => {
@@ -73,30 +115,60 @@ export default class ActionAPM {
   //   }
   // };
 
+  ShowSupplementComponent = ko.pureComputed(
+    () => this.newEntity.GTM.IsValid() && this.newEntity.COR.IsValid()
+  );
+
   submit = async () => {
     this.hasBeenValidated(true);
     if (this.validate().length) return;
-    console.log(this);
 
-    await this.ServiceType.updateEntity(["COR", "GTM"]);
+    this.newEntity.ContractorSupplementField.Value().Request = this.Request;
 
-    await this.Supplement.create(this.contractorSupplementEntity);
-    this.ServiceType.refreshEntity();
+    await this.newEntity.ContractorSupplement.create(
+      this.newEntity.ContractorSupplementField.Value()
+    );
+
+    // await ApplicationDbContext.Set(CH_Overtime).UpdateEntity(
+    //   this.newEntity,
+    //   CH_Overtime.Views.APMUpdate
+    // );
+
+    // this.ServiceType.refreshEntity();
+
+    this.Request.RequestBodyBlob.Value(this.newEntity);
+
+    await this._context.Requests.UpdateEntity(this.Request, [
+      "RequestBodyBlob",
+    ]);
+
+    if (this.assignment.Status != assignmentStates.Approved);
+    await this.completeAssignment(this.assignment, assignmentStates.Approved);
+
     this.hasBeenSaved(true);
+    this.IsCompleted(true);
   };
 
   update = async () => {
     this.hasBeenValidated(true);
     if (this.validate().length) return;
 
-    await this.ServiceType.Def()
-      ?.getListRef()
-      ?.UpdateEntity(this.ServiceType.Entity(), ["COR", "GTM"]);
+    this.Request.RequestBodyBlob.Value(this.newEntity);
 
-    await this.Supplement.update(ContractorSupplement.Views.APMUpdate);
-    this.ServiceType.refreshEntity();
+    await this._context.Requests.UpdateEntity(this.Request, [
+      "RequestBodyBlob",
+    ]);
+
+    await this.newEntity.ContractorSupplement.update(
+      ContractorSupplement.Views.APMUpdate
+    );
+    // this.ServiceType.refreshEntity();
     this.hasBeenSaved(true);
+    this.Editing(false);
   };
+
+  static name = "APMActions";
+  static template = apmActionsTemplate;
 }
 
 const errorSource = "apm-actions";

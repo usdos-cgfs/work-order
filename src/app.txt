@@ -1,219 +1,328 @@
-<div class="position-fixed bottom-0 end-0">
-  <div class="toast-container">
-    <!-- ko if: false -->
-    <!-- ko foreach: RequestDetailView().ActivityQueue -->
-    <div data-bind="template: {name: 'tmpl-activity-toast', data: $data}"></div>
-    <!-- /ko -->
-    <!-- /ko -->
-  </div>
-</div>
-<div class="container" data-bind="hidden: HasLoaded">
-  <div class="d-flex justify-content-center">
-    <progress class="w-75"></progress>
-  </div>
-</div>
 <div
-  id="app"
-  class="container"
   style="display: none"
-  data-bind="visible: $root"
+  data-bind="visible: BlockingTasks().length"
+  class="position-fixed w-100 vh-100 top-0 start-0 active dimmer"
 >
+  <div
+    class="d-flex flex-column justify-content-center w-100 h-100 align-items-center text-light"
+  >
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <ul class="list-unstyled" data-bind="foreach: BlockingTasks">
+      <li data-bind="text: msg + '... ' + Status()"></li>
+    </ul>
+  </div>
+</div>
+
+<div
+  style="display: none; z-index: 1201"
+  data-bind="visible: RunningTasks().length"
+  class="position-fixed w-100 vh-100 top-0 start-0 pe-none"
+>
+  <div class="toast-container p-3 bottom-0 end-0">
+    <div
+      class="toast show align-items-center"
+      role="alert"
+      aria-live="assertive"
+      aria-atomic="true"
+    >
+      <div class="d-flex">
+        <div class="toast-body">
+          <!-- ko foreach: RunningTasks -->
+          <div data-bind="text: `${msg}... ${Status()}`"></div>
+          <!-- /ko -->
+        </div>
+        <button
+          type="button"
+          class="btn-close me-1 m-auto"
+          data-bs-dismiss="toast"
+          aria-label="Close"
+        ></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container" data-bind="hidden: HasLoaded">
+  <div class="d-flex flex-column align-items-center">
+    <progress class="w-75 mb-3"></progress>
+    <div class="w-75 alert alert-warning text-center">
+      If the url you are viewing begins with
+      <span class="fw-semibold text-body-secondary"
+        >https://usdos.sharepoint.com<b>.mcas.ms</b></span
+      >
+      please copy and paste the following link into your browser:
+      <div id="ms-mcas-bypass" class="input-group w-100">
+        <input id="ms-mcas-bypass-link" class="form-control" disabled />
+        <button
+          id="ms-mcas-bypass-copy"
+          type="button"
+          class="btn btn-secondary"
+        >
+          copy
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  {
+    let loc = window.location;
+
+    const link = loc.href.replace(".mcas.ms", "");
+
+    let cpyLink = document.getElementById("ms-mcas-bypass-link");
+    cpyLink.value = link;
+
+    let cpybtn = document.getElementById("ms-mcas-bypass-copy");
+    cpybtn.addEventListener("click", (e, element) => {
+      debugger;
+      try {
+        navigator.clipboard.writeText(link);
+        e.target.innerText = "copied";
+        e.target.classList.remove("btn-secondary");
+        e.target.classList.add("btn-success");
+      } catch (e) {
+        alert("Copy failed, please select text and copy using CTRL+V");
+      }
+    });
+
+    // a.click();
+  }
+</script>
+
+<div id="app" class="wo" style="display: none" data-bind="visible: HasLoaded">
   <div
     data-bind="component: {name: 'quick-info', 
     params: { ShowActionOfficeFeatures, ToggleActionOfficeFeatures }}"
   ></div>
-  <ul class="nav nav-tabs" id="section-tabs" role="tablist">
-    <!-- ko if: ShowActionOfficeFeatures -->
-    <li class="nav-item" role="presentation">
-      <button
-        class="nav-link"
-        id="office-requests-tab"
-        data-bs-toggle="tab"
-        data-bs-target="#office-requests"
-        data-bind="click: TabClicked"
-        type="button"
-        role="tab"
-        aria-controls="office-requests"
-        aria-selected="true"
-      >
-        Office Orders
-      </button>
-    </li>
-    <!-- /ko -->
-    <li class="nav-item" role="presentation">
-      <button
-        class="nav-link"
-        id="my-requests-tab"
-        data-bs-toggle="tab"
-        data-bs-target="#my-requests"
-        data-bind="click: TabClicked"
-        type="button"
-        role="tab"
-        aria-controls="my-requests"
-        aria-selected="true"
-      >
-        My Orders
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button
-        class="nav-link position-relative"
-        id="my-assignments-tab"
-        data-bs-toggle="tab"
-        data-bs-target="#my-assignments"
-        data-bind="click: TabClicked"
-        type="button"
-        role="tab"
-        aria-controls="my-assignments"
-        aria-selected="true"
-      >
-        My Assignments
-        <span
-          class="badge text-bg-danger"
-          data-bind="visible: MyOpenAssignments().length, text: MyOpenAssignments().length"
-        ></span>
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button
-        class="nav-link"
-        id="new-request-tab"
-        data-bs-toggle="tab"
-        data-bs-target="#new-request"
-        data-bind="click: TabClicked"
-        type="button"
-        role="tab"
-        aria-controls="new-request"
-        aria-selected="true"
-      >
-        New Order
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button
-        class="nav-link"
-        id="request-detail-tab"
-        data-bs-toggle="tab"
-        data-bs-target="#request-detail"
-        data-bind="click: TabClicked"
-        type="button"
-        role="tab"
-        aria-controls="request-detail"
-        aria-selected="false"
-      >
-        Detail View
-      </button>
-    </li>
-  </ul>
-  <div class="tab-content">
-    <!-- ko if: ShowActionOfficeFeatures -->
-    <div
-      class="tab-pane"
-      role="tabpanel"
-      aria-labelledby="office-requests-tab"
-      id="office-requests"
-    >
-      <div
-        data-bind="template: {name: 'tmpl-office-requests-view', data: OfficeRequestsView}"
-      ></div>
+  <div class="d-flex justify-content-between">
+    <div>
+      <ul class="nav flex-column me-4" id="section-tabs" role="tablist">
+        <!-- ko if: ShowActionOfficeFeatures -->
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="office-requests-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#office-requests"
+            data-bind="click: TabClicked"
+            type="button"
+            role="tab"
+            aria-controls="office-requests"
+            aria-selected="true"
+          >
+            Team Requests
+          </button>
+        </li>
+        <!-- /ko -->
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="my-requests-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#my-requests"
+            data-bind="click: TabClicked"
+            type="button"
+            role="tab"
+            aria-controls="my-requests"
+            aria-selected="true"
+          >
+            My Requests
+          </button>
+        </li>
+        <!-- ko if: false -->
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link position-relative"
+            id="my-assignments-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#my-assignments"
+            data-bind="click: TabClicked"
+            type="button"
+            role="tab"
+            aria-controls="my-assignments"
+            aria-selected="true"
+          >
+            My Assignments
+            <span
+              class="badge text-bg-danger"
+              data-bind="visible: MyActiveAssignments().length, text: MyActiveAssignments().length"
+            ></span>
+          </button>
+        </li>
+        <!-- /ko -->
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="new-request-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#new-request"
+            data-bind="click: TabClicked"
+            type="button"
+            role="tab"
+            aria-controls="new-request"
+            aria-selected="true"
+          >
+            New Request
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="request-detail-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#request-detail"
+            data-bind="click: TabClicked"
+            type="button"
+            role="tab"
+            aria-controls="request-detail"
+            aria-selected="false"
+          >
+            Detail View
+          </button>
+        </li>
+      </ul>
     </div>
-    <!-- /ko -->
-    <div
-      class="tab-pane"
-      role="tabpanel"
-      aria-labelledby="my-requests-tab"
-      id="my-requests"
-    >
+    <div class="tab-content flex-grow-1">
+      <!-- ko if: ShowActionOfficeFeatures -->
       <div
-        data-bind="template: {name: 'tmpl-my-requests-view', data: MyRequestsView}"
-      ></div>
-    </div>
-    <div
-      class="tab-pane"
-      role="tabpanel"
-      aria-labelledby="my-assignments-tab"
-      id="my-assignments"
-    >
-      <div
-        data-bind="template: {name: 'tmpl-my-assignments-view', data: MyAssignmentsView}"
-      ></div>
-    </div>
-    <div
-      class="tab-pane"
-      role="tabpanel"
-      aria-labelledby="new-request"
-      id="new-request"
-    >
-      <div
-        data-bind="template: {name: 'tmpl-new-request-view', data: NewRequestView}"
-      ></div>
-    </div>
-    <div
-      id="request-detail"
-      class="tab-pane"
-      role="tabpanel"
-      aria-labelledby="request-detail-tab"
-    >
-      <!-- ko ifnot: RequestDetailView -->
-      <div class="">
-        <h2>Service Request Detail</h2>
-        <div>Please create a new request, or open an existing request.</div>
+        class="tab-pane"
+        role="tabpanel"
+        aria-labelledby="office-requests-tab"
+        id="office-requests"
+      >
+        <div
+          data-bind="template: {name: 'tmpl-office-requests-view', data: OfficeRequestsView}"
+        ></div>
       </div>
       <!-- /ko -->
-      <!-- ko if: RequestDetailView -->
       <div
-        data-bind="template: {name: 'tmpl-request-detail', data: RequestDetailView}"
-      ></div>
+        class="tab-pane"
+        role="tabpanel"
+        aria-labelledby="my-requests-tab"
+        id="my-requests"
+      >
+        <div
+          data-bind="template: {name: 'tmpl-my-requests-view', data: MyRequestsView}"
+        ></div>
+      </div>
+      <!-- ko if: false -->
+      <div
+        class="tab-pane"
+        role="tabpanel"
+        aria-labelledby="my-assignments-tab"
+        id="my-assignments"
+      >
+        <div
+          data-bind="template: {name: 'tmpl-my-assignments-view', data: MyAssignmentsView}"
+        ></div>
+      </div>
       <!-- /ko -->
+      <div
+        class="tab-pane"
+        role="tabpanel"
+        aria-labelledby="new-request"
+        id="new-request"
+      >
+        <div
+          data-bind="template: {name: 'tmpl-new-request-view', data: NewRequestView}"
+        ></div>
+      </div>
+      <div
+        id="request-detail"
+        class="tab-pane"
+        role="tabpanel"
+        aria-labelledby="request-detail-tab"
+        data-bind=""
+      >
+        <!-- ko ifnot: RequestDetailView.Request -->
+        <div class="">
+          <h2>Service Request Detail</h2>
+          <div>Please create a new request, or open an existing request.</div>
+        </div>
+        <!-- /ko -->
+        <!-- ko if: RequestDetailView.Request -->
+        <div
+          data-bind="template: {name: 'tmpl-request-detail', data: RequestDetailView}"
+        ></div>
+        <!-- /ko -->
+      </div>
     </div>
   </div>
   <div id="service-type-templates"></div>
 
   <div id="tmpl-views">
     <script type="text/html" id="tmpl-office-requests-view">
-      <h2>My Office Requests</h2>
-      <div class="d-flex">
-        <div
-          class="list-group me-3"
-          id="section-office-requests-tabs"
-          data-bind="foreach: StatusOptions"
-        >
-          <button
-            class="list-group-item list-group-action"
-            type="button"
-            data-bind="text: $data,
+      <h2>Team Requests</h2>
+      <div class="card bg-white">
+        <div class="card-body">
+          <div class="mb-3 d-flex">
+            <div
+              class="request-status-options me-3"
+              id="section-office-requests-tabs"
+              data-bind="foreach: StatusOptions"
+            >
+              <button
+                class="text-nowrap"
+                type="button"
+                data-bind="text: $data,
               css: {'active': $parent.ActiveKey() == $data },
               click: ()=> $parent.ActiveKey($data)"
-          ></button>
-        </div>
-        <div class="w-100">
-          <div
-            data-bind="component: {name: ActiveTableComponentName, params: ActiveTableParams}"
-          ></div>
+              ></button>
+            </div>
+            <button
+              type="button"
+              class="btn btn-outline-primary"
+              data-bind="css: {'active': ActiveKey() == byServiceTypeKey },
+            click: ()=> ActiveKey(byServiceTypeKey)"
+            >
+              By Service Type
+            </button>
+          </div>
+          <div class="flex-grow-1">
+            <div
+              data-bind="component: {name: ActiveTableComponentName, params: ActiveTableParams}"
+            ></div>
+          </div>
         </div>
       </div>
     </script>
 
     <script type="text/html" id="tmpl-my-requests-view">
       <h2>My Requests</h2>
-      <div class="d-flex">
-        <div
-          class="list-group me-3"
-          id="section-my-requests-tabs"
-          data-bind="foreach: StatusOptions"
-        >
-          <button
-            class="list-group-item list-group-action"
-            type="button"
-            data-bind="text: $data,
+      <div class="card bg-white">
+        <div class="card-body">
+          <div class="mb-3 d-flex">
+            <div
+              class="request-status-options me-3"
+              id="section-my-requests-tabs"
+              data-bind="foreach: StatusOptions"
+            >
+              <button
+                class="text-nowrap"
+                type="button"
+                data-bind="text: $data,
               css: {'active': $parent.ActiveKey() == $data },
               click: ()=> $parent.ActiveKey($data)"
-          ></button>
-        </div>
-        <div class="w-100">
-          <div
-            data-bind="component: {name: ActiveTableComponentName, params: ActiveTableParams}"
-          ></div>
+              ></button>
+            </div>
+            <button
+              type="button"
+              class="btn btn-outline-primary"
+              data-bind="css: {'active': ActiveKey() == 'By Service Type' },
+              click: ()=> ActiveKey('By Service Type')"
+            >
+              By Service Type
+            </button>
+          </div>
+          <div class="flex-grow-1">
+            <div
+              data-bind="component: {name: ActiveTableComponentName, params: ActiveTableParams}"
+            ></div>
+          </div>
         </div>
       </div>
     </script>
@@ -229,20 +338,76 @@
     </script>
 
     <script type="text/html" id="tmpl-new-request-view">
-      <h2>Select the type of work order you would like to open:</h2>
-      <div class="text-center">
-        <div class="row row-cols-4" data-bind="foreach: ActiveServiceTypes">
-          <div class="col">
+      <h2>Select the type of request you would like to open:</h2>
+      <div id="new-request-container">
+        <div
+          class="card new-request-ops-container"
+          data-bind="css: {'service-selected': SelectedServiceType}"
+        >
+          <div class="card-body">
             <div
-              class="card text-center pointer"
-              data-bind="click: $root.NewRequest"
+              class="new-request-opts"
+              data-bind="foreach: ActiveServiceTypes"
             >
-              <div class="card-body">
-                <i class="fa fa-5x" data-bind="class: Icon"></i>
+              <div
+                class="card new-request-opt"
+                data-bind="click: $parent.selectServiceTypeHandler, 
+                css: {'active': $parent.SelectedServiceType()?.ID == ID}, 
+                attr: {title: 'New ' + Title + ' Request'}"
+              >
+                <div class="card-body">
+                  <i class="fa fa-3x" data-bind="class: Icon"></i>
+                  <h5 class="card-title" data-bind="text: Title"></h5>
+                </div>
               </div>
-              <div class="card-body">
-                <h5 class="card-title" data-bind="text: Title"></h5>
-              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          id="new-request-detail"
+          class="card"
+          style="height: fit-content"
+          data-bind="visible: SelectedServiceType"
+        >
+          <div class="card-body" data-bind="">
+            <!-- ko if: SelectedServiceType -->
+            <h5
+              class="card-title"
+              data-bind="text: SelectedServiceType().Title"
+            ></h5>
+            <hr />
+            <b>Description:</b>
+            <div
+              data-bind="html: SelectedServiceType().Description"
+              class="mb-2"
+            ></div>
+            <b>Attachments:</b>
+            <div
+              data-bind="html: formatAttachmentDescription()"
+              class="mb-2"
+            ></div>
+            <div class="card-text" class="mb-2">
+              <p>
+                Once submitted, this request will be routed to the appropriate
+                action office.
+              </p>
+            </div>
+            <!-- /ko -->
+            <div class="d-flex justify-content-end">
+              <button
+                type="button"
+                class="btn btn-secondary me-2"
+                data-bind="click: cancelCreateServiceType"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                class="btn btn-success"
+                data-bind="click: confirmCreateServiceType, enable: SelectedServiceType"
+              >
+                Create
+              </button>
             </div>
           </div>
         </div>
@@ -251,198 +416,405 @@
 
     <script type="text/html" id="tmpl-request-detail">
       <!-- Report.RequestDetailView -->
+      <!-- ko if: request.IsLoading -->
+      <progress class="w-100"></progress>
+      <!-- /ko -->
+      <!-- ko ifnot: request.IsLoading -->
       <div class="">
         <h2>
           Service Request Detail:
-          <span data-bind="text: request.ServiceType.Def()?.Title"></span>
+          <span data-bind="text: request.RequestType.Title"></span>
         </h2>
         <div>
+          <!-- ko if: request.Validation.WasValidated -->
+          <!-- ko foreach: request.Validation.Errors.All -->
           <div
-            class="sticky-top my-3"
-            data-bind="template: {name: 'tmpl-quick-actions-bar'}"
-          ></div>
-          <div class="my-3">
-            <pipeline-component
-              params="request: request, ShowActionsArea: ShowActionsArea"
-            ></pipeline-component>
-            <!-- ko if: ShowActionsArea -->
-            <div
-              id="request-pipeline"
-              data-bind="template: {name: 'tmpl-request-pipeline-actions', data: request.Assignments}"
-            ></div>
-            <!-- /ko -->
-          </div>
-          <!-- ko if: request.State.Status()?.Title != 'Draft' -->
-          <div
-            class="my-3"
-            data-bind="template: {name: 'tmpl-assignments-component', data: request.Assignments}"
+            class="alert alert-danger mb-2"
+            data-bind="text: description"
           ></div>
           <!-- /ko -->
-          <div class="my-3">
-            <div class="card mb-3 w-100">
-              <div class="card-body">
-                <h3 class="card-title">Requestor Information</h3>
-                <div
-                  data-bind="component: {name: HeaderComponentName, params: request }"
-                ></div>
+          <!-- /ko -->
+          <div class="quick-actions-container">
+            <div
+              class=""
+              data-bind="template: {name: 'tmpl-quick-actions-bar'}"
+            ></div>
+          </div>
+          <div class="request-detail-components">
+            <div class="">
+              <div
+                data-bind="component: {name: 'pipeline-component',
+              params: {request: request}}"
+              ></div>
+            </div>
+            <!-- ko if: DisplayMode() != DisplayModes.New && $root.Authorization.currentUserIsAdmin()-->
+
+            <div
+              class="my-3"
+              data-bind="template: {name: 'tmpl-assignments-component', data: request.Assignments}"
+            ></div>
+            <!-- /ko -->
+            <div class="">
+              <div class="card w-100" data-bind="">
+                <div class="card-body">
+                  <h3 class="card-title">Requestor Information</h3>
+                  <div
+                    data-bind="component: {name: HeaderComponentName, params: request }"
+                  ></div>
+                </div>
               </div>
             </div>
-          </div>
-          <div
-            data-bind="component: {name: BodyComponentName, params: {DisplayMode, request} }"
-          ></div>
-          <div class="row my-3">
-            <div class="col-4" data-bind="using: request">
-              <div class="card">
-                <div class="card-body">
-                  <div class="card-title">
-                    <h3 class="mx-0">Attachments</h3>
+            <div class="card w-100 request-body" data-bind="using: Request">
+              <div class="card-body">
+                <div class="card-title d-flex justify-content-between">
+                  <h3 class="mx-0" data-bind="text: RequestType.Title"></h3>
+                  <!-- <i class="fa fa-sync pointer" data-bind="click: refreshEntity"></i> -->
+                </div>
+                <div class="detail-container">
+                  <div class="detail">
+                    <!-- ko if: RequestBodyBlob -->
+                    <div
+                      data-bind="component: {
+                        name: RequestBodyBlob.components[DisplayMode().toLowerCase()],
+                        params: RequestBodyBlob},
+                        class: RequestBodyBlob.width"
+                    ></div>
+                    <!-- /ko -->
+                    <div
+                      class="col-12 pb-6"
+                      data-bind="component: {name: RequestDescription.components[DisplayMode().toLowerCase()],
+                        params: RequestDescription}"
+                    ></div>
                   </div>
-                  <div
-                    data-bind="html: ServiceType.Def()?.AttachmentDescription"
-                  ></div>
-                  <div>
+                  <div class="card attachments">
+                    <div class="card-body d-flex flex-column">
+                      <div class="d-flex justify-content-between">
+                        <div>
+                          <h5 class="">Attachments</h5>
+                        </div>
+                        <i
+                          class="fa fa-sync pointer"
+                          data-bind="click: Attachments.refresh"
+                        ></i>
+                      </div>
+                      <!-- ko foreach: Attachments.Validation.Errors -->
+                      <div
+                        class="alert"
+                        data-bind="text: description,
+                        class: $parent.Validation.WasValidated() ? 'alert-danger' : 'alert-warning'"
+                      ></div>
+                      <!-- /ko -->
+                      <!-- ko if: RequestType.AttachmentDescription -->
+                      <div
+                        data-bind="html: RequestType.AttachmentDescription"
+                      ></div>
+                      <!-- /ko -->
+                      <!-- ko ifnot: RequestType.AttachmentDescription -->
+                      <p class="fst-italic">
+                        No attachment instructions provided.
+                      </p>
+                      <!-- /ko -->
+                      <!-- ko if: Attachments.list.Active().length -->
+                      <div>
+                        <table class="table">
+                          <thead>
+                            <tr>
+                              <th>Title</th>
+                              <th>FileName</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody data-bind="">
+                            <!-- ko if: Attachments.AreLoading -->
+                            <tr class="">
+                              <td colspan="4" class="p-0">
+                                <progress class="w-100"></progress>
+                              </td>
+                            </tr>
+                            <!-- /ko -->
+                            <!-- ko foreach: Attachments.list.Active -->
+                            <tr>
+                              <td>
+                                <div data-bind="text: Title"></div>
+                              </td>
+                              <td>
+                                <a
+                                  target="_blank"
+                                  data-bind="attr: { href: FileRef }, text: FileLeafRef"
+                                ></a>
+                              </td>
+                              <td>
+                                <i
+                                  class="fas fa-search pointer"
+                                  data-bind="click: $parent.Attachments.view"
+                                ></i>
+                                <!-- ko if: $parent.Attachments.userCanRemove($data) -->
+                                <i
+                                  class="fas fa-trash pointer"
+                                  data-bind="click: $parent.Attachments.remove"
+                                ></i>
+                                <!-- /ko -->
+                              </td>
+                            </tr>
+                            <!-- /ko -->
+                          </tbody>
+                        </table>
+                      </div>
+                      <!-- /ko -->
+                      <div
+                        data-bind="if: Attachments.userCanAttach"
+                        class="new-attachments"
+                      >
+                        <div>
+                          <label class="file-upload-field">
+                            <div class="dropzone" data-bind="">
+                              Drop Files or Click Here
+                            </div>
+                            <input
+                              type="file"
+                              multiple="true"
+                              style="display: none"
+                              data-bind="files: Attachments.newAttachmentFiles"
+                            />
+                          </label>
+                        </div>
+                        <div
+                          data-bind="if: Attachments.newAttachmentFiles().length"
+                        >
+                          <!-- Pending:
+                          <ul
+                            data-bind="foreach: Attachments.newAttachmentFiles"
+                          >
+                            <li>
+                              <span data-bind="text: name"></span>
+                              <i
+                                title="Remove File"
+                                data-bind="click: $parent.Attachments.removeFile"
+                                class="fa-solid fa-xmark pointer"
+                              ></i>
+                            </li>
+                          </ul> -->
+                          <table class="table table-sm">
+                            <thead>
+                              <tr>
+                                <th>Pending Upload</th>
+                                <th>Action</th>
+                              </tr>
+                            </thead>
+                            <tbody
+                              data-bind="foreach: Attachments.newAttachmentFiles"
+                            >
+                              <tr>
+                                <td data-bind="text: name"></td>
+                                <td>
+                                  <i
+                                    title="Remove File"
+                                    data-bind="click: $parent.Attachments.removeFile"
+                                    class="fa-solid fa-xmark pointer"
+                                  ></i>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                        <div class="form-actions">
+                          <button
+                            type="button"
+                            class="btn btn-primary"
+                            data-bind="click: Attachments.addNew, enable: Attachments.newAttachmentFiles().length"
+                          >
+                            Upload
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <!-- ko if: false -->
+              <div class="col-4" data-bind="using: request">
+                <div
+                  class="card"
+                  data-bind="css: {'border-danger': Validation.WasValidated() && Attachments.Validation.Errors().length}"
+                >
+                  <div class="card-body">
+                    <div class="card-title">
+                      <h3 class="mx-0">Attachments</h3>
+                    </div>
+                    <!-- ko foreach: Attachments.Validation.Errors -->
+                    <div
+                      class="alert"
+                      data-bind="text: description,
+                      class: $parent.Validation.WasValidated() ? 'alert-danger' : 'alert-warning'"
+                    ></div>
+                    <!-- /ko -->
+                    <div
+                      data-bind="html: RequestType.AttachmentDescription"
+                    ></div>
+                    <div>
+                      <div class="d-flex justify-content-end">
+                        <i
+                          class="fa fa-sync pointer"
+                          data-bind="click: Attachments.refresh"
+                        ></i>
+                      </div>
+                      <table class="table">
+                        <thead>
+                          <tr>
+                            <th>Title</th>
+                            <th>FileName</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody data-bind="">
+                          <!-- ko if: Attachments.AreLoading -->
+                          <tr class="">
+                            <td colspan="4" class="p-0">
+                              <progress class="w-100"></progress>
+                            </td>
+                          </tr>
+                          <!-- /ko -->
+                          <!-- ko foreach: Attachments.list.Active -->
+                          <tr>
+                            <td>
+                              <div data-bind="text: Title"></div>
+                            </td>
+                            <td>
+                              <a
+                                target="_blank"
+                                data-bind="attr: { href: FileRef }, text: FileLeafRef"
+                              ></a>
+                            </td>
+                            <td>
+                              <i
+                                class="fas fa-search pointer"
+                                data-bind="click: $parent.Attachments.view"
+                              ></i>
+                              <!-- ko if: $parent.Attachments.userCanRemove($data) -->
+                              <i
+                                class="fas fa-trash pointer"
+                                data-bind="click: $parent.Attachments.remove"
+                              ></i>
+                              <!-- /ko -->
+                            </td>
+                          </tr>
+                          <!-- /ko -->
+                        </tbody>
+                      </table>
+                      <!-- ko if: Attachments.userCanAttach -->
+                      <button
+                        class="btn btn-primary"
+                        data-bind="click: Attachments.addNew"
+                      >
+                        Upload
+                      </button>
+                      <!-- /ko -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- /ko -->
+              <!-- ko if: DisplayMode() != DisplayModes.New -->
+              <div class="">
+                <div class="card w-100" data-bind="using: request">
+                  <div class="card-body">
+                    <h3 class="card-title">Comments</h3>
+                    <div class="alert alert-warning">
+                      <strong>Note:</strong> Anyone with access to this record
+                      is able to view all comments.
+                    </div>
                     <div class="d-flex justify-content-end">
                       <i
                         class="fa fa-sync pointer"
-                        data-bind="click: Attachments.refresh"
+                        data-bind="click: Comments.refresh"
                       ></i>
                     </div>
                     <table class="table">
                       <thead>
                         <tr>
-                          <th>Title</th>
+                          <th>Created</th>
+                          <th>Author</th>
+                          <th>Notification Sent</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
                       <tbody data-bind="">
-                        <!-- ko if: Attachments.AreLoading -->
+                        <!-- ko if: Comments.AreLoading -->
                         <tr class="">
                           <td colspan="4" class="p-0">
                             <progress class="w-100"></progress>
                           </td>
                         </tr>
                         <!-- /ko -->
-                        <!-- ko foreach: Attachments.list.Active -->
-                        <tr>
+                        <!-- ko foreach: Comments.list.Active -->
+                        <tr class="table-group-divider">
+                          <td data-bind="text: Created.toLocaleString()"></td>
+                          <td data-bind="text: Author.Title"></td>
+                          <td data-bind="text: NotificationSent"></td>
                           <td>
-                            <a
-                              target="_blank"
-                              data-bind="attr: { href: FileRef }, text: Title"
-                            ></a>
-                          </td>
-                          <td>
+                            <!-- ko if: $parent.Comments.userCanComment -->
                             <i
-                              class="fas fa-search pointer"
-                              data-bind="click: $parent.Attachments.view"
+                              class="fa fa-envelope pointer"
+                              data-bind="click: $parent.Comments.sendNotification,
+                          attr: {title: NotificationSent ? 'Re-Send Email Notification' : 'Send Email Notification'}"
                             ></i>
-                            <!-- ko if: $parent.Attachments.userCanRemove($data) -->
                             <i
-                              class="fas fa-trash pointer"
-                              data-bind="click: $parent.Attachments.remove"
+                              class="fa fa-trash pointer ms-1"
+                              title="Remove Comment"
+                              data-bind="click: $parent.Comments.remove"
                             ></i>
                             <!-- /ko -->
                           </td>
                         </tr>
+                        <tr class="">
+                          <td
+                            colspan="4"
+                            data-bind="html: Comment"
+                            class="pb-4"
+                          ></td>
+                        </tr>
                         <!-- /ko -->
                       </tbody>
                     </table>
-                    <!-- ko if: Attachments.userCanAttach -->
-                    <button
-                      class="btn btn-primary"
-                      data-bind="click: Attachments.addNew"
-                    >
-                      Upload
-                    </button>
+                    <!-- ko if: Comments.userCanComment -->
+                    <div data-bind="using: $parent.newComment">
+                      <div
+                        class="mb-2"
+                        data-bind="component: {name: input.components.edit, params: input}"
+                      ></div>
+                      <button class="btn btn-primary" data-bind="click: submit">
+                        Submit Comment
+                      </button>
+                    </div>
                     <!-- /ko -->
                   </div>
                 </div>
               </div>
+              <!-- /ko -->
             </div>
+            <!-- ko if: DisplayMode() != DisplayModes.New -->
             <div
-              class="col-8"
+              class=""
               data-bind="template: {name: 'tmpl-activity-log-component', data: request.Actions}"
             ></div>
-          </div>
-          <div class="card my-3 w-100" data-bind="using: request">
-            <div class="card-body">
-              <h3 class="card-title">Comments</h3>
-              <div class="alert alert-warning">
-                <strong>Note:</strong> Anyone with access to this record is able
-                to view all comments.
-              </div>
-              <div class="d-flex justify-content-end">
-                <i
-                  class="fa fa-sync pointer"
-                  data-bind="click: Comments.refresh"
-                ></i>
-              </div>
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Author</th>
-                    <th>Comment</th>
-                    <th>Notification Sent</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody data-bind="">
-                  <!-- ko if: Comments.AreLoading -->
-                  <tr class="">
-                    <td colspan="4" class="p-0">
-                      <progress class="w-100"></progress>
-                    </td>
-                  </tr>
-                  <!-- /ko -->
-                  <!-- ko foreach: Comments.list.All -->
-                  <tr>
-                    <td data-bind="text: Author.Title"></td>
-                    <td data-bind="text: Comment"></td>
-                    <td data-bind="text: NotificationSent"></td>
-                    <td>
-                      <i
-                        class="fa fa-envelope pointer"
-                        data-bind="click: $parent.Comments.sendNotification,
-                        attr: {title: NotificationSent ? 'Re-Send Email Notification' : 'Send Email Notification'}"
-                      ></i>
-                    </td>
-                  </tr>
-                  <!-- /ko -->
-                </tbody>
-              </table>
-              <!-- ko if: Comments.userCanComment -->
-              <div>Provide additional comments/instructions here:</div>
-              <div data-bind="using: $parent.NewCommentComponent">
-                <textarea
-                  class="form-control mb-2"
-                  data-bind="value: CommentText"
-                ></textarea>
-                <button class="btn btn-primary" data-bind="click: submit">
-                  Submit Comment
-                </button>
-              </div>
+            <!-- /ko -->
+            <div>
+              <!-- ko if: DisplayMode() == DisplayModes.New -->
+              <button
+                type="button"
+                class="btn btn-success"
+                data-bind="click: submitNewRequest, enable: !request.Validation.WasValidated() || request.Validation.IsValid()"
+              >
+                Submit Request
+              </button>
               <!-- /ko -->
             </div>
           </div>
-          <div>
-            <!-- ko if: DisplayMode() == DisplayModes.New -->
-            <button
-              type="button"
-              class="btn btn-success"
-              data-bind="click: submitNewRequest, enable: request.Validation.IsValid"
-            >
-              Submit Request
-            </button>
-            <!-- /ko -->
-            <!-- <button
-              class="btn btn-danger"
-              data-bind="click: () => closeAndFinalize('Rejected')"
-            >
-              Danger Button
-            </button> -->
-          </div>
         </div>
       </div>
+      <!-- /ko -->
       <div
         class="modal fade"
         id="modal-advance-request"
@@ -514,51 +886,159 @@
     </script>
 
     <script type="text/html" id="tmpl-quick-actions-bar">
-      <div
-        class="card d-flex flex-row justify-content-between align-items-center px-2"
-      >
-        <div class="m-2">
-          <h6 class="mb-1">
-            Request: <span data-bind="text: request.ObservableTitle"></span>
-          </h6>
-          <div class="d-flex align-items-center">
-            <div class="me-2">
-              Loaded:
-              <span
-                data-bind="text: request.LoadedAt()?.toLocaleString()"
-              ></span>
+      <div class="quick-actions-bar card">
+        <div
+          class="btn-group actions dropdown status-container rounded-start"
+          role="group"
+        >
+          <button type="button" class="btn btn-secondary">
+            <div
+              class="badge"
+              data-bind="text: request.State.InternalStatus, 
+              class: request.State.InternalStatusClass, 
+              attr: {title: request.State.InternalStatus}"
+            ></div>
+          </button>
+          <button
+            type="button"
+            data-bs-toggle="dropdown"
+            class="btn btn-secondary toggle-status dropdown-toggle dropdown-toggle-split"
+            title="Change status"
+            data-bind="enable: EnableChangeStatusArea"
+          ></button>
+          <div class="dropdown-menu p-1 status-dropdown">
+            <div data-bind="if: showPause" class="status-section-pause">
+              <div class="dropdown-header">Change Status</div>
+              <div class="mx-2">
+                <div class="d-flex">
+                  <label class="me-1">
+                    <input
+                      placeholder="New Status..."
+                      class="form-select"
+                      list="pause-reason-options"
+                      data-bind="textInput: pauseReason, 
+                        attr: {placeholder: request.State.InternalStatus}"
+                    />
+                    <datalist
+                      id="pause-reason-options"
+                      data-bind="foreach: pauseOptions"
+                    >
+                      <option
+                        data-bind="text: value, attr: {value: value}"
+                      ></option>
+                    </datalist>
+                  </label>
+                  <button
+                    type="button"
+                    class="btn btn-success"
+                    data-bind="click: clickPause, enable: pauseReason"
+                  >
+                    Submit
+                  </button>
+                </div>
+                <div class="form-text mx-2">
+                  *Changing status will pause request.
+                </div>
+              </div>
             </div>
-            <i
-              class="fa fa-sync pointer"
-              title="Refresh this request"
-              data-bind="click: refreshAll"
-            ></i>
+            <div data-bind="if: showResume" class="status-section-resume">
+              <div class="dropdown-header">Resume Request</div>
+              <div class="mx-2">
+                <button
+                  type="button"
+                  title="Resume Request"
+                  class="btn btn-success"
+                  data-bind="click: clickResume"
+                >
+                  Resume Request
+                  <i class="fa-solid fa-play fa-xl"></i>
+                </button>
+              </div>
+            </div>
+            <div class="dropdown-divider"></div>
+            <div
+              class="text-nowrap"
+              data-bind="if: ShowCloseArea"
+              class="status-section-close"
+            >
+              <div class="dropdown-diver"></div>
+              <div class="dropdown-header">Close Request</div>
+              <div class="mx-2">
+                <button
+                  title="Cancel Request"
+                  class="btn btn-link text-danger action"
+                  data-bind="click: promptCancel"
+                >
+                  <i class="fa-solid fa-ban fa-xl"></i>
+                  Cancel Request
+                </button>
+                <button
+                  title="Close Request as Fulfilled"
+                  class="btn btn-link text-success action"
+                  data-bind="click: promptFulfill"
+                >
+                  Close Request as Fulfilled
+                  <i class="fa-solid fa-angles-right fa-lg"></i>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="d-flex justify-content-between">
+        <h6 class="">
+          Request ID <br />
+          <span data-bind="text: request.ObservableTitle"></span>
+        </h6>
+
+        <h6 class="">
+          Loaded Date and Time <br />
+          <span data-bind="text: request.LoadedAt()?.toLocaleString()"></span>
+        </h6>
+        <!-- ko if: $root.Authorization.currentUserIsAdmin -->
+        <a
+          class=""
+          target="_blank"
+          rel="noopener noreferrer"
+          data-bind="attr: {href: request.getFolderUrl()}"
+        >
+          <i class="fa fa-folder" data-bind=""></i
+        ></a>
+        <!-- /ko -->
+        <i
+          class="fa fa-sync pointer me-3"
+          title="Refresh this request"
+          data-bind="click: refreshAll"
+        ></i>
+
+        <div class="actions" role="group">
           <!-- ko if: DisplayMode() == DisplayModes.New -->
           <button
             type="button"
             class="btn btn-success ms-3"
-            data-bind="click: submitNewRequest, enable: request.Validation.IsValid"
+            data-bind="click: submitNewRequest, enable: !request.Validation.WasValidated() || request.Validation.IsValid()"
           >
-            Submit
+            Submit <span class="fa fa-chevron-right"></span>
           </button>
           <!-- /ko -->
           <!-- ko if: request.Authorization.currentUserCanAdvance -->
+          <div
+            class="action"
+            data-bind="component: {name: 'send-request-as-email', params: {request} }"
+          ></div>
           <!-- ko if: request.Pipeline.getNextStage -->
           <button
+            title="Advance to next stage"
             type="button"
-            class="btn btn-success ms-3"
-            data-bind="click: promptAdvance, enable: request.Assignments.CurrentStage.Validation.IsValid"
+            class="btn btn-success action"
+            data-bind="click: nextStageHandler, enable: request.Assignments.CurrentStage.Validation.IsValid"
           >
             Next Stage <span class="fa fa-chevron-right"></span>
           </button>
           <!-- /ko -->
           <!-- ko ifnot: request.Pipeline.getNextStage -->
           <button
+            title="Close and finalize"
             type="button"
-            class="btn btn-success ms-3"
+            class="btn btn-success action"
             data-bind="click: promptClose, enable: request.Assignments.CurrentStage.Validation.IsValid"
           >
             Close and Finalize
@@ -571,7 +1051,7 @@
 
     <script type="text/html" id="tmpl-request-pipeline-actions">
       <!-- ko using: CurrentStage -->
-      <!-- ko if: AssignmentComponents.Any -->
+      <!-- ko if: AssignmentComponents().length -->
       <div class="border border-top-0 rounded-bottom">
         <div class="p-3">
           <div data-bind="foreach: Validation.Errors">
@@ -581,26 +1061,13 @@
               data-bind="text: description"
             ></div>
           </div>
-          <!-- ko using: AssignmentComponents -->
-          <div class="d-flex justify-content-between">
-            <!-- ko if: Custom -->
-            <!-- ko using: Custom -->
+          <div class="">
+            <!-- ko foreach: AssignmentComponents -->
             <div
               data-bind="component: {name: actionComponentName, params: $data }"
             ></div>
             <!-- /ko -->
-            <!-- /ko -->
-            <!-- ko if: Generic -->
-            <div class="ms-auto">
-              <!-- ko foreach: Generic -->
-              <div
-                data-bind="component: {name: actionComponentName, params: $data }"
-              ></div>
-              <!-- /ko -->
-            </div>
-            <!-- /ko -->
           </div>
-          <!-- /ko -->
         </div>
       </div>
       <!-- /ko -->
@@ -608,7 +1075,7 @@
     </script>
 
     <script type="text/html" id="tmpl-assignments-component">
-      <div class="accordion accordion-flush">
+      <div class="card">
         <div class="card-body accordion-item">
           <div
             class="card-title d-flex justify-content-between align-items-center accordion-header"
@@ -623,17 +1090,26 @@
             </h3>
           </div>
           <div id="routing-body" class="accordion-collapse collapse">
-            <div class="d-flex justify-content-between">
-              <i
-                class="fa fa-sync pointer ms-auto"
-                data-bind="click: refresh"
-              ></i>
+            <div class="d-flex justify-content-end align-items-center">
+              <!-- ko if: $root.Authorization.currentUserIsAdmin -->
+              <a target="_blank" data-bind="attr: {href: getFolderUrl() }">
+                <i class="fa fa-folder" data-bind=""></i
+              ></a>
+              <button
+                type="button"
+                style="min-width: 0;"
+                class="btn btn-link ms-2 px-0"
+                data-bind="click: () => createStageAssignments()"
+              >
+                <i class="fa-solid fa-arrow-down-up-lock"></i>
+              </button>
+              <!-- /ko -->
+              <i class="fa fa-sync pointer ms-2" data-bind="click: refresh"></i>
             </div>
             <div class="position-relative">
               <table class="table">
                 <thead>
                   <tr>
-                    <th>ID</th>
                     <th>Stage</th>
                     <th>Assignee</th>
                     <th>Request Org</th>
@@ -652,7 +1128,6 @@
                   <!-- /ko -->
                   <!-- ko foreach: list.All -->
                   <tr>
-                    <td data-bind="text: ID"></td>
                     <td data-bind="text: PipelineStage?.Title"></td>
                     <td data-bind="text: Assignee?.Title"></td>
                     <td data-bind="text: RequestOrg?.Title"></td>
@@ -661,12 +1136,19 @@
                     <td>
                       <!-- ko if: $parent.userCanAssign -->
                       <i
+                        title="View Assignment"
                         class="fas fa-search pointer"
                         data-bind="click: $parent.view"
                       ></i>
                       <i
+                        title="Cancel Assignment"
                         class="fa fa-trash pointer"
                         data-bind="click: $parent.remove"
+                      ></i>
+                      <i
+                        title="Send Reminder Email"
+                        class="fa-solid fa-envelope pointer"
+                        data-bind="click: $parent.notify"
                       ></i>
                       <!-- /ko -->
                     </td>
@@ -676,65 +1158,9 @@
               </table>
             </div>
             <!-- ko if: userCanAssign -->
-            <div class="input-group" data-bind="using: NewAssignmentComponent">
-              <span class="input-group-text">New Assignment</span>
-              <div id="people-new-assignee" data-bind="people: Assignee"></div>
-              <select
-                name=""
-                id=""
-                class="form-select"
-                data-bind="value: Role,
-                options: Roles,
-                optionsText: (role) => role.value,
-                optionsCaption: 'Select...'"
-              ></select>
-              <button
-                type="button"
-                class="btn btn-primary"
-                data-bind="click: submit,
-              enable: Role() && Assignee()"
-              >
-                Submit
-              </button>
-            </div>
-            <!-- /ko -->
-          </div>
-        </div>
-      </div>
-    </script>
-
-    <script type="text/html" id="tmpl-service-type-using-components">
-      <div class="card mb-3 w-100">
-        <div class="card-body" data-bind="">
-          <div class="card-title d-flex justify-content-between">
-            <h3 class="mx-0" data-bind="text: ServiceType.Def()?.Title"></h3>
-            <i
-              class="fa fa-sync pointer"
-              data-bind="click: ServiceType.refreshEntity"
-            ></i>
-          </div>
-          <!-- ko if: ServiceType.Def()?.getComponentName() -->
-          <div
-            data-bind="component: {name: ServiceType.Def()?.getComponentName(), params: $data}"
-          ></div>
-          <!-- /ko -->
-          <div class="col-12 pb-6">
-            <label for=""
-              ><h6>
-                <span
-                  data-bind="text: ServiceType.Def()?.DescriptionTitle ?? 'Description'"
-                ></span
-                >:
-              </h6>
-            </label>
-            <!-- ko if: DisplayMode() != DisplayModes.View -->
-            <textarea
-              class="form-control"
-              data-bind="value: RequestDescription"
-            ></textarea>
-            <!-- /ko -->
-            <!-- ko if: DisplayMode() == DisplayModes.View -->
-            <div data-bind="html: RequestDescription"></div>
+            <div
+              data-bind="component: { name: 'new-assignment', params: {addAssignment: addNew } }"
+            ></div>
             <!-- /ko -->
           </div>
         </div>
@@ -742,24 +1168,32 @@
     </script>
 
     <script type="text/html" id="tmpl-activity-log-component">
-      <div class="accordion accordion-flush">
-        <div class="card-body accordion-item">
+      <div>
+        <button
+          type="button"
+          class="btn btn-link"
+          data-bind="click: showDialog"
+        >
+          Approvals and Actions Log
+        </button>
+      </div>
+      <dialog id="dialog-action-log" class="card">
+        <div class="card-body ">
           <div
-            class="card-title d-flex justify-content-between align-items-center accordion-header"
+            class="card-title d-flex justify-content-between align-items-center"
           >
-            <h3
-              class="mx-0 px-2 flex-grow-1 pointer accordion-title collapsed d-flex align-items-center justify-content-between"
-              data-bs-toggle="collapse"
-              data-bs-target="#actions-body"
-            >
-              Approvals and Actions Log
-              <i class="indicator fa fa-caret-down"></i>
-            </h3>
-          </div>
-          <div id="actions-body" class="accordion-collapse collapse">
-            <div class="d-flex justify-content-end">
-              <i class="fa fa-sync pointer" data-bind="click: refresh"></i>
+            <div>
+              <h3>Approvals and Actions Log</h3>
             </div>
+            <div class="d-flex justify-content-end">
+              <i class="fa fa-sync pointer me-2" data-bind="click: refresh"></i>
+              <i
+                class="fa-solid fa-xmark pointer"
+                data-bind="click: closeDialog"
+              ></i>
+            </div>
+          </div>
+          <div id="actions-body" class="">
             <div>
               <table class="table">
                 <thead>
@@ -798,13 +1232,22 @@
               </table>
             </div>
           </div>
+          <div class="d-flex justify-content-end">
+            <button
+              type="button"
+              class="btn btn-danger"
+              data-bind="click: closeDialog"
+            >
+              Close
+            </button>
+          </div>
         </div>
-      </div>
+      </dialog>
     </script>
   </div>
 
   <div id="tmpl-other">
-    <script type="text/html" id="tmpl-activity-toast">
+    <!-- <script type="text/html" id="tmpl-activity-toast">
       <div
         class="toast show"
         role="alert"
@@ -825,41 +1268,6 @@
           See? Just like this.
         </div>
       </div>
-    </script>
+    </script> -->
   </div>
-
-  <script
-    type="text/javascript"
-    src="../Apps/_layouts/15/sp.runtime.js"
-  ></script>
-  <script type="text/javascript" src="/_layouts/15/ScriptResx.ashx?name=sp.res&culture=en-us"></script>
-  <script type="text/javascript" src="../Apps/_layouts/15/sp.js"></script>
-  <script type="text/javascript" src="../Apps/_layouts/15/sp.init.js"></script>
-  <script
-    type="text/javascript"
-    src="../Apps/_layouts/15/sp.ui.dialog.js"
-  ></script>
-  <script
-    type="text/javascript"
-    src="../Apps/_layouts/15/clienttemplates.js"
-  ></script>
-  <script
-    type="text/javascript"
-    src="../Apps/_layouts/15/clientforms.js"
-  ></script>
-  <script
-    type="text/javascript"
-    src="../Apps/_layouts/15/clientpeoplepicker.js"
-  ></script>
-  <script type="text/javascript" src="../Apps/_layouts/15/autofill.js"></script>
-
-  <!-- <script src="../Style Library/wo/lib/knockout/knockout-3.5.1.js"></script> -->
-
-  <script>
-    window.appRoot =
-      _spPageContextInfo.siteAbsoluteUrl + "/Style Library/Apps/wo";
-  </script>
-  <script defer type="module">
-    import(window.appRoot + "/src/app.js");
-  </script>
 </div>

@@ -1,4 +1,4 @@
-import { requestStates } from "../entities/Request.js";
+import { requestStates } from "../constants/RequestStates.js";
 
 import { RequestsByStatusSet } from "../infrastructure/RequestsByStatusSet.js";
 
@@ -6,7 +6,7 @@ export const requestsByStatusMap = new Map();
 
 requestsByStatusMap.set(
   requestStates.open,
-  new RequestsByStatusSet(requestStates.open)
+  new RequestsByStatusSet(requestStates.open, true)
 );
 requestsByStatusMap.set(
   requestStates.fulfilled,
@@ -20,6 +20,8 @@ requestsByStatusMap.set(
   requestStates.rejected,
   new RequestsByStatusSet(requestStates.rejected)
 );
+
+export const requestIngests = ko.observableArray();
 
 //     'Closed': new RequestsByStatusSet(requestStates.closed),
 

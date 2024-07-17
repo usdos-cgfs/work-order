@@ -1,3 +1,5 @@
+import { People } from "./People.js";
+
 export const OrgTypes = {
   ActionOffice: "Action Office",
   RequestingOffice: "Requesting Office",
@@ -11,6 +13,16 @@ export class RequestOrg {
     this.Title = Title;
     this.LookupValue = Title;
   }
+
+  UserGroup;
+  Everyone;
+
+  FieldMap = {
+    UserGroup: {
+      get: () => this.UserGroup,
+      set: (val) => (this.UserGroup = People.Create(val)),
+    },
+  };
 
   static Create = function (props) {
     if (!props?.ID) return null;
@@ -36,6 +48,7 @@ export class RequestOrg {
       "OrgType",
       "BreakAccess",
       "PreferredEmail",
+      "Everyone",
     ],
   };
 

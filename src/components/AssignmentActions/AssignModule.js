@@ -1,8 +1,11 @@
 import { assignmentStates } from "../../entities/Assignment.js";
 import { roles } from "../../infrastructure/Authorization.js";
+import { BaseComponent } from "../index.js";
+import { assignTemplate } from "./AssignTemplate.js";
 
-export default class AssignModule {
+export class AssignModule extends BaseComponent {
   constructor({ request, assignment, addAssignment, completeAssignment }) {
+    super();
     this.allAssignments = request.Assignments.list.All;
     this.assignment = assignment;
     this.addAssignment = addAssignment;
@@ -11,12 +14,14 @@ export default class AssignModule {
   }
   assignmentStates = assignmentStates;
 
+  // TODO: How can we show who was assigned by this request,
   NewAssignments = ko.pureComputed(() => {
     return this.allAssignments().filter(
-      (assignment) => assignment.PipelineStage.ID == this.NextStage.ID
+      (assignment) => assignment.PipelineStage.ID == this.NextStage?.ID
     );
   });
 
+  // TODO: how should stage be determined?
   newAssignmentParams = ko.pureComputed(() => {
     return {
       addAssignment: async (newAssignment) => {
@@ -28,4 +33,7 @@ export default class AssignModule {
     };
   });
   // this is the callback function we pass to the new assignments subcomponent
+
+  static name = "assigner-actions";
+  static template = assignTemplate;
 }

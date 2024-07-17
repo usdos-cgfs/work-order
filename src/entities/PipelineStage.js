@@ -1,9 +1,12 @@
+import { RequestOrg } from "./RequestOrg.js";
+
 export const stageActionTypes = {
   PendingAssignment: "Pending Assignment",
   PendingApproval: "Pending Approval",
   PendingAction: "Pending Action",
   PendingResolution: "Pending Resolution",
   Notification: "Notification",
+  Closed: "Closed",
 };
 
 export class PipelineStage {
@@ -22,6 +25,12 @@ export class PipelineStage {
     return pipelineStageStore().find((stage) => stage.ID == props.ID);
   };
 
+  static GetCompletedStage = function () {
+    return pipelineStageStore().find(
+      (stage) => stage.ActionType == stageActionTypes.Closed
+    );
+  };
+
   static Views = {
     All: [
       "ID",
@@ -31,6 +40,7 @@ export class PipelineStage {
       "ActionType",
       "ActionTargetStage",
       "Assignee",
+      "WildCardAssignee",
       "RequestOrg",
       "AssignmentFunction",
       "ActionComponentName",

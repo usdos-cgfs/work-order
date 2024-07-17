@@ -1,4 +1,4 @@
-import { SPList } from "./SAL.js";
+import { SPList, copyFileAsync } from "./SAL.js";
 import { Assignment } from "../entities/Assignment.js";
 import { Notification } from "../entities/Notification.js";
 import { RequestEntity } from "../entities/Request.js";
@@ -9,16 +9,17 @@ import { ServiceType } from "../entities/ServiceType.js";
 import { Action } from "../entities/Action.js";
 import { Attachment } from "../entities/Attachment.js";
 import { Comment } from "../entities/Comment.js";
+import { RequestIngest } from "../entities/RequestIngest.js";
 
 const DEBUG = false;
 
 let context = null;
 
-export function setAppContext(appContext) {
+export function CreateAppContext() {
   if (context) {
     return;
   }
-  context = appContext;
+  context = new ApplicationDbContext();
 }
 
 export function getAppContext() {
@@ -30,8 +31,39 @@ export const lookupType = {
   id: "LookupID",
 };
 
-export default class ApplicationDbContext {
+const virtualSets = new Map();
+
+class DbContext {
   constructor() {}
+
+  CopyFileAsync = async function (source, dest) {
+    return copyFileAsync(source, dest);
+  };
+
+  virtualSets = new Map();
+
+  Set = (entityType) => {
+    const key = entityType.ListDef.name;
+
+    // If we have a defined entityset, return that
+    const set = Object.values(this)
+      .filter((val) => val.constructor.name == EntitySet.name)
+      .find((set) => set.ListDef?.name == key);
+    if (set) return set;
+
+    if (!this.virtualSets.has(key)) {
+      const newSet = new EntitySet(entityType);
+      this.virtualSets.set(key, newSet);
+      return newSet;
+    }
+    return this.virtualSets.get(key);
+  };
+}
+
+export default class ApplicationDbContext extends DbContext {
+  constructor() {
+    super();
+  }
 
   Actions = new EntitySet(Action);
 
@@ -45,6 +77,8 @@ export default class ApplicationDbContext {
 
   Requests = new EntitySet(RequestEntity);
 
+  RequestIngests = new EntitySet(RequestIngest);
+
   ConfigHolidays = new EntitySet(Holiday);
 
   ConfigRequestOrgs = new EntitySet(RequestOrg);
@@ -52,49 +86,50 @@ export default class ApplicationDbContext {
   ConfigPipelines = new EntitySet(PipelineStage);
 
   ConfigServiceTypes = new EntitySet(ServiceType);
-
-  static Set = (listDef) => new EntitySet(listDef);
 }
 
 class EntitySet {
-  constructor(constructor) {
-    if (!constructor.ListDef) {
-      console.error("Missing constructor listdef for", constructor);
+  constructor(entityType) {
+    if (!entityType.ListDef) {
+      console.error("Missing entityType listdef for", entityType);
       return;
     }
 
     // Check if the object we passed in defines a ListDef
-    this.constructor = constructor;
+    this.entityType = entityType;
 
     try {
       const allFieldsSet = new Set();
-      constructor.Views?.All?.map((field) => allFieldsSet.add(field));
-      const newEntity = new this.constructor({ ID: null, Title: null });
+      entityType.Views?.All?.map((field) => allFieldsSet.add(field));
+      const newEntity = new this.entityType({ ID: null, Title: null });
       if (newEntity.FieldMap) {
         Object.keys(newEntity.FieldMap).map((field) => allFieldsSet.add(field));
       }
       // const fieldMapKeysSet = new Set(...);
-      // constructor.Views.All.map((field) => fieldMapKeysSet.add(field));
+      // entityType.Views.All.map((field) => fieldMapKeysSet.add(field));
       this.AllDeclaredFields = [...allFieldsSet];
     } catch (e) {
-      console.warn("Could not instantiate", constructor), console.warn(e);
-      this.AllDeclaredFields = constructor.Views?.All ?? [];
+      console.warn("Could not instantiate", entityType), console.warn(e);
+      this.AllDeclaredFields = entityType.Views?.All ?? [];
     }
 
-    this.ListDef = constructor.ListDef;
-    this.Views = constructor.Views;
-    this.Title = constructor.ListDef.title;
-    this.Name = constructor.ListDef.name;
+    this.ListDef = entityType.ListDef;
+    this.Views = entityType.Views;
+    this.Title = entityType.ListDef.title;
+    this.Name = entityType.ListDef.name;
 
-    this.ListRef = new SPList(constructor.ListDef);
+    this.ListRef = new SPList(entityType.ListDef);
+
+    this.entityConstructor =
+      this.entityType.FindInStore || this.entityType.Create || this.entityType;
   }
 
   // Queries
   // TODO: Feature - Queries should return options to read e.g. toList, first, toCursor
-  FindById = async (id, fields) => {
+  FindById = async (id, fields = this.AllDeclaredFields) => {
     const result = await this.ListRef.findByIdAsync(id, fields);
     if (!result) return null;
-    const newEntity = new this.constructor(result);
+    const newEntity = new this.entityType(result);
     mapObjectToEntity(result, newEntity);
     return newEntity;
   };
@@ -131,7 +166,7 @@ class EntitySet {
     let cursor = {
       _next: results._next,
       results: results.results.map((item) => {
-        const newEntity = new this.constructor(item);
+        const newEntity = new this.entityConstructor(item);
         mapObjectToEntity(item, newEntity);
         return newEntity;
       }),
@@ -158,7 +193,7 @@ class EntitySet {
     return {
       _next: results._next,
       results: results.results.map((item) => {
-        const newEntity = new this.constructor(item);
+        const newEntity = new this.entityType(item);
         mapObjectToEntity(item, newEntity);
         return newEntity;
       }),
@@ -170,7 +205,7 @@ class EntitySet {
   ToList = async (fields = this.Views.All) => {
     const results = await this.ListRef.getListItemsAsync({ fields });
     return results.map((item) => {
-      const newEntity = new this.constructor(item);
+      const newEntity = new this.entityType(item);
       mapObjectToEntity(item, newEntity);
       return newEntity;
     });
@@ -199,6 +234,7 @@ class EntitySet {
     const writeableEntity = creationfunc(entity);
 
     if (request) {
+      writeableEntity.Title = request.Title;
       writeableEntity.Request = request;
     }
     if (DEBUG) console.log(writeableEntity);
@@ -228,7 +264,7 @@ class EntitySet {
   SetItemPermissions = async function (entityId, valuePairs, reset = false) {
     const salValuePairs = valuePairs
       .filter((vp) => vp[0] && vp[1])
-      .map((vp) => [vp[0].LoginName ?? vp[0].Title, vp[1]]);
+      .map((vp) => [vp[0].getKey(), vp[1]]);
     return this.ListRef.setItemPermissionsAsync(entityId, salValuePairs, reset);
   };
 
@@ -237,6 +273,9 @@ class EntitySet {
   };
 
   // Folder Methods
+  GetFolderUrl = function (relFolderPath = "") {
+    return this.ListRef.getServerRelativeFolderPath(relFolderPath);
+  };
 
   GetItemsByFolderPath = async function (
     folderPath,
@@ -248,7 +287,7 @@ class EntitySet {
       fields
     );
     return results.map((result) => {
-      const newEntity = new this.constructor(result);
+      const newEntity = new this.entityType(result);
       mapObjectToEntity(result, newEntity);
       return newEntity;
     });
@@ -258,6 +297,11 @@ class EntitySet {
     return this.ListRef.upsertFolderPathAsync(folderPath);
   };
 
+  DeleteFolderByPath = function (folderPath) {
+    return this.ListRef.deleteFolderByPathAsync(folderPath);
+  };
+
+  // Permissions
   SetFolderReadOnly = async function (relFolderPath) {
     return this.ListRef.setFolderReadonlyAsync(relFolderPath);
   };
@@ -265,7 +309,7 @@ class EntitySet {
   SetFolderPermissions = async function (folderPath, valuePairs, reset = true) {
     const salValuePairs = valuePairs
       .filter((vp) => vp[0] && vp[1])
-      .map((vp) => [vp[0].LoginName ?? vp[0].Title, vp[1]]);
+      .map((vp) => [vp[0].getKey(), vp[1]]);
     return this.ListRef.setFolderPermissionsAsync(
       folderPath,
       salValuePairs,
@@ -287,11 +331,51 @@ class EntitySet {
   };
 
   // Other Functions
+  UploadFileToFolderAndUpdateMetadata = async function (
+    file,
+    filename,
+    folderPath,
+    updates,
+    progress
+  ) {
+    const itemId = await this.ListRef.uploadFileToFolderAndUpdateMetadata(
+      file,
+      filename,
+      folderPath,
+      updates,
+      progress
+    );
+    const item = await this.ListRef.getById(itemId, this.AllDeclaredFields);
+    const newEntity = new this.entityConstructor(item);
+    mapObjectToEntity(item, newEntity);
+    return newEntity;
+  };
+
   UploadNewDocument = async function (folderPath, args) {
     return this.ListRef.uploadNewDocumentAsync(
       folderPath,
       "Attach a New Document",
       args
+    );
+  };
+
+  CopyFolderContents = async function (sourceFolder, targetFolder) {
+    return this.ListRef.copyFilesAsync(sourceFolder, targetFolder);
+  };
+
+  CopyFileAsync = async function (sourceServerRelativeUrl, siteDestUrl) {
+    return this.ListRef.copyFileAsync(sourceServerRelativeUrl, siteDestUrl);
+  };
+
+  CopyAttachmentFromPath = async function (
+    sourceServerRelativeUrl,
+    entity,
+    filename = null
+  ) {
+    return this.ListRef.copyAttachmentFromPath(
+      sourceServerRelativeUrl,
+      entity,
+      filename
     );
   };
 
@@ -301,9 +385,12 @@ class EntitySet {
       this.ListRef.showModal(name, title, args, resolve)
     );
   };
+
+  EnsureList = async function () {};
 }
 
-function mapObjectToEntity(inputObject, targetEntity) {
+export function mapObjectToEntity(inputObject, targetEntity) {
+  if (!inputObject || !targetEntity) return;
   // Takes an object and attempts to map it to the target entity
   Object.keys(inputObject).forEach((key) => {
     mapValueToEntityProperty(key, inputObject[key], targetEntity);
@@ -372,11 +459,11 @@ function generateObject(inVal, fieldMap) {
   return fieldMap.factory ? fieldMap.factory(inVal) : inVal;
 }
 
-function mapEntityToObject(input, selectedFields = null) {
+export function mapEntityToObject(input, selectedFields = null) {
   const entity = {};
   // We either predefine the fields in the ListDef, or provide a complete fieldmap
   const allWriteableFieldsSet = new Set([]);
-  if (this.ListDef.fields) {
+  if (this?.ListDef?.fields) {
     this.ListDef.fields.forEach((field) => allWriteableFieldsSet.add(field));
   }
   if (input.FieldMap) {
@@ -425,3 +512,5 @@ function mapViewFieldToValue(fieldMap) {
   // console.error("Error setting fieldMap", fieldMap);
   // throw "Error getting fieldmap";
 }
+
+// export const _context = new ApplicationDbContext();

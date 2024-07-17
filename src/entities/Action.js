@@ -1,6 +1,8 @@
 import { PipelineStage } from "./PipelineStage.js";
 
 export const actionTypes = {
+  Paused: "Paused",
+  Resumed: "Resumed",
   Assigned: "Assigned",
   Unassigned: "Unassigned",
   Created: "Created",
@@ -44,8 +46,8 @@ export class Action {
   };
 
   static ListDef = {
-    name: "Action",
-    title: "Action",
+    name: "Actions",
+    title: "Actions",
     fields: this.Views.All,
   };
 }

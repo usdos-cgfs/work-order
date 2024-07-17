@@ -49,6 +49,23 @@ export function getDefaultGroups() {
   return result;
 }
 
+const siteGroups = {};
+
+export async function getGroupUsers(groupName) {
+  if (siteGroups[groupName]?.Users?.constructor == Array) {
+    return siteGroups[groupName].Users;
+  }
+  const url = `/web/sitegroups/GetByName('${groupName}')?$expand=Users`;
+
+  const groupResult = await spFetch(url);
+
+  const group = groupResult.d;
+  group.Users = group.Users?.results;
+
+  siteGroups[groupName] = group;
+  return group.Users;
+}
+
 // Used in router
 export const webRoot =
   _spPageContextInfo.webAbsoluteUrl == "/"
@@ -96,7 +113,7 @@ export async function InitSal() {
   var oRoleDefinitions = currCtx.get_web().get_roleDefinitions();
   currCtx.load(oRoleDefinitions);
 
-  await new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     currCtx.executeQueryAsync(
       function () {
         sal.globalConfig.currentUser = user;
@@ -114,8 +131,9 @@ export async function InitSal() {
         sal.utilities = new sal.NewUtilities();
         resolve();
       },
-      function () {
-        alert("Error initializing SAL");
+      function (sender, args) {
+        alert("Error initializing SAL: " + args.get_message());
+        console.error("Error initializing SAL: " + args.get_message(), args);
         reject();
       }
     );
@@ -181,16 +199,17 @@ export async function getUserPropsAsync(userId = _spPageContextInfo.userId) {
   // const userGroupUrl = `/Web/GetUserById(${userId})/Groups`;
 
   // Get more user info:
+  // const userInfoUrl = `/Web/GetUserById(${userId})/?$expand=Groups/users`;
   const userInfoUrl = `/Web/GetUserById(${userId})/?$expand=Groups`;
 
-  const userInfo = (await fetchData(userInfoUrl)).d;
+  const userInfo = (await spFetch(userInfoUrl)).d;
 
   // TODO: See if we can just select the properties we need
   // const userPropsUrl = `/sp.userprofiles.peoplemanager/getpropertiesfor(@v)?@v='${encodeURIComponent(
   //   userInfo.LoginName
   // )}'`;
 
-  const userProps = (await fetchData(userPropsUrl))?.d.UserProfileProperties
+  const userProps = (await spFetch(userPropsUrl))?.d.UserProfileProperties
     .results;
 
   function findPropValue(props, key) {
@@ -202,7 +221,7 @@ export async function getUserPropsAsync(userId = _spPageContextInfo.userId) {
     Title: userInfo.Title,
     LoginName: userInfo.LoginName,
     WorkPhone: findPropValue(userProps, "WorkPhone"),
-    EMail: findPropValue(userProps, "Email"), // TODO: Do we still need this spelling?
+    EMail: findPropValue(userProps, "WorkEmail"), // TODO: Do we still need this spelling?
     IsEnsured: true,
     IsGroup: false,
     Groups: userInfo.Groups?.results?.map((group) => {
@@ -211,8 +230,17 @@ export async function getUserPropsAsync(userId = _spPageContextInfo.userId) {
         ID: group.Id,
         IsGroup: true,
         IsEnsured: true,
+        // Users: group.Users?.results.map((user) => {
+        //   return {
+        //     ID: user.Id,
+        //     LoginName: user.LoginName,
+        //     Title: user.Title,
+        //     EMail: user.Email,
+        //   };
+        // }),
       };
     }),
+    Department: findPropValue(userProps, "Department"),
   };
 }
 
@@ -511,6 +539,7 @@ export async function ensureUserByKeyAsync(userName) {
         ID: oUser.get_id(),
         Title: oUser.get_title(),
         LoginName: oUser.get_loginName(),
+        Email: oUser.get_email(),
         IsEnsured: true,
         IsGroup: false,
       };
@@ -559,6 +588,17 @@ sal.getSPSiteGroupByName = function (groupName) {
   return userGroup;
 };
 
+export function copyFileAsync(sourcePath, destPath) {
+  // const sourcePath = getServerRelativeFolderPath(source);
+  // const destPath = getServerRelativeFolderPath(dest);
+
+  const uri =
+    `/web/getFileByServerRelativeUrl('${sourcePath}')/` +
+    `copyTo(strNewUrl='${destPath}',bOverWrite=true)`;
+
+  return spFetch(uri, "POST");
+}
+
 export function SPList(listDef) {
   /*
       Expecting a list definition object in the following format:
@@ -584,7 +624,7 @@ export function SPList(listDef) {
   async function init() {
     if (!self.config.fieldSchema) {
       const apiEndpoint = `/web/lists/GetByTitle('${self.config.def.title}')/Fields`;
-      const fields = await fetchData(apiEndpoint);
+      const fields = await spFetch(apiEndpoint);
       self.config.fieldSchema = fields.d.results;
     }
   }
@@ -801,15 +841,14 @@ export function SPList(listDef) {
     if (!val) {
       return val;
     }
-    var out;
+    let out = {};
     switch (val.constructor.getName()) {
-      case "SP.FieldLookupValue":
       case "SP.FieldUserValue":
-        out = {
-          ID: val.get_lookupId(),
-          LookupValue: val.get_lookupValue(),
-          Title: val.get_lookupValue(),
-        };
+        out.LoginName = val.get_email();
+      case "SP.FieldLookupValue":
+        out.ID = val.get_lookupId();
+        out.LookupValue = val.get_lookupValue();
+        out.Title = val.get_lookupValue();
         break;
       default:
         out = val;
@@ -848,7 +887,7 @@ export function SPList(listDef) {
             : mapListItemToObject(colVal);
         });
         //listObj.fileUrl = oListItem.get_item("FileRef");
-        listObj.oListItem = oListItem;
+        // listObj.oListItem = oListItem;
         foundObjects.push(listObj);
       }
       //this.setState({ focusedItems })
@@ -904,10 +943,19 @@ export function SPList(listDef) {
     });
   }
 
+  async function getById(id, fields) {
+    const [queryFields, expandFields] = await getQueryFields(fields);
+
+    const apiEndpoint = `/web/lists/GetByTitle('${self.config.def.title}')/items(${id})?$Select=${queryFields}&$expand=${expandFields}`;
+
+    const result = await spFetch(apiEndpoint);
+    return result.d;
+  }
+
   async function getListFields() {
     if (!self.config.fieldSchema) {
       const apiEndpoint = `/web/lists/GetByTitle('${self.config.def.title}')/Fields`;
-      const fields = await fetchData(apiEndpoint);
+      const fields = await spFetch(apiEndpoint);
       self.config.fieldSchema = fields.d.results;
     }
     return self.config.fieldSchema;
@@ -930,6 +978,7 @@ export function SPList(listDef) {
         return;
       }
       switch (fieldSchema.TypeAsString) {
+        case "UserMulti":
         case "User":
         case "LookupMulti":
         case "Lookup":
@@ -985,7 +1034,7 @@ export function SPList(listDef) {
       `/web/lists/GetByTitle('${self.config.def.title}')/items?` +
       `${include}&${expand}&${orderBy}&${filter}&${page}`;
 
-    const result = await fetchData(apiEndpoint);
+    const result = await spFetch(apiEndpoint);
     const cursor = {
       results: result?.d?.results,
       _next: result?.d?.__next,
@@ -996,7 +1045,7 @@ export function SPList(listDef) {
   }
 
   async function loadNextPage(cursor) {
-    const result = await fetchData(cursor._next);
+    const result = await spFetch(cursor._next);
     return {
       results: result?.d?.results,
       _next: result?.d?.__next,
@@ -1080,12 +1129,13 @@ export function SPList(listDef) {
 
       function onUpdateListItemFailed(sender, args) {
         console.error("Update Failed - List: " + self.config.def.name);
-        console.error("ValuePairs", valuePairs);
+        console.error("Item Id", this.oListItem.get_id() ?? "N/A");
+        console.error(entity);
         console.error(sender, args);
         reject(args);
       }
 
-      const data = { oListItem, resolve, reject };
+      const data = { oListItem, entity, resolve, reject };
 
       currCtx.load(oListItem);
       currCtx.executeQueryAsync(
@@ -1361,7 +1411,10 @@ export function SPList(listDef) {
       ? "/" + self.config.def.name + "/"
       : "/Lists/" + self.config.def.name + "/";
 
-    return sal.globalConfig.siteUrl + listPath + relFolderPath;
+    const root = sal.globalConfig.siteUrl + listPath;
+
+    if (relFolderPath.startsWith(root)) return relFolderPath;
+    return root + relFolderPath;
   }
 
   function upsertFolderPathAsync(folderPath) {
@@ -1498,6 +1551,7 @@ export function SPList(listDef) {
           console.warn("Unable load list folder contents:");
           console.error(sender);
           console.error(args);
+          reject(args);
         }
       );
     });
@@ -1915,12 +1969,8 @@ export function SPList(listDef) {
 
       function onSetFolderPermissionsFailure(sender, args) {
         console.error(
-          "Failed to update permissions on item: " +
-            this.folderItem.get_lookupValue() +
-            args.get_message() +
-            "\n" +
-            args.get_stackTrace(),
-          false
+          "Failed to update permissions on item: " + args.get_message(),
+          args
         );
       }
 
@@ -1955,6 +2005,17 @@ export function SPList(listDef) {
       Function.createDelegate(data, onFindFolderSuccess),
       Function.createDelegate(data, onFindFolderFailure)
     );
+  }
+
+  function deleteFolderByPathAsync(relFolderPath) {
+    const serverRelFolderPath = getServerRelativeFolderPath(relFolderPath);
+
+    const url = `/web/GetFolderByServerRelativeUrl('${serverRelFolderPath}')`;
+    const headers = {
+      "If-Match": "*",
+      "X-HTTP-Method": "DELETE",
+    };
+    return spFetch(url, "POST", headers);
   }
 
   /*****************************************************************
@@ -2058,8 +2119,326 @@ export function SPList(listDef) {
     });
   }
 
+  const UPLOADCHUNKSIZE = 10485760; // PnPJs
+  // const UPLOADCHUNKSIZE = 262144000; // SPO
+
+  const uploadchunkActionTypes = {
+    start: "startupload",
+    continue: "continueupload",
+    finish: "finishupload",
+  };
+
+  async function uploadFileRestChunking(
+    file,
+    relFolderPath,
+    fileName,
+    progress
+  ) {
+    /* https://sharepoint.stackexchange.com/questions/287334/upload-files-250mb-via-sharepoint-rest-api
+https://learn.microsoft.com/en-us/previous-versions/office/developer/sharepoint-rest-reference/dn450841(v=office.15)
+    */
+    const blob = file;
+    const chunkSize = UPLOADCHUNKSIZE;
+    const fileSize = file.size;
+
+    const totalBlocks =
+      parseInt((fileSize / chunkSize).toString(), 10) +
+      (fileSize % chunkSize === 0 ? 1 : 0);
+
+    const fileRef = relFolderPath + "/" + fileName;
+
+    const jobGuid = getGUID();
+    // const jobGuid = crypto.randomUUID
+    //   ? crypto.randomUUID()
+    //   : "74493426-fb10-4e47-bc82-120954b81a60";
+
+    let currentPointer;
+    progress({ currentBlock: 0, totalBlocks });
+    currentPointer = await startUpload(
+      jobGuid,
+      file.slice(0, chunkSize),
+      fileRef,
+      relFolderPath
+    );
+
+    for (let i = 2; i < totalBlocks; i++) {
+      progress({ currentBlock: i, totalBlocks });
+      currentPointer = await continueUpload(
+        jobGuid,
+        file.slice(currentPointer, currentPointer + chunkSize),
+        currentPointer,
+        fileRef
+      );
+    }
+
+    progress({ currentBlock: totalBlocks - 1, totalBlocks });
+    const result = await finishUpload(
+      jobGuid,
+      file.slice(currentPointer),
+      currentPointer,
+      fileRef
+    );
+
+    progress({ currentBlock: totalBlocks, totalBlocks });
+
+    return result;
+  }
+
+  async function startUpload(uploadId, chunk, fileRef, relFolderPath) {
+    const url =
+      `/web/getFolderByServerRelativeUrl(@folder)/files/getByUrlOrAddStub(@file)/StartUpload(guid'${uploadId}')?` +
+      `&@folder='${relFolderPath}'&@file='${fileRef}'`;
+
+    const headers = {
+      "Content-Type": "application/octet-stream",
+    };
+    const opts = {
+      body: chunk,
+    };
+
+    const result = await spFetch(url, "POST", headers, opts);
+    if (!result) {
+      console.error("Error starting upload!");
+      return;
+    }
+
+    return parseFloat(result.d.StartUpload);
+  }
+
+  async function continueUpload(uploadId, chunk, fileOffset, fileRef) {
+    const url =
+      `/web/getFileByServerRelativeUrl(@file)/ContinueUpload(uploadId=guid'${uploadId}',fileOffset=${fileOffset})?` +
+      `&@file='${fileRef}'`;
+
+    const headers = {
+      "Content-Type": "application/octet-stream",
+    };
+    const opts = {
+      body: chunk,
+    };
+
+    const result = await spFetch(url, "POST", headers, opts);
+
+    if (!result) {
+      console.error("Error starting upload!");
+      return;
+    }
+
+    return parseFloat(result.d.ContinueUpload);
+  }
+
+  async function finishUpload(uploadId, chunk, fileOffset, fileRef) {
+    const url =
+      `/web/getFileByServerRelativeUrl(@file)/FinishUpload(uploadId=guid'${uploadId}',fileOffset=${fileOffset})?` +
+      `&@file='${fileRef}'`;
+
+    const headers = {
+      "Content-Type": "application/octet-stream",
+    };
+    const opts = {
+      body: chunk,
+    };
+
+    const result = await spFetch(url, "POST", headers, opts);
+
+    if (!result) {
+      console.error("Error starting upload!");
+      return;
+    }
+
+    return result;
+  }
+
+  async function uploadFileRest(file, relFolderPath, fileName) {
+    return await fetch(
+      _spPageContextInfo.webServerRelativeUrl +
+        `/_api/web/GetFolderByServerRelativeUrl('${relFolderPath}')/Files/add(url='${fileName}',overwrite=true)`,
+      {
+        method: "POST",
+        credentials: "same-origin",
+        body: file,
+        headers: {
+          Accept: "application/json; odata=verbose",
+          "Content-Type": "application/json;odata=nometadata",
+          "X-RequestDigest": document.getElementById("__REQUESTDIGEST").value,
+        },
+      }
+    ).then((response) => {
+      if (!response.ok) {
+        console.error("Error Uploading File", response);
+        return;
+      }
+
+      return response.json();
+    });
+  }
+
+  async function uploadFileToFolderAndUpdateMetadata(
+    file,
+    fileName,
+    relFolderPath,
+    payload,
+    progress = null
+  ) {
+    if (!progress) {
+      progress = () => {};
+    }
+
+    const serverRelFolderPath = getServerRelativeFolderPath(relFolderPath);
+    let result = null;
+    if (file.size > UPLOADCHUNKSIZE) {
+      const job = () =>
+        uploadFileRestChunking(file, serverRelFolderPath, fileName, progress);
+      result = await uploadQueue.addJob(job);
+    } else {
+      progress({ currentBlock: 0, totalBlocks: 1 });
+      result = await uploadFileRest(file, serverRelFolderPath, fileName);
+      progress({ currentBlock: 1, totalBlocks: 1 });
+    }
+
+    await updateUploadedFileMetadata(result.d, payload);
+
+    // check in
+    await checkinWithComment(serverRelFolderPath + "/" + fileName, "");
+
+    let itemUri = result.d.ListItemAllFields.__deferred.uri + "?$select=ID";
+
+    const listItem = await spFetch(itemUri);
+    return listItem.d.ID;
+  }
+
+  async function updateUploadedFileMetadata(fileResult, payload) {
+    var result = await fetch(fileResult.ListItemAllFields.__deferred.uri, {
+      method: "POST",
+      credentials: "same-origin",
+      body: JSON.stringify(payload),
+      headers: {
+        Accept: "application/json; odata=nometadata",
+        "Content-Type": "application/json;odata=nometadata",
+        "X-RequestDigest": document.getElementById("__REQUESTDIGEST").value,
+        "X-HTTP-Method": "MERGE",
+        "If-Match": "*",
+      },
+    }).then((response) => {
+      if (!response.ok) {
+        console.error("Error Updating File", response);
+        return;
+      }
+
+      return response;
+    });
+
+    return result;
+  }
+
+  function copyFiles(sourceFolderPath, destFolderPath, callback, onError) {
+    const sourcePath = getServerRelativeFolderPath(sourceFolderPath);
+    const destPath = getServerRelativeFolderPath(destFolderPath);
+    var context = new SP.ClientContext.get_current();
+    var web = context.get_web();
+    var folderSrc = web.getFolderByServerRelativeUrl(sourcePath);
+    context.load(folderSrc, "Files");
+    context.executeQueryAsync(
+      function () {
+        var files = folderSrc.get_files();
+        var e = files.getEnumerator();
+        var dest = [];
+        while (e.moveNext()) {
+          var file = e.get_current();
+          var destLibUrl = destPath + "/" + file.get_name();
+          dest.push(destLibUrl); //delete this when we're happy we got the file paths right
+          file.copyTo(destLibUrl, true);
+        }
+        console.log(dest); //delete this when we're happy we got the file paths right
+        context.executeQueryAsync(
+          function () {
+            console.log("Files moved successfully!");
+            callback();
+          },
+          function (sender, args) {
+            console.log("error: ", args.getMessage());
+            onError(args);
+          }
+        );
+      },
+      function (sender, args) {
+        console.error("Unable to copy files: ", args.get_message());
+        console.error(sender, args);
+        onError(args);
+      }
+    );
+  }
+
+  function copyFilesAsync(sourceFolder, destFolder) {
+    // TODO: this should stay as a static utility instead of list specific
+    return new Promise((resolve, reject) => {
+      copyFiles(sourceFolder, destFolder, resolve, reject);
+    });
+  }
+
+  function copyFileAsync(sourcePath, dest) {
+    const destPath = getServerRelativeFolderPath(dest);
+
+    const uri =
+      `/web/getFileByServerRelativeUrl(@s)/` +
+      `copyTo(strNewUrl=@d,bOverWrite=true)` +
+      `?@s='${sourcePath}'&@d='${destPath}'`;
+
+    return spFetch(uri, "POST");
+  }
+
+  async function copyAttachmentFromPath(sourcePath, item, fileName = null) {
+    if (!fileName) fileName = sourcePath.split("/").pop();
+    const destPath = getServerRelativeFolderPath(
+      `Attachments/${item.ID}/${fileName}`
+    );
+
+    const destItem = getServerRelativeFolderPath(`${item.ID}/${fileName}`);
+
+    const attachmentUri = `/web/lists/getbytitle('${self.config.def.title}')/items(${item.ID})/AttachmentFiles/add(FileName='${fileName}')`;
+
+    const sourceUri = `/web/GetFileByServerRelativeUrl('${sourcePath}')/$value`;
+    const fileResponse = await spFetch(sourceUri, "GET", null, null, "blob");
+    if (!fileResponse) {
+      return;
+    }
+    // const fileBlob = await fileResponse.blob();
+    const fileArrayBuffer = await fileResponse.arrayBuffer();
+
+    const headers = {
+      "Content-Length": fileArrayBuffer.byteLength,
+    };
+
+    const opts = {
+      body: fileArrayBuffer,
+    };
+
+    const attachmentResponse = await spFetch(
+      attachmentUri,
+      "POST",
+      headers,
+      opts
+    );
+
+    return attachmentResponse;
+  }
+
+  // Ensure List/Library exists on the site
+  async function ensureList() {
+    // Query List Title
+    const listInfo = await spFetch(
+      `/web/lists/GetByTitle('${self.config.def.title}')`
+    );
+  }
+
+  function checkinWithComment(fileRef, comment) {
+    const url = `/web/GetFileByServerRelativeUrl('${fileRef}')/CheckIn(comment='${comment}',checkintype=0)`;
+    return spFetch(url, "POST");
+  }
+
   const publicMembers = {
     findByIdAsync,
+    getById,
     findByColumnValueAsync,
     loadNextPage,
     getListItemsAsync,
@@ -2070,17 +2449,29 @@ export function SPList(listDef) {
     getItemPermissionsAsync,
     getFolderContentsAsync,
     upsertFolderPathAsync,
+    deleteFolderByPathAsync,
+    getServerRelativeFolderPath,
     setFolderReadonlyAsync,
     setFolderPermissionsAsync,
     ensureFolderPermissionsAsync,
+    uploadFileToFolderAndUpdateMetadata,
     uploadNewDocumentAsync,
+    copyFilesAsync,
+    copyFileAsync,
+    copyAttachmentFromPath,
     showModal,
   };
 
   return publicMembers;
 }
 
-async function fetchData(uri, method = "GET") {
+async function spFetch(
+  uri,
+  method = "GET",
+  headers = {},
+  opts = {},
+  responseType = "json"
+) {
   const siteEndpoint = uri.startsWith("http")
     ? uri
     : sal.globalConfig.siteUrl + "/_api" + uri;
@@ -2088,7 +2479,10 @@ async function fetchData(uri, method = "GET") {
     method: method,
     headers: {
       Accept: "application/json; odata=verbose",
+      "X-RequestDigest": document.getElementById("__REQUESTDIGEST").value,
+      ...headers,
     },
+    ...opts,
   });
 
   if (!response.ok) {
@@ -2097,6 +2491,72 @@ async function fetchData(uri, method = "GET") {
     }
     console.error(response);
   }
-  const result = await response.json();
-  return result;
+
+  try {
+    let result;
+    switch (responseType) {
+      case "json":
+        result = await response.json();
+        break;
+      case "blob":
+        result = await response.blob();
+        break;
+      default:
+        result = response;
+    }
+    return result;
+  } catch (e) {
+    return response;
+  }
 }
+
+window.spFetch = spFetch;
+
+// Other functions
+function getGUID() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+
+  let d = Date.now();
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+    const r = (d + Math.random() * 16) % 16 | 0;
+    d = Math.floor(d / 16);
+    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
+
+class JobProcessor {
+  constructor(maxConcurrency) {
+    this.maxConcurrency = maxConcurrency;
+    this.runningJobs = 0;
+    this.queue = [];
+  }
+
+  addJob(asyncFunction) {
+    return new Promise((resolve, reject) => {
+      const job = async () => {
+        try {
+          const result = await asyncFunction();
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        } finally {
+          this.runningJobs--;
+          this.processQueue();
+        }
+      };
+
+      this.queue.push(job);
+      this.processQueue();
+    });
+  }
+
+  processQueue() {
+    while (this.runningJobs < this.maxConcurrency && this.queue.length > 0) {
+      const job = this.queue.shift();
+      this.runningJobs++;
+      job();
+    }
+  }
+}
+
+const uploadQueue = new JobProcessor(5);

@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "dev": "node esbuild.dev.config.mjs",
+    "build": "node esbuild.config.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.21.5"
+  }
+}

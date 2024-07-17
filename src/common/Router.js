@@ -1,7 +1,13 @@
 import { webRoot } from "../infrastructure/SAL.js";
 export const appRoot = webRoot;
 
-export function setUrlParam(param, newval) {
+const state = {};
+
+window.history.replaceState({}, "", document.location.href);
+export function setUrlParam(param, newVal) {
+  // No need to reset the param if it hasn't changed
+  if (getUrlParam(param) == newVal) return;
+
   const search = window.location.search;
   //var urlParams = new URLSearchParams(queryString);
 
@@ -10,9 +16,10 @@ export function setUrlParam(param, newval) {
 
   const urlParams =
     (query.length > 2 ? query + "&" : "?") +
-    (newval ? param + "=" + newval : "");
+    (newVal ? param + "=" + newVal : "");
 
-  window.history.pushState({}, "", urlParams.toString());
+  state[param] = newVal;
+  window.history.pushState(state, "", urlParams.toString());
 }
 
 export function getUrlParam(param) {

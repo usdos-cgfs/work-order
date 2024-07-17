@@ -3,16 +3,22 @@ import {
   roles,
   stageActionRoleMap,
 } from "../../infrastructure/Authorization.js";
+import { BaseComponent } from "../BaseComponent.js";
+import { newAssignmentTemplate } from "./NewAssignmentTemplate.js";
 
-export default class NewAssignmentComponent {
+export class NewAssignmentModule extends BaseComponent {
   constructor({ addAssignment, stage = null }) {
+    super();
     this.stage = stage;
     this.addAssignment = addAssignment;
 
+    this.uniqueInt = Math.floor(Math.random() * 100);
     if (this.stage) {
       this.Role(stageActionRoleMap[this.stage.ActionType]);
     }
   }
+
+  getAsigneeElementID = () => `people-new-assignee-${this.uniqueInt}`;
 
   Assignee = ko.observable();
   Role = ko.observable();
@@ -42,4 +48,7 @@ export default class NewAssignmentComponent {
     this.Assignee(null);
     this.Role(null);
   };
+
+  static name = "new-assignment";
+  static template = newAssignmentTemplate;
 }

@@ -1,12 +1,5 @@
-import { registerFieldComponent } from "../infrastructure/RegisterComponents.js";
-import BaseField from "./BaseField.js";
-
-const components = {
-  view: "select-view",
-  edit: "select-edit",
-};
-
-registerFieldComponent("select", components);
+import { SelectModule } from "../components/Fields/index.js";
+import { BaseField } from "./index.js";
 
 export default class SelectField extends BaseField {
   constructor({
@@ -15,38 +8,35 @@ export default class SelectField extends BaseField {
     Visible,
     options,
     multiple = false,
+    optionsText,
+    instructions,
   }) {
-    super({ Visible, displayName, isRequired });
-    this.Options(options);
+    super({ Visible, displayName, isRequired, instructions });
+    ko.isObservable(options) ? (this.Options = options) : this.Options(options);
     this.multiple = multiple;
+    this.Value = multiple ? ko.observableArray() : ko.observable();
+    this.optionsText = optionsText;
   }
 
-  // For use with multiple select
-  SelectedOptions = ko.observableArray();
-  SelectedOption = ko.observable();
+  toString = ko.pureComputed(() =>
+    this.multiple ? this.Value().join(", ") : this.Value()
+  );
 
-  Value = ko.pureComputed({
-    read: () =>
-      this.multiple ? this.SelectedOptions().join(", ") : this.SelectedOption(),
-    write: (val) =>
-      this.multiple ? this.SelectedOptions(val) : this.SelectedOption(val),
-  });
+  get = () => this.Value();
 
-  get = () => {
-    if (this.multiple) {
-      return this.SelectedOptions();
-    }
-
-    return this.SelectedOption();
-  };
   set = (val) => {
     if (val && this.multiple) {
-      this.SelectedOptions(val.results ?? val.split("#;"));
+      if (Array.isArray(val)) {
+        this.Value(val);
+      } else {
+        this.Value(val.results ?? val.split(";#"));
+      }
+      return;
     }
-    this.SelectedOption(val);
+    this.Value(val);
   };
 
   Options = ko.observableArray();
 
-  components = components;
+  components = SelectModule;
 }

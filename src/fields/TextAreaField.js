@@ -1,12 +1,5 @@
-import { registerFieldComponent } from "../infrastructure/RegisterComponents.js";
-import BaseField from "./BaseField.js";
-
-const components = {
-  view: "text-area-view",
-  edit: "text-area-edit",
-};
-
-registerFieldComponent("textarea", components);
+import { TextAreaModule } from "../components/Fields/index.js";
+import { BaseField } from "./index.js";
 
 export default class TextAreaField extends BaseField {
   constructor(params) {
@@ -15,5 +8,5 @@ export default class TextAreaField extends BaseField {
     this.attr = params.attr ?? {};
   }
 
-  components = components;
+  components = TextAreaModule;
 }

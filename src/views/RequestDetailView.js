@@ -1,8 +1,7 @@
-import { requestStates } from "../entities/Request.js";
+import { requestInternalStates, requestStates } from "../constants/index.js";
 import { actionTypes } from "../entities/Action.js";
 
 import { People } from "../entities/People.js";
-import { NewAssignmentComponent } from "../components/NewAssignmentComponent.js";
 
 import { createNewRequestTitle } from "../common/EntityUtilities.js";
 import { businessDaysFromDate } from "../common/DateUtilities.js";
@@ -13,8 +12,11 @@ import { addTask, finishTask, taskDefs } from "../stores/Tasks.js";
 import { currentUser } from "../infrastructure/Authorization.js";
 
 import { getAppContext } from "../infrastructure/ApplicationDbContext.js";
+import TextAreaField from "../fields/TextAreaField.js";
 
-import { Tabs } from "../app.js";
+import { requestsByStatusMap } from "../stores/Requests.js";
+
+import { stageActionTypes } from "../entities/PipelineStage.js";
 
 const DEBUG = true;
 
@@ -45,6 +47,11 @@ export class RequestDetailView {
     await this.request.refreshAll();
   };
 
+  Request = ko.observable();
+  get request() {
+    return this.Request();
+  }
+
   DisplayModes = DisplayModes;
   DisplayMode = ko.observable();
 
@@ -59,18 +66,43 @@ export class RequestDetailView {
   ShowActionsArea = ko.pureComputed(
     () =>
       this.request.State.IsActive() &&
+      !this.request.IsLoading() &&
+      !this.request.Assignments.AreLoading() &&
       this.request.Assignments.CurrentStage.list.UserActionAssignments().length
   );
 
-  // TODO: Minor - this should probably be it's own component w/ template
-  NewCommentComponent = {
-    CommentText: ko.observable(),
+  ShowCloseArea = ko.pureComputed(() => {
+    return (
+      !this.request.IsLoading() &&
+      !this.request.Assignments.AreLoading() &&
+      this.request.Authorization.currentUserCanClose()
+    );
+  });
+
+  ShowFulfillArea = ko.pureComputed(() => {
+    return (
+      !this.request.IsLoading() &&
+      !this.request.Assignments.AreLoading() &&
+      this.request.Authorization.currentUserCanClose()
+    );
+  });
+
+  EnableChangeStatusArea = ko.pureComputed(() => {
+    return this.request.Authorization.currentUserCanAdvance();
+  });
+
+  newComment = {
+    input: new TextAreaField({
+      displayName: "Please provide additional comments/instructions here",
+      instructions: null,
+      isRichText: true,
+    }),
     submit: async () => {
       const comment = {
-        Comment: this.NewCommentComponent.CommentText(),
+        Comment: this.newComment.input.Value(),
       };
       await this.request.Comments.addNew(comment);
-      this.NewCommentComponent.CommentText("");
+      this.newComment.input.Value("");
     },
   };
 
@@ -78,22 +110,27 @@ export class RequestDetailView {
     // 1. Validate Request
     if (!this.request.Validation.validate()) return;
 
-    const serviceType = this.request.ServiceType.Def();
+    const serviceType = this.request.RequestType;
     if (!serviceType) {
       // We should have caught this in validation.
       throw "no service type provided";
     }
+    const saveTask = addTask(taskDefs.save);
     this.DisplayMode(DisplayModes.View);
-    //const saveTaskId = addTask(taskDefs.save);
+    this.request.DisplayMode(DisplayModes.View);
 
     // 2. Create Folder Structure
+    this.request.State.Status(requestStates.open);
     const folderPath = this.request.getRelativeFolderPath();
 
     createFolders: {
-      //const breakingPermissionsTask = addTask(taskDefs.permissions);
+      const breakingPermissionsTask = addTask(taskDefs.permissions);
       const folderPerms = this.request.getFolderPermissions();
 
       const listRefs = this.request.getInitialListRefs();
+      // See if we have any staged attachments
+      const hasStagedAttachments = this.request.Attachments.list.All().length;
+      if (hasStagedAttachments) listRefs.push(this._context.Attachments);
 
       await Promise.all(
         listRefs.map(async (listRef) => {
@@ -110,9 +147,20 @@ export class RequestDetailView {
           );
         })
       );
-      //finishTask(breakingPermissionsTask);
+      finishTask(breakingPermissionsTask);
+
+      if (hasStagedAttachments) {
+        const stagingFolderPath = this.request.getRelativeFolderPathStaging();
+        await this._context.Attachments.CopyFolderContents(
+          stagingFolderPath,
+          folderPath
+        );
+        // Delete
+        await this._context.Attachments.DeleteFolderByPath(stagingFolderPath);
+      }
     }
 
+    // 3. Initialize request header
     // Initialize dates
     const effectiveSubmissionDate =
       this.request.calculateEffectiveSubmissionDate();
@@ -123,14 +171,17 @@ export class RequestDetailView {
         serviceType.DaysToCloseBusiness
       )
     );
+    this.request.RequestOrgs(
+      this.request.Pipeline.Stages()
+        .filter((stage) => null != stage.RequestOrg)
+        .map((stage) => stage.RequestOrg)
+    );
 
-    this.request.State.Status(requestStates.open);
+    this.request.State.InternalStatus(requestInternalStates.inProgress);
     this.request.State.IsActive(true);
 
     createItems: {
       await this._context.Requests.AddEntity(this.request, folderPath);
-
-      await this.request.ServiceType.createEntity();
     }
 
     Router.setUrlParam("reqId", this.request.Title);
@@ -145,6 +196,16 @@ export class RequestDetailView {
 
     // Progress Request
     this.request.Pipeline.advance();
+
+    this.request.Validation.reset();
+
+    this.request.LoadedAt(new Date());
+
+    // push the newrequest to the open requests store
+    const openrequests = requestsByStatusMap.get(requestStates.open);
+    openrequests.List.push(this.request);
+
+    finishTask(saveTask);
   };
 
   editRequestHandler = async () => {
@@ -167,10 +228,81 @@ export class RequestDetailView {
     }
   };
 
+  promptFulfill = () => {
+    if (
+      this.request.Pipeline.Stage().ActionType == stageActionTypes.Closed &&
+      confirm("Close and finalize request? This action cannot be undone!")
+    ) {
+      this.request.closeAndFinalize(requestStates.fulfilled);
+      return;
+    }
+
+    const openSteps =
+      this.request.Pipeline.Stages().length -
+      this.request.Pipeline.Stage()?.Step;
+
+    if (
+      openSteps &&
+      confirm(
+        `This request still has ${openSteps} open steps! ` +
+          `Are you sure you want to close and finalize it? This action cannot be undone!`
+      )
+    ) {
+      this.request.closeAndFinalize(requestStates.fulfilled);
+      return;
+    }
+  };
+
+  promptCancel = () => {
+    if (confirm("Cancel request? This action cannot be undone!")) {
+      this.request.closeAndFinalize(requestStates.cancelled);
+    }
+  };
+
+  pauseOptions = Object.entries(requestInternalStates)
+    .filter(([key, value]) => value != requestInternalStates.inProgress)
+    .map(([key, value]) => {
+      return { key, value };
+    });
+
+  pauseReason = ko.observable();
+
+  showPause = ko.pureComputed(() => {
+    return (
+      this.request.State.Status() == requestStates.open &&
+      this.request.State.InternalStatus() == requestInternalStates.inProgress
+    );
+  });
+  clickPause = () => {
+    const reason = this.pauseReason();
+    this.pauseReason(null);
+    this.request.pauseRequest(reason);
+  };
+
+  showResume = ko.pureComputed(() => {
+    return this.request.State.IsPaused();
+  });
+
+  clickResume = () => {
+    this.request.resumeRequest();
+  };
+
   validationWatcher = (isValid) => {
-    if (isValid && this.request.Authorization.currentUserCanAdvance()) {
+    if (
+      isValid &&
+      this.request.Authorization.currentUserCanAdvance() &&
+      !this.request.Assignments.CurrentStage.list.InProgress().length
+    ) {
       this.promptAdvance();
     }
+  };
+
+  nextStageHandler = () => {
+    if (!this.request.Assignments.CurrentStage.list.InProgress().length) {
+      this.request.Pipeline.advance();
+      return;
+    }
+    this.promptAdvance();
   };
 
   promptAdvanceModal;
@@ -204,40 +336,43 @@ export class RequestDetailView {
 
   serviceTypeDefinitionWatcher = (newSvcType) => {
     // This should only be needed when creating a new request.
-    this.request.ServiceType.refreshEntity(newSvcType);
   };
 
-  constructor({ request, displayMode = DisplayModes.View, serviceType }) {
-    this.request = request;
+  createNewRequest = async ({ request }) => {
+    const { Requestor, Phone, Email, OfficeSymbol } = request.RequestorInfo;
+    const Author = request.Author.Value;
+
+    if (!Requestor()) Requestor(new People(currentUser()));
+    if (!Author()) Author(new People(currentUser()));
+    if (!Phone()) Phone(currentUser().WorkPhone);
+    if (!Email()) Email(currentUser().EMail);
+    if (!OfficeSymbol.get()) OfficeSymbol.set(currentUser().OfficeSymbol);
+    //this.request.Title = createNewRequestTitle();
+    const { Status, InternalStatus, IsActive } = request.State;
+    if (!Status()) Status(requestStates.draft);
+    if (!InternalStatus()) InternalStatus(requestStates.draft);
+    if (!IsActive()) IsActive(true);
+
+    // Watch for a change in service type
+    request.LoadedAt(new Date());
+
+    request.Validation.IsValid.subscribe(this.validationWatcher);
+
+    this.Request(request);
+    this.DisplayMode(DisplayModes.New);
+  };
+
+  viewRequest = ({ request }) => {
+    request.Validation.IsValid.subscribe(this.validationWatcher);
+
+    this.Request(request);
+
+    this.DisplayMode(DisplayModes.View);
+
+    this.refreshAll();
+  };
+
+  constructor() {
     this._context = getAppContext();
-
-    if (displayMode == DisplayModes.New) {
-      this.request.RequestorInfo.Requestor(new People(currentUser()));
-      this.request.RequestorInfo.Phone(currentUser().WorkPhone);
-      this.request.RequestorInfo.Email(currentUser().EMail);
-      this.request.Title = createNewRequestTitle();
-      this.request.State.Status(requestStates.draft);
-      this.request.State.IsActive(true);
-      this.request.ServiceType.Def.subscribe(this.serviceTypeDefinitionWatcher);
-    }
-
-    if (serviceType) {
-      this.request.ServiceType.Def(serviceType);
-      // this.ServiceType.instantiateEntity();
-    }
-
-    this.request.Assignments.NewAssignmentComponent =
-      new NewAssignmentComponent({
-        addAssignment: this.request.Assignments.addNew,
-      });
-
-    this.request.Validation.IsValid.subscribe(this.validationWatcher);
-    // this.DisplayMode.subscribe(this.displayModeWatcher);
-    this.DisplayMode(displayMode);
-
-    this.request.LoadedAt(new Date());
-    if (displayMode != DisplayModes.New) {
-      this.refreshAll();
-    }
   }
 }

@@ -1,17 +1,10 @@
-import { registerFieldComponent } from "../infrastructure/RegisterComponents.js";
-import BaseField from "./BaseField.js";
-
-const components = {
-  view: "checkbox-view",
-  edit: "checkbox-edit",
-};
-
-registerFieldComponent("checkbox", components);
+import { BaseField } from "./index.js";
+import { CheckboxModule } from "../components/Fields/index.js";
 
 export default class CheckboxField extends BaseField {
   constructor(params) {
     super(params);
   }
 
-  components = components;
+  components = CheckboxModule;
 }

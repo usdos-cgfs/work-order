@@ -1,30 +1,40 @@
 import { assignmentStates } from "../../entities/Assignment.js";
 import { currentUser } from "../../infrastructure/Authorization.js";
+import { BaseComponent } from "../index.js";
+import { approvalTemplate } from "./ApprovalTemplate.js";
 
-export default function ApprovalActions(params) {
-  console.log("hello from approval module", params);
+export class ApprovalActions extends BaseComponent {
+  constructor(params) {
+    super();
+    // this._context = getAppContext();
+    this.assignment = params.assignment;
+    // this.ServiceType = params.request.ServiceType;
+    // this.Errors = params.errors;
+    // this.Request = params.request;
+    this.completeAssignment = params.completeAssignment;
+  }
 
-  const assignment = params.assignment;
+  assignmentStates = assignmentStates;
 
-  const approve = async () => {
-    params.completeAssignment(params.assignment, assignmentStates.Approved);
+  approve = async () => {
+    this.completeAssignment(this.assignment, assignmentStates.Approved);
   };
 
-  const approveHandler = async () => {
+  approveHandler = async () => {
     console.log("approved");
     // Check if we have been directly assigned or as an action office
-    if (assignment.userIsDirectlyAssigned(currentUser())) {
-      approve();
+    if (this.assignment.userIsDirectlyAssigned(currentUser())) {
+      this.approve();
       return;
     }
 
-    if (assignment.userIsInRequestOrg(currentUser())) {
+    if (this.assignment.userIsInRequestOrg(currentUser())) {
       if (
         confirm(
-          `This approval is assigned to ${assignment.Assignee.Title}. Do you want to approve on their behalf? `
+          `This approval is assigned to ${this.assignment.Assignee.Title}. Do you want to approve on their behalf? `
         )
       ) {
-        approve();
+        this.approve();
       }
       return;
     }
@@ -32,27 +42,27 @@ export default function ApprovalActions(params) {
     alert("You are not authorized to approve this request!");
   };
 
-  const rejectModalId = "reject-modal-" + assignment.ID;
-  const rejectReason = ko.observable();
+  rejectModalId = ko.pureComputed(() => "reject-modal-" + this.assignment.ID);
+  RejectReason = ko.observable();
 
-  const reject = async () => {
+  reject = async () => {
     console.log("reject");
-    params.assignment.Comment = rejectReason();
-    params.completeAssignment(params.assignment, assignmentStates.Rejected);
-    document.getElementById(rejectModalId).close();
+    this.assignment.Comment = this.RejectReason();
+    this.completeAssignment(this.assignment, assignmentStates.Rejected);
+    document.getElementById(this.rejectModalId()).close();
   };
 
-  const showReject = () => {
-    const rejectModal = document.getElementById(rejectModalId);
-    if (assignment.userIsDirectlyAssigned(currentUser())) {
+  showReject = () => {
+    const rejectModal = document.getElementById(this.rejectModalId());
+    if (this.assignment.userIsDirectlyAssigned(currentUser())) {
       rejectModal.showModal();
       return;
     }
 
-    if (assignment.userIsInRequestOrg(currentUser())) {
+    if (this.assignment.userIsInRequestOrg(currentUser())) {
       if (
         confirm(
-          `This approval is assigned to ${assignment.Assignee.Title}. Do you want to reject on their behalf? `
+          `This approval is assigned to ${this.assignment.Assignee.Title}. Do you want to reject on their behalf? `
         )
       ) {
         rejectModal.showModal();
@@ -63,23 +73,14 @@ export default function ApprovalActions(params) {
     alert("You are not authorized to reject this request!");
   };
 
-  const cancelReject = () => {
-    document.getElementById(rejectModalId).close();
+  cancelReject = () => {
+    document.getElementById(this.rejectModalId()).close();
   };
 
-  const undo = async () => {
+  undo = async () => {
     // TODO: Minor - We should have an undo option instead of a "Reject Instead"
   };
 
-  return {
-    approveHandler,
-    undo,
-    reject,
-    showReject,
-    cancelReject,
-    rejectReason,
-    rejectModalId,
-    assignment,
-    assignmentStates,
-  };
+  static name = "approver-actions";
+  static template = approvalTemplate;
 }
