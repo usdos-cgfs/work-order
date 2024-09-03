@@ -26,11 +26,11 @@
 
 <!-- Other Libraries -->
 <!-- Quill JS -->
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
 <link
-  href="/sites/CGFS/Style Library/apps/wo/lib/quill/quill.snow.1.3.6.css"
+  href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css"
   rel="stylesheet"
 />
-<script src="/sites/CGFS/Style Library/apps/wo/lib/quill/quill.1.3.6.min.js"></script>
 
 <!-- Bootstrap -->
 <link
