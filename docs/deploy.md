@@ -1,6 +1,8 @@
 # Deployment Instructions
 
-1. Merge development changes into master (if done on github, pull changes to local development environment before proceeding.)
+1. Merge development changes into master.
+   1. If merging from `development` branch, use a merge commit, do not squash or rebase.
+   2. If done on github, pull changes to local development environment before proceeding.
 2. Remove or comment out `/dist` line from .gitignore, this will allow us to include our build results into source control.
 3. Run `npm run build` from terminal
    1. NOTE: build assets should now be in `/dist` folder.
