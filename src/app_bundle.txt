@@ -56,7 +56,7 @@
 <script src="/sites/CGFS/Style Library/apps/wo/lib/knockout/knockout-3.5.1.js"></script>
 
 <link
-  href="https://cdn.jsdelivr.net/gh/usdos-cgfs/work-order-pub@latest/dist/app.css"
+  href="https://cdn.jsdelivr.net/gh/usdos-cgfs/work-order@latest/dist/app.css"
   rel="stylesheet"
 />
 
@@ -65,5 +65,5 @@
 <script
   defer
   type="module"
-  src="https://cdn.jsdelivr.net/gh/usdos-cgfs/work-order-pub@latest/dist/app_bundle.js"
+  src="https://cdn.jsdelivr.net/gh/usdos-cgfs/work-order@latest/dist/app_bundle.js"
 ></script>
