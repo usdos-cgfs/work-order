@@ -5,7 +5,8 @@ import * as path from "path";
 await esbuild.build({
   entryPoints: ["./src/app_bundle.js", "./src/app.css"],
   bundle: true,
-  minify: true,
+  minify: false,
+  sourcemap: true,
   outdir: "dist",
 });
 

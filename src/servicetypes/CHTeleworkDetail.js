@@ -1,5 +1,5 @@
 import { PeopleField, SelectField, TextField } from "../fields/index.js";
-
+import { requestOrgStore, OrgTypes } from "../entities/RequestOrg.js";
 import { BaseServiceDetail } from "./BaseServiceDetail.js";
 
 export class CH_Telework extends BaseServiceDetail {
