@@ -49,6 +49,7 @@ export class RequestOrg {
       "BreakAccess",
       "PreferredEmail",
       "Everyone",
+      "ManagingDirector",
     ],
   };
 
