@@ -1806,7 +1806,8 @@
         "OrgType",
         "BreakAccess",
         "PreferredEmail",
-        "Everyone"
+        "Everyone",
+        "ManagingDirector"
       ]
     };
     static ListDef = {
@@ -3919,6 +3920,22 @@
       });
       return [newCustomAssignment];
     },
+    getROManagingDirector: function(request2, stage) {
+      const assignee = request2.RequestorInfo.Office()?.ManagingDirector;
+      if (!assignee) {
+        throw new Error("Could not find stage Assignee");
+      }
+      const person = People.Create(assignee);
+      return [
+        new Assignment({
+          Assignee: person,
+          RequestOrg: stage.RequestOrg,
+          PipelineStage: stage,
+          IsActive: true,
+          Role: roles.Approver
+        })
+      ];
+    },
     getGTM: function(request2, stage) {
       const assignee = request2.RequestBodyBlob?.Value()?.FieldMap.GTM.get();
       if (!assignee) {
@@ -5113,7 +5130,7 @@
     }
     const assignedNotification = Notification.Create({
       Title: formatNotificationTitle(request2, "Assigned"),
-      Body: `<p>Greetings Colleagues,<br><br>You have been assigned the role of       <strong>${role}</strong> on the following       request:<br>` + request2.getAppLinkElement() + "</p>" + roleBasedMessage + "<p>To view the request, please click the link above,       or copy and paste the below URL into your browser: <br> " + request2.getAppLink() + "</p>",
+      Body: `<p>Greetings Colleagues,<br><br>You have been assigned the role of       <strong>${role}</strong> on the following       request:<br>` + request2.getAppLinkElement() + "</p>" + roleBasedMessage + "<p>To view the request, please click the link above,       or copy and paste the below URL into your browser: <br> " + request2.getAppLink() + "</p><strong>Note:</strong> if you are a <strong>Subscriber</strong> or       <strong>Viewer</strong> you have no action to take.",
       Request: request2
     });
     const assignee = new People(action.data?.Assignee);
@@ -6867,8 +6884,9 @@
           }
           return;
         }
+        const Assignee = stage.Assignee ? People.Create(stage.Assignee) : RequestOrg.FindInStore(stage.RequestOrg)?.UserGroup;
         const newAssignment = new Assignment({
-          Assignee: stage.Assignee ?? RequestOrg.FindInStore(stage.RequestOrg)?.UserGroup,
+          Assignee,
           RequestOrg: stage.RequestOrg,
           PipelineStage: stage,
           IsActive: true,
@@ -7286,6 +7304,7 @@
     FPCodesRequest: () => FPCodesRequest,
     FPTravelRequest: () => FPTravelRequest,
     FiscalIrregularities: () => FiscalIrregularities,
+    GOVirtualException: () => GOVirtualException,
     ITHardware: () => ITHardware,
     ITSoftware: () => ITSoftware,
     Ironkey: () => Ironkey,
@@ -8363,6 +8382,58 @@ Full Name: 	${this.serviceType.FieldMap.FullName.toString()}Employee Type: 	${th
       fields: _FPTravelRequest.Views.All
     };
     static uid = "fp_travel";
+  };
+
+  // src/servicetypes/GOVirtualExceptionDetail.js
+  var GOVirtualException = class _GOVirtualException extends BaseServiceDetail {
+    constructor(params) {
+      super(params);
+    }
+    // setRequestContext = async (request) => {
+    //   this.Request = request;
+    //   const managingDirector = request.Request.Office()?.ManagingDirector;
+    //   if (managingDirector) {
+    //     this.ManagingDirector.set(managingDirector);
+    //   }
+    // };
+    accessTypeOpts = ["Temporary", "Permanent"];
+    AccessType = new SelectField({
+      isRequired: true,
+      displayName: "Request Type",
+      options: this.accessTypeOpts
+    });
+    DatesRequired = ko.pureComputed(() => this.AccessType.Value() == "Temporary");
+    StartDate = new DateField({
+      displayName: "Start Date",
+      isRequired: this.DatesRequired,
+      Visible: this.DatesRequired
+    });
+    EndDate = new DateField({
+      displayName: "End Date",
+      isRequired: this.DatesRequired,
+      Visible: this.DatesRequired
+    });
+    // ManagingDirector = new PeopleField({
+    //   displayName: "Managing Director",
+    //   isRequired: true,
+    // });
+    FieldMap = {
+      ...this.FieldMap,
+      AccessType: this.AccessType,
+      StartDate: this.StartDate,
+      EndDate: this.EndDate
+      // ManagingDirector: this.ManagingDirector,
+    };
+    static Views = {
+      All: ["ID", "Title", "AccessType", "StartDate", "EndDate"]
+    };
+    static ListDef = {
+      name: "st_govirtual",
+      title: "st_govirtual",
+      isServiceType: true,
+      fields: _GOVirtualException.Views.All
+    };
+    static uid = "govirtual";
   };
 
   // src/servicetypes/ITHardwareDetail.js
