@@ -785,9 +785,12 @@ export class RequestEntity {
         return;
       }
 
+      const Assignee = stage.Assignee
+        ? People.Create(stage.Assignee)
+        : RequestOrg.FindInStore(stage.RequestOrg)?.UserGroup;
+
       const newAssignment = new Assignment({
-        Assignee:
-          stage.Assignee ?? RequestOrg.FindInStore(stage.RequestOrg)?.UserGroup,
+        Assignee,
         RequestOrg: stage.RequestOrg,
         PipelineStage: stage,
         IsActive: true,

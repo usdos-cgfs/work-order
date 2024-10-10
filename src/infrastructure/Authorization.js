@@ -292,6 +292,22 @@ export const AssignmentFunctions = {
 
     return [newCustomAssignment];
   },
+  getROManagingDirector: function (request, stage) {
+    const assignee = request.RequestorInfo.Office()?.ManagingDirector;
+    if (!assignee) {
+      throw new Error("Could not find stage Assignee");
+    }
+    const person = People.Create(assignee);
+    return [
+      new Assignment({
+        Assignee: person,
+        RequestOrg: stage.RequestOrg,
+        PipelineStage: stage,
+        IsActive: true,
+        Role: roles.Approver,
+      }),
+    ];
+  },
   getGTM: function (request, stage) {
     const assignee = request.RequestBodyBlob?.Value()?.FieldMap.GTM.get();
     if (!assignee) {
