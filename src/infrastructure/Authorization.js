@@ -11,6 +11,7 @@ import {
   getGroupUsers,
   ensureUserByKeyAsync,
 } from "./SAL.js";
+import { stageActionTypes } from "../entities/PipelineStage.js";
 
 export const permissions = {
   FullControl: "Full Control",
@@ -187,10 +188,16 @@ export function getRequestFolderPermissions(request) {
   request.Pipeline.Stages()?.forEach((stage) => {
     const stageOrg = RequestOrg.FindInStore(stage.RequestOrg);
     if (stageOrg) {
-      folderPermissions.push([
-        stageOrg.UserGroup,
-        permissions.RestrictedContribute,
-      ]);
+      // Grant appropriate level role based off orgs assigned action type
+      let orgPerms;
+      switch (stage.ActionType) {
+        case stageActionTypes.Notification:
+          orgPerms = permissions.RestrictedRead;
+          break;
+        default:
+          orgPerms = permissions.Contribute;
+      }
+      folderPermissions.push([stageOrg.UserGroup, orgPerms]);
     }
 
     if (
