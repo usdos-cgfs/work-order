@@ -4458,6 +4458,7 @@
         "Assignee",
         "WildCardAssignee",
         "RequestOrg",
+        "NotifyOrg",
         "AssignmentFunction",
         "ActionComponentName"
       ]
@@ -5117,9 +5118,15 @@
   }
   async function requestAssignedNotification(request2, action) {
     if (window.DEBUG)
-      console.log("Sending Request Assigned Notification for: ", request2);
-    if (window.DEBUG) console.log(action);
-    const role = action.data?.Role?.LookupValue;
+      console.log("Sending Request Assigned Notification for: ", request2, action);
+    if (!action.data) {
+      console.warn("Assignment created with no Payload", request2, action);
+      return;
+    }
+    const stage = action.data.PipelineStage;
+    const role = action.data.Role?.LookupValue;
+    const assignee = new People(action.data.Assignee);
+    const assignedReqOrg = RequestOrg.FindInStore(action.data.RequestOrg);
     let roleBasedMessage = "";
     switch (role) {
       case assignmentRoles.Subscriber:
@@ -5133,13 +5140,13 @@
       Body: `<p>Greetings Colleagues,<br><br>You have been assigned the role of       <strong>${role}</strong> on the following       request:<br>` + request2.getAppLinkElement() + "</p>" + roleBasedMessage + "<p>To view the request, please click the link above,       or copy and paste the below URL into your browser: <br> " + request2.getAppLink() + "</p><strong>Note:</strong> if you are a <strong>Subscriber</strong> or       <strong>Viewer</strong> you have no action to take.",
       Request: request2
     });
-    const assignee = new People(action.data?.Assignee);
-    const assignedReqOrg = RequestOrg.FindInStore(action.data?.RequestOrg);
     if (assignee?.ID != assignedReqOrg?.UserGroup.ID) {
       const to = await peopleToEmailString(assignee);
       assignedNotification.ToString.Value(to);
-      const cc = await reqOrgToEmailString(assignedReqOrg);
-      assignedNotification.CCString.Value(cc);
+      if (stage.NotifyOrg) {
+        const cc = await reqOrgToEmailString(assignedReqOrg);
+        assignedNotification.CCString.Value(cc);
+      }
     } else {
       const to = await reqOrgToEmailString(assignedReqOrg);
       assignedNotification.ToString.Value(to);
