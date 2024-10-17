@@ -8384,10 +8384,54 @@ Full Name: 	${this.serviceType.FieldMap.FullName.toString()}Employee Type: 	${th
     static uid = "fp_travel";
   };
 
-  // src/servicetypes/GOVirtualExceptionDetail.js
+  // src/servicetypes/govirtual/views/Edit.js
+  var govirtualEditTemplate = html2`
+  <div>
+    <div class="row row-cols-2 form-fields">
+      <div
+        class="col pb-2"
+        data-bind="component: {name: RequestingOffice.components.edit, params: RequestingOffice}"
+      ></div>
+      <div
+        class="col pb-2"
+        data-bind="component: {name: ManagingDirector.components.view, params: ManagingDirector}"
+      ></div>
+      <div
+        class="col pb-2"
+        data-bind="component: {name: AccessType.components.edit, params: AccessType}"
+      ></div>
+      <!-- ko if: DatesRequired -->
+      <div
+        class="col pb-2"
+        data-bind="component: {name: StartDate.components.edit, params: StartDate}"
+      ></div>
+      <div
+        class="col pb-2"
+        data-bind="component: {name: EndDate.components.edit, params: EndDate}"
+      ></div>
+      <!-- /ko -->
+    </div>
+  </div>
+`;
+
+  // src/servicetypes/govirtual/GOVirtualExceptionDetail.js
+  var components = {
+    ...defaultComponents,
+    edit: "svc-govirtual-edit",
+    new: "svc-govirtual-edit"
+  };
+  var GOVirtualExceptionModule = class extends ConstrainedEntityEditModule {
+    constructor(params) {
+      super(params);
+    }
+    static name = components.edit;
+    static template = govirtualEditTemplate;
+  };
+  registerComponentFromConstructor(GOVirtualExceptionModule);
   var GOVirtualException = class _GOVirtualException extends BaseServiceDetail {
     constructor(params) {
       super(params);
+      this.RequestingOffice.Value.subscribe(this.requestingOfficeChangeHandler);
     }
     // setRequestContext = async (request) => {
     //   this.Request = request;
@@ -8396,6 +8440,23 @@ Full Name: 	${this.serviceType.FieldMap.FullName.toString()}Employee Type: 	${th
     //     this.ManagingDirector.set(managingDirector);
     //   }
     // };
+    RequestingOffice = new LookupField({
+      isRequired: true,
+      type: RequestOrg,
+      displayName: "Requesting Office",
+      Options: ko.pureComputed(() => {
+        return requestOrgStore().filter((org) => org.ManagingDirector);
+      })
+    });
+    ManagingDirector = new PeopleField({
+      isRequired: true,
+      displayName: "Managing Director",
+      isEditable: false
+    });
+    requestingOfficeChangeHandler = (newOffice) => {
+      if (!newOffice) return;
+      this.ManagingDirector.set(newOffice.ManagingDirector);
+    };
     accessTypeOpts = ["Temporary", "Permanent"];
     AccessType = new SelectField({
       isRequired: true,
@@ -8419,13 +8480,23 @@ Full Name: 	${this.serviceType.FieldMap.FullName.toString()}Employee Type: 	${th
     // });
     FieldMap = {
       ...this.FieldMap,
+      RequestingOffice: this.RequestingOffice,
+      ManagingDirector: this.ManagingDirector,
       AccessType: this.AccessType,
       StartDate: this.StartDate,
       EndDate: this.EndDate
-      // ManagingDirector: this.ManagingDirector,
     };
+    components = components;
     static Views = {
-      All: ["ID", "Title", "AccessType", "StartDate", "EndDate"]
+      All: [
+        "ID",
+        "Title",
+        "RequestingOffice",
+        "ManagingDirector",
+        "AccessType",
+        "StartDate",
+        "EndDate"
+      ]
     };
     static ListDef = {
       name: "st_govirtual",
@@ -9648,7 +9719,7 @@ Full Name: 	${this.serviceType.FieldMap.FullName.toString()}Employee Type: 	${th
   var errorSource2 = "gov-manager-actions";
 
   // src/servicetypes/ch_overtime/CHOvertimeDetail.js
-  var components = {
+  var components2 = {
     view: "svc-ch_overtime-view",
     edit: "svc-ch_overtime-edit",
     new: "svc-ch_overtime-edit"
@@ -9670,14 +9741,14 @@ Full Name: 	${this.serviceType.FieldMap.FullName.toString()}Employee Type: 	${th
     constructor(params) {
       super(params);
     }
-    static name = components.view;
+    static name = components2.view;
     static template = chOvertimeViewTemplate;
   };
   var CH_OvertimeEditModule = class extends ConstrainedEntityEditModule {
     constructor(params) {
       super(params);
     }
-    static name = components.edit;
+    static name = components2.edit;
     static template = chOvertimeEditTemplate;
   };
   registerComponentFromConstructor(CH_OvertimeEditModule);
@@ -9823,7 +9894,7 @@ Full Name: 	${this.serviceType.FieldMap.FullName.toString()}Employee Type: 	${th
       })
       // ContractorSupplement: this.ContractorSupplementField,
     };
-    components = components;
+    components = components2;
     static Views = {
       All: [
         "ID",
@@ -9976,7 +10047,7 @@ Full Name: 	${this.serviceType.FieldMap.FullName.toString()}Employee Type: 	${th
     New: "New",
     Renewal: "Renewal"
   };
-  var components2 = {
+  var components3 = {
     view: "svc-diplomatic_passport-view",
     edit: "svc-diplomatic_passport-edit",
     new: "svc-diplomatic_passport-edit"
@@ -9985,14 +10056,14 @@ Full Name: 	${this.serviceType.FieldMap.FullName.toString()}Employee Type: 	${th
     constructor(params) {
       super(params);
     }
-    static name = components2.edit;
+    static name = components3.edit;
     static template = diplomaticPassportEditTemplate;
   };
   var DiplomaticPassportViewModule = class extends ConstrainedEntityViewModule {
     constructor(params) {
       super(params);
     }
-    static name = components2.view;
+    static name = components3.view;
     static template = diplomaticPassportViewTemplate;
   };
   registerComponentFromConstructor(DiplomaticPassportEditModule);
@@ -10122,7 +10193,7 @@ Full Name: 	${this.serviceType.FieldMap.FullName.toString()}Employee Type: 	${th
       this.FieldMap.FullName,
       this.FieldMap.PassportNum
     ]);
-    components = components2;
+    components = components3;
     static Views = {
       All: ["ID", "Title"]
     };
@@ -10196,7 +10267,7 @@ Full Name: 	${this.serviceType.FieldMap.FullName.toString()}Employee Type: 	${th
 `;
 
   // src/servicetypes/fp_fiscal_irreg/FPFiscalIrregDetail.js
-  var components3 = {
+  var components4 = {
     ...defaultComponents,
     edit: "svc-fiscal-irreg-edit",
     new: "svc-fiscal-irreg-edit"
@@ -10205,7 +10276,7 @@ Full Name: 	${this.serviceType.FieldMap.FullName.toString()}Employee Type: 	${th
     constructor(params) {
       super(params);
     }
-    static name = components3.edit;
+    static name = components4.edit;
     static template = fiscalIrregEditTemplate;
   };
   registerComponentFromConstructor(FiscalIrregularitiesEditModule);
@@ -10258,7 +10329,7 @@ Full Name: 	${this.serviceType.FieldMap.FullName.toString()}Employee Type: 	${th
       USDValue: this.USDValue,
       FIType: this.FIType
     };
-    components = components3;
+    components = components4;
     static uid = "fp_fiscal_irreg";
   };
 
@@ -10485,7 +10556,7 @@ Full Name: 	${this.serviceType.FieldMap.FullName.toString()}Employee Type: 	${th
 `;
 
   // src/servicetypes/property_space/PropertySpaceDetail.js
-  var components4 = {
+  var components5 = {
     view: "svc-prop_space-view",
     edit: "svc-prop_space-edit",
     new: "svc-prop_space-edit"
@@ -10494,14 +10565,14 @@ Full Name: 	${this.serviceType.FieldMap.FullName.toString()}Employee Type: 	${th
     constructor(params) {
       super(params);
     }
-    static name = components4.edit;
+    static name = components5.edit;
     static template = propSpaceEditTemplate;
   };
   var PropertySpaceViewModule = class extends ConstrainedEntityViewModule {
     constructor(params) {
       super(params);
     }
-    static name = components4.view;
+    static name = components5.view;
     static template = propSpaceViewTemplate;
   };
   registerComponentFromConstructor(PropertySpaceEditModule);
@@ -10638,7 +10709,7 @@ Full Name: 	${this.serviceType.FieldMap.FullName.toString()}Employee Type: 	${th
         })
       })
     };
-    components = components4;
+    components = components5;
     static Views = {
       All: [
         "ID",
@@ -10688,7 +10759,7 @@ Full Name: 	${this.serviceType.FieldMap.FullName.toString()}Employee Type: 	${th
 `;
 
   // src/servicetypes/template/TemplateDetail.js
-  var components5 = {
+  var components6 = {
     view: "svc-template-view",
     edit: "svc-template-edit",
     new: "svc-template-edit"
@@ -10702,14 +10773,14 @@ Full Name: 	${this.serviceType.FieldMap.FullName.toString()}Employee Type: 	${th
     constructor(params) {
       super(params);
     }
-    static name = components5.view;
+    static name = components6.view;
     static template = templateViewTemplate;
   };
   var TemplateRequestEditModule = class extends ConstrainedEntityEditModule {
     constructor(params) {
       super(params);
     }
-    static name = components5.edit;
+    static name = components6.edit;
     static template = templateEditTemplate;
   };
   registerComponentFromConstructor(TemplateRequestEditModule);
@@ -10776,7 +10847,7 @@ Full Name: 	${this.serviceType.FieldMap.FullName.toString()}Employee Type: 	${th
         multiple: true
       })
     };
-    components = components5;
+    components = components6;
     /* Optional views when querying the EntitySet. 
       By default, all declared columns are used.
       When a view is passed, only the specified columns are loaded. */
