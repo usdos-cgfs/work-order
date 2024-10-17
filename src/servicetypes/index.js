@@ -21,7 +21,7 @@ export * from "./FPCashierOperationsDetail.js";
 export * from "./FPCodesDetail.js";
 export * from "./FPCollectionsDetail.js";
 export * from "./FPTravelDetail.js";
-export * from "./GOVirtualExceptionDetail.js";
+export * from "./govirtual/GOVirtualExceptionDetail.js";
 export * from "./ITHardwareDetail.js";
 export * from "./IronKeyDetail.js";
 export * from "./LocksmithDetail.js";
