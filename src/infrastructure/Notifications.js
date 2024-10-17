@@ -178,9 +178,18 @@ function requestAdvancedNotification(request) {
 
 async function requestAssignedNotification(request, action) {
   if (window.DEBUG)
-    console.log("Sending Request Assigned Notification for: ", request);
-  if (window.DEBUG) console.log(action);
-  const role = action.data?.Role?.LookupValue;
+    console.log("Sending Request Assigned Notification for: ", request, action);
+
+  if (!action.data) {
+    console.warn("Assignment created with no Payload", request, action);
+    return;
+  }
+
+  const stage = action.data.PipelineStage;
+  const role = action.data.Role?.LookupValue;
+  const assignee = new People(action.data.Assignee);
+  const assignedReqOrg = RequestOrg.FindInStore(action.data.RequestOrg);
+
   let roleBasedMessage = "";
   switch (role) {
     case assignmentRoles.Subscriber:
@@ -210,13 +219,13 @@ async function requestAssignedNotification(request, action) {
   });
 
   // Only send to assignee if they are different than the Request Org
-  const assignee = new People(action.data?.Assignee);
-  const assignedReqOrg = RequestOrg.FindInStore(action.data?.RequestOrg);
   if (assignee?.ID != assignedReqOrg?.UserGroup.ID) {
     const to = await peopleToEmailString(assignee);
     assignedNotification.ToString.Value(to);
-    const cc = await reqOrgToEmailString(assignedReqOrg);
-    assignedNotification.CCString.Value(cc);
+    if (stage.NotifyOrg) {
+      const cc = await reqOrgToEmailString(assignedReqOrg);
+      assignedNotification.CCString.Value(cc);
+    }
   } else {
     const to = await reqOrgToEmailString(assignedReqOrg);
     assignedNotification.ToString.Value(to);
