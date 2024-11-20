@@ -1,4 +1,7 @@
+import { actionTypes } from "../entities/Action.js";
 import { holidayStore } from "../entities/Holiday.js";
+
+const ONE_DAY = 1000 * 60 * 60 * 24;
 
 export function calculateEffectiveSubmissionDate(submissionDate = null) {
   // Check the submitted date, if it's between 3 pm, (19 UTC) and midnight (4 UTC)
@@ -15,6 +18,34 @@ export function calculateEffectiveSubmissionDate(submissionDate = null) {
   }
 }
 
+export function calculateEffectiveTimeToClose(request, closedAt) {
+  closedAt = closedAt ?? request.Dates.Closed.get();
+
+  const actions = request.Actions.list
+    .All()
+    .filter((action) =>
+      [actionTypes.Paused, actionTypes.Resumed].includes(action.ActionType)
+    );
+}
+
+/**
+ * If current date is a business day, returns immediately, otherwise
+ * calculates next or previous business midnight
+ * @param {*} date
+ * @param {*} stepDir 1 or -1 for next and previous business date respectively
+ * @returns
+ */
+function nextBusinessDate(date, stepDir = 1) {
+  if (isBusinessDay(date) && !isConfigHoliday(date)) return date;
+  const temp = new Date(date);
+  const hours = stepDir > 0 ? 0 : 24;
+
+  while (!isBusinessDay(temp) || isConfigHoliday(temp)) {
+    temp.setDate(temp.getDate() + 1 * stepDir);
+  }
+  temp.setHours(hours, 0, 0, 0);
+  return temp;
+}
 /* Business days start at 0, i.e. a workorder opened and closed
  on the same day will result in 0 days passed
  */
