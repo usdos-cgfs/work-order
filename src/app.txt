@@ -895,6 +895,7 @@
             <div
               class="badge"
               data-bind="text: request.State.InternalStatus, 
+              click: calculateEffectiveOpenTime,
               class: request.State.InternalStatusClass, 
               attr: {title: request.State.InternalStatus}"
             ></div>
