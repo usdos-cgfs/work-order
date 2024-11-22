@@ -1320,6 +1320,7 @@
             <div\r
               class="badge"\r
               data-bind="text: request.State.InternalStatus, \r
+              click: calculateEffectiveOpenTime,\r
               class: request.State.InternalStatusClass, \r
               attr: {title: request.State.InternalStatus}"\r
             ></div>\r
@@ -4458,6 +4459,7 @@
         "Assignee",
         "WildCardAssignee",
         "RequestOrg",
+        "NotifyOrg",
         "AssignmentFunction",
         "ActionComponentName"
       ]
@@ -4778,6 +4780,60 @@
   };
 
   // src/common/DateUtilities.js
+  var ONE_DAY = 1e3 * 60 * 60 * 24;
+  function calculateEffectiveTimeToClose(request2) {
+    const closeDate = request2.Dates.Closed.Value() ?? /* @__PURE__ */ new Date();
+    const effectiveClosedDate = nextBusinessDate(closeDate, -1);
+    const effectiveSubmittedDate = request2.Dates.Submitted.Value();
+    const nonBusinessDays = calculateNonBusinessDays(
+      effectiveSubmittedDate,
+      effectiveClosedDate
+    );
+    const nonBusinessMs = nonBusinessDays * ONE_DAY;
+    const actions = request2.Actions.list.All().filter(
+      (action) => [actionTypes.Paused, actionTypes.Resumed].includes(action.ActionType)
+    );
+    const effectivePauseDurations = [];
+    let effectivePauseDuration = 0;
+    for (let i = 0; i < actions.length; i++) {
+      const pauseAction = actions[i];
+      if (pauseAction.ActionType != actionTypes.Paused) {
+        console.warn("Not a pause action");
+      }
+      const pauseActionEffectiveDate = prevBusinessDate(
+        new Date(pauseAction.Created)
+      );
+      const effectivePauseDate = pauseActionEffectiveDate > effectiveSubmittedDate ? pauseActionEffectiveDate : effectiveSubmittedDate;
+      const resumeAction = actions[++i];
+      const resumeActionDate = resumeAction ? new Date(resumeAction.Created) : effectiveClosedDate;
+      const effectiveResumeDate = nextBusinessDate(resumeActionDate);
+      const pausedNonBusinessDays = calculateNonBusinessDays(
+        effectivePauseDate,
+        effectiveResumeDate
+      );
+      const pausedNonBusinessMs = pausedNonBusinessDays * ONE_DAY;
+      effectivePauseDuration += effectiveResumeDate - effectivePauseDate - pausedNonBusinessMs;
+    }
+    const effectiveMs = effectiveClosedDate - effectiveSubmittedDate - nonBusinessMs - effectivePauseDuration;
+    return effectiveMs;
+  }
+  function prevBusinessDate(date) {
+    return nextBusinessDate(date, -1);
+  }
+  function nextBusinessDate(date, stepDir = 1) {
+    if (isBusinessDay(date) && !isConfigHoliday(date)) return date;
+    const temp = new Date(date);
+    const hours = stepDir > 0 ? 0 : 24;
+    while (!isBusinessDay(temp) || isConfigHoliday(temp)) {
+      temp.setDate(temp.getDate() + 1 * stepDir);
+    }
+    if (stepDir > 0) {
+      temp.setHours(0, 0, 0, 0);
+    } else {
+      temp.setHours(23, 59, 59, 0);
+    }
+    return temp;
+  }
   function businessDaysFromDate(date, businessDays) {
     var counter = 0, tmp = new Date(date);
     var dayCnt = Math.abs(businessDays);
@@ -4797,6 +4853,18 @@
     var stepDir = Math.sign(endDate - startDate);
     while (temp.format("yyyy-MM-dd") != endDate.format("yyyy-MM-dd")) {
       if (isBusinessDay(temp) && !isConfigHoliday(temp)) {
+        counter++;
+      }
+      temp.setDate(temp.getDate() + 1 * stepDir);
+    }
+    return counter * stepDir;
+  }
+  function calculateNonBusinessDays(startDate, endDate) {
+    var counter = 0;
+    var temp = new Date(startDate);
+    var stepDir = Math.sign(endDate - startDate);
+    while (temp.format("yyyy-MM-dd") != endDate.format("yyyy-MM-dd")) {
+      if (!isBusinessDay(temp) || isConfigHoliday(temp)) {
         counter++;
       }
       temp.setDate(temp.getDate() + 1 * stepDir);
@@ -5117,9 +5185,15 @@
   }
   async function requestAssignedNotification(request2, action) {
     if (window.DEBUG)
-      console.log("Sending Request Assigned Notification for: ", request2);
-    if (window.DEBUG) console.log(action);
-    const role = action.data?.Role?.LookupValue;
+      console.log("Sending Request Assigned Notification for: ", request2, action);
+    if (!action.data) {
+      console.warn("Assignment created with no Payload", request2, action);
+      return;
+    }
+    const stage = action.data.PipelineStage;
+    const role = action.data.Role?.LookupValue;
+    const assignee = new People(action.data.Assignee);
+    const assignedReqOrg = RequestOrg.FindInStore(action.data.RequestOrg);
     let roleBasedMessage = "";
     switch (role) {
       case assignmentRoles.Subscriber:
@@ -5133,13 +5207,13 @@
       Body: `<p>Greetings Colleagues,<br><br>You have been assigned the role of       <strong>${role}</strong> on the following       request:<br>` + request2.getAppLinkElement() + "</p>" + roleBasedMessage + "<p>To view the request, please click the link above,       or copy and paste the below URL into your browser: <br> " + request2.getAppLink() + "</p><strong>Note:</strong> if you are a <strong>Subscriber</strong> or       <strong>Viewer</strong> you have no action to take.",
       Request: request2
     });
-    const assignee = new People(action.data?.Assignee);
-    const assignedReqOrg = RequestOrg.FindInStore(action.data?.RequestOrg);
     if (assignee?.ID != assignedReqOrg?.UserGroup.ID) {
       const to = await peopleToEmailString(assignee);
       assignedNotification.ToString.Value(to);
-      const cc = await reqOrgToEmailString(assignedReqOrg);
-      assignedNotification.CCString.Value(cc);
+      if (stage.NotifyOrg) {
+        const cc = await reqOrgToEmailString(assignedReqOrg);
+        assignedNotification.CCString.Value(cc);
+      }
     } else {
       const to = await reqOrgToEmailString(assignedReqOrg);
       assignedNotification.ToString.Value(to);
@@ -6117,6 +6191,10 @@
         this.newComment.input.Value("");
       }
     };
+    calculateEffectiveOpenTime = () => {
+      const timeToClose = calculateEffectiveTimeToClose(this.request);
+      console.log(timeToClose);
+    };
     submitNewRequest = async () => {
       if (!this.request.Validation.validate()) return;
       const serviceType = this.request.RequestType;
@@ -6418,6 +6496,9 @@
       EstClosed: new DateField({ displayName: "Est. Closed Date" }),
       Closed: new DateField({ displayName: "Closed Date" })
     };
+    TimeToClose = new TextField({
+      displayName: "Time To Close"
+    });
     RequestOrgs = ko.observable();
     // ServiceType = {
     //   IsLoading: ko.observable(false),
@@ -7140,13 +7221,16 @@
       this.State.InternalStatus(status);
       this.State.IsActive(false);
       this.Dates.Closed.set(/* @__PURE__ */ new Date());
+      const timeToClose = calculateEffectiveTimeToClose(this);
+      this.TimeToClose.set(timeToClose);
       await this._context.Requests.UpdateEntity(this, [
         "PipelineStage",
         "PipelineStagePrev",
         "RequestStatus",
         "InternalStatus",
         "IsActive",
-        "ClosedDate"
+        "ClosedDate",
+        "TimeToClose"
       ]);
       this.ActivityQueue.push({
         activity: actionTypes.Closed,
@@ -7189,6 +7273,7 @@
       RequestSubmitted: this.Dates.Submitted,
       EstClosedDate: this.Dates.EstClosed,
       ClosedDate: this.Dates.Closed,
+      TimeToClose: this.TimeToClose,
       RequestOrgs: {
         set: (inputArr) => this.RequestOrgs(
           (inputArr.results ?? inputArr).map((val) => RequestOrg.Create(val))
