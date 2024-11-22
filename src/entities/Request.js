@@ -27,6 +27,7 @@ import {
 import {
   businessDaysFromDate,
   calculateBusinessDays,
+  calculateEffectiveTimeToClose,
 } from "../common/DateUtilities.js";
 import * as Router from "../common/Router.js";
 
@@ -200,6 +201,10 @@ export class RequestEntity {
     EstClosed: new DateField({ displayName: "Est. Closed Date" }),
     Closed: new DateField({ displayName: "Closed Date" }),
   };
+
+  TimeToClose = new TextField({
+    displayName: "Time To Close",
+  });
 
   RequestOrgs = ko.observable();
 
@@ -1119,6 +1124,10 @@ export class RequestEntity {
     this.State.InternalStatus(status);
     this.State.IsActive(false);
     this.Dates.Closed.set(new Date());
+
+    const timeToClose = calculateEffectiveTimeToClose(this);
+    this.TimeToClose.set(timeToClose);
+
     await this._context.Requests.UpdateEntity(this, [
       "PipelineStage",
       "PipelineStagePrev",
@@ -1126,6 +1135,7 @@ export class RequestEntity {
       "InternalStatus",
       "IsActive",
       "ClosedDate",
+      "TimeToClose",
     ]);
     // 3. Emit closeout action
     this.ActivityQueue.push({
@@ -1171,6 +1181,7 @@ export class RequestEntity {
     RequestSubmitted: this.Dates.Submitted,
     EstClosedDate: this.Dates.EstClosed,
     ClosedDate: this.Dates.Closed,
+    TimeToClose: this.TimeToClose,
     RequestOrgs: {
       set: (inputArr) =>
         this.RequestOrgs(

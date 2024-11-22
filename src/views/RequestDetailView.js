@@ -4,7 +4,10 @@ import { actionTypes } from "../entities/Action.js";
 import { People } from "../entities/People.js";
 
 import { createNewRequestTitle } from "../common/EntityUtilities.js";
-import { businessDaysFromDate } from "../common/DateUtilities.js";
+import {
+  businessDaysFromDate,
+  calculateEffectiveTimeToClose,
+} from "../common/DateUtilities.js";
 import * as Router from "../common/Router.js";
 
 import { addTask, finishTask, taskDefs } from "../stores/Tasks.js";
@@ -104,6 +107,11 @@ export class RequestDetailView {
       await this.request.Comments.addNew(comment);
       this.newComment.input.Value("");
     },
+  };
+
+  calculateEffectiveOpenTime = () => {
+    const timeToClose = calculateEffectiveTimeToClose(this.request);
+    console.log(timeToClose);
   };
 
   submitNewRequest = async () => {

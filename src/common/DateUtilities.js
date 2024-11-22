@@ -1,4 +1,7 @@
+import { actionTypes } from "../entities/Action.js";
 import { holidayStore } from "../entities/Holiday.js";
+
+const ONE_DAY = 1000 * 60 * 60 * 24;
 
 export function calculateEffectiveSubmissionDate(submissionDate = null) {
   // Check the submitted date, if it's between 3 pm, (19 UTC) and midnight (4 UTC)
@@ -13,6 +16,112 @@ export function calculateEffectiveSubmissionDate(submissionDate = null) {
   } else {
     return now;
   }
+}
+
+export function calculateEffectiveTimeToClose(request) {
+  /** Effective Closed Date
+   * - EffectiveSubmittedDate
+   * - NonBusinessDays * ONE_DAY
+   * - Effective Paused Duration
+   */
+  const closeDate = request.Dates.Closed.Value() ?? new Date();
+
+  const effectiveClosedDate = nextBusinessDate(closeDate, -1);
+  const effectiveSubmittedDate = request.Dates.Submitted.Value();
+
+  const nonBusinessDays = calculateNonBusinessDays(
+    effectiveSubmittedDate,
+    effectiveClosedDate
+  );
+  const nonBusinessMs = nonBusinessDays * ONE_DAY;
+
+  // get all paused/resumed actions
+  const actions = request.Actions.list
+    .All()
+    .filter((action) =>
+      [actionTypes.Paused, actionTypes.Resumed].includes(action.ActionType)
+    );
+
+  const effectivePauseDurations = [];
+  let effectivePauseDuration = 0;
+
+  for (let i = 0; i < actions.length; i++) {
+    // Calculate effective paused time:
+    // Get the start and end of the pause period
+    // If it's paused or resumed on a non-business day
+    // use the previous or next business date respectively
+    //
+    const pauseAction = actions[i];
+    if (pauseAction.ActionType != actionTypes.Paused) {
+      console.warn("Not a pause action");
+    }
+
+    const pauseActionEffectiveDate = prevBusinessDate(
+      new Date(pauseAction.Created)
+    );
+
+    const effectivePauseDate =
+      pauseActionEffectiveDate > effectiveSubmittedDate
+        ? pauseActionEffectiveDate
+        : effectiveSubmittedDate;
+
+    const resumeAction = actions[++i];
+
+    const resumeActionDate = resumeAction
+      ? new Date(resumeAction.Created)
+      : effectiveClosedDate;
+
+    const effectiveResumeDate = nextBusinessDate(resumeActionDate);
+
+    // Calculate the time paused that would have been accounted for by non-business days
+    const pausedNonBusinessDays = calculateNonBusinessDays(
+      effectivePauseDate,
+      effectiveResumeDate
+    );
+
+    const pausedNonBusinessMs = pausedNonBusinessDays * ONE_DAY;
+
+    // effective pause time
+    effectivePauseDuration +=
+      effectiveResumeDate - effectivePauseDate - pausedNonBusinessMs;
+
+    // effectivePauseDuration.push(effectivePauseDuration);
+  }
+
+  const effectiveMs =
+    effectiveClosedDate -
+    effectiveSubmittedDate -
+    nonBusinessMs -
+    effectivePauseDuration;
+
+  return effectiveMs;
+}
+
+function prevBusinessDate(date) {
+  return nextBusinessDate(date, -1);
+}
+
+/**
+ * If current date is a business day, returns immediately, otherwise
+ * calculates next or previous business midnight
+ * @param {*} date
+ * @param {*} stepDir 1 or -1 for next and previous business date respectively
+ * @returns
+ */
+function nextBusinessDate(date, stepDir = 1) {
+  if (isBusinessDay(date) && !isConfigHoliday(date)) return date;
+  const temp = new Date(date);
+  const hours = stepDir > 0 ? 0 : 24;
+
+  while (!isBusinessDay(temp) || isConfigHoliday(temp)) {
+    temp.setDate(temp.getDate() + 1 * stepDir);
+  }
+  if (stepDir > 0) {
+    temp.setHours(0, 0, 0, 0);
+  } else {
+    temp.setHours(23, 59, 59, 0);
+  }
+  return temp;
 }
 
 /* Business days start at 0, i.e. a workorder opened and closed
@@ -42,6 +151,20 @@ export function calculateBusinessDays(startDate, endDate) {
 
   while (temp.format("yyyy-MM-dd") != endDate.format("yyyy-MM-dd")) {
     if (isBusinessDay(temp) && !isConfigHoliday(temp)) {
+      counter++;
+    }
+    temp.setDate(temp.getDate() + 1 * stepDir);
+  }
+  return counter * stepDir;
+}
+
+export function calculateNonBusinessDays(startDate, endDate) {
+  var counter = 0;
+  var temp = new Date(startDate);
+  var stepDir = Math.sign(endDate - startDate);
+
+  while (temp.format("yyyy-MM-dd") != endDate.format("yyyy-MM-dd")) {
+    if (!isBusinessDay(temp) || isConfigHoliday(temp)) {
       counter++;
     }
     temp.setDate(temp.getDate() + 1 * stepDir);
