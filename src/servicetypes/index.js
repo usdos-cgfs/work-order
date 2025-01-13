@@ -24,6 +24,7 @@ export * from "./FPTravelDetail.js";
 export * from "./govirtual/GOVirtualExceptionDetail.js";
 export * from "./ITHardwareDetail.js";
 export * from "./IronKeyDetail.js";
+export * from "./LaptopRequestDetail.js";
 export * from "./LocksmithDetail.js";
 export * from "./MobileDetail.js";
 export * from "./MotorPoolDetail.js";
