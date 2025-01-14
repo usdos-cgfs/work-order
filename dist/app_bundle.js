@@ -8721,6 +8721,7 @@ Full Name: 	${this.serviceType.FieldMap.FullName.toString()}Employee Type: 	${th
           "Civil Service - New Hire",
           "Contractor",
           "Domestically Employeed Teleworking Overseas (DETO)",
+          "Foreign Service",
           "Intern"
         ],
         isRequired: true

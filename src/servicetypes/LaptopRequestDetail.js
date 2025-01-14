@@ -25,6 +25,7 @@ export class LaptopRequest extends BaseServiceDetail {
         "Civil Service - New Hire",
         "Contractor",
         "Domestically Employeed Teleworking Overseas (DETO)",
+        "Foreign Service",
         "Intern",
       ],
       isRequired: true,
