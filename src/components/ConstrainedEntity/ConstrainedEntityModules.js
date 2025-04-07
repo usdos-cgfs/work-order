@@ -1,4 +1,4 @@
-import { defaultComponents } from "../../primitives/ConstrainedEntity.js";
+import { defaultComponents } from "../../primitives/index.js";
 import { BaseComponent } from "../BaseComponent.js";
 import { constrainedEntityEditTemplate } from "./DefaultEdit.js";
 import { constrainedEntityViewTemplate } from "./DefaultView.js";

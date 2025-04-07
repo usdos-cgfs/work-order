@@ -532,14 +532,17 @@ div.form-control.is-valid {
 
 .kpi-green {
   /* background-image: url("../assets/KPIGreen.GIF"); */
+  color: green;
 }
 
 .kpi-yellow {
   /* background-image: url("../assets/KPIYellow.GIF"); */
+  color: yellow;
 }
 
 .kpi-red {
   /* background-image: url("../assets/KPIRed.GIF"); */
+  color: red;
 }
 
 .ql-container {

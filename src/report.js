@@ -1,24 +1,24 @@
-import { requestOrgStore } from "./entities/RequestOrg.js";
-import { pipelineStageStore } from "./entities/PipelineStage.js";
-import { serviceTypeStore } from "./entities/ServiceType.js";
-import { holidayStore } from "./entities/Holiday.js";
+import {
+  requestOrgStore,
+  pipelineStageStore,
+  serviceTypeStore,
+  holidayStore,
+} from "./entities/index.js";
 import { requestStates } from "./constants/index.js";
 
 import "./common/KnockoutExtensions.js";
 
-import PeopleField from "./fields/PeopleField.js";
-import DateField, { dateFieldTypes } from "./fields/DateField.js";
+import { CheckboxField, DateField, dateFieldTypes } from "./fields/index.js";
 
 import { currentUser, User } from "./infrastructure/Authorization.js";
 import {
   CreateAppContext,
   getAppContext,
-} from "./infrastructure/ApplicationDbContext.js";
-import { InitSal } from "./infrastructure/SAL.js";
+  InitSal,
+  RegisterComponents,
+} from "./infrastructure/index.js";
 
 import { sortByTitle } from "./common/EntityUtilities.js";
-import { RegisterComponents } from "./infrastructure/RegisterComponents.js";
-import CheckboxField from "./fields/CheckboxField.js";
 
 window.WorkOrder = window.WorkOrder || {};
 
@@ -49,9 +49,11 @@ class ServiceTypeSummary {
     if (!this.requests.length) return;
     const percMeetingStandard = this.PercentMeetingStandard();
 
-    if (percMeetingStandard > this.thresholds.green) return "kpi-green";
-    if (percMeetingStandard > this.thresholds.yellow) return "kpi-yellow";
-    return "kpi-red";
+    if (percMeetingStandard > this.thresholds.green)
+      return "fa-solid fa-circle-check kpi-green";
+    if (percMeetingStandard > this.thresholds.yellow)
+      return "fa-solid fa-circle kpi-yellow";
+    return "fa-solid fa-circle-exclamation kpi-red";
   });
 
   ViewButtonText = ko.pureComputed(() =>

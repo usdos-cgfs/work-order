@@ -17,7 +17,7 @@ import {
 } from "../../infrastructure/Authorization.js";
 import { ContractorSupplement } from "../ContractorSupplementDetail.js";
 
-import { defaultComponents } from "../../primitives/ConstrainedEntity.js";
+import { defaultComponents } from "../../primitives/defaultComponents.js";
 
 import { registerComponentFromConstructor } from "../../infrastructure/RegisterComponents.js";
 
