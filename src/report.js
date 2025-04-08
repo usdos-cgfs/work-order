@@ -234,11 +234,15 @@ class Report {
 
     // Filter by date
     const filterStart = this.filters.startDate.Value().getTime();
-    const filterEnd = this.filters.endDate.Value().getTime();
+    const filterEndDate = new Date(this.filters.endDate.Value());
+    filterEndDate.setDate(filterEndDate.getDate() + 1);
+
+    const filterEnd = filterEndDate.getTime();
+    // Filter by closed date
     return filteredRequests.filter(
       (request) =>
         filterStart <= request.Dates.Closed.Value()?.getTime() &&
-        request.Dates.Closed.Value()?.getTime() <= filterEnd
+        request.Dates.Closed.Value()?.getTime() <= filterEndDate
     );
   });
 
