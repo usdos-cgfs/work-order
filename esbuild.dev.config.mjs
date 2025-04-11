@@ -3,14 +3,14 @@ import * as fs from "fs";
 import * as path from "path";
 
 await esbuild.build({
-  entryPoints: ["./src/app_bundle.js", "./src/app.css"],
+  entryPoints: ["./src/app_bundle.js", "./src/app.css", "./src/report.js"],
   bundle: true,
   minify: true,
   sourcemap: true,
   outdir: "P:/Style Library/apps/wo/dist",
 });
 
-const referenceFiles = ["app_bundle_dev.txt"];
+const referenceFiles = ["app_bundle_dev.txt", "report.txt"];
 
 referenceFiles.forEach(copyReferenceFiles);
 

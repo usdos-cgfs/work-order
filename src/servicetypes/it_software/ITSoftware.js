@@ -1,6 +1,6 @@
 import { TextField, SelectField } from "../../fields/index.js";
 
-import { defaultComponents } from "../../primitives/ConstrainedEntity.js";
+import { defaultComponents } from "../../primitives/defaultComponents.js";
 
 import { BaseServiceDetail } from "../BaseServiceDetail.js";
 import { ConstrainedEntityViewModule } from "../../components/index.js";

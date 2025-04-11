@@ -8,7 +8,7 @@ import {
   TextField,
 } from "../../fields/index.js";
 import { registerComponentFromConstructor } from "../../infrastructure/RegisterComponents.js";
-import { defaultComponents } from "../../primitives/ConstrainedEntity.js";
+import { defaultComponents } from "../../primitives/defaultComponents.js";
 
 import { BaseServiceDetail } from "../BaseServiceDetail.js";
 import { govirtualEditTemplate } from "./views/Edit.js";
